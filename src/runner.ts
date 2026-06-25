@@ -121,6 +121,14 @@ const examples: Record<string, Example> = {
       await mod.run();
     },
   },
+  '19-horizon-streaming': {
+    name: '19-horizon-streaming',
+    description: 'Subscribe to live Horizon payment events over Server-Sent Events',
+    run: async () => {
+      const mod = await import('./examples/19-horizon-streaming');
+      await mod.run();
+    },
+  },
 };
 
 /**

@@ -21,6 +21,7 @@ We organize examples sequentially:
 8. **`12-asset-issuance`**: Custom asset issuance and locking the issuer account weight to 0.
 9. **`17-offline-signing`**: Building unsigned transaction XDR, signing it offline, and verifying.
 10. **`18-soroban-errors`**: Intentionally triggering and parsing Soroban RPC and simulation errors.
+11. **`19-horizon-streaming`**: Subscribing to live Horizon Testnet payment events over Server-Sent Events.
 
 ## Installation
 
@@ -39,18 +40,33 @@ npm install
 We include a central runner to execute examples interactively.
 
 ### Interactive Mode
+
 Run the driver to select and run an example from the list:
+
 ```bash
 npm run dev
 ```
 
 ### Direct Run
+
 Run a specific example directly by passing its suffix name:
+
 ```bash
 npm run run-example 01-create-account
 ```
 
-*Note: You can configure custom environment variables in a local `.env` file (e.g. `HORIZON_URL`, `SOROBAN_RPC_URL`).*
+Stream live Horizon Testnet payment events:
+
+```bash
+npm run run-example 19-horizon-streaming
+```
+
+The streaming example listens from cursor `now`, prints formatted payment-like
+operations as they arrive, logs stream errors, and closes cleanly when you press
+Ctrl+C. For quick sampling, set `STREAM_DURATION_SECONDS=10` or
+`STREAM_MAX_EVENTS=3`.
+
+_Note: You can configure custom environment variables in a local `.env` file (e.g. `HORIZON_URL`, `SOROBAN_RPC_URL`)._
 
 ## Automated Example Validation
 

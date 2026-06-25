@@ -8,6 +8,7 @@ import * as ex11 from '../src/examples/11-sponsored-reserves';
 import * as ex12 from '../src/examples/12-asset-issuance';
 import * as ex17 from '../src/examples/17-offline-signing';
 import * as ex18 from '../src/examples/18-soroban-errors';
+import * as ex19 from '../src/examples/19-horizon-streaming';
 
 describe('Examples Exports', () => {
   it('should export a run function', () => {
@@ -21,5 +22,6 @@ describe('Examples Exports', () => {
     expect(typeof ex12.run).toBe('function');
     expect(typeof ex17.run).toBe('function');
     expect(typeof ex18.run).toBe('function');
+    expect(typeof ex19.run).toBe('function');
   });
 });
