@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "🎓 Educational repository of runnable TypeScript examples demonstrating the Stellar & Soroban JavaScript SDK.",
   "main": "dist/runner.js",
+  "bin": {
+    "stellar-api-inspector": "dist/stellar-api-inspector.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/runner.ts",

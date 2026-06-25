@@ -59,6 +59,22 @@ const examples: Record<string, Example> = {
       await mod.run();
     },
   },
+  '08-liquidity-pools': {
+    name: '08-liquidity-pools',
+    description: 'Create trustline, deposit, and withdraw from an AMM liquidity pool',
+    run: async () => {
+      const mod = await import('./examples/08-liquidity-pools');
+      await mod.run();
+    },
+  },
+  '11-sponsored-reserves': {
+    name: '11-sponsored-reserves',
+    description: 'Create sponsored resources and inspect sponsorship state',
+    run: async () => {
+      const mod = await import('./examples/11-sponsored-reserves');
+      await mod.run();
+    },
+  },
   '12-asset-issuance': {
     name: '12-asset-issuance',
     description: 'Issue a custom asset and lock the issuer account',
