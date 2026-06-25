@@ -105,6 +105,14 @@ const examples: Record<string, Example> = {
       await mod.run();
     },
   },
+  '21-sep24-deposit-withdrawal': {
+    name: '21-sep24-deposit-withdrawal',
+    description: 'SEP-24 interactive deposit and withdrawal with a real testnet anchor',
+    run: async () => {
+      const mod = await import('./examples/21-sep24-deposit-withdrawal');
+      await mod.run();
+    },
+  },
 };
 
 /**

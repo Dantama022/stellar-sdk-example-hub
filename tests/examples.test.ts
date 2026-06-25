@@ -6,6 +6,7 @@ import * as ex5 from '../src/examples/05-soroban-invoke';
 import * as ex12 from '../src/examples/12-asset-issuance';
 import * as ex17 from '../src/examples/17-offline-signing';
 import * as ex18 from '../src/examples/18-soroban-errors';
+import * as ex21 from '../src/examples/21-sep24-deposit-withdrawal';
 
 describe('Examples Exports', () => {
   it('should export a run function', () => {
@@ -17,5 +18,6 @@ describe('Examples Exports', () => {
     expect(typeof ex12.run).toBe('function');
     expect(typeof ex17.run).toBe('function');
     expect(typeof ex18.run).toBe('function');
+    expect(typeof ex21.run).toBe('function');
   });
 });
