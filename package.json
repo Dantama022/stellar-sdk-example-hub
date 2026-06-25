@@ -7,6 +7,8 @@
     "build": "tsc",
     "dev": "ts-node src/runner.ts",
     "run-example": "ts-node src/runner.ts",
+    "validate:examples": "ts-node src/validate-examples.ts",
+    "validate:examples:all": "ts-node src/validate-examples.ts --include-excluded",
     "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
