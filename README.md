@@ -16,6 +16,9 @@ We organize examples sequentially:
 3. **`03-create-trustline`**: Setting up trustlines to receive non-native assets.
 4. **`04-multisig`**: Multi-signature setup, changing thresholds, and gathering signatures.
 5. **`05-soroban-invoke`**: Simulating and invoking smart contract methods.
+6. **`12-asset-issuance`**: Custom asset issuance and locking the issuer account weight to 0.
+7. **`17-offline-signing`**: Building unsigned transaction XDR, signing it offline, and verifying.
+8. **`18-soroban-errors`**: Intentionally triggering and parsing Soroban RPC and simulation errors.
 
 ## Installation
 

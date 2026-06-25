@@ -5,3 +5,7 @@ coverage/
 *.log
 .eslintcache
 .DS_Store
+
+.agents/
+issue.md
+skills-lock.json
