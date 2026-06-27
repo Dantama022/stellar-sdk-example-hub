@@ -1,7 +1,16 @@
-import { Horizon, Keypair, Networks, Operation, TransactionBuilder, Asset } from '@stellar/stellar-sdk';
+import {
+  Horizon,
+  Keypair,
+  Networks,
+  Operation,
+  TransactionBuilder,
+  Asset,
+} from '@stellar/stellar-sdk';
 
 async function fundAccount(publicKey: string): Promise<void> {
-  const response = await fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(publicKey)}`);
+  const response = await fetch(
+    `https://friendbot.stellar.org/?addr=${encodeURIComponent(publicKey)}`,
+  );
   if (!response.ok) {
     throw new Error(`Failed to fund account ${publicKey}: ${response.statusText}`);
   }
@@ -63,8 +72,12 @@ export async function run(): Promise<void> {
 
   const sourceBalances = await server.loadAccount(source.publicKey());
   const sponsorBalances = await server.loadAccount(sponsor.publicKey());
-  const sourceNative = sourceBalances.balances.find((balance) => balance.asset_type === 'native')?.balance;
-  const sponsorNative = sponsorBalances.balances.find((balance) => balance.asset_type === 'native')?.balance;
+  const sourceNative = sourceBalances.balances.find(
+    (balance) => balance.asset_type === 'native',
+  )?.balance;
+  const sponsorNative = sponsorBalances.balances.find(
+    (balance) => balance.asset_type === 'native',
+  )?.balance;
 
   console.log(`Source native balance: ${sourceNative}`);
   console.log(`Sponsor native balance: ${sponsorNative}`);

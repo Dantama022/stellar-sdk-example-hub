@@ -1,6 +1,5 @@
 import {
   Account,
-  hash as stellarHash,
   Keypair,
   Networks,
   Operation,

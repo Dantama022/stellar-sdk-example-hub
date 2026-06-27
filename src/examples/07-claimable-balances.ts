@@ -1,7 +1,17 @@
-import { Asset, Claimant, Horizon, Keypair, Networks, Operation, TransactionBuilder } from '@stellar/stellar-sdk';
+import {
+  Asset,
+  Claimant,
+  Horizon,
+  Keypair,
+  Networks,
+  Operation,
+  TransactionBuilder,
+} from '@stellar/stellar-sdk';
 
 async function fundAccount(publicKey: string): Promise<void> {
-  const response = await fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(publicKey)}`);
+  const response = await fetch(
+    `https://friendbot.stellar.org/?addr=${encodeURIComponent(publicKey)}`,
+  );
   if (!response.ok) {
     throw new Error(`Failed to fund account ${publicKey}: ${response.statusText}`);
   }
@@ -41,7 +51,12 @@ export async function run(): Promise<void> {
       Operation.createClaimableBalance({
         asset,
         amount: '15',
-        claimants: [new Claimant(claimant.publicKey(), Claimant.predicateBeforeAbsoluteTime(String(claimWindowMs)))],
+        claimants: [
+          new Claimant(
+            claimant.publicKey(),
+            Claimant.predicateBeforeAbsoluteTime(String(claimWindowMs)),
+          ),
+        ],
       }),
     )
     .setTimeout(30)
