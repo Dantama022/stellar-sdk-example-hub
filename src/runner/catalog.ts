@@ -133,7 +133,8 @@ export const examples: Record<string, Example> = {
   },
   '20-sep10-authentication': {
     name: '20-sep10-authentication',
-    description: 'SEP-10 Web Authentication: challenge generation, signing, verification, and JWT issuance',
+    description:
+      'SEP-10 Web Authentication: challenge generation, signing, verification, and JWT issuance',
     run: runSep10Authentication,
   },
   '21-sep24-deposit-withdrawal': {
@@ -158,7 +159,8 @@ export const examples: Record<string, Example> = {
   },
   '25-account-flags': {
     name: '25-account-flags',
-    description: 'View and modify issuer account flags (AUTH_REQUIRED, AUTH_REVOCABLE, AUTH_IMMUTABLE)',
+    description:
+      'View and modify issuer account flags (AUTH_REQUIRED, AUTH_REVOCABLE, AUTH_IMMUTABLE)',
     run: runAccountFlags,
   },
   '26-sponsored-claimable-balance': {

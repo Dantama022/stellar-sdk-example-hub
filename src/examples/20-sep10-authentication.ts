@@ -1,4 +1,12 @@
-import { Keypair, Networks, TransactionBuilder, Transaction } from '@stellar/stellar-sdk';
+import {
+  Account,
+  hash as stellarHash,
+  Keypair,
+  Networks,
+  Operation,
+  Transaction,
+  TransactionBuilder,
+} from '@stellar/stellar-sdk';
 
 /**
  * SEP-10 Web Authentication Example
@@ -135,14 +143,12 @@ function buildChallengeTransaction(
   networkPassphrase: string,
 ): Transaction {
   // A sequence-0 account object is used so the transaction is never submittable
-  const { Account } = require('@stellar/stellar-sdk');
   const serverAccount = new Account(serverKeypair.publicKey(), '-1'); // seq -1 → built tx gets seq 0
 
   // 32-byte nonce encoded as base64
   const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(32)));
 
   const now = Math.floor(Date.now() / 1000);
-  const { Operation, Memo } = require('@stellar/stellar-sdk');
 
   const tx = new TransactionBuilder(serverAccount, {
     fee: '100',
@@ -192,8 +198,6 @@ function verifyChallengeTransaction(
   homeDomain: string,
   networkPassphrase: string,
 ): void {
-  const { hash: stellarHash } = require('@stellar/stellar-sdk');
-
   // 1. Network passphrase
   if (tx.networkPassphrase !== networkPassphrase) {
     throw new Error(
@@ -203,9 +207,7 @@ function verifyChallengeTransaction(
 
   // 2. Sequence number must be 0
   if (tx.sequence !== '0') {
-    throw new Error(
-      `Challenge sequence must be 0 (non-submittable), got ${tx.sequence}`,
-    );
+    throw new Error(`Challenge sequence must be 0 (non-submittable), got ${tx.sequence}`);
   }
 
   // 3. Time bounds
@@ -214,14 +216,10 @@ function verifyChallengeTransaction(
   }
   const nowSec = Math.floor(Date.now() / 1000);
   if (nowSec > Number(tx.timeBounds.maxTime)) {
-    throw new Error(
-      `Challenge has expired (maxTime=${tx.timeBounds.maxTime}, now=${nowSec})`,
-    );
+    throw new Error(`Challenge has expired (maxTime=${tx.timeBounds.maxTime}, now=${nowSec})`);
   }
   if (nowSec < Number(tx.timeBounds.minTime)) {
-    throw new Error(
-      `Challenge is not yet valid (minTime=${tx.timeBounds.minTime}, now=${nowSec})`,
-    );
+    throw new Error(`Challenge is not yet valid (minTime=${tx.timeBounds.minTime}, now=${nowSec})`);
   }
 
   // 4. First operation must be manage_data with correct key
@@ -291,7 +289,7 @@ function issueSimulatedJwt(
     iss: `https://${serverDomain}/auth`,
     sub: clientPublicKey,
     iat: now,
-    exp: now + 86400,         // 24-hour token lifetime
+    exp: now + 86400, // 24-hour token lifetime
     jti: `${challengeTx.hash().toString('hex').slice(0, 16)}`, // ties token to challenge
   };
 
@@ -328,9 +326,7 @@ function inspectChallengeTransaction(tx: Transaction): void {
     const op = tx.operations[i] as any;
     if (op.type === 'manageData') {
       const valuePreview =
-        op.value instanceof Buffer
-          ? `<${op.value.length} bytes>`
-          : String(op.value).slice(0, 32);
+        op.value instanceof Buffer ? `<${op.value.length} bytes>` : String(op.value).slice(0, 32);
       console.log(`      [${i}] manage_data  name="${op.name}"  value=${valuePreview}`);
       if (op.source) console.log(`           source=${op.source}`);
     } else {
@@ -359,7 +355,9 @@ async function runLiveAnchorFlow(
   const challengeUrl = `${webAuthEndpoint}?account=${clientKeypair.publicKey()}&home_domain=${ANCHOR_DOMAIN}`;
   const challengeRes = await fetch(challengeUrl);
   if (!challengeRes.ok) {
-    console.log(`    Anchor challenge request failed (${challengeRes.status}) — skipping live flow`);
+    console.log(
+      `    Anchor challenge request failed (${challengeRes.status}) — skipping live flow`,
+    );
     return null;
   }
   const challengeData = (await challengeRes.json()) as ChallengeResponse;
@@ -518,21 +516,20 @@ export async function run(): Promise<void> {
   if (payload.jti) {
     console.log(`    jti (challenge): ${payload.jti}`);
   }
-  console.log('  Note: In production, verify the JWT signature with the server\'s public key');
+  console.log("  Note: In production, verify the JWT signature with the server's public key");
   console.log('        before trusting any claim. This demo uses a simulated signature.');
 
   // ── Step 7: Expiry validation demonstration ───────────────────────────────
   console.log('\nStep 7: Demonstrating challenge expiration detection...');
   const serverKpForExpiry = Keypair.random();
   const clientKpForExpiry = Keypair.random();
-  const { Account, Operation: Op } = require('@stellar/stellar-sdk');
   const expiredServerAccount = new Account(serverKpForExpiry.publicKey(), '-1');
   const expiredTx = new TransactionBuilder(expiredServerAccount, {
     fee: '100',
     networkPassphrase: Networks.TESTNET,
   })
     .addOperation(
-      Op.manageData({
+      Operation.manageData({
         name: `${ANCHOR_DOMAIN} auth`,
         value: Buffer.from(crypto.getRandomValues(new Uint8Array(32))),
         source: clientKpForExpiry.publicKey(),
@@ -570,7 +567,9 @@ export async function run(): Promise<void> {
       console.log('  Requesting challenge from anchor...');
       liveJwt = await runLiveAnchorFlow(clientKeypair, toml);
     } else {
-      console.log('  stellar.toml is missing WEB_AUTH_ENDPOINT or SIGNING_KEY — skipping live flow');
+      console.log(
+        '  stellar.toml is missing WEB_AUTH_ENDPOINT or SIGNING_KEY — skipping live flow',
+      );
     }
   } catch (err: any) {
     console.log(`  Live anchor flow skipped (network error): ${err.message}`);
@@ -600,7 +599,11 @@ export async function run(): Promise<void> {
   console.log('    ✓ Server verified client signature and issued a JWT');
   console.log('    ✓ JWT payload decoded and claims explained');
   console.log('    ✓ Expired challenge was correctly rejected');
-  console.log(liveJwt ? '    ✓ Live JWT obtained from testnet anchor' : '    ✓ Live anchor flow attempted (testnet connectivity optional)');
+  console.log(
+    liveJwt
+      ? '    ✓ Live JWT obtained from testnet anchor'
+      : '    ✓ Live anchor flow attempted (testnet connectivity optional)',
+  );
   console.log('\n  SEP-10 reference: https://stellar.org/protocol/sep-10');
   console.log('═══════════════════════════════════════════════════════════\n');
 }

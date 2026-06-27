@@ -6,7 +6,6 @@ import {
   Operation,
   AuthRequiredFlag,
   AuthRevocableFlag,
-  AuthImmutableFlag,
 } from '@stellar/stellar-sdk';
 
 /**
