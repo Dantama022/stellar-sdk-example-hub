@@ -11,6 +11,10 @@ import { run as runAssetIssuance } from '../examples/12-asset-issuance';
 import { run as runOfflineSigning } from '../examples/17-offline-signing';
 import { run as runSorobanErrors } from '../examples/18-soroban-errors';
 import { run as runSep10Authentication } from '../examples/20-sep10-authentication';
+import { run as runManageBuyOffer } from '../examples/22-manage-buy-offer';
+import { run as runManageDataEntries } from '../examples/23-manage-data-entries';
+import { run as runPassiveSellOffer } from '../examples/24-create-passive-sell-offer';
+import { run as runAccountFlags } from '../examples/25-account-flags';
 
 export interface Example {
   name: string;
@@ -111,5 +115,24 @@ export const examples: Record<string, Example> = {
     name: '20-sep10-authentication',
     description: 'SEP-10 Web Authentication: challenge generation, signing, verification, and JWT issuance',
     run: runSep10Authentication,
+  '22-manage-buy-offer': {
+    name: '22-manage-buy-offer',
+    description: 'Create, modify, and delete buy offers on the Stellar SDEX',
+    run: runManageBuyOffer,
+  },
+  '23-manage-data-entries': {
+    name: '23-manage-data-entries',
+    description: 'Create, update, query, and remove account data entries on-ledger',
+    run: runManageDataEntries,
+  },
+  '24-create-passive-sell-offer': {
+    name: '24-create-passive-sell-offer',
+    description: 'Create a passive sell offer on the SDEX for liquidity provisioning',
+    run: runPassiveSellOffer,
+  },
+  '25-account-flags': {
+    name: '25-account-flags',
+    description: 'View and modify issuer account flags (AUTH_REQUIRED, AUTH_REVOCABLE, AUTH_IMMUTABLE)',
+    run: runAccountFlags,
   },
 };
