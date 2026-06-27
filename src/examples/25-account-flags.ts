@@ -94,7 +94,12 @@ export async function run(): Promise<void> {
   })
     .addOperation(
       Operation.setOptions({
-        setFlags: AuthRequiredFlag | AuthRevocableFlag,
+        setFlags: AuthRequiredFlag,
+      }),
+    )
+    .addOperation(
+      Operation.setOptions({
+        setFlags: AuthRevocableFlag,
       }),
     )
     .setTimeout(30)
