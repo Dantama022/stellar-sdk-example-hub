@@ -10,6 +10,7 @@ import { run as runBatchedOperations } from '../examples/16-batched-operations';
 import { run as runAssetIssuance } from '../examples/12-asset-issuance';
 import { run as runOfflineSigning } from '../examples/17-offline-signing';
 import { run as runSorobanErrors } from '../examples/18-soroban-errors';
+import { run as runManageBuyOffer } from '../examples/22-manage-buy-offer';
 
 export interface Example {
   name: string;
@@ -105,5 +106,10 @@ export const examples: Record<string, Example> = {
     name: '18-soroban-errors',
     description: 'Intentionally trigger and parse Soroban RPC and transaction errors',
     run: runSorobanErrors,
+  },
+  '22-manage-buy-offer': {
+    name: '22-manage-buy-offer',
+    description: 'Create, modify, and delete buy offers on the Stellar SDEX',
+    run: runManageBuyOffer,
   },
 };

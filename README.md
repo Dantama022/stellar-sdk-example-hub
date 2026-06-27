@@ -29,6 +29,7 @@ We organize examples sequentially:
 9. **`17-offline-signing`**: Building unsigned transaction XDR, signing it offline, and verifying.
 10. **`18-soroban-errors`**: Intentionally triggering and parsing Soroban RPC and simulation errors.
 11. **`19-horizon-streaming`**: Subscribing to live Horizon Testnet payment events over Server-Sent Events.
+12. **`22-manage-buy-offer`**: Creating, modifying, and deleting buy offers on the Stellar SDEX using `manageBuyOffer`.
 
 ## Installation
 
