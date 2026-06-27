@@ -12,6 +12,7 @@ import * as ex14 from '../src/examples/14-time-locked-escrow';
 import * as ex16 from '../src/examples/16-batched-operations';
 import * as ex17 from '../src/examples/17-offline-signing';
 import * as ex18 from '../src/examples/18-soroban-errors';
+import * as ex20 from '../src/examples/20-sep10-authentication';
 import * as ex21 from '../src/examples/21-sep24-deposit-withdrawal';
 import { examples } from '../src/runner/catalog';
 import * as ex19 from '../src/examples/19-horizon-streaming';
@@ -32,6 +33,7 @@ describe('Examples Exports', () => {
     expect(typeof ex16.run).toBe('function');
     expect(typeof ex17.run).toBe('function');
     expect(typeof ex18.run).toBe('function');
+    expect(typeof ex20.run).toBe('function');
     expect(typeof ex21.run).toBe('function');
     expect(typeof ex19.run).toBe('function');
   });
@@ -41,5 +43,6 @@ describe('Examples Exports', () => {
     expect(examples['09-fee-bump']).toBeDefined();
     expect(examples['14-time-locked-escrow']).toBeDefined();
     expect(examples['16-batched-operations']).toBeDefined();
+    expect(examples['20-sep10-authentication']).toBeDefined();
   });
 });

@@ -34,6 +34,10 @@
     {
       "match": "18-soroban-errors",
       "reason": "Requires Soroban RPC responses from external services"
+    },
+    {
+      "match": "20-sep10-authentication",
+      "reason": "Requires live anchor and testnet network access for the live flow step"
     }
   ]
 }
