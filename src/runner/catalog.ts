@@ -11,6 +11,7 @@ import { run as runAssetIssuance } from '../examples/12-asset-issuance';
 import { run as runOfflineSigning } from '../examples/17-offline-signing';
 import { run as runSorobanErrors } from '../examples/18-soroban-errors';
 import { run as runManageBuyOffer } from '../examples/22-manage-buy-offer';
+import { run as runManageDataEntries } from '../examples/23-manage-data-entries';
 
 export interface Example {
   name: string;
@@ -111,5 +112,10 @@ export const examples: Record<string, Example> = {
     name: '22-manage-buy-offer',
     description: 'Create, modify, and delete buy offers on the Stellar SDEX',
     run: runManageBuyOffer,
+  },
+  '23-manage-data-entries': {
+    name: '23-manage-data-entries',
+    description: 'Create, update, query, and remove account data entries on-ledger',
+    run: runManageDataEntries,
   },
 };
