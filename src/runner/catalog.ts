@@ -4,17 +4,22 @@ import { run as runTrustline } from '../examples/03-create-trustline';
 import { run as runMultisig } from '../examples/04-multisig';
 import { run as runSorobanInvoke } from '../examples/05-soroban-invoke';
 import { run as runClaimableBalances } from '../examples/07-claimable-balances';
+import { run as runLiquidityPools } from '../examples/08-liquidity-pools';
 import { run as runFeeBump } from '../examples/09-fee-bump';
+import { run as runSponsoredReserves } from '../examples/11-sponsored-reserves';
+import { run as runAssetIssuance } from '../examples/12-asset-issuance';
 import { run as runTimeLockedEscrow } from '../examples/14-time-locked-escrow';
 import { run as runBatchedOperations } from '../examples/16-batched-operations';
-import { run as runAssetIssuance } from '../examples/12-asset-issuance';
 import { run as runOfflineSigning } from '../examples/17-offline-signing';
 import { run as runSorobanErrors } from '../examples/18-soroban-errors';
+import { run as runHorizonStreaming } from '../examples/19-horizon-streaming';
 import { run as runSep10Authentication } from '../examples/20-sep10-authentication';
+import { run as runSep24DepositWithdrawal } from '../examples/21-sep24-deposit-withdrawal';
 import { run as runManageBuyOffer } from '../examples/22-manage-buy-offer';
 import { run as runManageDataEntries } from '../examples/23-manage-data-entries';
 import { run as runPassiveSellOffer } from '../examples/24-create-passive-sell-offer';
 import { run as runAccountFlags } from '../examples/25-account-flags';
+import { run as runSponsoredClaimableBalance } from '../examples/26-sponsored-claimable-balance';
 
 export interface Example {
   name: string;
@@ -59,10 +64,20 @@ export const examples: Record<string, Example> = {
     description: 'Create and claim a claimable balance with claimant predicates',
     run: runClaimableBalances,
   },
+  '08-liquidity-pools': {
+    name: '08-liquidity-pools',
+    description: 'Create trustline, deposit, and withdraw from an AMM liquidity pool',
+    run: runLiquidityPools,
+  },
   '09-fee-bump': {
     name: '09-fee-bump',
     description: 'Wrap a source transaction in a sponsor-paid fee-bump transaction',
     run: runFeeBump,
+  },
+  '11-sponsored-reserves': {
+    name: '11-sponsored-reserves',
+    description: 'Create sponsored resources and inspect sponsorship state',
+    run: runSponsoredReserves,
   },
   '12-asset-issuance': {
     name: '12-asset-issuance',
@@ -111,10 +126,21 @@ export const examples: Record<string, Example> = {
     description: 'Intentionally trigger and parse Soroban RPC and transaction errors',
     run: runSorobanErrors,
   },
+  '19-horizon-streaming': {
+    name: '19-horizon-streaming',
+    description: 'Subscribe to live Horizon payment events over Server-Sent Events',
+    run: runHorizonStreaming,
+  },
   '20-sep10-authentication': {
     name: '20-sep10-authentication',
     description: 'SEP-10 Web Authentication: challenge generation, signing, verification, and JWT issuance',
     run: runSep10Authentication,
+  },
+  '21-sep24-deposit-withdrawal': {
+    name: '21-sep24-deposit-withdrawal',
+    description: 'Run SEP-24 interactive deposit and withdrawal against a Testnet anchor',
+    run: runSep24DepositWithdrawal,
+  },
   '22-manage-buy-offer': {
     name: '22-manage-buy-offer',
     description: 'Create, modify, and delete buy offers on the Stellar SDEX',
@@ -134,5 +160,10 @@ export const examples: Record<string, Example> = {
     name: '25-account-flags',
     description: 'View and modify issuer account flags (AUTH_REQUIRED, AUTH_REVOCABLE, AUTH_IMMUTABLE)',
     run: runAccountFlags,
+  },
+  '26-sponsored-claimable-balance': {
+    name: '26-sponsored-claimable-balance',
+    description: 'Create and claim a sponsored claimable balance on Testnet',
+    run: runSponsoredClaimableBalance,
   },
 };

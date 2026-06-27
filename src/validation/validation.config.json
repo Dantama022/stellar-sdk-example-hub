@@ -38,6 +38,18 @@
     {
       "match": "20-sep10-authentication",
       "reason": "Requires live anchor and testnet network access for the live flow step"
+    },
+    {
+      "match": "14-time-locked-escrow",
+      "reason": "Depends on live Testnet timing and transaction acceptance windows"
+    },
+    {
+      "match": "19-horizon-streaming",
+      "reason": "Keeps a live Horizon SSE connection open until events arrive"
+    },
+    {
+      "match": "26-sponsored-claimable-balance",
+      "reason": "Requires live Friendbot funding and Horizon Testnet claimable balance state"
     }
   ]
 }
