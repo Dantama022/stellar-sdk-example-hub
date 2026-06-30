@@ -148,6 +148,7 @@ function buildChallengeTransaction(
   const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(32)));
 
   const now = Math.floor(Date.now() / 1000);
+  const { Operation } = require('@stellar/stellar-sdk');
 
   const tx = new TransactionBuilder(serverAccount, {
     fee: '100',
@@ -197,6 +198,8 @@ function verifyChallengeTransaction(
   homeDomain: string,
   networkPassphrase: string,
 ): void {
+  const { hash: stellarHash } = require('@stellar/stellar-sdk');
+
   // 1. Network passphrase
   if (tx.networkPassphrase !== networkPassphrase) {
     throw new Error(

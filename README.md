@@ -19,20 +19,24 @@ We organize examples sequentially:
 6. **`07-claimable-balances`**: Creating a claimable balance and claiming it with predicates.
 7. **`08-liquidity-pools`**: Liquidity pool identification, trustline setup, deposit, and withdrawal.
 8. **`09-fee-bump`**: Wrapping a signed transaction in a sponsor-paid fee-bump transaction.
-9. **`11-sponsored-reserves`**: Sponsorship lifecycle with sponsored reserves and verification.
-10. **`12-asset-issuance`**: Custom asset issuance and locking the issuer account weight to 0.
-11. **`14-time-locked-escrow`**: Demonstrating a transaction that only becomes valid inside a time window.
-12. **`16-batched-operations`**: Bundling multiple payment operations into one atomic transaction.
-13. **`17-offline-signing`**: Building unsigned transaction XDR, signing it offline, and verifying.
-14. **`18-soroban-errors`**: Intentionally triggering and parsing Soroban RPC and simulation errors.
-15. **`19-horizon-streaming`**: Subscribing to live Horizon Testnet payment events over Server-Sent Events.
-16. **`20-sep10-authentication`**: SEP-10 challenge generation, signing, verification, and JWT issuance.
-17. **`21-sep24-deposit-withdrawal`**: Running SEP-24 interactive deposit and withdrawal against a Testnet anchor.
-18. **`22-manage-buy-offer`**: Creating, modifying, and deleting buy offers on the Stellar SDEX using `manageBuyOffer`.
-19. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries using `manageData`.
-20. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provisioning.
-21. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, `AUTH_IMMUTABLE`).
-22. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
+9. **`10-soroban-events`**: Subscribe to and decode Soroban contract event streams.
+10. **`11-sponsored-reserves`**: Sponsorship lifecycle with sponsored reserves and verification.
+11. **`12-asset-issuance`**: Custom asset issuance and locking the issuer account weight to 0.
+12. **`13-soroban-deploy`**: Upload and deploy a Soroban WASM smart contract.
+13. **`14-time-locked-escrow`**: Demonstrating a transaction that only becomes valid inside a time window.
+14. **`15-account-merge`**: Merge an account into a destination account to recover the minimum reserve.
+15. **`16-batched-operations`**: Bundling multiple payment operations into one atomic transaction.
+16. **`17-offline-signing`**: Building unsigned transaction XDR, signing it offline, and verifying.
+17. **`18-soroban-errors`**: Intentionally triggering and parsing Soroban RPC and simulation errors.
+18. **`19-horizon-streaming`**: Subscribing to live Horizon Testnet payment events over Server-Sent Events.
+19. **`20-sep10-authentication`**: SEP-10 challenge generation, signing, verification, and JWT issuance.
+20. **`21-sep24-deposit-withdrawal`**: Running SEP-24 interactive deposit and withdrawal against a Testnet anchor.
+21. **`22-manage-buy-offer`**: Creating, modifying, and deleting buy offers on the Stellar SDEX using `manageBuyOffer`.
+22. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries using `manageData`.
+23. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provisioning.
+24. **`24-cross-contract-invoke`**: Demonstrate cross-contract invocation, authorization, and returned values.
+25. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, `AUTH_IMMUTABLE`).
+26. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
 
 ## Installation
 

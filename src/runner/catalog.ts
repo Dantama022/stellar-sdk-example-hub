@@ -19,6 +19,10 @@ import { run as runManageBuyOffer } from '../examples/22-manage-buy-offer';
 import { run as runManageDataEntries } from '../examples/23-manage-data-entries';
 import { run as runPassiveSellOffer } from '../examples/24-create-passive-sell-offer';
 import { run as runAccountFlags } from '../examples/25-account-flags';
+import { run as runSorobanEvents } from '../examples/10-soroban-events';
+import { run as runSorobanDeploy } from '../examples/13-soroban-deploy';
+import { run as runAccountMerge } from '../examples/15-account-merge';
+import { run as runCrossContractInvoke } from '../examples/24-cross-contract-invoke';
 import { run as runSponsoredClaimableBalance } from '../examples/26-sponsored-claimable-balance';
 
 export interface Example {
@@ -162,6 +166,26 @@ export const examples: Record<string, Example> = {
     description:
       'View and modify issuer account flags (AUTH_REQUIRED, AUTH_REVOCABLE, AUTH_IMMUTABLE)',
     run: runAccountFlags,
+  },
+  '10-soroban-events': {
+    name: '10-soroban-events',
+    description: 'Subscribe to and decode Soroban contract event streams',
+    run: runSorobanEvents,
+  },
+  '13-soroban-deploy': {
+    name: '13-soroban-deploy',
+    description: 'Upload and deploy a Soroban WASM smart contract',
+    run: runSorobanDeploy,
+  },
+  '15-account-merge': {
+    name: '15-account-merge',
+    description: 'Merge an account into a destination account to recover the minimum reserve',
+    run: runAccountMerge,
+  },
+  '24-cross-contract-invoke': {
+    name: '24-cross-contract-invoke',
+    description: 'Demonstrate cross-contract invocation, authorization, and returned values',
+    run: runCrossContractInvoke,
   },
   '26-sponsored-claimable-balance': {
     name: '26-sponsored-claimable-balance',
