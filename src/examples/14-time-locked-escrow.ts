@@ -1,7 +1,16 @@
-import { Asset, Horizon, Keypair, Networks, Operation, TransactionBuilder } from '@stellar/stellar-sdk';
+import {
+  Asset,
+  Horizon,
+  Keypair,
+  Networks,
+  Operation,
+  TransactionBuilder,
+} from '@stellar/stellar-sdk';
 
 async function fundAccount(publicKey: string): Promise<void> {
-  const response = await fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(publicKey)}`);
+  const response = await fetch(
+    `https://friendbot.stellar.org/?addr=${encodeURIComponent(publicKey)}`,
+  );
   if (!response.ok) {
     throw new Error(`Failed to fund account ${publicKey}: ${response.statusText}`);
   }
@@ -59,7 +68,7 @@ export async function run(): Promise<void> {
     console.log(`Early submission rejected: ${message}`);
   }
 
-  const waitMs = Math.max((openAt * 1000) - Date.now() + 1000, 0);
+  const waitMs = Math.max(openAt * 1000 - Date.now() + 1000, 0);
   if (waitMs > 0) {
     console.log('Waiting for the time window to open...');
     await new Promise((resolve) => setTimeout(resolve, waitMs));

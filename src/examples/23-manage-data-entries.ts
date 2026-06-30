@@ -1,10 +1,4 @@
-import {
-  Keypair,
-  Horizon,
-  TransactionBuilder,
-  Networks,
-  Operation,
-} from '@stellar/stellar-sdk';
+import { Keypair, Horizon, TransactionBuilder, Networks, Operation } from '@stellar/stellar-sdk';
 
 /**
  * Manage Data Entries Example

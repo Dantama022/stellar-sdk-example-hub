@@ -7,18 +7,12 @@
       "match": "01-create-account",
       "reason": "Requires live Friendbot and testnet network access"
     },
-    {
-      "match": "02-payment",
-      "reason": "Requires funded accounts and live network state"
-    },
+    { "match": "02-payment", "reason": "Requires funded accounts and live network state" },
     {
       "match": "03-create-trustline",
       "reason": "Requires issuer/distributor setup on live network"
     },
-    {
-      "match": "04-multisig",
-      "reason": "Requires mutable on-chain account state"
-    },
+    { "match": "04-multisig", "reason": "Requires mutable on-chain account state" },
     {
       "match": "05-soroban-invoke",
       "reason": "Requires Soroban RPC availability and deployed contracts"
@@ -27,10 +21,7 @@
       "match": "12-asset-issuance",
       "reason": "Requires live accounts and asset issuance on network"
     },
-    {
-      "match": "17-offline-signing",
-      "reason": "Depends on live Horizon account fetches"
-    },
+    { "match": "17-offline-signing", "reason": "Depends on live Horizon account fetches" },
     {
       "match": "18-soroban-errors",
       "reason": "Requires Soroban RPC responses from external services"
@@ -38,6 +29,58 @@
     {
       "match": "20-sep10-authentication",
       "reason": "Requires live anchor and testnet network access for the live flow step"
+    },
+    {
+      "match": "14-time-locked-escrow",
+      "reason": "Depends on live Testnet timing and transaction acceptance windows"
+    },
+    {
+      "match": "19-horizon-streaming",
+      "reason": "Keeps a live Horizon SSE connection open until events arrive"
+    },
+    {
+      "match": "26-sponsored-claimable-balance",
+      "reason": "Requires live Friendbot funding and Horizon Testnet claimable balance state"
+    },
+    {
+      "match": "07-claimable-balances",
+      "reason": "Requires live Friendbot funding and Horizon Testnet claimable balance state"
+    },
+    {
+      "match": "08-liquidity-pools",
+      "reason": "Requires live issuer accounts, liquidity pool state, and Testnet transactions"
+    },
+    {
+      "match": "09-fee-bump",
+      "reason": "Requires live funded accounts and Testnet fee-bump transaction submission"
+    },
+    {
+      "match": "11-sponsored-reserves",
+      "reason": "Requires live sponsored reserve setup and Testnet transaction submission"
+    },
+    {
+      "match": "16-batched-operations",
+      "reason": "Requires live funded accounts and multiple Testnet operations"
+    },
+    {
+      "match": "21-sep24-deposit-withdrawal",
+      "reason": "Requires live anchor services and interactive network flow"
+    },
+    {
+      "match": "22-manage-buy-offer",
+      "reason": "Requires live funded accounts and SDEX offer submission"
+    },
+    {
+      "match": "23-manage-data-entries",
+      "reason": "Requires live account state and Testnet manageData operations"
+    },
+    {
+      "match": "24-create-passive-sell-offer",
+      "reason": "Requires live funded accounts and SDEX passive offer submission"
+    },
+    {
+      "match": "25-account-flags",
+      "reason": "Requires live issuer account flag transactions on Testnet"
     }
   ]
 }
