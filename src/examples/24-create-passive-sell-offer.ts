@@ -151,8 +151,12 @@ export async function run(): Promise<void> {
     console.log(`\nFound ${offers.records.length} offer(s):`);
     for (const offer of offers.records) {
       console.log(`  Offer ID: ${offer.id}`);
-      console.log(`    Selling: ${offer.selling.asset_type === 'native' ? 'XLM' : `${(offer.selling as any).asset_code}:${(offer.selling as any).asset_issuer}`}`);
-      console.log(`    Buying:  ${offer.buying.asset_type === 'native' ? 'XLM' : `${(offer.buying as any).asset_code}:${(offer.buying as any).asset_issuer}`}`);
+      console.log(
+        `    Selling: ${offer.selling.asset_type === 'native' ? 'XLM' : `${(offer.selling as any).asset_code}:${(offer.selling as any).asset_issuer}`}`,
+      );
+      console.log(
+        `    Buying:  ${offer.buying.asset_type === 'native' ? 'XLM' : `${(offer.buying as any).asset_code}:${(offer.buying as any).asset_issuer}`}`,
+      );
       console.log(`    Amount:  ${offer.amount}`);
       console.log(`    Price:   ${offer.price}`);
     }
