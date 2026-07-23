@@ -15,6 +15,7 @@ import * as ex18 from '../src/examples/18-soroban-errors';
 import * as ex19 from '../src/examples/19-horizon-streaming';
 import * as ex20 from '../src/examples/20-sep10-authentication';
 import * as ex21 from '../src/examples/21-sep24-deposit-withdrawal';
+import * as ex22a from '../src/examples/22-advanced-multisig';
 import * as ex22 from '../src/examples/22-manage-buy-offer';
 import * as ex23 from '../src/examples/23-manage-data-entries';
 import * as ex24 from '../src/examples/24-create-passive-sell-offer';
@@ -42,6 +43,7 @@ describe('Examples Exports', () => {
       ex19,
       ex20,
       ex21,
+      ex22a,
       ex22,
       ex23,
       ex24,
@@ -63,6 +65,7 @@ describe('Examples Exports', () => {
       '19-horizon-streaming',
       '20-sep10-authentication',
       '21-sep24-deposit-withdrawal',
+      '22-advanced-multisig',
       '22-manage-buy-offer',
       '23-manage-data-entries',
       '24-create-passive-sell-offer',
