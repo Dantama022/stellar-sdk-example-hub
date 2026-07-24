@@ -41,6 +41,13 @@ We organize examples sequentially:
 28. **`30-end-sponsoring-reserves`**: Complete the lifecycle of sponsored reserves and inspect state.
 29. **`37-strict-send-path-payment`**: Execute a strict-send path payment and observe received amount.
 30. **`38-account-signer-management`**: Manage account signers and weights for multi-party authorization.
+21. **`22-advanced-multisig`**: Advanced multisig wallet management: weighted signers, threshold tiers, signer rotation, and insufficient-signature failures.
+22. **`22-manage-buy-offer`**: Creating, modifying, and deleting buy offers on the Stellar SDEX using `manageBuyOffer`.
+23. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries using `manageData`.
+24. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provisioning.
+25. **`24-cross-contract-invoke`**: Demonstrate cross-contract invocation, authorization, and returned values.
+26. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, `AUTH_IMMUTABLE`).
+27. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
 
 ## Installation
 
