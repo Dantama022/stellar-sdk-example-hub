@@ -37,6 +37,10 @@ We organize examples sequentially:
 24. **`24-cross-contract-invoke`**: Demonstrate cross-contract invocation, authorization, and returned values.
 25. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, `AUTH_IMMUTABLE`).
 26. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
+27. **`27-manage-sell-offer`**: Create, update, and remove sell offers directly on the SDEX.
+28. **`28-trustline-authorization`**: Authorize, deauthorize, and reauthorize an asset trustline.
+29. **`29-account-home-domain`**: Set, inspect, update, and remove an account home domain.
+30. **`30-horizon-pagination`**: Retrieve and traverse paginated Horizon records safely across multiple pages.
 27. **`29-inflation-destination`**: Set, inspect, and remove an account inflation destination.
 28. **`30-end-sponsoring-reserves`**: Complete the lifecycle of sponsored reserves and inspect state.
 29. **`37-strict-send-path-payment`**: Execute a strict-send path payment and observe received amount.
