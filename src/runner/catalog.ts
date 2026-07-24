@@ -25,6 +25,10 @@ import { run as runSorobanDeploy } from '../examples/13-soroban-deploy';
 import { run as runAccountMerge } from '../examples/15-account-merge';
 import { run as runCrossContractInvoke } from '../examples/24-cross-contract-invoke';
 import { run as runSponsoredClaimableBalance } from '../examples/26-sponsored-claimable-balance';
+import { run as runInflationDestination } from '../examples/29-inflation-destination';
+import { run as runEndSponsoringReserves } from '../examples/30-end-sponsoring-reserves';
+import { run as runStrictSendPathPayment } from '../examples/37-strict-send-path-payment';
+import { run as runAccountSignerManagement } from '../examples/38-account-signer-management';
 
 export interface Example {
   name: string;
@@ -198,5 +202,25 @@ export const examples: Record<string, Example> = {
     name: '26-sponsored-claimable-balance',
     description: 'Create and claim a sponsored claimable balance on Testnet',
     run: runSponsoredClaimableBalance,
+  },
+  '29-inflation-destination': {
+    name: '29-inflation-destination',
+    description: 'Set, inspect, and remove an account inflation destination',
+    run: runInflationDestination,
+  },
+  '30-end-sponsoring-reserves': {
+    name: '30-end-sponsoring-reserves',
+    description: 'Complete the lifecycle of sponsored reserves and inspect state',
+    run: runEndSponsoringReserves,
+  },
+  '37-strict-send-path-payment': {
+    name: '37-strict-send-path-payment',
+    description: 'Execute a strict-send path payment and observe the received amount',
+    run: runStrictSendPathPayment,
+  },
+  '38-account-signer-management': {
+    name: '38-account-signer-management',
+    description: 'Manage account signers and weights for multi-party authorization',
+    run: runAccountSignerManagement,
   },
 };
