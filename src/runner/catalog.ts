@@ -15,6 +15,7 @@ import { run as runSorobanErrors } from '../examples/18-soroban-errors';
 import { run as runHorizonStreaming } from '../examples/19-horizon-streaming';
 import { run as runSep10Authentication } from '../examples/20-sep10-authentication';
 import { run as runSep24DepositWithdrawal } from '../examples/21-sep24-deposit-withdrawal';
+import { run as runAdvancedMultisig } from '../examples/22-advanced-multisig';
 import { run as runManageBuyOffer } from '../examples/22-manage-buy-offer';
 import { run as runManageDataEntries } from '../examples/23-manage-data-entries';
 import { run as runPassiveSellOffer } from '../examples/24-create-passive-sell-offer';
@@ -28,6 +29,10 @@ import { run as runManageSellOffer } from '../examples/27-manage-sell-offer';
 import { run as runTrustlineAuthorization } from '../examples/28-trustline-authorization';
 import { run as runAccountHomeDomain } from '../examples/29-account-home-domain';
 import { run as runHorizonPagination } from '../examples/30-horizon-pagination';
+import { run as runInflationDestination } from '../examples/29-inflation-destination';
+import { run as runEndSponsoringReserves } from '../examples/30-end-sponsoring-reserves';
+import { run as runStrictSendPathPayment } from '../examples/37-strict-send-path-payment';
+import { run as runAccountSignerManagement } from '../examples/38-account-signer-management';
 
 export interface Example {
   name: string;
@@ -150,6 +155,12 @@ export const examples: Record<string, Example> = {
     description: 'Run SEP-24 interactive deposit and withdrawal against a Testnet anchor',
     run: runSep24DepositWithdrawal,
   },
+  '22-advanced-multisig': {
+    name: '22-advanced-multisig',
+    description:
+      'Advanced multisig: weighted signers, threshold tiers, signer rotation, and failure handling',
+    run: runAdvancedMultisig,
+  },
   '22-manage-buy-offer': {
     name: '22-manage-buy-offer',
     description: 'Create, modify, and delete buy offers on the Stellar SDEX',
@@ -215,5 +226,24 @@ export const examples: Record<string, Example> = {
     name: '30-horizon-pagination',
     description: 'Retrieve and traverse paginated Horizon records safely',
     run: runHorizonPagination,
+  '29-inflation-destination': {
+    name: '29-inflation-destination',
+    description: 'Set, inspect, and remove an account inflation destination',
+    run: runInflationDestination,
+  },
+  '30-end-sponsoring-reserves': {
+    name: '30-end-sponsoring-reserves',
+    description: 'Complete the lifecycle of sponsored reserves and inspect state',
+    run: runEndSponsoringReserves,
+  },
+  '37-strict-send-path-payment': {
+    name: '37-strict-send-path-payment',
+    description: 'Execute a strict-send path payment and observe the received amount',
+    run: runStrictSendPathPayment,
+  },
+  '38-account-signer-management': {
+    name: '38-account-signer-management',
+    description: 'Manage account signers and weights for multi-party authorization',
+    run: runAccountSignerManagement,
   },
 };

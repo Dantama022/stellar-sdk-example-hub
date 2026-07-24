@@ -67,6 +67,10 @@
       "reason": "Requires live anchor services and interactive network flow"
     },
     {
+      "match": "22-advanced-multisig",
+      "reason": "Requires live Friendbot funding and mutable on-chain signer state"
+    },
+    {
       "match": "22-manage-buy-offer",
       "reason": "Requires live funded accounts and SDEX offer submission"
     },
