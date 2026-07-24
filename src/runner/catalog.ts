@@ -15,6 +15,7 @@ import { run as runSorobanErrors } from '../examples/18-soroban-errors';
 import { run as runHorizonStreaming } from '../examples/19-horizon-streaming';
 import { run as runSep10Authentication } from '../examples/20-sep10-authentication';
 import { run as runSep24DepositWithdrawal } from '../examples/21-sep24-deposit-withdrawal';
+import { run as runAdvancedMultisig } from '../examples/22-advanced-multisig';
 import { run as runManageBuyOffer } from '../examples/22-manage-buy-offer';
 import { run as runManageDataEntries } from '../examples/23-manage-data-entries';
 import { run as runPassiveSellOffer } from '../examples/24-create-passive-sell-offer';
@@ -145,6 +146,12 @@ export const examples: Record<string, Example> = {
     name: '21-sep24-deposit-withdrawal',
     description: 'Run SEP-24 interactive deposit and withdrawal against a Testnet anchor',
     run: runSep24DepositWithdrawal,
+  },
+  '22-advanced-multisig': {
+    name: '22-advanced-multisig',
+    description:
+      'Advanced multisig: weighted signers, threshold tiers, signer rotation, and failure handling',
+    run: runAdvancedMultisig,
   },
   '22-manage-buy-offer': {
     name: '22-manage-buy-offer',
