@@ -24,6 +24,10 @@ import { run as runSorobanDeploy } from '../examples/13-soroban-deploy';
 import { run as runAccountMerge } from '../examples/15-account-merge';
 import { run as runCrossContractInvoke } from '../examples/24-cross-contract-invoke';
 import { run as runSponsoredClaimableBalance } from '../examples/26-sponsored-claimable-balance';
+import { run as runManageSellOffer } from '../examples/27-manage-sell-offer';
+import { run as runTrustlineAuthorization } from '../examples/28-trustline-authorization';
+import { run as runAccountHomeDomain } from '../examples/29-account-home-domain';
+import { run as runHorizonPagination } from '../examples/30-horizon-pagination';
 
 export interface Example {
   name: string;
@@ -191,5 +195,25 @@ export const examples: Record<string, Example> = {
     name: '26-sponsored-claimable-balance',
     description: 'Create and claim a sponsored claimable balance on Testnet',
     run: runSponsoredClaimableBalance,
+  },
+  '27-manage-sell-offer': {
+    name: '27-manage-sell-offer',
+    description: 'Create, update, and remove sell offers directly on the SDEX',
+    run: runManageSellOffer,
+  },
+  '28-trustline-authorization': {
+    name: '28-trustline-authorization',
+    description: 'Authorize, deauthorize, and reauthorize an asset trustline',
+    run: runTrustlineAuthorization,
+  },
+  '29-account-home-domain': {
+    name: '29-account-home-domain',
+    description: 'Set, inspect, update, and remove an account home domain',
+    run: runAccountHomeDomain,
+  },
+  '30-horizon-pagination': {
+    name: '30-horizon-pagination',
+    description: 'Retrieve and traverse paginated Horizon records safely',
+    run: runHorizonPagination,
   },
 };
