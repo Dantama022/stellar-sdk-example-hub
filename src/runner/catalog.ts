@@ -233,7 +233,8 @@ export const examples: Record<string, Example> = {
   },
   '35-revoke-sponsorship': {
     name: '35-revoke-sponsorship',
-    description: 'Revoke sponsorship from a sponsored ledger entry and inspect reserve responsibility',
+    description:
+      'Revoke sponsorship from a sponsored ledger entry and inspect reserve responsibility',
     run: loadExample('../examples/35-revoke-sponsorship'),
   },
   '38-account-signer-management': {
