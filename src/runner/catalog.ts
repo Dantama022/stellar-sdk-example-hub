@@ -226,6 +226,16 @@ export const examples: Record<string, Example> = {
     description: 'Retrieve and traverse paginated Horizon records safely',
     run: loadExample('../examples/30-horizon-pagination'),
   },
+  '32-ledger-bounds': {
+    name: '32-ledger-bounds',
+    description: 'Build transactions with ledger bounds, inspect the validity range, and handle out-of-range rejections',
+    run: loadExample('../examples/32-ledger-bounds'),
+  },
+  '33-fee-bump-replacement': {
+    name: '33-fee-bump-replacement',
+    description: 'Wrap a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account',
+    run: loadExample('../examples/33-fee-bump-replacement'),
+  },
   '37-strict-send-path-payment': {
     name: '37-strict-send-path-payment',
     description: 'Execute a strict-send path payment and observe the received amount',
