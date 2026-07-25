@@ -50,7 +50,11 @@ The repository currently includes the following runnable examples:
 37. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
 38. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
 39. **`44-resilient-horizon-stream`**: Consuming a Horizon payment stream with cursor resume, controlled reconnection backoff, and graceful shutdown.
-40. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
+40. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
+41. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
+42. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
+43. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
+44. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
 
 ## Installation
 
@@ -110,6 +114,30 @@ Inspect the latest transaction returned by Horizon:
 
 ```bash
 npm run run-example 46-transaction-detail-inspection
+```
+
+Inspect Horizon effects for the latest transaction:
+
+```bash
+npm run run-example 45-horizon-effects
+```
+
+Run account data entry management (create, update, remove):
+
+```bash
+npm run run-example 47-account-data-entries
+```
+
+Run asset authorization flag and trustline authorization workflow:
+
+```bash
+npm run run-example 48-asset-authorization-flags
+```
+
+Inspect claimable balances and claimant predicates:
+
+```bash
+npm run run-example 49-claimable-balance-inspection
 ```
 
 Inspect a specific transaction by supplying its hash as an additional command-line argument:
