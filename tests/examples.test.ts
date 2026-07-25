@@ -25,6 +25,11 @@ import * as ex45 from '../src/examples/45-horizon-effects';
 import * as ex47 from '../src/examples/47-account-data-entries';
 import * as ex48 from '../src/examples/48-asset-authorization-flags';
 import * as ex49 from '../src/examples/49-claimable-balance-inspection';
+import * as ex51 from '../src/examples/51-failed-transaction-analysis';
+import * as ex54 from '../src/examples/54-fee-stats';
+import * as ex57 from '../src/examples/57-account-reserve-calculator';
+import * as ex58 from '../src/examples/58-account-relationship-discovery';
+
 import { examples } from '../src/runner/catalog';
 
 describe('Examples Exports', () => {
@@ -57,6 +62,10 @@ describe('Examples Exports', () => {
       ex47,
       ex48,
       ex49,
+      ex51,
+      ex54,
+      ex57,
+      ex58,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -83,8 +92,174 @@ describe('Examples Exports', () => {
       '47-account-data-entries',
       '48-asset-authorization-flags',
       '49-claimable-balance-inspection',
+      '51-failed-transaction-analysis',
+      '54-fee-stats',
+      '57-account-reserve-calculator',
+      '58-account-relationship-discovery',
     ]) {
       expect(examples[key]).toBeDefined();
     }
+  });
+});
+
+describe('ISSUE-058: Account Relationship Discovery Unit Tests', () => {
+  const accountId = 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7';
+
+  it('extracts signer relationships correctly', () => {
+    const signers = [
+      { key: accountId, weight: 1 },
+      { key: 'GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFXYCZLYF3436GTYOWD4S', weight: 2 },
+    ];
+    const extracted = ex58.extractSigners(signers, accountId);
+    expect(extracted).toHaveLength(2);
+    expect(extracted[0].type).toBe('primary');
+    expect(extracted[1].type).toBe('co-signer');
+  });
+
+  it('extracts trustline asset issuers correctly', () => {
+    const balances = [
+      { asset_type: 'native', balance: '100' },
+      {
+        asset_type: 'credit_alphanum4',
+        asset_code: 'USDC',
+        asset_issuer: 'GBBD47IF6LWK2P7MDEVSCWR7DPUWV3NY3DTQEVFL4TWVCKPXA26VCCKM',
+        balance: '500',
+      },
+    ];
+    const issuers = ex58.extractAssetIssuers(balances);
+    expect(issuers).toHaveLength(1);
+    expect(issuers[0].assetCode).toBe('USDC');
+  });
+
+  it('extracts sponsorships correctly', () => {
+    const sponsorships = ex58.extractSponsorships({
+      sponsor: 'GBSPMXXXX',
+      num_sponsored: 2,
+      num_sponsoring: 1,
+    });
+    expect(sponsorships.accountSponsor).toBe('GBSPMXXXX');
+    expect(sponsorships.numSponsored).toBe(2);
+    expect(sponsorships.numSponsoring).toBe(1);
+  });
+
+  it('deduplicates transaction counterparties', () => {
+    const ops = [
+      { source_account: accountId, to: 'GBPARTY1' },
+      { source_account: 'GBPARTY1', to: accountId },
+      { funder: 'GBPARTY2', account: accountId },
+    ];
+    const counterparties = ex58.extractCounterparties(ops, accountId);
+    expect(counterparties).toContain('GBPARTY1');
+    expect(counterparties).toContain('GBPARTY2');
+    expect(counterparties.filter((c) => c === 'GBPARTY1')).toHaveLength(1);
+  });
+
+  it('handles empty relationship categories safely', () => {
+    const summary = ex58.formatRelationshipSummary({
+      accountId,
+      signers: [],
+      assetIssuers: [],
+      sponsorships: { numSponsored: 0, numSponsoring: 0 },
+      transactionCounterparties: [],
+    });
+    expect(summary).toContain(accountId);
+    expect(summary).toContain('No signers found');
+  });
+});
+
+describe('ISSUE-057: Account Reserve Calculator Unit Tests', () => {
+  it('calculates minimum reserve using base reserve rate', () => {
+    const reserve = ex57.calculateMinimumReserve(3, 0, 0, 0.5);
+    // (2 + 3) * 0.5 = 2.5 XLM
+    expect(reserve).toBe(2.5);
+  });
+
+  it('handles sponsored entries correctly', () => {
+    // 4 subentries, 1 sponsored by someone else -> effective 3 subentries
+    const reserve = ex57.calculateMinimumReserve(4, 1, 0, 0.5);
+    // (2 + 4 - 1) * 0.5 = 2.5 XLM
+    expect(reserve).toBe(2.5);
+  });
+
+  it('calculates available balance above minimum reserve', () => {
+    const available = ex57.calculateAvailableBalance(10.0, 2.5);
+    expect(available).toBe(7.5);
+  });
+
+  it('parses account reserve data correctly', () => {
+    const accountResponse = {
+      id: 'GACCOUNT123',
+      balances: [{ asset_type: 'native', balance: '50.0000000' }],
+      subentry_count: 2,
+      num_sponsored: 0,
+      num_sponsoring: 1,
+    };
+    const parsed = ex57.parseAccountReserveData(accountResponse, 0.5);
+    expect(parsed.nativeBalance).toBe(50);
+    // (2 + 2 - 0 + 1) * 0.5 = 2.5 XLM minimum reserve
+    expect(parsed.minimumReserve).toBe(2.5);
+    expect(parsed.availableBalance).toBe(47.5);
+  });
+});
+
+describe('ISSUE-054: Fee Statistics Inspection Unit Tests', () => {
+  it('parses raw Horizon fee stats correctly', () => {
+    const raw = {
+      last_ledger: '123456',
+      last_ledger_base_fee: '100',
+      ledger_capacity_usage: '0.45',
+      min_accepted_fee: '100',
+      mode_accepted_fee: '100',
+      p50_accepted_fee: '150',
+      p90_accepted_fee: '200',
+      p95_accepted_fee: '250',
+      p99_accepted_fee: '300',
+    };
+    const parsed = ex54.parseFeeStats(raw);
+    expect(parsed.lastLedger).toBe('123456');
+    expect(parsed.baseFee).toBe(100);
+    expect(parsed.medianFee).toBe(150);
+    expect(parsed.p90Fee).toBe(200);
+    expect(parsed.recommendedFee).toBe(200);
+  });
+
+  it('handles missing fields safely', () => {
+    const parsed = ex54.parseFeeStats({});
+    expect(parsed.baseFee).toBe(100);
+    expect(parsed.minFee).toBe(100);
+    expect(parsed.recommendedFee).toBeGreaterThanOrEqual(100);
+  });
+});
+
+describe('ISSUE-051: Failed Transaction Result Analysis Unit Tests', () => {
+  it('maps common result codes to human-readable explanations', () => {
+    expect(ex51.mapResultCodeToExplanation('tx_bad_seq')).toContain('sequence number');
+    expect(ex51.mapResultCodeToExplanation('op_underfunded')).toContain('insufficient balance');
+  });
+
+  it('identifies failing operation index correctly', () => {
+    const opCodes = ['op_success', 'op_underfunded', 'op_success'];
+    const idx = ex51.identifyFailingOperationIndex(opCodes);
+    expect(idx).toBe(1);
+  });
+
+  it('handles unknown result codes without crashing', () => {
+    const explanation = ex51.mapResultCodeToExplanation('op_unknown_custom_code');
+    expect(explanation).toContain('Unrecognized result code');
+  });
+
+  it('parses transaction failure records', () => {
+    const record = {
+      hash: 'abc123hash',
+      successful: false,
+      result_codes: {
+        transaction: 'tx_failed',
+        operations: ['op_no_destination'],
+      },
+    };
+    const parsed = ex51.parseTransactionResult(record);
+    expect(parsed.successful).toBe(false);
+    expect(parsed.failingOperationIndex).toBe(0);
+    expect(parsed.operationExplanations[0].explanation).toContain('Destination account does not exist');
   });
 });

@@ -327,4 +327,45 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '51-failed-transaction-analysis': {
+    name: '51-failed-transaction-analysis',
+    description: 'Inspect failed transactions and translate result codes into human-readable diagnostics',
+    run: loadExample('../examples/51-failed-transaction-analysis'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Optional transaction hash (blank searches recent failed transactions):',
+      },
+    ],
+  },
+  '54-fee-stats': {
+    name: '54-fee-stats',
+    description: 'Query Horizon fee statistics, fee distributions, and recommended fee values',
+    run: loadExample('../examples/54-fee-stats'),
+  },
+  '57-account-reserve-calculator': {
+    name: '57-account-reserve-calculator',
+    description: 'Calculate an account minimum reserve and available balance from ledger entries',
+    run: loadExample('../examples/57-account-reserve-calculator'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+    ],
+  },
+  '58-account-relationship-discovery': {
+    name: '58-account-relationship-discovery',
+    description: 'Discover and summarize signers, asset issuers, sponsorships, and counterparties for an account',
+    run: loadExample('../examples/58-account-relationship-discovery'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+    ],
+  },
 };
