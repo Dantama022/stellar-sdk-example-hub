@@ -21,6 +21,10 @@ import * as ex23 from '../src/examples/23-manage-data-entries';
 import * as ex24 from '../src/examples/24-create-passive-sell-offer';
 import * as ex25 from '../src/examples/25-account-flags';
 import * as ex26 from '../src/examples/26-sponsored-claimable-balance';
+import * as ex45 from '../src/examples/45-horizon-effects';
+import * as ex47 from '../src/examples/47-account-data-entries';
+import * as ex48 from '../src/examples/48-asset-authorization-flags';
+import * as ex49 from '../src/examples/49-claimable-balance-inspection';
 import { examples } from '../src/runner/catalog';
 
 describe('Examples Exports', () => {
@@ -49,6 +53,10 @@ describe('Examples Exports', () => {
       ex24,
       ex25,
       ex26,
+      ex45,
+      ex47,
+      ex48,
+      ex49,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -71,6 +79,10 @@ describe('Examples Exports', () => {
       '24-create-passive-sell-offer',
       '25-account-flags',
       '26-sponsored-claimable-balance',
+      '45-horizon-effects',
+      '47-account-data-entries',
+      '48-asset-authorization-flags',
+      '49-claimable-balance-inspection',
     ]) {
       expect(examples[key]).toBeDefined();
     }
