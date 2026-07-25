@@ -5,6 +5,7 @@ import {
   Operation,
   Networks,
   Account,
+  Address,
 } from '@stellar/stellar-sdk';
 import chalk from 'chalk';
 import fs from 'fs';
@@ -81,8 +82,8 @@ export async function run(): Promise<void> {
   const wasmId = Buffer.alloc(32, 1);
 
   const deployOp = Operation.createCustomContract({
-    address: deployer.publicKey(),
-    wasmId: wasmId,
+    address: Address.fromString(deployer.publicKey()),
+    wasmHash: wasmId,
   });
 
   let deployTx = new TransactionBuilder(account, {

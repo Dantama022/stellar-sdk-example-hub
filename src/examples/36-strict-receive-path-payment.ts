@@ -1,4 +1,11 @@
-import { Keypair, Horizon, TransactionBuilder, Networks, Operation, Asset } from '@stellar/stellar-sdk';
+import {
+  Keypair,
+  Horizon,
+  TransactionBuilder,
+  Networks,
+  Operation,
+  Asset,
+} from '@stellar/stellar-sdk';
 
 export function formatPathAssets(
   path: Array<{ asset_type: string; asset_code?: string; asset_issuer?: string }>,
@@ -85,7 +92,9 @@ export async function run(): Promise<void> {
   console.log(`  Configured send max:        ${sendMax} XLM`);
 
   if (Number(pathRecord.source_amount) > Number(sendMax)) {
-    throw new Error('Quoted source amount exceeds configured sendMax; widen sendMax or pick another path.');
+    throw new Error(
+      'Quoted source amount exceeds configured sendMax; widen sendMax or pick another path.',
+    );
   }
 
   const sourceAcc = await server.loadAccount(source.publicKey());
