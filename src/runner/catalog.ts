@@ -251,6 +251,12 @@ export const examples: Record<string, Example> = {
     description: 'Retrieve, consume, and correctly manage account sequence numbers',
     run: loadExample('../examples/42-account-sequence-numbers'),
   },
+  '44-resilient-horizon-stream': {
+    name: '44-resilient-horizon-stream',
+    description:
+      'Consume a Horizon SSE stream with cursor resume, controlled reconnect backoff, and graceful shutdown',
+    run: loadExample('../examples/44-resilient-horizon-stream'),
+  },
   '46-transaction-detail-inspection': {
     name: '46-transaction-detail-inspection',
     description: 'Retrieve a Horizon transaction by hash and inspect its metadata and XDR',

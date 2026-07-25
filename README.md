@@ -49,7 +49,8 @@ The repository currently includes the following runnable examples:
 36. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
 37. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
 38. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
-39. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
+39. **`44-resilient-horizon-stream`**: Consuming a Horizon payment stream with cursor resume, controlled reconnection backoff, and graceful shutdown.
+40. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
 
 ## Installation
 
@@ -128,6 +129,14 @@ npm run run-example 19-horizon-streaming
 The streaming example listens from cursor `now`, prints formatted payment-like operations as they arrive, logs stream errors, and closes cleanly when you press Ctrl+C.
 
 For quick sampling, set `STREAM_DURATION_SECONDS=10` or `STREAM_MAX_EVENTS=3`.
+
+Run the resilient streaming example with explicit reconnect backoff:
+
+```bash
+npm run run-example 44-resilient-horizon-stream
+```
+
+The resilient stream tracks the last paging token, logs each reconnect attempt, and resumes from the saved cursor instead of replaying already-processed records.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 
