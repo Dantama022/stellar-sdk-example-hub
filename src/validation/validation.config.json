@@ -59,6 +59,10 @@
       "reason": "Requires live issuer accounts, liquidity pool state, and Testnet transactions"
     },
     {
+      "match": "36-strict-receive-path-payment",
+      "reason": "Requires live Friendbot funding, SDEX liquidity, and Testnet path payments"
+    },
+    {
       "match": "09-fee-bump",
       "reason": "Requires live funded accounts and Testnet fee-bump transaction submission"
     },

@@ -59,6 +59,7 @@ The repository currently includes the following runnable examples:
 34. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
 35. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
 34. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
+35. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
 35. **`35-revoke-sponsorship`**: Revoking sponsorship from a sponsored data entry and observing reserve responsibility shift back to the owner.
 36. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
 37. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
