@@ -40,12 +40,20 @@ export function describeReserveResponsibility(summary: SponsorshipRevocationSumm
 }
 
 async function readDataEntrySponsor(
-  server: Horizon.Server,
+  horizonUrl: string,
   accountId: string,
   dataName: string,
 ): Promise<string | null> {
-  const data = await server.data(accountId, dataName).call();
-  return (data as { sponsor?: string }).sponsor ?? null;
+  const response = await fetch(
+    `${horizonUrl}/accounts/${accountId}/data/${encodeURIComponent(dataName)}`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to load data entry ${dataName} for ${accountId}`);
+  }
+
+  const body = (await response.json()) as { sponsor?: string };
+  return body.sponsor ?? null;
 }
 
 export async function run(): Promise<void> {
@@ -113,7 +121,7 @@ export async function run(): Promise<void> {
     string,
     unknown
   >;
-  const dataSponsorBefore = await readDataEntrySponsor(server, sponsored.publicKey(), dataName);
+  const dataSponsorBefore = await readDataEntrySponsor(horizonUrl, sponsored.publicKey(), dataName);
 
   console.log('\n--- Before revocation ---');
   console.log(`Data entry sponsor: ${dataSponsorBefore ?? 'none'}`);
@@ -150,7 +158,7 @@ export async function run(): Promise<void> {
     string,
     unknown
   >;
-  const dataSponsorAfter = await readDataEntrySponsor(server, sponsored.publicKey(), dataName);
+  const dataSponsorAfter = await readDataEntrySponsor(horizonUrl, sponsored.publicKey(), dataName);
 
   const summary = buildRevocationSummary(
     sponsorBefore,
