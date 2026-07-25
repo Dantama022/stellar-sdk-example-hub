@@ -1,10 +1,4 @@
-import {
-  Keypair,
-  Horizon,
-  TransactionBuilder,
-  Networks,
-  Operation,
-} from '@stellar/stellar-sdk';
+import { Keypair, Horizon, TransactionBuilder, Networks, Operation } from '@stellar/stellar-sdk';
 
 export async function run(): Promise<void> {
   const horizonUrl = process.env.HORIZON_URL || 'https://horizon-testnet.stellar.org';
@@ -14,7 +8,9 @@ export async function run(): Promise<void> {
 
   const accountKeypair = Keypair.random();
   console.log('Funding account via Friendbot...');
-  await fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(accountKeypair.publicKey())}`);
+  await fetch(
+    `https://friendbot.stellar.org/?addr=${encodeURIComponent(accountKeypair.publicKey())}`,
+  );
 
   const checkHomeDomain = async () => {
     const acc = await server.loadAccount(accountKeypair.publicKey());
@@ -30,7 +26,7 @@ export async function run(): Promise<void> {
   console.log('\n--- Setting Home Domain ---');
   const initialDomain = 'stellar.org';
   let account = await server.loadAccount(accountKeypair.publicKey());
-  
+
   let tx = new TransactionBuilder(account, { fee: '100', networkPassphrase: Networks.TESTNET })
     .addOperation(Operation.setOptions({ homeDomain: initialDomain }))
     .setTimeout(30)
@@ -62,7 +58,7 @@ export async function run(): Promise<void> {
 
   tx = new TransactionBuilder(account, { fee: '100', networkPassphrase: Networks.TESTNET })
     // Setting an empty string removes the home domain
-    .addOperation(Operation.setOptions({ clearFlags: 0, homeDomain: '' }))
+    .addOperation(Operation.setOptions({ homeDomain: '' }))
     .setTimeout(30)
     .build();
 

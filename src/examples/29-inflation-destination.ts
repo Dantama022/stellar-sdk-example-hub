@@ -5,10 +5,12 @@ export async function run(): Promise<void> {
   const server = new Horizon.Server(horizonUrl);
 
   console.log('Starting Account Inflation Destination Example...');
-  
+
   // Historical note on inflation
   console.log('Note: The Stellar network inflation mechanism was disabled in Protocol 12 (2019).');
-  console.log('However, configuring an inflation destination remains a valid account option and is supported by the protocol and SDK.');
+  console.log(
+    'However, configuring an inflation destination remains a valid account option and is supported by the protocol and SDK.',
+  );
 
   const source = Keypair.random();
   const destination = Keypair.random();
@@ -19,7 +21,7 @@ export async function run(): Promise<void> {
   console.log('Funding accounts via Friendbot...');
   await Promise.all([
     fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(source.publicKey())}`),
-    fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(destination.publicKey())}`)
+    fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(destination.publicKey())}`),
   ]);
 
   let sourceAccount = await server.loadAccount(source.publicKey());
@@ -69,7 +71,7 @@ export async function run(): Promise<void> {
   // Query and Verify
   sourceAccount = await server.loadAccount(source.publicKey());
   console.log(`Updated Inflation Destination: ${sourceAccount.inflation_destination}`);
-  
+
   if (sourceAccount.inflation_destination === source.publicKey()) {
     console.log('Inflation destination successfully cleared (pointed to self).');
   }

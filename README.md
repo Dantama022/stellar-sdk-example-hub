@@ -33,17 +33,18 @@ The repository currently includes the following runnable examples:
 20. **`21-sep24-deposit-withdrawal`**: Running SEP-24 interactive deposit and withdrawal against a Testnet anchor.
 21. **`22-advanced-multisig`**: Managing weighted signers, threshold tiers, signer rotation, and insufficient-signature failures.
 22. **`22-manage-buy-offer`**: Creating, modifying, and deleting buy offers on the Stellar SDEX with `manageBuyOffer`.
-23. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
-24. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provision.
-25. **`24-cross-contract-invoke`**: Demonstrating cross-contract invocation, authorization, and returned values.
-26. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, and `AUTH_IMMUTABLE`).
-27. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
-28. **`27-manage-sell-offer`**: Creating, updating, and removing sell offers directly on the SDEX.
-29. **`28-trustline-authorization`**: Authorizing, deauthorizing, and reauthorizing an asset trustline.
-30. **`29-account-home-domain`**: Setting, inspecting, updating, and removing an account home domain.
-31. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
-32. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
-33. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+23. **`23-soroban-upgrade`**: Deploying a Soroban contract, uploading upgraded WASM, executing an upgrade, and verifying persisted state.
+24. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
+25. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provision.
+26. **`24-cross-contract-invoke`**: Demonstrating cross-contract invocation, authorization, and returned values.
+27. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, and `AUTH_IMMUTABLE`).
+28. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
+29. **`27-manage-sell-offer`**: Creating, updating, and removing sell offers directly on the SDEX.
+30. **`28-trustline-authorization`**: Authorizing, deauthorizing, and reauthorizing an asset trustline.
+31. **`29-account-home-domain`**: Setting, inspecting, updating, and removing an account home domain.
+32. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
+33. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
+34. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
 34. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
 35. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
 36. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.

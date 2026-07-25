@@ -24,7 +24,10 @@ export async function run(): Promise<void> {
 
   // Establish trustline and issue assets to the seller so they have something to sell
   const sellerAccount = await server.loadAccount(seller.publicKey());
-  let tx = new TransactionBuilder(sellerAccount, { fee: '100', networkPassphrase: Networks.TESTNET })
+  let tx = new TransactionBuilder(sellerAccount, {
+    fee: '100',
+    networkPassphrase: Networks.TESTNET,
+  })
     .addOperation(Operation.changeTrust({ asset: customAsset, limit: '1000' }))
     .setTimeout(30)
     .build();
@@ -33,7 +36,9 @@ export async function run(): Promise<void> {
 
   const issuerAccount = await server.loadAccount(issuer.publicKey());
   tx = new TransactionBuilder(issuerAccount, { fee: '100', networkPassphrase: Networks.TESTNET })
-    .addOperation(Operation.payment({ destination: seller.publicKey(), asset: customAsset, amount: '500' }))
+    .addOperation(
+      Operation.payment({ destination: seller.publicKey(), asset: customAsset, amount: '500' }),
+    )
     .setTimeout(30)
     .build();
   tx.sign(issuer);
@@ -45,7 +50,7 @@ export async function run(): Promise<void> {
   console.log('\n--- Creating Sell Offer ---');
   console.log('Action: Selling 100 TEST for native XLM at a price of 2.0 XLM per TEST');
   let sellerSeqAccount = await server.loadAccount(seller.publicKey());
-  
+
   tx = new TransactionBuilder(sellerSeqAccount, { fee: '100', networkPassphrase: Networks.TESTNET })
     .addOperation(
       Operation.manageSellOffer({
@@ -53,18 +58,18 @@ export async function run(): Promise<void> {
         buying: Asset.native(),
         amount: '100',
         price: '2.0', // Price of 1 unit of selling in terms of buying
-      })
+      }),
     )
     .setTimeout(30)
     .build();
-  
+
   tx.sign(seller);
   let response = await server.submitTransaction(tx);
   console.log(`Sell offer created! Transaction Hash: ${response.hash}`);
 
   // Fetch the offer ID from Horizon
   let offers = await server.offers().forAccount(seller.publicKey()).call();
-  let offerId = offers.records[0].id;
+  const offerId = offers.records[0].id;
   console.log(`Active Offer ID: ${offerId}`);
 
   // 3. Update the Sell Offer
@@ -80,11 +85,11 @@ export async function run(): Promise<void> {
         amount: '150',
         price: '2.5',
         offerId: offerId, // Providing the ID updates the existing offer
-      })
+      }),
     )
     .setTimeout(30)
     .build();
-  
+
   tx.sign(seller);
   response = await server.submitTransaction(tx);
   console.log(`Sell offer updated! Transaction Hash: ${response.hash}`);
@@ -102,11 +107,11 @@ export async function run(): Promise<void> {
         amount: '0', // Amount 0 deletes the offer
         price: '2.5',
         offerId: offerId,
-      })
+      }),
     )
     .setTimeout(30)
     .build();
-  
+
   tx.sign(seller);
   response = await server.submitTransaction(tx);
   console.log(`Sell offer deleted! Transaction Hash: ${response.hash}`);
