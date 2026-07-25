@@ -45,16 +45,30 @@ The repository currently includes the following runnable examples:
 32. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
 33. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
 34. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+23. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
+24. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provision.
+25. **`24-cross-contract-invoke`**: Demonstrating cross-contract invocation, authorization, and returned values.
+26. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, and `AUTH_IMMUTABLE`).
+27. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
+28. **`27-manage-sell-offer`**: Creating, updating, and removing sell offers directly on the SDEX.
+29. **`28-trustline-authorization`**: Authorizing, deauthorizing, and reauthorizing an asset trustline.
+30. **`29-account-home-domain`**: Setting, inspecting, updating, and removing an account home domain.
+31. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
+32. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
+33. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+34. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
+35. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
 34. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
 35. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
 36. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
 37. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
 38. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
-39. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
-40. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
-41. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
-42. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
-43. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
+39. **`44-resilient-horizon-stream`**: Consuming a Horizon payment stream with cursor resume, controlled reconnection backoff, and graceful shutdown.
+40. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
+41. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
+42. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
+43. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
+44. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
 
 ## Installation
 
@@ -140,6 +154,18 @@ Inspect claimable balances and claimant predicates:
 npm run run-example 49-claimable-balance-inspection
 ```
 
+Run the ledger bounds example:
+
+```bash
+npm run run-example 32-ledger-bounds
+```
+
+Run the fee-bump replacement workflow:
+
+```bash
+npm run run-example 33-fee-bump-replacement
+```
+
 Inspect a specific transaction by supplying its hash as an additional command-line argument:
 
 ```bash
@@ -157,6 +183,14 @@ npm run run-example 19-horizon-streaming
 The streaming example listens from cursor `now`, prints formatted payment-like operations as they arrive, logs stream errors, and closes cleanly when you press Ctrl+C.
 
 For quick sampling, set `STREAM_DURATION_SECONDS=10` or `STREAM_MAX_EVENTS=3`.
+
+Run the resilient streaming example with explicit reconnect backoff:
+
+```bash
+npm run run-example 44-resilient-horizon-stream
+```
+
+The resilient stream tracks the last paging token, logs each reconnect attempt, and resumes from the saved cursor instead of replaying already-processed records.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 

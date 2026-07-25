@@ -43,6 +43,10 @@
       "reason": "Keeps a live Horizon SSE connection open until events arrive"
     },
     {
+      "match": "44-resilient-horizon-stream",
+      "reason": "Keeps a live Horizon SSE connection open with manual reconnection handling"
+    },
+    {
       "match": "26-sponsored-claimable-balance",
       "reason": "Requires live Friendbot funding and Horizon Testnet claimable balance state"
     },
