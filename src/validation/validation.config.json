@@ -18,6 +18,10 @@
       "reason": "Requires Soroban RPC availability and deployed contracts"
     },
     {
+      "match": "23-soroban-upgrade",
+      "reason": "Requires Soroban RPC, WASM uploads, and multi-step contract upgrade transactions"
+    },
+    {
       "match": "12-asset-issuance",
       "reason": "Requires live accounts and asset issuance on network"
     },

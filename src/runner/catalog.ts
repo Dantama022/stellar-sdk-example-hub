@@ -170,6 +170,11 @@ export const examples: Record<string, Example> = {
     description: 'Create, modify, and delete buy offers on the Stellar SDEX',
     run: loadExample('../examples/22-manage-buy-offer'),
   },
+  '23-soroban-upgrade': {
+    name: '23-soroban-upgrade',
+    description: 'Deploy, upgrade, and verify a Soroban contract while preserving storage',
+    run: loadExample('../examples/23-soroban-upgrade'),
+  },
   '23-manage-data-entries': {
     name: '23-manage-data-entries',
     description: 'Create, update, query, and remove account data entries on-ledger',
