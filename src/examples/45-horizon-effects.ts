@@ -134,7 +134,10 @@ async function retrieveTransaction(
     return tx as unknown as HorizonTransactionLike;
   }
 
-  const fromArgv = process.argv[3]?.trim();
+  const argv = process.argv.slice(2).map((arg) => arg.trim());
+  const exampleIndex = argv.indexOf('45-horizon-effects');
+  const fromArgv = exampleIndex >= 0 ? argv[exampleIndex + 1] : argv[1];
+
   if (fromArgv) {
     if (!isValidTransactionHash(fromArgv)) {
       throw new Error(
