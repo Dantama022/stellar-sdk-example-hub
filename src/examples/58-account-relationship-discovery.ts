@@ -184,9 +184,7 @@ export async function run(params: AccountRelationshipParams = {}): Promise<void>
   const server = new Horizon.Server(horizonUrl);
 
   let accountId =
-    params.accountId?.trim() ||
-    process.env.ACCOUNT_ID?.trim() ||
-    process.argv[3]?.trim();
+    params.accountId?.trim() || process.env.ACCOUNT_ID?.trim() || process.argv[3]?.trim();
 
   console.log('Starting Account Relationship Discovery Example...');
   console.log(`Using Horizon: ${horizonUrl}`);

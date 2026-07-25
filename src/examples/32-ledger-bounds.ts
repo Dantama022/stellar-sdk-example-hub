@@ -106,8 +106,12 @@ function printTransactionLedgerBounds(tx: ReturnType<TransactionBuilder['build']
     ._ledgerBounds;
 
   if (lb) {
-    console.log(`  Encoded minLedger : ${lb.minLedger === 0 ? '0 (no lower bound)' : lb.minLedger}`);
-    console.log(`  Encoded maxLedger : ${lb.maxLedger === 0 ? '0 (no upper limit)' : lb.maxLedger}`);
+    console.log(
+      `  Encoded minLedger : ${lb.minLedger === 0 ? '0 (no lower bound)' : lb.minLedger}`,
+    );
+    console.log(
+      `  Encoded maxLedger : ${lb.maxLedger === 0 ? '0 (no upper limit)' : lb.maxLedger}`,
+    );
   } else {
     console.log('  (no ledger bounds encoded)');
   }
@@ -238,12 +242,8 @@ export async function run(): Promise<void> {
   console.log('  Transaction submitted successfully!');
   console.log(`  Transaction hash     : ${result.hash}`);
   console.log(`  Closed in ledger     : ${result.ledger}`);
-  console.log(
-    `  Ledger bounds window : [${validMinLedger} (open), ${validMaxLedger}]`,
-  );
-  console.log(
-    `  Accepted because ledger ${result.ledger} is within the valid range.\n`,
-  );
+  console.log(`  Ledger bounds window : [${validMinLedger} (open), ${validMaxLedger}]`);
+  console.log(`  Accepted because ledger ${result.ledger} is within the valid range.\n`);
 
   // -----------------------------------------------------------------------
   // Step 5 – Demonstrate: building a 32-ledger window (the task title)
@@ -260,9 +260,7 @@ export async function run(): Promise<void> {
 
   console.log(`  Window start (minLedger) : ${windowMin}  (current ledger)`);
   console.log(`  Window end   (maxLedger) : ${windowMax}  (current + 32)`);
-  console.log(
-    `  Approximate wall-clock duration: ~${32 * 5} seconds at 5 s/ledger\n`,
-  );
+  console.log(`  Approximate wall-clock duration: ~${32 * 5} seconds at 5 s/ledger\n`);
 
   const windowTx = new TransactionBuilder(thirdAccount, {
     fee: BASE_FEE,

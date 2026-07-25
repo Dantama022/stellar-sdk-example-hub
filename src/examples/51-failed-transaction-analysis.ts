@@ -10,12 +10,14 @@ export const COMMON_RESULT_CODE_EXPLANATIONS: Record<string, string> = {
   tx_insufficient_balance: 'The source account cannot cover the minimum transaction fee.',
   tx_insufficient_fee: 'The fee provided is lower than the minimum network base fee.',
   tx_no_source_account: 'The source account specified does not exist on-ledger.',
-  tx_too_early: 'The transaction was submitted before the valid time window specified in time bounds.',
+  tx_too_early:
+    'The transaction was submitted before the valid time window specified in time bounds.',
   tx_too_late: 'The transaction was submitted after the expiry time specified in time bounds.',
 
   // Operation-level codes
   op_underfunded: 'Source account has insufficient balance to complete the operation.',
-  op_no_destination: 'Destination account does not exist. (Consider createAccount instead of payment).',
+  op_no_destination:
+    'Destination account does not exist. (Consider createAccount instead of payment).',
   op_low_reserve: 'Account balance would drop below the required minimum XLM reserve.',
   op_no_trust: 'Destination account does not have a trustline for the specified asset.',
   op_line_full: 'Destination trustline balance limit would be exceeded.',
@@ -23,7 +25,8 @@ export const COMMON_RESULT_CODE_EXPLANATIONS: Record<string, string> = {
   op_bad_auth: 'Operation source account signature is invalid or insufficient.',
   op_no_issuer: 'The specified asset issuer account does not exist.',
   op_src_no_trust: 'Source account does not hold a trustline for the asset being sent.',
-  op_cross_self: 'Order cannot be placed because it would cross an existing offer from the same account.',
+  op_cross_self:
+    'Order cannot be placed because it would cross an existing offer from the same account.',
 };
 
 export interface ParsedTxAnalysis {
@@ -88,7 +91,9 @@ export function parseTransactionResult(txRecord: {
   const hash = txRecord.hash;
   const successful = txRecord.successful ?? false;
   const txCode =
-    txRecord.result_code || txRecord.result_codes?.transaction || (successful ? 'tx_success' : 'tx_failed');
+    txRecord.result_code ||
+    txRecord.result_codes?.transaction ||
+    (successful ? 'tx_success' : 'tx_failed');
 
   const txExplanation = mapResultCodeToExplanation(txCode);
   const opCodes = txRecord.result_codes?.operations || [];
@@ -126,12 +131,16 @@ export function formatAnalysisSummary(analysis: ParsedTxAnalysis): string {
 
   lines.push(`\n2. Operation-Level Diagnostics:`);
   if (analysis.operationResultCodes.length === 0) {
-    lines.push(`  - No operation-level result codes available (failure occurred before operation evaluation).`);
+    lines.push(
+      `  - No operation-level result codes available (failure occurred before operation evaluation).`,
+    );
   } else {
     lines.push(`  - Total Operations Evaluated: ${analysis.operationResultCodes.length}`);
     lines.push(
       `  - Failing Operation Index:    ${
-        analysis.failingOperationIndex !== null ? `Operation #${analysis.failingOperationIndex + 1} (index ${analysis.failingOperationIndex})` : 'None (all succeeded)'
+        analysis.failingOperationIndex !== null
+          ? `Operation #${analysis.failingOperationIndex + 1} (index ${analysis.failingOperationIndex})`
+          : 'None (all succeeded)'
       }`,
     );
 
@@ -141,7 +150,9 @@ export function formatAnalysisSummary(analysis: ParsedTxAnalysis): string {
   }
 
   lines.push(`\n3. Troubleshooting Guidance:`);
-  lines.push(`  - Transaction-level failures (e.g. tx_bad_seq, tx_bad_auth) invalidate the entire envelope.`);
+  lines.push(
+    `  - Transaction-level failures (e.g. tx_bad_seq, tx_bad_auth) invalidate the entire envelope.`,
+  );
   lines.push(
     `  - Operation-level failures occur after transaction validation and identify specific failed actions.`,
   );
@@ -193,7 +204,9 @@ export async function run(params: FailedTxParams = {}): Promise<void> {
   }
 
   // Fallback to a mock/simulated failed transaction analysis to demonstrate feature
-  console.log('\nNo failed transaction found on-chain. Demonstrating analysis on simulated failed transaction response:');
+  console.log(
+    '\nNo failed transaction found on-chain. Demonstrating analysis on simulated failed transaction response:',
+  );
   const mockFailedRecord = {
     hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
     successful: false,

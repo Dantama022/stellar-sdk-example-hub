@@ -260,6 +260,8 @@ describe('ISSUE-051: Failed Transaction Result Analysis Unit Tests', () => {
     const parsed = ex51.parseTransactionResult(record);
     expect(parsed.successful).toBe(false);
     expect(parsed.failingOperationIndex).toBe(0);
-    expect(parsed.operationExplanations[0].explanation).toContain('Destination account does not exist');
+    expect(parsed.operationExplanations[0].explanation).toContain(
+      'Destination account does not exist',
+    );
   });
 });

@@ -86,9 +86,7 @@ function stroopsToXlm(stroops: string | number): string {
 
 /** Read the XLM balance from a loaded account record. */
 function xlmBalance(account: Horizon.AccountResponse): string {
-  return (
-    account.balances.find((b) => b.asset_type === 'native')?.balance ?? 'unknown'
-  );
+  return account.balances.find((b) => b.asset_type === 'native')?.balance ?? 'unknown';
 }
 
 export async function run(): Promise<void> {
@@ -102,7 +100,7 @@ export async function run(): Promise<void> {
   console.log('Step 1: Generating account keypairs...');
 
   const innerSource = Keypair.random(); // Signs the inner transaction
-  const feeSource = Keypair.random();   // Pays the bumped fee
+  const feeSource = Keypair.random(); // Pays the bumped fee
   const destination = Keypair.random(); // Receives the payment
 
   console.log(`  Inner transaction source : ${innerSource.publicKey()}`);
@@ -167,7 +165,9 @@ export async function run(): Promise<void> {
 
   console.log(`  Inner tx hash       : ${innerTx.hash().toString('hex')}`);
   console.log(`  Inner tx operations : ${innerOps}`);
-  console.log(`  Inner tx fee        : ${innerFeeStroops} stroops (${stroopsToXlm(innerFeeStroops)} XLM)`);
+  console.log(
+    `  Inner tx fee        : ${innerFeeStroops} stroops (${stroopsToXlm(innerFeeStroops)} XLM)`,
+  );
   console.log(`  Inner tx source seq : ${innerTx.sequence}`);
   console.log();
   console.log('  Inner transaction XDR (first 80 chars):');
@@ -189,15 +189,19 @@ export async function run(): Promise<void> {
 
   console.log(`  Bump base fee     : ${BUMP_BASE_FEE} stroops/op`);
   console.log(`  Inner operations  : ${innerOps}`);
-  console.log(`  Fee calculation   : ${BUMP_BASE_FEE} × (${innerOps} + 1) = ${totalFeeStroops} stroops`);
-  console.log(`  Total fee         : ${totalFeeStroops} stroops (${stroopsToXlm(totalFeeStroops)} XLM)`);
+  console.log(
+    `  Fee calculation   : ${BUMP_BASE_FEE} × (${innerOps} + 1) = ${totalFeeStroops} stroops`,
+  );
+  console.log(
+    `  Total fee         : ${totalFeeStroops} stroops (${stroopsToXlm(totalFeeStroops)} XLM)`,
+  );
   console.log(`  Fee payer         : ${feeSource.publicKey()}`);
   console.log();
 
   const feeBumpTx = TransactionBuilder.buildFeeBumpTransaction(
     feeSource.publicKey(), // Account that will pay the fee
-    BUMP_BASE_FEE,         // New per-operation base fee rate
-    innerTx,               // Already-signed inner transaction (untouched)
+    BUMP_BASE_FEE, // New per-operation base fee rate
+    innerTx, // Already-signed inner transaction (untouched)
     Networks.TESTNET,
   );
 
@@ -242,7 +246,9 @@ export async function run(): Promise<void> {
   console.log(`  Fee charged (stroops): ${txRecord.fee_charged}`);
   console.log(`  Max fee (stroops)    : ${txRecord.max_fee}`);
   // ledger_attr holds the sequence number; txRecord.ledger is a link function
-  console.log(`  Ledger               : ${(txRecord as unknown as { ledger_attr: number }).ledger_attr}`);
+  console.log(
+    `  Ledger               : ${(txRecord as unknown as { ledger_attr: number }).ledger_attr}`,
+  );
   console.log(`  Source account       : ${txRecord.source_account}`);
   console.log();
 
@@ -256,7 +262,9 @@ export async function run(): Promise<void> {
   if (txRecord.fee_bump_transaction) {
     console.log('\n  --- Fee-Bump Envelope ---');
     console.log(`  Fee-bump hash  : ${txRecord.fee_bump_transaction.hash}`);
-    console.log(`  Signatures     : ${txRecord.fee_bump_transaction.signatures.length} signature(s)`);
+    console.log(
+      `  Signatures     : ${txRecord.fee_bump_transaction.signatures.length} signature(s)`,
+    );
   }
 
   // -----------------------------------------------------------------------

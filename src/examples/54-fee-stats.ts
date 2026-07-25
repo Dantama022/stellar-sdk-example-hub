@@ -37,10 +37,7 @@ export function parseFeeStats(rawStats: any): ParsedFeeStats {
 
   const minFee = parseInt(rawStats?.min_accepted_fee ?? rawStats?.fee_charged?.min ?? '100', 10);
   const modeFee = parseInt(rawStats?.mode_accepted_fee ?? rawStats?.fee_charged?.mode ?? '100', 10);
-  const medianFee = parseInt(
-    rawStats?.p50_accepted_fee ?? rawStats?.fee_charged?.p50 ?? '100',
-    10,
-  );
+  const medianFee = parseInt(rawStats?.p50_accepted_fee ?? rawStats?.fee_charged?.p50 ?? '100', 10);
   const p90Fee = parseInt(rawStats?.p90_accepted_fee ?? rawStats?.fee_charged?.p90 ?? '100', 10);
   const p95Fee = parseInt(rawStats?.p95_accepted_fee ?? rawStats?.fee_charged?.p95 ?? '100', 10);
   const p99Fee = parseInt(rawStats?.p99_accepted_fee ?? rawStats?.fee_charged?.p99 ?? '100', 10);

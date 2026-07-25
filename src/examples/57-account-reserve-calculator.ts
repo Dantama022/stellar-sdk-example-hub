@@ -92,10 +92,14 @@ export function formatReserveSummary(data: AccountReserveData): string {
   lines.push(`Total XLM Balance:         ${data.nativeBalance.toFixed(7)} XLM`);
 
   lines.push(`\nLedger Entry Breakdown:`);
-  lines.push(`  - Account Entry Base:     2 * ${data.baseReserve} = ${(2 * data.baseReserve).toFixed(2)} XLM`);
+  lines.push(
+    `  - Account Entry Base:     2 * ${data.baseReserve} = ${(2 * data.baseReserve).toFixed(2)} XLM`,
+  );
   lines.push(`  - Total Subentry Count:   ${data.subentryCount} subentries`);
   lines.push(`  - Sponsored by Others:    ${data.numSponsored} subentries (exempt from reserve)`);
-  lines.push(`  - Sponsoring for Others:  ${data.numSponsoring} subentries (adds reserve responsibility)`);
+  lines.push(
+    `  - Sponsoring for Others:  ${data.numSponsoring} subentries (adds reserve responsibility)`,
+  );
 
   lines.push(`\nCalculated Reserves:`);
   lines.push(`  - Minimum Required Reserve: ${data.minimumReserve.toFixed(7)} XLM`);
@@ -124,9 +128,7 @@ export async function run(params: AccountReserveParams = {}): Promise<void> {
   const server = new Horizon.Server(horizonUrl);
 
   let accountId =
-    params.accountId?.trim() ||
-    process.env.ACCOUNT_ID?.trim() ||
-    process.argv[3]?.trim();
+    params.accountId?.trim() || process.env.ACCOUNT_ID?.trim() || process.argv[3]?.trim();
 
   console.log('Starting Account Reserve and Minimum Balance Calculator Example...');
   console.log(`Using Horizon: ${horizonUrl}`);
