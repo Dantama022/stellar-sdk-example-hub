@@ -5,7 +5,6 @@ import { examples } from './runner/catalog';
 
 dotenv.config();
 
-
 /**
  * Handles the interactive inquirer CLI prompt selection flow.
  */

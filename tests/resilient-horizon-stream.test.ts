@@ -1,4 +1,7 @@
-import { computeReconnectDelay, formatConnectionStatus } from '../src/examples/44-resilient-horizon-stream';
+import {
+  computeReconnectDelay,
+  formatConnectionStatus,
+} from '../src/examples/44-resilient-horizon-stream';
 
 describe('Resilient Horizon stream helpers', () => {
   it('applies exponential backoff with a ceiling', () => {
@@ -10,8 +13,8 @@ describe('Resilient Horizon stream helpers', () => {
 
   it('formats connection status messages', () => {
     expect(formatConnectionStatus('connected', { cursor: 'now' })).toContain('cursor=now');
-    expect(formatConnectionStatus('reconnecting', { cursor: '123', attempt: 2, delayMs: 4000 })).toContain(
-      'attempt 2',
-    );
+    expect(
+      formatConnectionStatus('reconnecting', { cursor: '123', attempt: 2, delayMs: 4000 }),
+    ).toContain('attempt 2');
   });
 });
