@@ -44,6 +44,8 @@ The repository currently includes the following runnable examples:
 31. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
 32. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
 33. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+34. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
+35. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
 34. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
 35. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
 36. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
@@ -138,6 +140,18 @@ Inspect claimable balances and claimant predicates:
 
 ```bash
 npm run run-example 49-claimable-balance-inspection
+```
+
+Run the ledger bounds example:
+
+```bash
+npm run run-example 32-ledger-bounds
+```
+
+Run the fee-bump replacement workflow:
+
+```bash
+npm run run-example 33-fee-bump-replacement
 ```
 
 Inspect a specific transaction by supplying its hash as an additional command-line argument:
