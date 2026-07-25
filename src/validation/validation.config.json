@@ -67,6 +67,10 @@
       "reason": "Requires live sponsored reserve setup and Testnet transaction submission"
     },
     {
+      "match": "35-revoke-sponsorship",
+      "reason": "Requires live sponsorship setup and revocation transactions on Testnet"
+    },
+    {
       "match": "16-batched-operations",
       "reason": "Requires live funded accounts and multiple Testnet operations"
     },
