@@ -231,6 +231,11 @@ export const examples: Record<string, Example> = {
     description: 'Execute a strict-send path payment and observe the received amount',
     run: loadExample('../examples/37-strict-send-path-payment'),
   },
+  '35-revoke-sponsorship': {
+    name: '35-revoke-sponsorship',
+    description: 'Revoke sponsorship from a sponsored ledger entry and inspect reserve responsibility',
+    run: loadExample('../examples/35-revoke-sponsorship'),
+  },
   '38-account-signer-management': {
     name: '38-account-signer-management',
     description: 'Manage account signers and weights for multi-party authorization',
