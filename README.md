@@ -45,15 +45,16 @@ The repository currently includes the following runnable examples:
 32. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
 33. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
 34. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
-35. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
-36. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
-37. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
-38. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
-39. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
-40. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
-41. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
-42. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
-43. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
+35. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
+36. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+37. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+38. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
+39. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+40. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
+41. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
+42. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
+43. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
+44. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
 
 ## Installation
 

@@ -198,8 +198,6 @@ function verifyChallengeTransaction(
   homeDomain: string,
   networkPassphrase: string,
 ): void {
-  const { hash: stellarHash } = require('@stellar/stellar-sdk');
-
   // 1. Network passphrase
   if (tx.networkPassphrase !== networkPassphrase) {
     throw new Error(

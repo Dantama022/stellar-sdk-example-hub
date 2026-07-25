@@ -231,6 +231,12 @@ export const examples: Record<string, Example> = {
     description: 'Execute a strict-send path payment and observe the received amount',
     run: loadExample('../examples/37-strict-send-path-payment'),
   },
+  '36-strict-receive-path-payment': {
+    name: '36-strict-receive-path-payment',
+    description:
+      'Execute a strict-receive path payment with a fixed destination amount and sendMax cap',
+    run: loadExample('../examples/36-strict-receive-path-payment'),
+  },
   '38-account-signer-management': {
     name: '38-account-signer-management',
     description: 'Manage account signers and weights for multi-party authorization',
