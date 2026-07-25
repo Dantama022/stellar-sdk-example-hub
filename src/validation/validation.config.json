@@ -18,6 +18,10 @@
       "reason": "Requires Soroban RPC availability and deployed contracts"
     },
     {
+      "match": "23-soroban-upgrade",
+      "reason": "Requires Soroban RPC, WASM uploads, and multi-step contract upgrade transactions"
+    },
+    {
       "match": "12-asset-issuance",
       "reason": "Requires live accounts and asset issuance on network"
     },
@@ -37,6 +41,10 @@
     {
       "match": "19-horizon-streaming",
       "reason": "Keeps a live Horizon SSE connection open until events arrive"
+    },
+    {
+      "match": "44-resilient-horizon-stream",
+      "reason": "Keeps a live Horizon SSE connection open with manual reconnection handling"
     },
     {
       "match": "26-sponsored-claimable-balance",
@@ -61,6 +69,10 @@
     {
       "match": "11-sponsored-reserves",
       "reason": "Requires live sponsored reserve setup and Testnet transaction submission"
+    },
+    {
+      "match": "35-revoke-sponsorship",
+      "reason": "Requires live sponsorship setup and revocation transactions on Testnet"
     },
     {
       "match": "16-batched-operations",
