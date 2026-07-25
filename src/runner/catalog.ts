@@ -251,6 +251,38 @@ export const examples: Record<string, Example> = {
     description: 'Retrieve, consume, and correctly manage account sequence numbers',
     run: loadExample('../examples/42-account-sequence-numbers'),
   },
+  '45-horizon-effects': {
+    name: '45-horizon-effects',
+    description: 'Inspect Horizon effects for a transaction and compare them to operations',
+    run: loadExample('../examples/45-horizon-effects'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Optional transaction hash (blank uses latest transaction):',
+      },
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account filter (blank uses transaction source account):',
+      },
+    ],
+  },
+  '47-account-data-entries': {
+    name: '47-account-data-entries',
+    description: 'Create, verify, update, and remove account data entries with reserve context',
+    run: loadExample('../examples/47-account-data-entries'),
+  },
+  '48-asset-authorization-flags': {
+    name: '48-asset-authorization-flags',
+    description: 'Configure issuer authorization flags and observe trustline authorization changes',
+    run: loadExample('../examples/48-asset-authorization-flags'),
+  },
+  '49-claimable-balance-inspection': {
+    name: '49-claimable-balance-inspection',
+    description: 'Inspect claimable balances, claimant predicates, and claimant-based filtering',
+    run: loadExample('../examples/49-claimable-balance-inspection'),
+  },
   '46-transaction-detail-inspection': {
     name: '46-transaction-detail-inspection',
     description: 'Retrieve a Horizon transaction by hash and inspect its metadata and XDR',
