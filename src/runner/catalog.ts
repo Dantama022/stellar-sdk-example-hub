@@ -343,6 +343,19 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '56-account-flags-inspection': {
+    name: '56-account-flags-inspection',
+    description:
+      'Inspect and interpret Horizon account flags, master key state, and restrictive configurations',
+    run: loadExample('../examples/56-account-flags-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+    ],
+  },
   '54-fee-stats': {
     name: '54-fee-stats',
     description: 'Query Horizon fee statistics, fee distributions, and recommended fee values',

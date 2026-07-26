@@ -107,6 +107,10 @@
       "reason": "Requires live Horizon transaction data or fallback simulation"
     },
     {
+      "match": "56-account-flags-inspection",
+      "reason": "Requires live Horizon account data"
+    },
+    {
       "match": "54-fee-stats",
       "reason": "Requires live Horizon fee statistics endpoint"
     },

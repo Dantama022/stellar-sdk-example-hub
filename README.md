@@ -86,6 +86,7 @@ The repository currently includes the following runnable examples:
 51. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 52. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
 53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+54. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
 
 ## Installation
 
@@ -170,6 +171,20 @@ Inspect claimable balances and claimant predicates:
 ```bash
 npm run run-example 49-claimable-balance-inspection
 ```
+
+Audit the account-level flags of a recently active account:
+
+```bash
+npm run run-example 56-account-flags-inspection
+```
+
+Audit a specific account by passing its ID as an additional command-line argument:
+
+```bash
+npm run run-example -- 56-account-flags-inspection <account-id>
+```
+
+This example is read-only. It explains each flag, reconstructs the raw flag bitmask, reports the master key weight, and highlights restrictive configurations such as `AUTH_IMMUTABLE` or a disabled master key. Accounts with no flags set are reported as using default, permissionless behaviour. The account ID can also be supplied through the `ACCOUNT_ID` environment variable.
 
 Run the ledger bounds example:
 

@@ -27,6 +27,7 @@ import * as ex48 from '../src/examples/48-asset-authorization-flags';
 import * as ex49 from '../src/examples/49-claimable-balance-inspection';
 import * as ex51 from '../src/examples/51-failed-transaction-analysis';
 import * as ex54 from '../src/examples/54-fee-stats';
+import * as ex56 from '../src/examples/56-account-flags-inspection';
 import * as ex57 from '../src/examples/57-account-reserve-calculator';
 import * as ex58 from '../src/examples/58-account-relationship-discovery';
 
@@ -64,6 +65,7 @@ describe('Examples Exports', () => {
       ex49,
       ex51,
       ex54,
+      ex56,
       ex57,
       ex58,
     ]) {
@@ -94,6 +96,7 @@ describe('Examples Exports', () => {
       '49-claimable-balance-inspection',
       '51-failed-transaction-analysis',
       '54-fee-stats',
+      '56-account-flags-inspection',
       '57-account-reserve-calculator',
       '58-account-relationship-discovery',
     ]) {
@@ -164,6 +167,150 @@ describe('ISSUE-058: Account Relationship Discovery Unit Tests', () => {
     });
     expect(summary).toContain(accountId);
     expect(summary).toContain('No signers found');
+  });
+});
+
+describe('ISSUE-056: Account Flags Inspection Unit Tests', () => {
+  const accountId = 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7';
+
+  it('maps every supported flag to a human-readable description', () => {
+    const described = ex56.describeAccountFlags({ auth_required: true });
+
+    expect(described.map((f) => f.key)).toEqual([
+      'auth_required',
+      'auth_revocable',
+      'auth_immutable',
+      'auth_clawback_enabled',
+    ]);
+    for (const flag of described) {
+      expect(flag.meaning.length).toBeGreaterThan(0);
+      expect(flag.whenUnset.length).toBeGreaterThan(0);
+      expect(flag.constantName).toMatch(/_FLAG$/);
+    }
+  });
+
+  it('parses enabled and default flag states from Horizon booleans', () => {
+    const enabled = ex56.describeAccountFlags({
+      auth_required: true,
+      auth_revocable: true,
+      auth_immutable: false,
+      auth_clawback_enabled: true,
+    });
+    const byKey = Object.fromEntries(enabled.map((f) => [f.key, f.enabled]));
+
+    expect(byKey.auth_required).toBe(true);
+    expect(byKey.auth_revocable).toBe(true);
+    expect(byKey.auth_immutable).toBe(false);
+    expect(byKey.auth_clawback_enabled).toBe(true);
+  });
+
+  it('treats a missing flags object as all defaults', () => {
+    const described = ex56.describeAccountFlags(undefined);
+    expect(described.every((f) => !f.enabled)).toBe(true);
+    expect(ex56.computeRawFlagValue(described)).toBe(0);
+  });
+
+  it('reconstructs the raw on-ledger flag bitmask', () => {
+    // AUTH_REQUIRED (1) + AUTH_REVOCABLE (2) + AUTH_CLAWBACK_ENABLED (8) = 11
+    const described = ex56.describeAccountFlags({
+      auth_required: true,
+      auth_revocable: true,
+      auth_clawback_enabled: true,
+    });
+    expect(ex56.computeRawFlagValue(described)).toBe(11);
+  });
+
+  it('reads the master key weight from the signer list', () => {
+    expect(ex56.getMasterKeyWeight(accountId, [{ key: accountId, weight: 3 }])).toBe(3);
+    expect(
+      ex56.getMasterKeyWeight(accountId, [
+        { key: accountId, weight: 0 },
+        { key: 'GBOTHERSIGNER', weight: 2 },
+      ]),
+    ).toBe(0);
+    expect(ex56.getMasterKeyWeight(accountId, [])).toBe(0);
+  });
+
+  it('reports no findings for an account with default flags', () => {
+    const report = ex56.buildAccountFlagsReport({
+      id: accountId,
+      flags: {},
+      signers: [{ key: accountId, weight: 1 }],
+    });
+
+    expect(report.usesDefaults).toBe(true);
+    expect(report.rawFlagValue).toBe(0);
+    expect(report.notableFindings).toEqual([]);
+    expect(ex56.formatFlagsReport(report)).toContain('No restrictive or unusual configuration');
+  });
+
+  it('identifies restrictive issuer configurations', () => {
+    const report = ex56.buildAccountFlagsReport({
+      id: accountId,
+      flags: {
+        auth_required: true,
+        auth_revocable: true,
+        auth_immutable: true,
+        auth_clawback_enabled: true,
+      },
+      signers: [{ key: accountId, weight: 1 }],
+    });
+
+    expect(report.usesDefaults).toBe(false);
+    expect(report.rawFlagValue).toBe(15);
+    expect(report.notableFindings.join(' ')).toContain('AUTH_IMMUTABLE is set');
+    expect(report.notableFindings.join(' ')).toContain('AUTH_REQUIRED + AUTH_REVOCABLE');
+    expect(report.notableFindings.join(' ')).toContain('AUTH_CLAWBACK_ENABLED is set');
+  });
+
+  it('flags clawback enabled without auth_revocable as unusual', () => {
+    const described = ex56.describeAccountFlags({ auth_clawback_enabled: true });
+    const findings = ex56.identifyNotableConfigurations(described, 1);
+    expect(findings.join(' ')).toContain('clawback is enabled without AUTH_REVOCABLE');
+  });
+
+  it('detects a permanently locked account', () => {
+    const report = ex56.buildAccountFlagsReport({
+      id: accountId,
+      flags: { auth_immutable: true },
+      signers: [{ key: accountId, weight: 0 }],
+    });
+
+    expect(report.masterKeyWeight).toBe(0);
+    expect(report.notableFindings.join(' ')).toContain('no other signers exist');
+    expect(report.notableFindings.join(' ')).toContain('locked issuer');
+  });
+
+  it('notes when control shifts to additional signers', () => {
+    const report = ex56.buildAccountFlagsReport({
+      id: accountId,
+      flags: {},
+      signers: [
+        { key: accountId, weight: 0 },
+        { key: 'GBOTHERSIGNER', weight: 2 },
+      ],
+    });
+
+    expect(report.notableFindings.join(' ')).toContain('control rests entirely with');
+  });
+
+  it('renders a readable report containing every flag name', () => {
+    const summary = ex56.formatFlagsReport(
+      ex56.buildAccountFlagsReport({
+        id: accountId,
+        flags: { auth_required: true },
+        signers: [{ key: accountId, weight: 1 }],
+      }),
+    );
+
+    expect(summary).toContain(accountId);
+    expect(summary).toContain('auth_required');
+    expect(summary).toContain('auth_revocable');
+    expect(summary).toContain('auth_immutable');
+    expect(summary).toContain('auth_clawback_enabled');
+    expect(summary).toContain('[ENABLED ] auth_required');
+    expect(summary).toContain('[disabled] auth_immutable');
+    expect(summary).toContain('Raw flag value: 1');
   });
 });
 
