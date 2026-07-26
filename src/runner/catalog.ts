@@ -343,6 +343,30 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '55-trade-history': {
+    name: '55-trade-history',
+    description:
+      'Retrieve completed SDEX trades for an asset pair and summarize volume and average price',
+    run: loadExample('../examples/55-trade-history'),
+    params: [
+      {
+        type: 'input',
+        name: 'baseAsset',
+        message: 'Base asset ("native" or CODE:ISSUER, blank uses a recently traded pair):',
+      },
+      {
+        type: 'input',
+        name: 'counterAsset',
+        message: 'Counter asset ("native" or CODE:ISSUER, blank uses a recently traded pair):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of trades to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
   '56-account-flags-inspection': {
     name: '56-account-flags-inspection',
     description:

@@ -107,6 +107,10 @@
       "reason": "Requires live Horizon transaction data or fallback simulation"
     },
     {
+      "match": "55-trade-history",
+      "reason": "Requires live Horizon trade data for an active asset pair"
+    },
+    {
       "match": "56-account-flags-inspection",
       "reason": "Requires live Horizon account data"
     },

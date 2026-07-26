@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import path from 'path';
+
 import * as ex1 from '../src/examples/01-create-account';
 import * as ex2 from '../src/examples/02-payment';
 import * as ex3 from '../src/examples/03-create-trustline';
@@ -27,6 +30,7 @@ import * as ex48 from '../src/examples/48-asset-authorization-flags';
 import * as ex49 from '../src/examples/49-claimable-balance-inspection';
 import * as ex51 from '../src/examples/51-failed-transaction-analysis';
 import * as ex54 from '../src/examples/54-fee-stats';
+import * as ex55 from '../src/examples/55-trade-history';
 import * as ex56 from '../src/examples/56-account-flags-inspection';
 import * as ex57 from '../src/examples/57-account-reserve-calculator';
 import * as ex58 from '../src/examples/58-account-relationship-discovery';
@@ -65,6 +69,7 @@ describe('Examples Exports', () => {
       ex49,
       ex51,
       ex54,
+      ex55,
       ex56,
       ex57,
       ex58,
@@ -96,6 +101,7 @@ describe('Examples Exports', () => {
       '49-claimable-balance-inspection',
       '51-failed-transaction-analysis',
       '54-fee-stats',
+      '55-trade-history',
       '56-account-flags-inspection',
       '57-account-reserve-calculator',
       '58-account-relationship-discovery',
@@ -167,6 +173,302 @@ describe('ISSUE-058: Account Relationship Discovery Unit Tests', () => {
     });
     expect(summary).toContain(accountId);
     expect(summary).toContain('No signers found');
+  });
+});
+
+describe('ISSUE-055: Trade History Unit Tests', () => {
+  const issuer = 'GB6ZS324HT6VEEDZ6MG6CESWE7YZSY7WAJDRQSP2GZCRZ5GBND377A2F';
+
+  /** Builds a Horizon-shaped trade record with sensible defaults. */
+  const rawTrade = (overrides: Partial<ex55.RawTradeRecord> = {}): ex55.RawTradeRecord => ({
+    id: '123456789-0',
+    paging_token: '123456789-0',
+    ledger_close_time: '2024-05-01T10:00:00Z',
+    trade_type: 'orderbook',
+    base_account: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+    base_amount: '100.0000000',
+    base_asset_type: 'native',
+    counter_account: 'GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFXYCZLYF3436GTYOWD4S',
+    counter_amount: '25.0000000',
+    counter_asset_type: 'credit_alphanum4',
+    counter_asset_code: 'USDC',
+    counter_asset_issuer: issuer,
+    base_is_seller: true,
+    price: { n: '1', d: '4' },
+    _links: { operation: { href: 'https://horizon-testnet.stellar.org/operations/123456789' } },
+    ...overrides,
+  });
+
+  describe('asset pair parameters', () => {
+    it('maps native input to the native asset', () => {
+      expect(ex55.parseAssetInput('native').isNative()).toBe(true);
+      expect(ex55.parseAssetInput('XLM').isNative()).toBe(true);
+      expect(ex55.parseAssetInput('  Native  ').isNative()).toBe(true);
+    });
+
+    it('maps CODE:ISSUER input to an issued asset', () => {
+      const asset = ex55.parseAssetInput(`USDC:${issuer}`);
+      expect(asset.isNative()).toBe(false);
+      expect(asset.getCode()).toBe('USDC');
+      expect(asset.getIssuer()).toBe(issuer);
+    });
+
+    it('rejects malformed and empty asset input', () => {
+      expect(() => ex55.parseAssetInput('USDC', 'base asset')).toThrow(/base asset/);
+      expect(() => ex55.parseAssetInput('   ', 'counter asset')).toThrow(/Missing counter asset/);
+      expect(() => ex55.parseAssetInput('USDC:not-an-issuer')).toThrow(/Invalid asset/);
+    });
+
+    it('describes both asset kinds for display', () => {
+      expect(ex55.describeAsset(ex55.parseAssetInput('native'))).toContain('XLM');
+      expect(ex55.describeAsset(ex55.parseAssetInput(`USDC:${issuer}`))).toBe(`USDC:${issuer}`);
+    });
+
+    it('labels trade sides, defaulting an absent type to native', () => {
+      expect(ex55.describeTradeSideAsset('native')).toBe('XLM');
+      expect(ex55.describeTradeSideAsset(undefined)).toBe('XLM');
+      expect(ex55.describeTradeSideAsset('credit_alphanum4', 'USDC', issuer)).toBe(
+        `USDC:${issuer}`,
+      );
+    });
+
+    it('clamps the result limit into the range Horizon accepts', () => {
+      expect(ex55.normalizeLimit(25)).toBe(25);
+      expect(ex55.normalizeLimit('25')).toBe(25);
+      expect(ex55.normalizeLimit(0)).toBe(1);
+      expect(ex55.normalizeLimit(5000)).toBe(200);
+      expect(ex55.normalizeLimit(undefined)).toBe(10);
+      expect(ex55.normalizeLimit('not-a-number')).toBe(10);
+    });
+  });
+
+  describe('trade record parsing', () => {
+    it('parses a native/issued orderbook trade', () => {
+      const trade = ex55.parseTradeRecord(rawTrade());
+
+      expect(trade.id).toBe('123456789-0');
+      expect(trade.ledgerCloseTime).toBe('2024-05-01T10:00:00Z');
+      expect(trade.tradeType).toBe('orderbook');
+      expect(trade.baseAsset).toBe('XLM');
+      expect(trade.counterAsset).toBe(`USDC:${issuer}`);
+      expect(trade.baseAmount).toBe(100);
+      expect(trade.counterAmount).toBe(25);
+      expect(trade.baseIsSeller).toBe(true);
+      expect(trade.operationId).toBe('123456789');
+      expect(trade.operationLink).toContain('/operations/123456789');
+    });
+
+    it('uses the rational price from Horizon when present', () => {
+      const trade = ex55.parseTradeRecord(rawTrade({ price: { n: '3', d: '8' } }));
+      expect(trade.price).toBeCloseTo(0.375, 7);
+    });
+
+    it('derives the price from amounts when Horizon omits it', () => {
+      const trade = ex55.parseTradeRecord(
+        rawTrade({ price: undefined, base_amount: '50', counter_amount: '20' }),
+      );
+      expect(trade.price).toBeCloseTo(0.4, 7);
+    });
+
+    it('avoids dividing by a zero base amount', () => {
+      const trade = ex55.parseTradeRecord(
+        rawTrade({ price: undefined, base_amount: '0', counter_amount: '20' }),
+      );
+      expect(trade.price).toBe(0);
+    });
+
+    it('parses liquidity pool trades and their pool references', () => {
+      const trade = ex55.parseTradeRecord(
+        rawTrade({
+          trade_type: 'liquidity_pool',
+          base_account: undefined,
+          base_liquidity_pool_id: 'abc123poolid',
+        }),
+      );
+
+      expect(trade.tradeType).toBe('liquidity_pool');
+      expect(trade.baseParty).toBe('abc123poolid');
+    });
+
+    it('extracts operation IDs from trade IDs', () => {
+      expect(ex55.extractOperationId('123456789-0')).toBe('123456789');
+      expect(ex55.extractOperationId('987654321-1')).toBe('987654321');
+      expect(ex55.extractOperationId('nodashes')).toBe('nodashes');
+      expect(ex55.extractOperationId(undefined)).toBe('');
+    });
+  });
+
+  describe('market activity statistics', () => {
+    const trades = [
+      ex55.parseTradeRecord(
+        rawTrade({ base_amount: '100', counter_amount: '25', price: { n: '1', d: '4' } }),
+      ),
+      ex55.parseTradeRecord(
+        rawTrade({
+          id: '223456789-0',
+          ledger_close_time: '2024-05-01T09:00:00Z',
+          base_amount: '300',
+          counter_amount: '150',
+          price: { n: '1', d: '2' },
+          trade_type: 'liquidity_pool',
+        }),
+      ),
+    ];
+
+    it('totals traded volume on both sides of the pair', () => {
+      const summary = ex55.summarizeTrades(trades);
+      expect(summary.tradeCount).toBe(2);
+      expect(summary.totalBaseVolume).toBeCloseTo(400, 7);
+      expect(summary.totalCounterVolume).toBeCloseTo(175, 7);
+    });
+
+    it('calculates unweighted and volume-weighted average prices', () => {
+      const summary = ex55.summarizeTrades(trades);
+      // Unweighted mean of 0.25 and 0.5.
+      expect(summary.averagePrice).toBeCloseTo(0.375, 7);
+      // VWAP: 175 counter / 400 base, pulled toward the larger 0.5 trade.
+      expect(summary.volumeWeightedPrice).toBeCloseTo(0.4375, 7);
+    });
+
+    it('reports the price range and the time window covered', () => {
+      const summary = ex55.summarizeTrades(trades);
+      expect(summary.highestPrice).toBeCloseTo(0.5, 7);
+      expect(summary.lowestPrice).toBeCloseTo(0.25, 7);
+      expect(summary.earliestTradeAt).toBe('2024-05-01T09:00:00Z');
+      expect(summary.latestTradeAt).toBe('2024-05-01T10:00:00Z');
+    });
+
+    it('splits trades by execution venue', () => {
+      const summary = ex55.summarizeTrades(trades);
+      expect(summary.orderbookTradeCount).toBe(1);
+      expect(summary.liquidityPoolTradeCount).toBe(1);
+    });
+
+    it('reports zeroed statistics instead of NaN for an empty result set', () => {
+      const summary = ex55.summarizeTrades([]);
+      expect(summary.tradeCount).toBe(0);
+      expect(summary.totalBaseVolume).toBe(0);
+      expect(summary.averagePrice).toBe(0);
+      expect(summary.volumeWeightedPrice).toBe(0);
+      expect(summary.earliestTradeAt).toBeNull();
+      expect(summary.latestTradeAt).toBeNull();
+    });
+
+    it('reports a zero VWAP when only zero-amount trades exist', () => {
+      const zeroVolume = [
+        ex55.parseTradeRecord(rawTrade({ base_amount: '0', counter_amount: '0' })),
+      ];
+      expect(ex55.summarizeTrades(zeroVolume).volumeWeightedPrice).toBe(0);
+    });
+  });
+
+  describe('report formatting', () => {
+    it('renders trade records with timestamps, prices, amounts, and references', () => {
+      const trades = [ex55.parseTradeRecord(rawTrade())];
+      const report = ex55.formatTradeHistoryReport(
+        'XLM',
+        'USDC',
+        trades,
+        ex55.summarizeTrades(trades),
+      );
+
+      expect(report).toContain('2024-05-01T10:00:00Z');
+      expect(report).toContain('0.2500000');
+      expect(report).toContain('100.0000000');
+      expect(report).toMatch(/Operation ID:\s+123456789/);
+      expect(report).toContain('USDC:' + issuer);
+      expect(report).toContain('Volume-Weighted Price');
+    });
+
+    it('shows the trade direction implied by base_is_seller', () => {
+      const sell = [ex55.parseTradeRecord(rawTrade({ base_is_seller: true }))];
+      const buy = [ex55.parseTradeRecord(rawTrade({ base_is_seller: false }))];
+
+      expect(
+        ex55.formatTradeHistoryReport('XLM', 'USDC', sell, ex55.summarizeTrades(sell)),
+      ).toContain('SELL XLM');
+      expect(
+        ex55.formatTradeHistoryReport('XLM', 'USDC', buy, ex55.summarizeTrades(buy)),
+      ).toContain('BUY  XLM');
+    });
+
+    it('explains an empty trade history instead of printing empty statistics', () => {
+      const report = ex55.formatTradeHistoryReport('XLM', 'USDC', [], ex55.summarizeTrades([]));
+
+      expect(report).toContain('No trades found for this asset pair');
+      expect(report).toContain('orderbook');
+      expect(report).not.toContain('Volume-Weighted Price');
+    });
+
+    it('distinguishes completed trades from resting orderbook offers', () => {
+      const trades = [ex55.parseTradeRecord(rawTrade())];
+      const report = ex55.formatTradeHistoryReport(
+        'XLM',
+        'USDC',
+        trades,
+        ex55.summarizeTrades(trades),
+      );
+
+      expect(report).toContain('SDEX orderbook');
+      expect(report).toContain('counter units (USDC) per 1 base unit (XLM)');
+    });
+  });
+
+  describe('empty and failed result handling', () => {
+    it('treats a Horizon 404 as an empty trade history', () => {
+      expect(ex55.isEmptyTradeHistoryError({ response: { status: 404 } })).toBe(true);
+      expect(ex55.isEmptyTradeHistoryError({ name: 'NotFoundError' })).toBe(true);
+    });
+
+    it('does not treat other failures as an empty history', () => {
+      expect(ex55.isEmptyTradeHistoryError({ response: { status: 400 } })).toBe(false);
+      expect(ex55.isEmptyTradeHistoryError(new Error('network down'))).toBe(false);
+      expect(ex55.isEmptyTradeHistoryError(undefined)).toBe(false);
+    });
+  });
+
+  describe('transaction reference resolution', () => {
+    it('returns the transaction hash behind a trade operation', async () => {
+      const server = {
+        operations: () => ({
+          operation: () => ({ call: async () => ({ transaction_hash: 'abcdef123456' }) }),
+        }),
+      } as any;
+
+      await expect(ex55.resolveTransactionHash(server, '123456789')).resolves.toBe('abcdef123456');
+    });
+
+    it('degrades gracefully when the operation cannot be fetched', async () => {
+      const server = {
+        operations: () => ({
+          operation: () => ({
+            call: async () => {
+              throw new Error('not found');
+            },
+          }),
+        }),
+      } as any;
+
+      await expect(ex55.resolveTransactionHash(server, '123456789')).resolves.toBeUndefined();
+      await expect(ex55.resolveTransactionHash(server, '')).resolves.toBeUndefined();
+    });
+  });
+
+  describe('runner and documentation registration', () => {
+    it('registers the example with asset pair and limit parameters', () => {
+      const entry = examples['55-trade-history'];
+
+      expect(entry).toBeDefined();
+      expect(typeof entry.run).toBe('function');
+      expect(entry.params?.map((p) => p.name)).toEqual(['baseAsset', 'counterAsset', 'limit']);
+    });
+
+    it('documents the example in the README catalog', () => {
+      const readme = readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+
+      expect(readme).toContain('`55-trade-history`');
+      expect(readme).toContain('npm run run-example 55-trade-history');
+    });
   });
 });
 
