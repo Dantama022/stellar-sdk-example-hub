@@ -233,12 +233,14 @@ export const examples: Record<string, Example> = {
   },
   '32-ledger-bounds': {
     name: '32-ledger-bounds',
-    description: 'Build transactions with ledger bounds, inspect the validity range, and handle out-of-range rejections',
+    description:
+      'Build transactions with ledger bounds, inspect the validity range, and handle out-of-range rejections',
     run: loadExample('../examples/32-ledger-bounds'),
   },
   '33-fee-bump-replacement': {
     name: '33-fee-bump-replacement',
-    description: 'Wrap a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account',
+    description:
+      'Wrap a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account',
     run: loadExample('../examples/33-fee-bump-replacement'),
   },
   '37-strict-send-path-payment': {
@@ -251,6 +253,7 @@ export const examples: Record<string, Example> = {
     description:
       'Execute a strict-receive path payment with a fixed destination amount and sendMax cap',
     run: loadExample('../examples/36-strict-receive-path-payment'),
+  },
   '35-revoke-sponsorship': {
     name: '35-revoke-sponsorship',
     description:
@@ -324,6 +327,49 @@ export const examples: Record<string, Example> = {
         type: 'input',
         name: 'transactionHash',
         message: 'Enter a transaction hash, or leave blank to inspect the latest transaction:',
+      },
+    ],
+  },
+  '51-failed-transaction-analysis': {
+    name: '51-failed-transaction-analysis',
+    description:
+      'Inspect failed transactions and translate result codes into human-readable diagnostics',
+    run: loadExample('../examples/51-failed-transaction-analysis'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Optional transaction hash (blank searches recent failed transactions):',
+      },
+    ],
+  },
+  '54-fee-stats': {
+    name: '54-fee-stats',
+    description: 'Query Horizon fee statistics, fee distributions, and recommended fee values',
+    run: loadExample('../examples/54-fee-stats'),
+  },
+  '57-account-reserve-calculator': {
+    name: '57-account-reserve-calculator',
+    description: 'Calculate an account minimum reserve and available balance from ledger entries',
+    run: loadExample('../examples/57-account-reserve-calculator'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+    ],
+  },
+  '58-account-relationship-discovery': {
+    name: '58-account-relationship-discovery',
+    description:
+      'Discover and summarize signers, asset issuers, sponsorships, and counterparties for an account',
+    run: loadExample('../examples/58-account-relationship-discovery'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
       },
     ],
   },

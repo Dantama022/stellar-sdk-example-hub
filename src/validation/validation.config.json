@@ -101,6 +101,22 @@
     {
       "match": "25-account-flags",
       "reason": "Requires live issuer account flag transactions on Testnet"
+    },
+    {
+      "match": "51-failed-transaction-analysis",
+      "reason": "Requires live Horizon transaction data or fallback simulation"
+    },
+    {
+      "match": "54-fee-stats",
+      "reason": "Requires live Horizon fee statistics endpoint"
+    },
+    {
+      "match": "57-account-reserve-calculator",
+      "reason": "Requires live Horizon account data"
+    },
+    {
+      "match": "58-account-relationship-discovery",
+      "reason": "Requires live Horizon account and operation data"
     }
   ]
 }
