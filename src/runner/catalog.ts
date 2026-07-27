@@ -496,4 +496,17 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '61-horizon-resource-filtering': {
+    name: '61-horizon-resource-filtering',
+    description:
+      'Demonstrate filtered Horizon queries across transactions, operations, payments, and effects',
+    run: loadExample('../examples/61-horizon-resource-filtering'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+    ],
+  },
 };
