@@ -82,12 +82,16 @@ The repository currently includes the following runnable examples:
 47. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
 48. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
 49. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
-50. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
-51. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
-52. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
-53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
-54. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
+50. **`50-asset-issuer-discovery`**: Querying Horizon for an issued asset by code and issuer, displaying trustline/holder counts and authorization flags.
+51. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+52. **`52-account-balance-history`**: Reconstructing a simple native XLM balance history from recent Horizon effects with transaction and ledger references.
+53. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
+54. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 55. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+56. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
+57. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+59. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
 
 ## Installation
 
@@ -173,6 +177,48 @@ Inspect claimable balances and claimant predicates:
 npm run run-example 49-claimable-balance-inspection
 ```
 
+Discover an asset issuer and trustline/holder counts:
+
+```bash
+npm run run-example 50-asset-issuer-discovery
+```
+
+Look up a specific issued asset by code and issuer:
+
+```bash
+npm run run-example -- 50-asset-issuer-discovery <asset-code> <issuer-account-id>
+```
+
+An issued asset is uniquely identified by `asset_code` + `asset_issuer` — the code alone is not unique. Leaving both blank makes the example discover a recently indexed asset on the connected network. Unknown or unindexed assets are reported as an empty result rather than a crash.
+
+Reconstruct a simple native XLM balance history from recent effects:
+
+```bash
+npm run run-example 52-account-balance-history
+```
+
+Inspect balance history for a specific account with a custom effect window:
+
+```bash
+npm run run-example -- 52-account-balance-history <account-id> 50
+```
+
+This example reconstructs chronological native XLM balance changes from `account_credited`, `account_debited`, and `account_created` effects. It is educational rather than a production ledger: history outside the retrieved window is inferred, and failed transactions produce no effects. The account ID and limit can also be supplied through `ACCOUNT_ID` and `HISTORY_LIMIT`.
+
+Inspect a Horizon ledger (latest when no sequence is given):
+
+```bash
+npm run run-example 53-ledger-inspection
+```
+
+Inspect a specific ledger sequence:
+
+```bash
+npm run run-example -- 53-ledger-inspection <ledger-sequence>
+```
+
+The ledger example displays sequence, close time, hash / previous hash, transaction and operation counts, protocol version, and base fee / reserve. Unavailable sequences (future or outside history retention) produce a clear error. The sequence can also be supplied through `LEDGER_SEQUENCE`.
+
 Audit the account-level flags of a recently active account:
 
 ```bash
@@ -202,6 +248,20 @@ npm run run-example -- 55-trade-history native USDC:<issuer-account-id> 25
 Each side of the pair is given as `native` (or `XLM`) for the native asset, or as `CODE:ISSUER` for an issued asset; the same values can be supplied through the `BASE_ASSET`, `COUNTER_ASSET`, and `TRADE_LIMIT` environment variables. Prices are quoted as counter units per 1 base unit, so reversing the pair inverts every price. Leaving both assets blank makes the example discover a pair from the most recent trade on the connected network.
 
 This example reports **completed** trades, which is the counterpart to orderbook depth: `server.orderbook(base, counter)` returns the bids and asks that are currently resting and may never execute, while `server.trades().forAssetPair(...)` returns executions that already settled on the ledger. Alongside each trade's timestamp, price, amounts, and operation and transaction references, the example reports total traded volume, an unweighted average price, and the volume-weighted average price (VWAP). A pair with no trades is reported as an empty history rather than an error, since it indicates the market has never executed rather than that the request failed.
+
+Inspect an account's active SDEX offers:
+
+```bash
+npm run run-example 59-account-offer-inspection
+```
+
+Inspect offers for a specific account:
+
+```bash
+npm run run-example -- 59-account-offer-inspection <account-id>
+```
+
+This example is read-only. It lists offer IDs, selling/buying assets, amounts, prices (including rational representation), and approximate fill volume, and summarizes totals across active offers. Accounts with no offers produce a clear empty-state message. Leaving the account blank prefers an account that already has resting offers when Horizon has any. The account ID and limit can also be supplied through `ACCOUNT_ID` and `OFFER_LIMIT`.
 
 Run the ledger bounds example:
 

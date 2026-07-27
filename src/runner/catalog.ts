@@ -318,6 +318,73 @@ export const examples: Record<string, Example> = {
     description: 'Inspect claimable balances, claimant predicates, and claimant-based filtering',
     run: loadExample('../examples/49-claimable-balance-inspection'),
   },
+  '50-asset-issuer-discovery': {
+    name: '50-asset-issuer-discovery',
+    description:
+      'Query Horizon for an asset by code and issuer, inspect trustline counts and authorization flags',
+    run: loadExample('../examples/50-asset-issuer-discovery'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code (blank discovers a recently indexed asset):',
+      },
+      {
+        type: 'input',
+        name: 'assetIssuer',
+        message: 'Asset issuer account ID (required when asset code is set):',
+      },
+    ],
+  },
+  '52-account-balance-history': {
+    name: '52-account-balance-history',
+    description: 'Reconstruct a simple native XLM balance history from recent Horizon effects',
+    run: loadExample('../examples/52-account-balance-history'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of recent effects to retrieve (1-200):',
+        default: '25',
+      },
+    ],
+  },
+  '53-ledger-inspection': {
+    name: '53-ledger-inspection',
+    description:
+      'Retrieve and inspect a Horizon ledger sequence, close time, counts, and network parameters',
+    run: loadExample('../examples/53-ledger-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'ledgerSequence',
+        message: 'Ledger sequence (blank uses the latest closed ledger):',
+      },
+    ],
+  },
+  '59-account-offer-inspection': {
+    name: '59-account-offer-inspection',
+    description: "Inspect an account's active SDEX offers, assets, prices, and approximate volumes",
+    run: loadExample('../examples/59-account-offer-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank finds an account with offers when possible):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of offers to retrieve (1-200):',
+        default: '20',
+      },
+    ],
+  },
   '46-transaction-detail-inspection': {
     name: '46-transaction-detail-inspection',
     description: 'Retrieve a Horizon transaction by hash and inspect its metadata and XDR',

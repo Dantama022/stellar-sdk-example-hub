@@ -28,12 +28,16 @@ import * as ex45 from '../src/examples/45-horizon-effects';
 import * as ex47 from '../src/examples/47-account-data-entries';
 import * as ex48 from '../src/examples/48-asset-authorization-flags';
 import * as ex49 from '../src/examples/49-claimable-balance-inspection';
+import * as ex50 from '../src/examples/50-asset-issuer-discovery';
 import * as ex51 from '../src/examples/51-failed-transaction-analysis';
+import * as ex52 from '../src/examples/52-account-balance-history';
+import * as ex53 from '../src/examples/53-ledger-inspection';
 import * as ex54 from '../src/examples/54-fee-stats';
 import * as ex55 from '../src/examples/55-trade-history';
 import * as ex56 from '../src/examples/56-account-flags-inspection';
 import * as ex57 from '../src/examples/57-account-reserve-calculator';
 import * as ex58 from '../src/examples/58-account-relationship-discovery';
+import * as ex59 from '../src/examples/59-account-offer-inspection';
 
 import { examples } from '../src/runner/catalog';
 
@@ -67,12 +71,16 @@ describe('Examples Exports', () => {
       ex47,
       ex48,
       ex49,
+      ex50,
       ex51,
+      ex52,
+      ex53,
       ex54,
       ex55,
       ex56,
       ex57,
       ex58,
+      ex59,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -99,12 +107,16 @@ describe('Examples Exports', () => {
       '47-account-data-entries',
       '48-asset-authorization-flags',
       '49-claimable-balance-inspection',
+      '50-asset-issuer-discovery',
       '51-failed-transaction-analysis',
+      '52-account-balance-history',
+      '53-ledger-inspection',
       '54-fee-stats',
       '55-trade-history',
       '56-account-flags-inspection',
       '57-account-reserve-calculator',
       '58-account-relationship-discovery',
+      '59-account-offer-inspection',
     ]) {
       expect(examples[key]).toBeDefined();
     }
@@ -712,5 +724,270 @@ describe('ISSUE-051: Failed Transaction Result Analysis Unit Tests', () => {
     expect(parsed.operationExplanations[0].explanation).toContain(
       'Destination account does not exist',
     );
+  });
+});
+
+describe('ISSUE-050: Asset Issuer Discovery Unit Tests', () => {
+  const issuer = 'GBBD47IF6LWK2P7MDEVSCWR7DPUWV3NY3DTQEVFL4TWVCKPXA26VCCKM';
+
+  it('parses code and issuer into an Asset', () => {
+    // Use a known-valid Testnet-style issuer from other examples.
+    const validIssuer = 'GB6ZS324HT6VEEDZ6MG6CESWE7YZSY7WAJDRQSP2GZCRZ5GBND377A2F';
+    const asset = ex50.parseAssetIdentifier('USDC', validIssuer);
+    expect(asset.getCode()).toBe('USDC');
+    expect(asset.getIssuer()).toBe(validIssuer);
+  });
+
+  it('parses combined CODE:ISSUER input', () => {
+    const validIssuer = 'GB6ZS324HT6VEEDZ6MG6CESWE7YZSY7WAJDRQSP2GZCRZ5GBND377A2F';
+    const asset = ex50.parseCombinedAssetInput(`USDC:${validIssuer}`);
+    expect(asset.getCode()).toBe('USDC');
+    expect(asset.getIssuer()).toBe(validIssuer);
+  });
+
+  it('rejects malformed asset identifiers', () => {
+    expect(() => ex50.parseAssetIdentifier('', issuer)).toThrow(/Missing asset code/);
+    expect(() => ex50.parseCombinedAssetInput('USDC')).toThrow(/CODE:ISSUER/);
+  });
+
+  it('parses Horizon asset records and formats a report', () => {
+    const parsed = ex50.parseAssetRecord({
+      asset_type: 'credit_alphanum4',
+      asset_code: 'USDC',
+      asset_issuer: issuer,
+      num_accounts: 42,
+      num_claimable_balances: 1,
+      num_liquidity_pools: 2,
+      amount: '1000.0000000',
+      flags: { auth_required: true, auth_revocable: false },
+    });
+
+    expect(parsed.numAccounts).toBe(42);
+    expect(parsed.flags.authRequired).toBe(true);
+
+    const report = ex50.formatAssetDiscoveryReport(parsed);
+    expect(report).toContain('USDC');
+    expect(report).toContain(issuer);
+    expect(report).toContain('Accounts Trusting');
+    expect(report).toContain('code + issuer');
+  });
+
+  it('detects unknown asset errors', () => {
+    expect(ex50.isUnknownAssetError({ response: { status: 404 } })).toBe(true);
+    expect(ex50.isUnknownAssetError({ name: 'NotFoundError' })).toBe(true);
+    expect(ex50.isUnknownAssetError({ response: { status: 500 } })).toBe(false);
+  });
+
+  it('registers the example and documents it in the README', () => {
+    expect(examples['50-asset-issuer-discovery']).toBeDefined();
+    const readme = readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+    expect(readme).toContain('`50-asset-issuer-discovery`');
+    expect(readme).toContain('npm run run-example 50-asset-issuer-discovery');
+  });
+});
+
+describe('ISSUE-052: Account Balance History Unit Tests', () => {
+  it('normalizes history limits into Horizon range', () => {
+    expect(ex52.normalizeLimit(undefined)).toBe(25);
+    expect(ex52.normalizeLimit('10')).toBe(10);
+    expect(ex52.normalizeLimit(0)).toBe(1);
+    expect(ex52.normalizeLimit(999)).toBe(200);
+  });
+
+  it('identifies native balance-changing effects only', () => {
+    expect(
+      ex52.isNativeBalanceChangingEffect({
+        type: 'account_credited',
+        asset_type: 'native',
+        amount: '1',
+      }),
+    ).toBe(true);
+    expect(
+      ex52.isNativeBalanceChangingEffect({
+        type: 'account_credited',
+        asset_type: 'credit_alphanum4',
+        asset_code: 'USDC',
+        amount: '1',
+      }),
+    ).toBe(false);
+    expect(ex52.isNativeBalanceChangingEffect({ type: 'offer_created' })).toBe(false);
+  });
+
+  it('parses credits, debits, and account creation into signed deltas', () => {
+    expect(
+      ex52.parseBalanceEffect({ type: 'account_credited', amount: '5.5', id: '1' })?.deltaXlm,
+    ).toBe(5.5);
+    expect(
+      ex52.parseBalanceEffect({ type: 'account_debited', amount: '2', id: '2' })?.deltaXlm,
+    ).toBe(-2);
+    expect(
+      ex52.parseBalanceEffect({ type: 'account_created', starting_balance: '100', id: '3' })
+        ?.deltaXlm,
+    ).toBe(100);
+  });
+
+  it('sorts chronologically and attaches running balances', () => {
+    const changes = [
+      ex52.parseBalanceEffect({
+        type: 'account_credited',
+        amount: '10',
+        id: 'b',
+        created_at: '2024-01-02T00:00:00Z',
+      })!,
+      ex52.parseBalanceEffect({
+        type: 'account_debited',
+        amount: '3',
+        id: 'a',
+        created_at: '2024-01-01T00:00:00Z',
+      })!,
+    ];
+
+    const chronological = ex52.sortChronologically(changes);
+    expect(chronological[0].type).toBe('account_debited');
+
+    const withBalances = ex52.attachRunningBalances(chronological, 107);
+    // window delta = -3 + 10 = 7; start = 107 - 7 = 100
+    expect(withBalances[0].balanceAfter).toBe(97);
+    expect(withBalances[1].balanceAfter).toBe(107);
+  });
+
+  it('formats empty history and documents limitations', () => {
+    const report = ex52.formatBalanceHistoryReport({
+      accountId: 'GACCOUNT',
+      currentBalanceXlm: 10,
+      changes: [],
+      windowLimit: 25,
+      reconstructed: false,
+    });
+    expect(report).toContain('No native XLM balance-changing effects');
+    expect(report).toContain('GACCOUNT');
+  });
+
+  it('registers the example and documents it in the README', () => {
+    expect(examples['52-account-balance-history']).toBeDefined();
+    const readme = readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+    expect(readme).toContain('`52-account-balance-history`');
+    expect(readme).toContain('npm run run-example 52-account-balance-history');
+  });
+});
+
+describe('ISSUE-053: Ledger Inspection Unit Tests', () => {
+  it('parses valid ledger sequences and rejects invalid ones', () => {
+    expect(ex53.parseLedgerSequence(undefined)).toBeUndefined();
+    expect(ex53.parseLedgerSequence('12345')).toBe(12345);
+    expect(() => ex53.parseLedgerSequence('0')).toThrow(/positive integer/);
+    expect(() => ex53.parseLedgerSequence('abc')).toThrow(/Invalid ledger sequence/);
+  });
+
+  it('parses Horizon ledger records into structured metadata', () => {
+    const parsed = ex53.parseLedgerRecord({
+      sequence: 100,
+      hash: 'abc',
+      prev_hash: 'def',
+      closed_at: '2024-01-01T00:00:00Z',
+      successful_transaction_count: 3,
+      failed_transaction_count: 1,
+      operation_count: 7,
+      protocol_version: 20,
+      base_fee_in_stroops: 100,
+      base_reserve_in_stroops: 5000000,
+      total_coins: '105000000000',
+      fee_pool: '1000',
+      max_tx_set_size: 1000,
+    });
+
+    expect(parsed.sequence).toBe(100);
+    expect(parsed.successfulTransactionCount).toBe(3);
+    expect(parsed.protocolVersion).toBe(20);
+
+    const report = ex53.formatLedgerReport(parsed);
+    expect(report).toContain('Ledger Sequence');
+    expect(report).toContain('Previous Ledger Hash');
+    expect(report).toContain('ledgers relate to transactions');
+  });
+
+  it('detects unavailable ledger errors', () => {
+    expect(ex53.isUnavailableLedgerError({ response: { status: 404 } })).toBe(true);
+    expect(ex53.isUnavailableLedgerError({ name: 'NotFoundError' })).toBe(true);
+    expect(ex53.isUnavailableLedgerError({})).toBe(false);
+  });
+
+  it('registers the example and documents it in the README', () => {
+    expect(examples['53-ledger-inspection']).toBeDefined();
+    const readme = readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+    expect(readme).toContain('`53-ledger-inspection`');
+    expect(readme).toContain('npm run run-example 53-ledger-inspection');
+  });
+});
+
+describe('ISSUE-059: Account Offer Inspection Unit Tests', () => {
+  it('describes native and issued offer assets', () => {
+    expect(ex59.describeOfferAsset({ asset_type: 'native' })).toBe('XLM');
+    expect(
+      ex59.describeOfferAsset({
+        asset_type: 'credit_alphanum4',
+        asset_code: 'USDC',
+        asset_issuer: 'GISSUER',
+      }),
+    ).toBe('USDC:GISSUER');
+  });
+
+  it('parses offer records with price and approximate volume', () => {
+    const offer = ex59.parseOfferRecord({
+      id: '99',
+      seller: 'GSELLER',
+      selling: { asset_type: 'native' },
+      buying: {
+        asset_type: 'credit_alphanum4',
+        asset_code: 'USDC',
+        asset_issuer: 'GISSUER',
+      },
+      amount: '10.0000000',
+      price_r: { n: '1', d: '4' },
+      price: '0.2500000',
+      last_modified_ledger: 1000,
+    });
+
+    expect(offer.offerType).toBe('sell');
+    expect(offer.sellingAsset).toBe('XLM');
+    expect(offer.buyingAsset).toBe('USDC:GISSUER');
+    expect(offer.price).toBe(0.25);
+    expect(offer.approximateBuyingVolume).toBe(2.5);
+  });
+
+  it('summarizes offers and formats empty-state messaging', () => {
+    const offers = [
+      ex59.parseOfferRecord({
+        id: '1',
+        selling: { asset_type: 'native' },
+        buying: { asset_type: 'credit_alphanum4', asset_code: 'USDC', asset_issuer: 'G' },
+        amount: '4',
+        price: '2',
+        price_r: { n: 2, d: 1 },
+      }),
+    ];
+    const summary = ex59.summarizeOffers(offers);
+    expect(summary.offerCount).toBe(1);
+    expect(summary.totalSellingByAsset.XLM).toBe(4);
+
+    const empty = ex59.formatOfferInspectionReport('GACCOUNT', [], {
+      offerCount: 0,
+      totalSellingByAsset: {},
+      totalBuyingVolumeByAsset: {},
+    });
+    expect(empty).toContain('No active offers found');
+    expect(empty).toContain('orderbook');
+  });
+
+  it('normalizes offer limits', () => {
+    expect(ex59.normalizeLimit('5')).toBe(5);
+    expect(ex59.normalizeLimit(500)).toBe(200);
+  });
+
+  it('registers the example and documents it in the README', () => {
+    expect(examples['59-account-offer-inspection']).toBeDefined();
+    const readme = readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+    expect(readme).toContain('`59-account-offer-inspection`');
+    expect(readme).toContain('npm run run-example 59-account-offer-inspection');
   });
 });
