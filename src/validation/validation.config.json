@@ -141,6 +141,10 @@
     {
       "match": "59-account-offer-inspection",
       "reason": "Requires live Horizon account offer data"
+    },
+    {
+      "match": "61-horizon-resource-filtering",
+      "reason": "Requires live Horizon data across multiple resource endpoints"
     }
   ]
 }
