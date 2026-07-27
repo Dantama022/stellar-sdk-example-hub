@@ -125,6 +125,22 @@
     {
       "match": "58-account-relationship-discovery",
       "reason": "Requires live Horizon account and operation data"
+    },
+    {
+      "match": "50-asset-issuer-discovery",
+      "reason": "Requires live Horizon asset index data"
+    },
+    {
+      "match": "52-account-balance-history",
+      "reason": "Requires live Horizon account effects data"
+    },
+    {
+      "match": "53-ledger-inspection",
+      "reason": "Requires live Horizon ledger data"
+    },
+    {
+      "match": "59-account-offer-inspection",
+      "reason": "Requires live Horizon account offer data"
     }
   ]
 }
