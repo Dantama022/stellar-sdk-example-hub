@@ -88,6 +88,7 @@ The repository currently includes the following runnable examples:
 53. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
 54. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 55. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+56. **`60-network-configuration`**: Selecting Testnet vs Mainnet Horizon / Soroban RPC endpoints, binding `TransactionBuilder` to the correct network passphrase, detecting mismatched configuration, and explaining why a transaction signed for one network cannot be submitted to another.
 56. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
 57. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
 58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
@@ -249,6 +250,20 @@ Each side of the pair is given as `native` (or `XLM`) for the native asset, or a
 
 This example reports **completed** trades, which is the counterpart to orderbook depth: `server.orderbook(base, counter)` returns the bids and asks that are currently resting and may never execute, while `server.trades().forAssetPair(...)` returns executions that already settled on the ledger. Alongside each trade's timestamp, price, amounts, and operation and transaction references, the example reports total traded volume, an unweighted average price, and the volume-weighted average price (VWAP). A pair with no trades is reported as an empty history rather than an error, since it indicates the market has never executed rather than that the request failed.
 
+Inspect Testnet vs Mainnet network configuration (Horizon, Soroban RPC, and passphrase):
+
+```bash
+npm run run-example 60-network-configuration
+```
+
+Select Mainnet explicitly via CLI or environment variable:
+
+```bash
+npm run run-example -- 60-network-configuration mainnet
+STELLAR_NETWORK=mainnet npm run run-example 60-network-configuration
+```
+
+The example prints the selected Horizon and Soroban RPC endpoints, binds `TransactionBuilder` to the matching network passphrase, rejects mismatched endpoint/passphrase combinations, and shows why a transaction signed for one network cannot be submitted to another. It never submits Mainnet transactions.
 Inspect an account's active SDEX offers:
 
 ```bash
