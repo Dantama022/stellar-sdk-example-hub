@@ -34,6 +34,7 @@ import * as ex55 from '../src/examples/55-trade-history';
 import * as ex56 from '../src/examples/56-account-flags-inspection';
 import * as ex57 from '../src/examples/57-account-reserve-calculator';
 import * as ex58 from '../src/examples/58-account-relationship-discovery';
+import * as ex60 from '../src/examples/60-network-configuration';
 
 import { examples } from '../src/runner/catalog';
 
@@ -73,6 +74,7 @@ describe('Examples Exports', () => {
       ex56,
       ex57,
       ex58,
+      ex60,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -105,6 +107,7 @@ describe('Examples Exports', () => {
       '56-account-flags-inspection',
       '57-account-reserve-calculator',
       '58-account-relationship-discovery',
+      '60-network-configuration',
     ]) {
       expect(examples[key]).toBeDefined();
     }

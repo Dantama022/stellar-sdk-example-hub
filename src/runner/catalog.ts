@@ -15,6 +15,7 @@ export interface Example {
     name: string;
     message: string;
     default?: any;
+    choices?: Array<string | { name: string; value: string }>;
   }>;
 }
 
@@ -407,6 +408,24 @@ export const examples: Record<string, Example> = {
         type: 'input',
         name: 'accountId',
         message: 'Optional account ID (blank uses recent active account):',
+      },
+    ],
+  },
+  '60-network-configuration': {
+    name: '60-network-configuration',
+    description:
+      'Configure Testnet/Mainnet Horizon, Soroban RPC, and network passphrase for transaction signing',
+    run: loadExample('../examples/60-network-configuration'),
+    params: [
+      {
+        type: 'list',
+        name: 'network',
+        message: 'Select Stellar network:',
+        default: 'testnet',
+        choices: [
+          { name: 'Testnet', value: 'testnet' },
+          { name: 'Mainnet (Public)', value: 'mainnet' },
+        ],
       },
     ],
   },

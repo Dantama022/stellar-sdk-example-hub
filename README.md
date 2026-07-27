@@ -88,6 +88,7 @@ The repository currently includes the following runnable examples:
 53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
 54. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
 55. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+56. **`60-network-configuration`**: Selecting Testnet vs Mainnet Horizon / Soroban RPC endpoints, binding `TransactionBuilder` to the correct network passphrase, detecting mismatched configuration, and explaining why a transaction signed for one network cannot be submitted to another.
 
 ## Installation
 
@@ -202,6 +203,21 @@ npm run run-example -- 55-trade-history native USDC:<issuer-account-id> 25
 Each side of the pair is given as `native` (or `XLM`) for the native asset, or as `CODE:ISSUER` for an issued asset; the same values can be supplied through the `BASE_ASSET`, `COUNTER_ASSET`, and `TRADE_LIMIT` environment variables. Prices are quoted as counter units per 1 base unit, so reversing the pair inverts every price. Leaving both assets blank makes the example discover a pair from the most recent trade on the connected network.
 
 This example reports **completed** trades, which is the counterpart to orderbook depth: `server.orderbook(base, counter)` returns the bids and asks that are currently resting and may never execute, while `server.trades().forAssetPair(...)` returns executions that already settled on the ledger. Alongside each trade's timestamp, price, amounts, and operation and transaction references, the example reports total traded volume, an unweighted average price, and the volume-weighted average price (VWAP). A pair with no trades is reported as an empty history rather than an error, since it indicates the market has never executed rather than that the request failed.
+
+Inspect Testnet vs Mainnet network configuration (Horizon, Soroban RPC, and passphrase):
+
+```bash
+npm run run-example 60-network-configuration
+```
+
+Select Mainnet explicitly via CLI or environment variable:
+
+```bash
+npm run run-example -- 60-network-configuration mainnet
+STELLAR_NETWORK=mainnet npm run run-example 60-network-configuration
+```
+
+The example prints the selected Horizon and Soroban RPC endpoints, binds `TransactionBuilder` to the matching network passphrase, rejects mismatched endpoint/passphrase combinations, and shows why a transaction signed for one network cannot be submitted to another. It never submits Mainnet transactions.
 
 Run the ledger bounds example:
 
