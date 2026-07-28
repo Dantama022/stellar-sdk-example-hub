@@ -145,6 +145,22 @@
     {
       "match": "61-horizon-resource-filtering",
       "reason": "Requires live Horizon data across multiple resource endpoints"
+    },
+    {
+      "match": "68-soroban-contract-simulation",
+      "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+    },
+    {
+      "match": "69-soroban-contract-storage",
+      "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+    },
+    {
+      "match": "70-soroban-authorization",
+      "reason": "Requires live Soroban RPC, Friendbot funding, and a deployed contract on Testnet"
+    },
+    {
+      "match": "71-soroban-storage-update",
+      "reason": "Requires live Soroban RPC, Friendbot funding, and a state-modifying contract on Testnet"
     }
   ]
 }
