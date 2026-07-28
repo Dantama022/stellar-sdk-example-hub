@@ -528,5 +528,28 @@ export const examples: Record<string, Example> = {
     name: '87-transaction-envelope-inspection',
     description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
     run: loadExample('../examples/87-transaction-envelope-inspection'),
+  '68-soroban-contract-simulation': {
+    name: '68-soroban-contract-simulation',
+    description:
+      'Simulate a Soroban contract invocation, inspect resource estimates and returned values, and assemble the transaction footprint',
+    run: loadExample('../examples/68-soroban-contract-simulation'),
+  },
+  '69-soroban-contract-storage': {
+    name: '69-soroban-contract-storage',
+    description:
+      'Retrieve and inspect Soroban contract storage entries, decode keys and values, and explain instance, persistent, and temporary durability',
+    run: loadExample('../examples/69-soroban-contract-storage'),
+  },
+  '70-soroban-authorization': {
+    name: '70-soroban-authorization',
+    description:
+      'Invoke an authorized Soroban contract method, inspect authorization entries, sign them, and distinguish auth from transaction signatures',
+    run: loadExample('../examples/70-soroban-authorization'),
+  },
+  '71-soroban-storage-update': {
+    name: '71-soroban-storage-update',
+    description:
+      'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
+    run: loadExample('../examples/71-soroban-storage-update'),
   },
 };
