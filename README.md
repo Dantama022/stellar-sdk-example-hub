@@ -94,6 +94,10 @@ The repository currently includes the following runnable examples:
 58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
 59. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
 60. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
+61. **`72-contract-interface-inspection`**: Retrieving and inspecting a Soroban contract's interface specification (ScSpec): exported functions with parameter and return types, user-defined structs, enums, unions, and error enums, plus a JSON Schema preview for tooling.
+62. **`73-complex-data-types`**: Encoding and decoding Soroban complex types (Vec, Map, Struct, integer enum, tagged union, Option, Address) with `nativeToScVal` / `scValToNative`, invalid argument handling, and a live `balance()` simulation against the native XLM SAC.
+63. **`74-contract-error-handling`**: Distinguishing and handling all six Soroban error categories: pre-flight SDK validation, simulation failure, transaction submission error, on-ledger execution failure, contract application error (`scvError`), and network/transport errors — with a decision tree for each remediation path.
+64. **`75-deploy-precompiled-wasm`**: Loading a precompiled `.wasm` artifact from disk, validating the WebAssembly magic number, uploading it to the network via `uploadContractWasm`, deploying a contract instance via `createCustomContract`, cross-checking the installed WASM hash, and verifying the live contract entry with `getLedgerEntries`.
 
 ## Installation
 

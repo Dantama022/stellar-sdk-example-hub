@@ -509,4 +509,44 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '72-contract-interface-inspection': {
+    name: '72-contract-interface-inspection',
+    description:
+      'Retrieve and inspect a Soroban contract interface: functions, parameters, return types, and custom data types via ScSpec metadata',
+    run: loadExample('../examples/72-contract-interface-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message:
+          'Contract ID to inspect (blank uses the native XLM SAC on Testnet):',
+      },
+    ],
+  },
+  '73-complex-data-types': {
+    name: '73-complex-data-types',
+    description:
+      'Encode and decode Soroban complex types (Vec, Map, Struct, Enum, tagged union, Option, Address) and invoke a contract via simulation',
+    run: loadExample('../examples/73-complex-data-types'),
+  },
+  '74-contract-error-handling': {
+    name: '74-contract-error-handling',
+    description:
+      'Distinguish and handle all Soroban error categories: pre-flight, simulation failure, submission error, execution failure, contract application error, and network error',
+    run: loadExample('../examples/74-contract-error-handling'),
+  },
+  '75-deploy-precompiled-wasm': {
+    name: '75-deploy-precompiled-wasm',
+    description:
+      'Load a precompiled .wasm artifact, upload it to the network, deploy a contract instance, and verify it on-chain',
+    run: loadExample('../examples/75-deploy-precompiled-wasm'),
+    params: [
+      {
+        type: 'input',
+        name: 'wasmPath',
+        message:
+          'Path to .wasm file (blank uses src/contracts/sample/hello.wasm):',
+      },
+    ],
+  },
 };
