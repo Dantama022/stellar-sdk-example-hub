@@ -86,6 +86,7 @@ The repository currently includes the following runnable examples:
 51. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 52. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
 53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+54. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
 
 ## Installation
 
@@ -170,6 +171,26 @@ Inspect claimable balances and claimant predicates:
 ```bash
 npm run run-example 49-claimable-balance-inspection
 ```
+
+Inspect the events emitted by a Soroban smart contract:
+
+```bash
+npm run run-example 67-soroban-contract-events
+```
+
+Query a specific contract, ledger range, and result limit by passing them as additional command-line arguments:
+
+```bash
+npm run run-example -- 67-soroban-contract-events <contract-id> <start-ledger> <end-ledger> 25
+```
+
+The same values can be supplied through the `CONTRACT_ID`, `START_LEDGER`, `END_LEDGER`, `EVENT_LIMIT`, and `EVENT_TYPE` environment variables, and the RPC endpoint through `SOROBAN_RPC_URL` (defaulting to `https://soroban-testnet.stellar.org`). Leaving the contract ID blank makes the example discover a recently active contract on the connected network, so it runs without any setup. Leaving the ledger range blank scans roughly the last 24 hours of ledgers.
+
+This example is read-only. For each event it prints the emitting contract, the ledger sequence and close time, the transaction hash, every indexed topic with its XDR type (`scvSymbol`, `scvAddress`, `scvI128`, …), and the decoded data payload. It also aggregates the results by event name and event type, and flags events emitted by a sub-call that later failed.
+
+Contract events are **not** Horizon events. Horizon operations and effects are derived from protocol-defined changes to classic ledger state and are retained for the instance's full history; Soroban contract events are application-defined values the contract author chose to publish, live in transaction meta rather than ledger state, and are retained by Soroban RPC only for a rolling window (commonly around 24 hours). Because of that window, activity older than the retention period cannot be recovered by widening the ledger range — long-term event history has to be ingested as it happens. Queries that predate the window are narrowed automatically, and a contract with no events in range is reported as an empty result rather than an error.
+
+To generate events of your own, deploy a contract with `13-soroban-deploy` and invoke it with `05-soroban-invoke`, then pass the resulting contract ID to this example. Example `10-soroban-events` covers the same RPC method in a shorter, minimal form.
 
 Run the ledger bounds example:
 

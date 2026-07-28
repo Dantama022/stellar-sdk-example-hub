@@ -117,6 +117,10 @@
     {
       "match": "58-account-relationship-discovery",
       "reason": "Requires live Horizon account and operation data"
+    },
+    {
+      "match": "67-soroban-contract-events",
+      "reason": "Requires live Soroban RPC event data within the server retention window"
     }
   ]
 }
