@@ -94,10 +94,14 @@ The repository currently includes the following runnable examples:
 58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
 59. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
 60. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
-61. **`72-contract-interface-inspection`**: Retrieving and inspecting a Soroban contract's interface specification (ScSpec): exported functions with parameter and return types, user-defined structs, enums, unions, and error enums, plus a JSON Schema preview for tooling.
-62. **`73-complex-data-types`**: Encoding and decoding Soroban complex types (Vec, Map, Struct, integer enum, tagged union, Option, Address) with `nativeToScVal` / `scValToNative`, invalid argument handling, and a live `balance()` simulation against the native XLM SAC.
-63. **`74-contract-error-handling`**: Distinguishing and handling all six Soroban error categories: pre-flight SDK validation, simulation failure, transaction submission error, on-ledger execution failure, contract application error (`scvError`), and network/transport errors — with a decision tree for each remediation path.
-64. **`75-deploy-precompiled-wasm`**: Loading a precompiled `.wasm` artifact from disk, validating the WebAssembly magic number, uploading it to the network via `uploadContractWasm`, deploying a contract instance via `createCustomContract`, cross-checking the installed WASM hash, and verifying the live contract entry with `getLedgerEntries`.
+61. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
+62. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
+63. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
+64. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signatures, signer hints, and XDR serialization round-trips.
+61. **`68-soroban-contract-simulation`**: Simulating a Soroban contract invocation, inspecting resource estimates and returned values, and assembling the footprint-bearing transaction without broadcasting.
+62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
+63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
+64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
 
 ## Installation
 
@@ -320,6 +324,56 @@ npm run run-example 44-resilient-horizon-stream
 ```
 
 The resilient stream tracks the last paging token, logs each reconnect attempt, and resumes from the saved cursor instead of replaying already-processed records.
+
+Simulate a Soroban contract invocation without broadcasting:
+
+```bash
+npm run run-example 68-soroban-contract-simulation
+```
+
+Supply a custom contract ID and method via environment variables:
+
+```bash
+CONTRACT_ID=<contract-id> CONTRACT_METHOD=<method> npm run run-example 68-soroban-contract-simulation
+```
+
+The example connects to Soroban RPC, builds an invocation transaction, submits it for simulation, and displays estimated resource usage (CPU instructions, read/write bytes, ledger footprint) and the returned value. It then assembles the footprint-bearing transaction without submitting — demonstrating the exact preparation steps required before signing and broadcasting.
+
+Inspect Soroban contract storage entries:
+
+```bash
+npm run run-example 69-soroban-contract-storage
+```
+
+Inspect storage for a specific contract:
+
+```bash
+CONTRACT_ID=<contract-id> npm run run-example 69-soroban-contract-storage
+```
+
+The example queries the contract's instance entry and a named persistent key, decodes and displays their values and live-until ledger sequences, demonstrates graceful handling of missing keys, and explains the difference between instance, persistent, and temporary storage durability — and how storage differs from contract events.
+
+Invoke an authorized Soroban contract method:
+
+```bash
+npm run run-example 70-soroban-authorization
+```
+
+The example funds an ephemeral account, builds a contract invocation, simulates to obtain authorization entries, inspects and signs each entry with the authorized keypair, assembles the transaction, and submits it — explaining at each step how Soroban authorization differs from ordinary transaction signatures.
+
+Demonstrate the Soroban storage update lifecycle:
+
+```bash
+npm run run-example 71-soroban-storage-update
+```
+
+Supply a custom contract and methods:
+
+```bash
+CONTRACT_ID=<id> CONTRACT_METHOD=increment CONTRACT_READ_METHOD=get npm run run-example 71-soroban-storage-update
+```
+
+The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 

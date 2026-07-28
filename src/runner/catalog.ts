@@ -509,44 +509,47 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
-  '72-contract-interface-inspection': {
-    name: '72-contract-interface-inspection',
-    description:
-      'Retrieve and inspect a Soroban contract interface: functions, parameters, return types, and custom data types via ScSpec metadata',
-    run: loadExample('../examples/72-contract-interface-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'contractId',
-        message:
-          'Contract ID to inspect (blank uses the native XLM SAC on Testnet):',
-      },
-    ],
+  '84-muxed-account-handling': {
+    name: '84-muxed-account-handling',
+    description: 'Create, parse, and validate muxed (M...) accounts and their identifiers',
+    run: loadExample('../examples/84-muxed-account-handling'),
   },
-  '73-complex-data-types': {
-    name: '73-complex-data-types',
-    description:
-      'Encode and decode Soroban complex types (Vec, Map, Struct, Enum, tagged union, Option, Address) and invoke a contract via simulation',
-    run: loadExample('../examples/73-complex-data-types'),
+  '85-transaction-fee-estimation': {
+    name: '85-transaction-fee-estimation',
+    description: 'Estimate transaction fees from network fee stats across priority levels',
+    run: loadExample('../examples/85-transaction-fee-estimation'),
   },
-  '74-contract-error-handling': {
-    name: '74-contract-error-handling',
-    description:
-      'Distinguish and handle all Soroban error categories: pre-flight, simulation failure, submission error, execution failure, contract application error, and network error',
-    run: loadExample('../examples/74-contract-error-handling'),
+  '86-transaction-memo-handling': {
+    name: '86-transaction-memo-handling',
+    description: 'Build, encode, and decode every supported Stellar transaction memo type',
+    run: loadExample('../examples/86-transaction-memo-handling'),
   },
-  '75-deploy-precompiled-wasm': {
-    name: '75-deploy-precompiled-wasm',
+  '87-transaction-envelope-inspection': {
+    name: '87-transaction-envelope-inspection',
+    description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
+    run: loadExample('../examples/87-transaction-envelope-inspection'),
+  '68-soroban-contract-simulation': {
+    name: '68-soroban-contract-simulation',
     description:
-      'Load a precompiled .wasm artifact, upload it to the network, deploy a contract instance, and verify it on-chain',
-    run: loadExample('../examples/75-deploy-precompiled-wasm'),
-    params: [
-      {
-        type: 'input',
-        name: 'wasmPath',
-        message:
-          'Path to .wasm file (blank uses src/contracts/sample/hello.wasm):',
-      },
-    ],
+      'Simulate a Soroban contract invocation, inspect resource estimates and returned values, and assemble the transaction footprint',
+    run: loadExample('../examples/68-soroban-contract-simulation'),
+  },
+  '69-soroban-contract-storage': {
+    name: '69-soroban-contract-storage',
+    description:
+      'Retrieve and inspect Soroban contract storage entries, decode keys and values, and explain instance, persistent, and temporary durability',
+    run: loadExample('../examples/69-soroban-contract-storage'),
+  },
+  '70-soroban-authorization': {
+    name: '70-soroban-authorization',
+    description:
+      'Invoke an authorized Soroban contract method, inspect authorization entries, sign them, and distinguish auth from transaction signatures',
+    run: loadExample('../examples/70-soroban-authorization'),
+  },
+  '71-soroban-storage-update': {
+    name: '71-soroban-storage-update',
+    description:
+      'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
+    run: loadExample('../examples/71-soroban-storage-update'),
   },
 };
