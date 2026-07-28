@@ -86,7 +86,8 @@ The repository currently includes the following runnable examples:
 51. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 52. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
 53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
-54. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+54. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
+55. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
 
 ## Installation
 
@@ -171,6 +172,28 @@ Inspect claimable balances and claimant predicates:
 ```bash
 npm run run-example 49-claimable-balance-inspection
 ```
+
+Inspect every effect produced by a closed ledger:
+
+```bash
+npm run run-example 66-ledger-effects
+```
+
+Inspect a specific ledger and raise the result limit by passing them as additional command-line arguments:
+
+```bash
+npm run run-example -- 66-ledger-effects <ledger-sequence> 100
+```
+
+The same values can be supplied through the `LEDGER_SEQUENCE` and `EFFECT_LIMIT` environment variables, and the Horizon endpoint through `HORIZON_URL` (defaulting to `https://horizon-testnet.stellar.org`). Leaving the ledger sequence blank inspects the latest closed ledger, so the example runs without any setup.
+
+This example is read-only. It prints the ledger header (close time, transaction counts, operation count), then every effect with its type, affected account, and ledger sequence, followed by a breakdown grouped by effect type and by category (account balances, trustlines, DEX activity, claimable balances, liquidity pools, sponsorship, smart contracts) and summary statistics: distinct effect types, accounts touched, operations and transactions involved, and effects per operation.
+
+Effect records do not carry a ledger field of their own. The ledger sequence, the transaction's position within that ledger, and the operation's position within that transaction are all decoded from the effect ID, which is the operation's TOID (`ledgerSequence << 32 | transactionOrder << 12 | operationIndex`) followed by the effect index.
+
+Ledger effects differ from transaction effects and account effects in scope, not in record shape. Ledger effects cover every transaction in one closed ledger — a complete, bounded slice of history that will never change. Transaction effects (`45-horizon-effects`) cover one submission across its operations, which is what you want after submitting. Account effects cover one participant across all of history, spanning many ledgers and growing as the account stays active. The same `account_credited` record, with the same ID, can be returned by all three endpoints.
+
+Invalid ledger sequences are rejected before any request is made, and a ledger that Horizon does not have — not yet closed, never ingested, or pruned — is reported with the latest available sequence rather than as an opaque 404. A ledger that closed with no transactions, or whose transactions all failed, is reported as an empty result with an explanation rather than as an error.
 
 Inspect the events emitted by a Soroban smart contract:
 

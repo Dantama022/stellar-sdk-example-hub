@@ -29,6 +29,7 @@ import * as ex51 from '../src/examples/51-failed-transaction-analysis';
 import * as ex54 from '../src/examples/54-fee-stats';
 import * as ex57 from '../src/examples/57-account-reserve-calculator';
 import * as ex58 from '../src/examples/58-account-relationship-discovery';
+import * as ex66 from '../src/examples/66-ledger-effects';
 import * as ex67 from '../src/examples/67-soroban-contract-events';
 
 import { examples } from '../src/runner/catalog';
@@ -67,6 +68,7 @@ describe('Examples Exports', () => {
       ex54,
       ex57,
       ex58,
+      ex66,
       ex67,
     ]) {
       expect(typeof mod.run).toBe('function');
@@ -98,6 +100,7 @@ describe('Examples Exports', () => {
       '54-fee-stats',
       '57-account-reserve-calculator',
       '58-account-relationship-discovery',
+      '66-ledger-effects',
       '67-soroban-contract-events',
     ]) {
       expect(examples[key]).toBeDefined();
