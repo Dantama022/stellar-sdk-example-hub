@@ -509,6 +509,25 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '84-muxed-account-handling': {
+    name: '84-muxed-account-handling',
+    description: 'Create, parse, and validate muxed (M...) accounts and their identifiers',
+    run: loadExample('../examples/84-muxed-account-handling'),
+  },
+  '85-transaction-fee-estimation': {
+    name: '85-transaction-fee-estimation',
+    description: 'Estimate transaction fees from network fee stats across priority levels',
+    run: loadExample('../examples/85-transaction-fee-estimation'),
+  },
+  '86-transaction-memo-handling': {
+    name: '86-transaction-memo-handling',
+    description: 'Build, encode, and decode every supported Stellar transaction memo type',
+    run: loadExample('../examples/86-transaction-memo-handling'),
+  },
+  '87-transaction-envelope-inspection': {
+    name: '87-transaction-envelope-inspection',
+    description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
+    run: loadExample('../examples/87-transaction-envelope-inspection'),
   '68-soroban-contract-simulation': {
     name: '68-soroban-contract-simulation',
     description:
