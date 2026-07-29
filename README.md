@@ -110,6 +110,7 @@ The repository currently includes the following runnable examples:
 62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+65. **`104-contract-restoration`**: Detecting archived Soroban contract ledger entries, building and simulating a `RestoreFootprint` transaction, submitting restoration when required, and verifying the contract becomes accessible again — with guidance on TTL extension versus restoration.
 65. **`106-scval-serialization`**: Converting JavaScript values to Soroban ScVal objects and back with reusable helpers, displaying raw XDR, and explaining common serialization pitfalls.
 65. **`105-contract-event-decoding`**: Retrieving Soroban contract events and decoding indexed topics and data payloads into human-readable values, with raw base64 XDR shown alongside decoded output.
 65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
@@ -435,6 +436,19 @@ CONTRACT_ID=<id> CONTRACT_METHOD=increment CONTRACT_READ_METHOD=get npm run run-
 
 The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
 
+Detect archived Soroban contract state and demonstrate restoration:
+
+```bash
+npm run run-example 104-contract-restoration
+```
+
+Inspect a specific contract:
+
+```bash
+npm run run-example -- 104-contract-restoration <contract-id>
+```
+
+The same contract ID can be supplied through `CONTRACT_ID`. For accessible contracts the example simulates restoration and reports the estimated fee and footprint without submitting an unnecessary transaction. When simulation detects archived entries (`isSimulationRestore`), it prepares, submits, and polls a `RestoreFootprint` transaction, then re-checks accessibility. The output explains the difference between proactive `extendFootprintTtl` and reactive `restoreFootprint`.
 Convert JavaScript values to Soroban ScVal and back:
 
 ```bash

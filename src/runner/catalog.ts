@@ -621,6 +621,11 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
+  '104-contract-restoration': {
+    name: '104-contract-restoration',
+    description:
+      'Detect archived Soroban contract state, simulate and submit RestoreFootprint, and verify accessibility',
+    run: loadExample('../examples/104-contract-restoration'),
   '106-scval-serialization': {
     name: '106-scval-serialization',
     description:
@@ -643,6 +648,7 @@ export const examples: Record<string, Example> = {
         message: 'Contract ID (blank uses native SAC on Testnet):',
         default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
       },
+    ],
       {
         type: 'input',
         name: 'startLedger',
