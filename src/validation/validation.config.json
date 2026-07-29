@@ -107,6 +107,14 @@
       "reason": "Requires live Horizon transaction data or fallback simulation"
     },
     {
+      "match": "55-trade-history",
+      "reason": "Requires live Horizon trade data for an active asset pair"
+    },
+    {
+      "match": "56-account-flags-inspection",
+      "reason": "Requires live Horizon account data"
+    },
+    {
       "match": "54-fee-stats",
       "reason": "Requires live Horizon fee statistics endpoint"
     },
@@ -121,6 +129,40 @@
     {
       "match": "67-soroban-contract-events",
       "reason": "Requires live Soroban RPC event data within the server retention window"
+      "match": "50-asset-issuer-discovery",
+      "reason": "Requires live Horizon asset index data"
+    },
+    {
+      "match": "52-account-balance-history",
+      "reason": "Requires live Horizon account effects data"
+    },
+    {
+      "match": "53-ledger-inspection",
+      "reason": "Requires live Horizon ledger data"
+    },
+    {
+      "match": "59-account-offer-inspection",
+      "reason": "Requires live Horizon account offer data"
+    },
+    {
+      "match": "61-horizon-resource-filtering",
+      "reason": "Requires live Horizon data across multiple resource endpoints"
+    },
+    {
+      "match": "68-soroban-contract-simulation",
+      "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+    },
+    {
+      "match": "69-soroban-contract-storage",
+      "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+    },
+    {
+      "match": "70-soroban-authorization",
+      "reason": "Requires live Soroban RPC, Friendbot funding, and a deployed contract on Testnet"
+    },
+    {
+      "match": "71-soroban-storage-update",
+      "reason": "Requires live Soroban RPC, Friendbot funding, and a state-modifying contract on Testnet"
     }
   ]
 }
