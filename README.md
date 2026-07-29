@@ -111,6 +111,8 @@ The repository currently includes the following runnable examples:
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
 65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
+65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
+65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 
 ## Installation
 
@@ -444,6 +446,32 @@ npm run run-example -- 107-contract-spec-introspection <contract-id> balance
 ```
 
 The same values can be supplied through `CONTRACT_ID` and `CONTRACT_FUNCTION`. The example fetches WASM via Soroban RPC, parses ScSpec metadata with `spec-parser` utilities, lists functions, structs, enums, unions, and error enums, and shows how SDK tooling and explorers use the same metadata. Missing or empty specifications are reported gracefully.
+Run the full Soroban transaction preflight workflow:
+
+```bash
+npm run run-example 81-transaction-preflight
+```
+
+Supply a custom contract ID and method via environment variables:
+
+```bash
+CONTRACT_ID=<contract-id> CONTRACT_METHOD=<method> npm run run-example 81-transaction-preflight
+```
+
+The example funds an ephemeral fee-payer account, builds a contract invocation transaction, and submits it for preflight simulation to extract the ledger footprint, authorization entries, and estimated resource fee. It then assembles the final transaction from that simulation data, signs and submits it, and polls until on-chain confirmation — while also explaining how a full preflight (simulate → assemble → sign → submit) differs from an ordinary read-only simulation that is never meant to be submitted, and reporting any preflight failures with clear, actionable guidance.
+Compose a multi-contract transaction through an orchestrator invocation:
+
+```bash
+npm run run-example 83-multi-contract-transaction
+```
+
+Supply a custom orchestrator and downstream contract IDs:
+
+```bash
+CONTRACT_ID=<orchestrator-id> CONTRACT_ID_A=<contract-a-id> CONTRACT_ID_B=<contract-b-id> npm run run-example 83-multi-contract-transaction
+```
+
+Soroban only allows a single host-function (contract invocation) operation per transaction, so "multiple contract invocations in one transaction" is achieved by invoking one orchestrator/router contract whose method internally makes cross-contract calls into other contracts, rather than by adding several top-level `contract.call(...)` operations. The example builds that single orchestrator invocation with two downstream contract IDs as arguments, simulates it to display the combined resource footprint and authorization entries spanning every contract touched, signs and submits it, and explains why a failure anywhere in the call chain — including a downstream cross-contract call — rolls back the entire transaction atomically, and why execution order follows the orchestrator's own code path rather than the order arguments are listed.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 
