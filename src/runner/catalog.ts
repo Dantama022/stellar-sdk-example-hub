@@ -626,6 +626,11 @@ export const examples: Record<string, Example> = {
     description:
       'Retrieve Soroban contract events and decode topics and payloads with raw XDR side-by-side',
     run: loadExample('../examples/105-contract-event-decoding'),
+  '107-contract-spec-introspection': {
+    name: '107-contract-spec-introspection',
+    description:
+      'Retrieve and parse Soroban contract specifications, displaying functions, types, and docs',
+    run: loadExample('../examples/107-contract-spec-introspection'),
     params: [
       {
         type: 'input',
@@ -645,5 +650,19 @@ export const examples: Record<string, Example> = {
         default: '5',
       },
     ],
+        name: 'functionName',
+        message: 'Optional function name for dynamic selection:',
+      },
+    ],
+  '81-transaction-preflight': {
+    name: '81-transaction-preflight',
+    description:
+      'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
+    run: loadExample('../examples/81-transaction-preflight'),
+  '83-multi-contract-transaction': {
+    name: '83-multi-contract-transaction',
+    description:
+      'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
+    run: loadExample('../examples/83-multi-contract-transaction'),
   },
 };
