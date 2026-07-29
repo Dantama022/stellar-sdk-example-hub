@@ -173,6 +173,12 @@
     {
       "match": "82-transaction-time-bounds",
       "reason": "Depends on live Testnet timing and Soroban RPC transaction acceptance windows"
+      "match": "80-offline-transaction-workflow",
+      "reason": "Requires live Friendbot funding and Horizon Testnet transaction submission"
+      "match": "81-transaction-preflight",
+      "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+      "match": "83-multi-contract-transaction",
+      "reason": "Requires live Soroban RPC and deployed contracts on Testnet"
     }
   ]
 }

@@ -626,5 +626,95 @@ export const examples: Record<string, Example> = {
     description:
       'Build, simulate, sign, and submit a Soroban contract invocation with custom time bounds, and demonstrate expired and invalid time-bounds handling',
     run: loadExample('../examples/82-transaction-time-bounds'),
+  '80-offline-transaction-workflow': {
+    name: '80-offline-transaction-workflow',
+    description:
+      'Prepare and serialize an unsigned transaction, sign it in a simulated offline environment, handle corrupted XDR gracefully, and submit the reconstructed transaction',
+    run: loadExample('../examples/80-offline-transaction-workflow'),
+    params: [
+      {
+        type: 'input',
+        name: 'amount',
+        message: 'Enter payment amount (XLM):',
+        default: '10',
+      },
+    ],
+  '100-authorization-entry-inspection': {
+    name: '100-authorization-entry-inspection',
+    description:
+      'Decode a SorobanAuthorizationEntry: distinguish source-account from address credentials, walk the invocation tree, and read nonce and expiration',
+    run: loadExample('../examples/100-authorization-entry-inspection'),
+  },
+  '101-simulation-result-analysis': {
+    name: '101-simulation-result-analysis',
+    description:
+      'Interpret a simulateTransaction response: resource budget, ledger footprint, return value, diagnostic events, and restore preamble',
+    run: loadExample('../examples/101-simulation-result-analysis'),
+  },
+  '102-contract-storage-inspection': {
+    name: '102-contract-storage-inspection',
+    description:
+      'Probe contract storage keys across persistent and temporary durability, decode raw and native values, and handle missing keys gracefully',
+    run: loadExample('../examples/102-contract-storage-inspection'),
+  },
+  '103-storage-ttl-management': {
+    name: '103-storage-ttl-management',
+    description:
+      'Read a storage entry TTL, classify how much life it has left, and build, simulate, and submit an ExtendFootprintTTL transaction',
+    run: loadExample('../examples/103-storage-ttl-management'),
+  '104-contract-restoration': {
+    name: '104-contract-restoration',
+    description:
+      'Detect archived Soroban contract state, simulate and submit RestoreFootprint, and verify accessibility',
+    run: loadExample('../examples/104-contract-restoration'),
+  '106-scval-serialization': {
+    name: '106-scval-serialization',
+    description:
+      'Convert JavaScript values to Soroban ScVal objects and back with reusable helpers',
+    run: loadExample('../examples/106-scval-serialization'),
+  '105-contract-event-decoding': {
+    name: '105-contract-event-decoding',
+    description:
+      'Retrieve Soroban contract events and decode topics and payloads with raw XDR side-by-side',
+    run: loadExample('../examples/105-contract-event-decoding'),
+  '107-contract-spec-introspection': {
+    name: '107-contract-spec-introspection',
+    description:
+      'Retrieve and parse Soroban contract specifications, displaying functions, types, and docs',
+    run: loadExample('../examples/107-contract-spec-introspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank uses native SAC on Testnet):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+    ],
+      {
+        type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans ~24h):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to decode (1-50):',
+        default: '5',
+      },
+    ],
+        name: 'functionName',
+        message: 'Optional function name for dynamic selection:',
+      },
+    ],
+  '81-transaction-preflight': {
+    name: '81-transaction-preflight',
+    description:
+      'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
+    run: loadExample('../examples/81-transaction-preflight'),
+  '83-multi-contract-transaction': {
+    name: '83-multi-contract-transaction',
+    description:
+      'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
+    run: loadExample('../examples/83-multi-contract-transaction'),
   },
 };

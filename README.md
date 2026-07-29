@@ -45,6 +45,75 @@ The repository currently includes the following runnable examples:
 32. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
 33. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
 34. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+35. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
+36. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provision.
+37. **`24-cross-contract-invoke`**: Demonstrating cross-contract invocation, authorization, and returned values.
+38. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, and `AUTH_IMMUTABLE`).
+39. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
+40. **`27-manage-sell-offer`**: Creating, updating, and removing sell offers directly on the SDEX.
+41. **`28-trustline-authorization`**: Authorizing, deauthorizing, and reauthorizing an asset trustline.
+42. **`29-account-home-domain`**: Setting, inspecting, updating, and removing an account home domain.
+43. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
+44. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
+45. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+46. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
+47. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
+48. **`96-fee-bump-recovery-workflow`**: Recover a low-fee transaction by submitting a higher-fee fee-bump replacement.
+49. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
+50. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
+51. **`35-revoke-sponsorship`**: Revoking sponsorship from a sponsored data entry and observing reserve responsibility shift back to the owner.
+52. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+53. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+54. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
+55. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+56. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+57. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+58. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
+59. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
+60. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
+61. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
+62. **`35-revoke-sponsorship`**: Revoking sponsorship from a sponsored data entry and observing reserve responsibility shift back to the owner.
+63. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+64. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+65. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
+66. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+67. **`44-resilient-horizon-stream`**: Consuming a Horizon payment stream with cursor resume, controlled reconnection backoff, and graceful shutdown.
+68. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
+69. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
+70. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
+71. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
+72. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
+73. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+74. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+75. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+76. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+77. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
+78. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+79. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+80. **`50-asset-issuer-discovery`**: Querying Horizon for an issued asset by code and issuer, displaying trustline/holder counts and authorization flags.
+81. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+82. **`52-account-balance-history`**: Reconstructing a simple native XLM balance history from recent Horizon effects with transaction and ledger references.
+83. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
+84. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+85. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+86. **`60-network-configuration`**: Selecting Testnet vs Mainnet Horizon / Soroban RPC endpoints, binding `TransactionBuilder` to the correct network passphrase, detecting mismatched configuration, and explaining why a transaction signed for one network cannot be submitted to another.
+87. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
+88. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+89. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+90. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
+91. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
+92. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
+93. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
+94. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
+95. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signatures, signer hints, and XDR serialization round-trips.
+96. **`68-soroban-contract-simulation`**: Simulating a Soroban contract invocation, inspecting resource estimates and returned values, and assembling the footprint-bearing transaction without broadcasting.
+97. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
+98. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
+99. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+100. **`100-authorization-entry-inspection`**: Decoding a `SorobanAuthorizationEntry` — distinguishing source-account from address credentials, walking the invocation tree including sub-invocations, decoding arguments, and reading the nonce and signature expiration ledger.
+101. **`101-simulation-result-analysis`**: Interpreting every part of a `simulateTransaction` response — classifying success, error and restore-required outcomes, reading the resource budget and ledger footprint, decoding the return value, and decoding diagnostic events.
+102. **`102-contract-storage-inspection`**: Probing contract storage keys across persistent and temporary durability, displaying raw `ScVal` XDR alongside decoded values, and handling missing keys and decoding failures without aborting the sweep.
+103. **`103-storage-ttl-management`**: Reading a storage entry's `liveUntilLedgerSeq`, classifying how much life it has left, and building, simulating and submitting an `ExtendFootprintTTL` transaction — plus when to restore an archived entry instead.
 23. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
 24. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provision.
 25. **`24-cross-contract-invoke`**: Demonstrating cross-contract invocation, authorization, and returned values.
@@ -111,6 +180,13 @@ The repository currently includes the following runnable examples:
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
 65. **`82-transaction-time-bounds`**: Building, simulating, signing, and submitting a Soroban contract invocation with custom time bounds, demonstrating expired and invalid time-bounds handling, and explaining best practices for choosing validity windows.
+65. **`80-offline-transaction-workflow`**: Building an unsigned transaction, serializing it to XDR, signing it in a simulated offline (air-gapped) environment, gracefully handling corrupted XDR, and reconstructing and submitting the signed transaction.
+65. **`104-contract-restoration`**: Detecting archived Soroban contract ledger entries, building and simulating a `RestoreFootprint` transaction, submitting restoration when required, and verifying the contract becomes accessible again — with guidance on TTL extension versus restoration.
+65. **`106-scval-serialization`**: Converting JavaScript values to Soroban ScVal objects and back with reusable helpers, displaying raw XDR, and explaining common serialization pitfalls.
+65. **`105-contract-event-decoding`**: Retrieving Soroban contract events and decoding indexed topics and data payloads into human-readable values, with raw base64 XDR shown alongside decoded output.
+65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
+65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
+65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 
 ## Installation
 
@@ -429,6 +505,58 @@ Supply a custom contract and methods:
 CONTRACT_ID=<id> CONTRACT_METHOD=increment CONTRACT_READ_METHOD=get npm run run-example 71-soroban-storage-update
 ```
 
+Decode a Soroban authorization entry:
+
+```bash
+npm run run-example 100-authorization-entry-inspection
+```
+
+Decode an entry supplied by a dApp, as a wallet would:
+
+```bash
+AUTH_ENTRY_XDR=<base64> npm run run-example 100-authorization-entry-inspection
+```
+
+The example obtains authorization entries from simulation, distinguishes source-account credentials from address credentials, walks the invocation tree including nested sub-invocations, decodes each argument, and reports the nonce and signature expiration ledger relative to the current ledger — the fields a wallet must show a user before collecting a signature.
+
+Analyse a simulation result in full:
+
+```bash
+npm run run-example 101-simulation-result-analysis
+```
+
+```bash
+CONTRACT_ID=<contract-id> CONTRACT_METHOD=<method> npm run run-example 101-simulation-result-analysis
+```
+
+The example classifies the response as success, error or restore-required, reports the CPU/read/write resource budget and minimum resource fee, decodes the read-only and read-write footprint into readable ledger keys, decodes the return value and state changes, and decodes the diagnostic event log — the part that usually explains a failure the top-level error message does not.
+
+Sweep contract storage across durability tiers:
+
+```bash
+npm run run-example 102-contract-storage-inspection
+```
+
+```bash
+CONTRACT_ID=<contract-id> STORAGE_KEYS=COUNTER,Admin npm run run-example 102-contract-storage-inspection
+```
+
+The example probes each key in both persistent and temporary storage, prints raw `ScVal` XDR next to the decoded value, reports last-modified and live-until ledgers, and ends with a summary table — making it obvious when a value is missing simply because it lives in the other durability tier.
+
+Inspect and extend a storage entry's TTL:
+
+```bash
+npm run run-example 103-storage-ttl-management
+```
+
+Submit the extension against a funded account:
+
+```bash
+EXTEND_TTL=true SECRET_KEY=<secret> EXTEND_TO=100000 npm run run-example 103-storage-ttl-management
+```
+
+The example reads the entry's `liveUntilLedgerSeq`, converts the remaining ledgers into an approximate duration, classifies the entry as healthy, expiring soon or expired, then builds an `ExtendFootprintTTL` transaction with the entry in its read-only footprint and simulates it to price the rent. It is read-only unless `EXTEND_TTL=true`, and it explains why an archived persistent entry needs `restoreFootprint` rather than an extension, while an expired temporary entry is gone for good.
+
 The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
 
 Build a Soroban contract invocation with custom time bounds:
@@ -444,6 +572,87 @@ CONTRACT_ID=<id> CONTRACT_METHOD=hello npm run run-example 82-transaction-time-b
 ```
 
 The example computes and validates a time-bounds window, then simulates, signs, and submits a contract invocation within it; deliberately constructs an already-expired window to show how the network rejects a stale transaction with a clear, friendly explanation instead of a raw error; demonstrates graceful rejection of an invalid configuration; and explains why choosing a good time-bounds window matters for Soroban contract execution.
+Run the offline transaction preparation workflow:
+
+```bash
+npm run run-example 80-offline-transaction-workflow
+```
+
+The interactive runner (`npm run run-example` with no example name) also prompts for a custom payment amount before running.
+
+The example builds an unsigned payment transaction on an online machine, serializes it to XDR, simulates transferring that XDR to an air-gapped offline signer, signs it there, and returns the signed XDR. It also deliberately corrupts a copy of the signed XDR to demonstrate graceful error handling before reconstructing the real signed transaction and submitting it to the network — finishing with a short explainer on when and why offline (cold-storage/hardware-wallet) signing should be used.
+Detect archived Soroban contract state and demonstrate restoration:
+
+```bash
+npm run run-example 104-contract-restoration
+```
+
+Inspect a specific contract:
+
+```bash
+npm run run-example -- 104-contract-restoration <contract-id>
+```
+
+The same contract ID can be supplied through `CONTRACT_ID`. For accessible contracts the example simulates restoration and reports the estimated fee and footprint without submitting an unnecessary transaction. When simulation detects archived entries (`isSimulationRestore`), it prepares, submits, and polls a `RestoreFootprint` transaction, then re-checks accessibility. The output explains the difference between proactive `extendFootprintTtl` and reactive `restoreFootprint`.
+Convert JavaScript values to Soroban ScVal and back:
+
+```bash
+npm run run-example 106-scval-serialization
+```
+
+This offline example encodes booleans, integers, BigInts, strings, symbols, bytes, addresses, vectors, maps, and nested objects using `src/utils/scval-utils.ts`, prints raw base64 XDR for each value, compares originals with decoded round-trip results, and demonstrates graceful handling of unsupported JavaScript types.
+Decode Soroban contract event topics and payloads:
+
+```bash
+npm run run-example 105-contract-event-decoding
+```
+
+Query a specific contract, start ledger, and limit:
+
+```bash
+npm run run-example -- 105-contract-event-decoding <contract-id> <start-ledger> 10
+```
+
+The same values can be supplied through `CONTRACT_ID`, `START_LEDGER`, and `EVENT_LIMIT`. For each event the example prints the contract ID, ledger sequence, transaction hash, every topic and the data payload with raw base64 XDR beside the decoded value. Unsupported ScVal types are reported without aborting the run.
+Inspect a Soroban contract specification from on-chain WASM:
+
+```bash
+npm run run-example 107-contract-spec-introspection
+```
+
+Select a contract and function dynamically:
+
+```bash
+npm run run-example -- 107-contract-spec-introspection <contract-id> balance
+```
+
+The same values can be supplied through `CONTRACT_ID` and `CONTRACT_FUNCTION`. The example fetches WASM via Soroban RPC, parses ScSpec metadata with `spec-parser` utilities, lists functions, structs, enums, unions, and error enums, and shows how SDK tooling and explorers use the same metadata. Missing or empty specifications are reported gracefully.
+Run the full Soroban transaction preflight workflow:
+
+```bash
+npm run run-example 81-transaction-preflight
+```
+
+Supply a custom contract ID and method via environment variables:
+
+```bash
+CONTRACT_ID=<contract-id> CONTRACT_METHOD=<method> npm run run-example 81-transaction-preflight
+```
+
+The example funds an ephemeral fee-payer account, builds a contract invocation transaction, and submits it for preflight simulation to extract the ledger footprint, authorization entries, and estimated resource fee. It then assembles the final transaction from that simulation data, signs and submits it, and polls until on-chain confirmation — while also explaining how a full preflight (simulate → assemble → sign → submit) differs from an ordinary read-only simulation that is never meant to be submitted, and reporting any preflight failures with clear, actionable guidance.
+Compose a multi-contract transaction through an orchestrator invocation:
+
+```bash
+npm run run-example 83-multi-contract-transaction
+```
+
+Supply a custom orchestrator and downstream contract IDs:
+
+```bash
+CONTRACT_ID=<orchestrator-id> CONTRACT_ID_A=<contract-a-id> CONTRACT_ID_B=<contract-b-id> npm run run-example 83-multi-contract-transaction
+```
+
+Soroban only allows a single host-function (contract invocation) operation per transaction, so "multiple contract invocations in one transaction" is achieved by invoking one orchestrator/router contract whose method internally makes cross-contract calls into other contracts, rather than by adding several top-level `contract.call(...)` operations. The example builds that single orchestrator invocation with two downstream contract IDs as arguments, simulates it to display the combined resource footprint and authorization entries spanning every contract touched, signs and submits it, and explains why a failure anywhere in the call chain — including a downstream cross-contract call — rolls back the entire transaction atomically, and why execution order follows the orchestrator's own code path rather than the order arguments are listed.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 
