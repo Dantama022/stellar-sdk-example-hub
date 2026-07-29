@@ -621,6 +621,11 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
+  '105-contract-event-decoding': {
+    name: '105-contract-event-decoding',
+    description:
+      'Retrieve Soroban contract events and decode topics and payloads with raw XDR side-by-side',
+    run: loadExample('../examples/105-contract-event-decoding'),
   '107-contract-spec-introspection': {
     name: '107-contract-spec-introspection',
     description:
@@ -635,6 +640,16 @@ export const examples: Record<string, Example> = {
       },
       {
         type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans ~24h):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to decode (1-50):',
+        default: '5',
+      },
+    ],
         name: 'functionName',
         message: 'Optional function name for dynamic selection:',
       },
