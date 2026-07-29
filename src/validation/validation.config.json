@@ -127,6 +127,8 @@
       "reason": "Requires live Horizon account and operation data"
     },
     {
+      "match": "67-soroban-contract-events",
+      "reason": "Requires live Soroban RPC event data within the server retention window"
       "match": "50-asset-issuer-discovery",
       "reason": "Requires live Horizon asset index data"
     },

@@ -498,6 +498,35 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '67-soroban-contract-events': {
+    name: '67-soroban-contract-events',
+    description:
+      'Query Soroban contract events over a ledger range and decode topics, payloads, and ledger references',
+    run: loadExample('../examples/67-soroban-contract-events'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank discovers a recently active contract):',
+      },
+      {
+        type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans the last ~24h of ledgers):',
+      },
+      {
+        type: 'input',
+        name: 'endLedger',
+        message: 'End ledger (blank queries up to the latest ledger):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
   '60-network-configuration': {
     name: '60-network-configuration',
     description:
