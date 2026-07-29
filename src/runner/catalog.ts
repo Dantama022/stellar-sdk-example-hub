@@ -621,6 +621,11 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
+  '106-scval-serialization': {
+    name: '106-scval-serialization',
+    description:
+      'Convert JavaScript values to Soroban ScVal objects and back with reusable helpers',
+    run: loadExample('../examples/106-scval-serialization'),
   '105-contract-event-decoding': {
     name: '105-contract-event-decoding',
     description:
