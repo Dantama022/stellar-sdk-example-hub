@@ -244,6 +244,26 @@ export const examples: Record<string, Example> = {
       'Wrap a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account',
     run: loadExample('../examples/33-fee-bump-replacement'),
   },
+  '96-fee-bump-recovery-workflow': {
+    name: '96-fee-bump-recovery-workflow',
+    description:
+      'Recover a low-fee transaction by wrapping it in a higher-fee fee-bump replacement',
+    run: loadExample('../examples/96-fee-bump-recovery-workflow'),
+    params: [
+      {
+        type: 'input',
+        name: 'innerBaseFee',
+        message: 'Enter the original transaction base fee in stroops:',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'bumpBaseFee',
+        message: 'Enter the fee-bump base fee in stroops:',
+        default: '500',
+      },
+    ],
+  },
   '37-strict-send-path-payment': {
     name: '37-strict-send-path-payment',
     description: 'Execute a strict-send path payment and observe the received amount',
@@ -528,6 +548,7 @@ export const examples: Record<string, Example> = {
     name: '87-transaction-envelope-inspection',
     description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
     run: loadExample('../examples/87-transaction-envelope-inspection'),
+  },
   '68-soroban-contract-simulation': {
     name: '68-soroban-contract-simulation',
     description:
