@@ -173,6 +173,8 @@
     {
       "match": "81-transaction-preflight",
       "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+      "match": "83-multi-contract-transaction",
+      "reason": "Requires live Soroban RPC and deployed contracts on Testnet"
     }
   ]
 }
