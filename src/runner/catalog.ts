@@ -621,6 +621,11 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
+  '81-transaction-preflight': {
+    name: '81-transaction-preflight',
+    description:
+      'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
+    run: loadExample('../examples/81-transaction-preflight'),
   '83-multi-contract-transaction': {
     name: '83-multi-contract-transaction',
     description:

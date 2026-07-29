@@ -110,6 +110,7 @@ The repository currently includes the following runnable examples:
 62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
 65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 
 ## Installation
@@ -431,6 +432,19 @@ CONTRACT_ID=<id> CONTRACT_METHOD=increment CONTRACT_READ_METHOD=get npm run run-
 
 The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
 
+Run the full Soroban transaction preflight workflow:
+
+```bash
+npm run run-example 81-transaction-preflight
+```
+
+Supply a custom contract ID and method via environment variables:
+
+```bash
+CONTRACT_ID=<contract-id> CONTRACT_METHOD=<method> npm run run-example 81-transaction-preflight
+```
+
+The example funds an ephemeral fee-payer account, builds a contract invocation transaction, and submits it for preflight simulation to extract the ledger footprint, authorization entries, and estimated resource fee. It then assembles the final transaction from that simulation data, signs and submits it, and polls until on-chain confirmation — while also explaining how a full preflight (simulate → assemble → sign → submit) differs from an ordinary read-only simulation that is never meant to be submitted, and reporting any preflight failures with clear, actionable guidance.
 Compose a multi-contract transaction through an orchestrator invocation:
 
 ```bash
