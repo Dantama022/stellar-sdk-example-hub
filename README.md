@@ -110,6 +110,7 @@ The repository currently includes the following runnable examples:
 62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+65. **`82-transaction-time-bounds`**: Building, simulating, signing, and submitting a Soroban contract invocation with custom time bounds, demonstrating expired and invalid time-bounds handling, and explaining best practices for choosing validity windows.
 
 ## Installation
 
@@ -429,6 +430,20 @@ CONTRACT_ID=<id> CONTRACT_METHOD=increment CONTRACT_READ_METHOD=get npm run run-
 ```
 
 The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
+
+Build a Soroban contract invocation with custom time bounds:
+
+```bash
+npm run run-example 82-transaction-time-bounds
+```
+
+Supply a custom contract and method:
+
+```bash
+CONTRACT_ID=<id> CONTRACT_METHOD=hello npm run run-example 82-transaction-time-bounds
+```
+
+The example computes and validates a time-bounds window, then simulates, signs, and submits a contract invocation within it; deliberately constructs an already-expired window to show how the network rejects a stale transaction with a clear, friendly explanation instead of a raw error; demonstrates graceful rejection of an invalid configuration; and explains why choosing a good time-bounds window matters for Soroban contract execution.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 

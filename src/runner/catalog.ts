@@ -621,4 +621,10 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
+  '82-transaction-time-bounds': {
+    name: '82-transaction-time-bounds',
+    description:
+      'Build, simulate, sign, and submit a Soroban contract invocation with custom time bounds, and demonstrate expired and invalid time-bounds handling',
+    run: loadExample('../examples/82-transaction-time-bounds'),
+  },
 };
