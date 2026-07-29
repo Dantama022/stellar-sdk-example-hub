@@ -179,6 +179,7 @@ The repository currently includes the following runnable examples:
 62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+65. **`82-transaction-time-bounds`**: Building, simulating, signing, and submitting a Soroban contract invocation with custom time bounds, demonstrating expired and invalid time-bounds handling, and explaining best practices for choosing validity windows.
 65. **`80-offline-transaction-workflow`**: Building an unsigned transaction, serializing it to XDR, signing it in a simulated offline (air-gapped) environment, gracefully handling corrupted XDR, and reconstructing and submitting the signed transaction.
 65. **`104-contract-restoration`**: Detecting archived Soroban contract ledger entries, building and simulating a `RestoreFootprint` transaction, submitting restoration when required, and verifying the contract becomes accessible again — with guidance on TTL extension versus restoration.
 65. **`106-scval-serialization`**: Converting JavaScript values to Soroban ScVal objects and back with reusable helpers, displaying raw XDR, and explaining common serialization pitfalls.
@@ -558,6 +559,19 @@ The example reads the entry's `liveUntilLedgerSeq`, converts the remaining ledge
 
 The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
 
+Build a Soroban contract invocation with custom time bounds:
+
+```bash
+npm run run-example 82-transaction-time-bounds
+```
+
+Supply a custom contract and method:
+
+```bash
+CONTRACT_ID=<id> CONTRACT_METHOD=hello npm run run-example 82-transaction-time-bounds
+```
+
+The example computes and validates a time-bounds window, then simulates, signs, and submits a contract invocation within it; deliberately constructs an already-expired window to show how the network rejects a stale transaction with a clear, friendly explanation instead of a raw error; demonstrates graceful rejection of an invalid configuration; and explains why choosing a good time-bounds window matters for Soroban contract execution.
 Run the offline transaction preparation workflow:
 
 ```bash
