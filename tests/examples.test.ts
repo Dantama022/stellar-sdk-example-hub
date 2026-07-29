@@ -39,6 +39,7 @@ import * as ex57 from '../src/examples/57-account-reserve-calculator';
 import * as ex58 from '../src/examples/58-account-relationship-discovery';
 import * as ex60 from '../src/examples/60-network-configuration';
 import * as ex59 from '../src/examples/59-account-offer-inspection';
+import * as ex96 from '../src/examples/96-fee-bump-recovery-workflow';
 
 import { examples } from '../src/runner/catalog';
 
@@ -80,9 +81,10 @@ describe('Examples Exports', () => {
       ex55,
       ex56,
       ex57,
-      ex58,
-      ex60,
+        ex58,
       ex59,
+      ex60,
+      ex96,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -120,6 +122,7 @@ describe('Examples Exports', () => {
       '58-account-relationship-discovery',
       '60-network-configuration',
       '59-account-offer-inspection',
+      '96-fee-bump-recovery-workflow',
     ]) {
       expect(examples[key]).toBeDefined();
     }
