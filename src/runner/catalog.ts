@@ -621,4 +621,10 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
+  '83-multi-contract-transaction': {
+    name: '83-multi-contract-transaction',
+    description:
+      'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
+    run: loadExample('../examples/83-multi-contract-transaction'),
+  },
 };
