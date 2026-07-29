@@ -498,6 +498,25 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '66-ledger-effects': {
+    name: '66-ledger-effects',
+    description:
+      'Retrieve every effect produced by one closed ledger, grouped by effect type with summary statistics',
+    run: loadExample('../examples/66-ledger-effects'),
+    params: [
+      {
+        type: 'input',
+        name: 'ledgerSequence',
+        message: 'Ledger sequence (blank uses the latest closed ledger):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of effects to retrieve (1-500):',
+        default: '25',
+      },
+    ],
+  },
   '67-soroban-contract-events': {
     name: '67-soroban-contract-events',
     description:
