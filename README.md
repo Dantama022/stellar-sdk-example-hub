@@ -111,6 +111,12 @@ The repository currently includes the following runnable examples:
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
 65. **`80-offline-transaction-workflow`**: Building an unsigned transaction, serializing it to XDR, signing it in a simulated offline (air-gapped) environment, gracefully handling corrupted XDR, and reconstructing and submitting the signed transaction.
+65. **`104-contract-restoration`**: Detecting archived Soroban contract ledger entries, building and simulating a `RestoreFootprint` transaction, submitting restoration when required, and verifying the contract becomes accessible again — with guidance on TTL extension versus restoration.
+65. **`106-scval-serialization`**: Converting JavaScript values to Soroban ScVal objects and back with reusable helpers, displaying raw XDR, and explaining common serialization pitfalls.
+65. **`105-contract-event-decoding`**: Retrieving Soroban contract events and decoding indexed topics and data payloads into human-readable values, with raw base64 XDR shown alongside decoded output.
+65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
+65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
+65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 
 ## Installation
 
@@ -440,6 +446,78 @@ npm run run-example 80-offline-transaction-workflow
 The interactive runner (`npm run run-example` with no example name) also prompts for a custom payment amount before running.
 
 The example builds an unsigned payment transaction on an online machine, serializes it to XDR, simulates transferring that XDR to an air-gapped offline signer, signs it there, and returns the signed XDR. It also deliberately corrupts a copy of the signed XDR to demonstrate graceful error handling before reconstructing the real signed transaction and submitting it to the network — finishing with a short explainer on when and why offline (cold-storage/hardware-wallet) signing should be used.
+Detect archived Soroban contract state and demonstrate restoration:
+
+```bash
+npm run run-example 104-contract-restoration
+```
+
+Inspect a specific contract:
+
+```bash
+npm run run-example -- 104-contract-restoration <contract-id>
+```
+
+The same contract ID can be supplied through `CONTRACT_ID`. For accessible contracts the example simulates restoration and reports the estimated fee and footprint without submitting an unnecessary transaction. When simulation detects archived entries (`isSimulationRestore`), it prepares, submits, and polls a `RestoreFootprint` transaction, then re-checks accessibility. The output explains the difference between proactive `extendFootprintTtl` and reactive `restoreFootprint`.
+Convert JavaScript values to Soroban ScVal and back:
+
+```bash
+npm run run-example 106-scval-serialization
+```
+
+This offline example encodes booleans, integers, BigInts, strings, symbols, bytes, addresses, vectors, maps, and nested objects using `src/utils/scval-utils.ts`, prints raw base64 XDR for each value, compares originals with decoded round-trip results, and demonstrates graceful handling of unsupported JavaScript types.
+Decode Soroban contract event topics and payloads:
+
+```bash
+npm run run-example 105-contract-event-decoding
+```
+
+Query a specific contract, start ledger, and limit:
+
+```bash
+npm run run-example -- 105-contract-event-decoding <contract-id> <start-ledger> 10
+```
+
+The same values can be supplied through `CONTRACT_ID`, `START_LEDGER`, and `EVENT_LIMIT`. For each event the example prints the contract ID, ledger sequence, transaction hash, every topic and the data payload with raw base64 XDR beside the decoded value. Unsupported ScVal types are reported without aborting the run.
+Inspect a Soroban contract specification from on-chain WASM:
+
+```bash
+npm run run-example 107-contract-spec-introspection
+```
+
+Select a contract and function dynamically:
+
+```bash
+npm run run-example -- 107-contract-spec-introspection <contract-id> balance
+```
+
+The same values can be supplied through `CONTRACT_ID` and `CONTRACT_FUNCTION`. The example fetches WASM via Soroban RPC, parses ScSpec metadata with `spec-parser` utilities, lists functions, structs, enums, unions, and error enums, and shows how SDK tooling and explorers use the same metadata. Missing or empty specifications are reported gracefully.
+Run the full Soroban transaction preflight workflow:
+
+```bash
+npm run run-example 81-transaction-preflight
+```
+
+Supply a custom contract ID and method via environment variables:
+
+```bash
+CONTRACT_ID=<contract-id> CONTRACT_METHOD=<method> npm run run-example 81-transaction-preflight
+```
+
+The example funds an ephemeral fee-payer account, builds a contract invocation transaction, and submits it for preflight simulation to extract the ledger footprint, authorization entries, and estimated resource fee. It then assembles the final transaction from that simulation data, signs and submits it, and polls until on-chain confirmation — while also explaining how a full preflight (simulate → assemble → sign → submit) differs from an ordinary read-only simulation that is never meant to be submitted, and reporting any preflight failures with clear, actionable guidance.
+Compose a multi-contract transaction through an orchestrator invocation:
+
+```bash
+npm run run-example 83-multi-contract-transaction
+```
+
+Supply a custom orchestrator and downstream contract IDs:
+
+```bash
+CONTRACT_ID=<orchestrator-id> CONTRACT_ID_A=<contract-a-id> CONTRACT_ID_B=<contract-b-id> npm run run-example 83-multi-contract-transaction
+```
+
+Soroban only allows a single host-function (contract invocation) operation per transaction, so "multiple contract invocations in one transaction" is achieved by invoking one orchestrator/router contract whose method internally makes cross-contract calls into other contracts, rather than by adding several top-level `contract.call(...)` operations. The example builds that single orchestrator invocation with two downstream contract IDs as arguments, simulates it to display the combined resource footprint and authorization entries spanning every contract touched, signs and submits it, and explains why a failure anywhere in the call chain — including a downstream cross-contract call — rolls back the entire transaction atomically, and why execution order follows the orchestrator's own code path rather than the order arguments are listed.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 
