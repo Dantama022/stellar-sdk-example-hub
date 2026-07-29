@@ -15,6 +15,7 @@ export interface Example {
     name: string;
     message: string;
     default?: any;
+    choices?: Array<string | { name: string; value: string }>;
   }>;
 }
 
@@ -243,6 +244,26 @@ export const examples: Record<string, Example> = {
       'Wrap a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account',
     run: loadExample('../examples/33-fee-bump-replacement'),
   },
+  '96-fee-bump-recovery-workflow': {
+    name: '96-fee-bump-recovery-workflow',
+    description:
+      'Recover a low-fee transaction by wrapping it in a higher-fee fee-bump replacement',
+    run: loadExample('../examples/96-fee-bump-recovery-workflow'),
+    params: [
+      {
+        type: 'input',
+        name: 'innerBaseFee',
+        message: 'Enter the original transaction base fee in stroops:',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'bumpBaseFee',
+        message: 'Enter the fee-bump base fee in stroops:',
+        default: '500',
+      },
+    ],
+  },
   '37-strict-send-path-payment': {
     name: '37-strict-send-path-payment',
     description: 'Execute a strict-send path payment and observe the received amount',
@@ -318,6 +339,73 @@ export const examples: Record<string, Example> = {
     description: 'Inspect claimable balances, claimant predicates, and claimant-based filtering',
     run: loadExample('../examples/49-claimable-balance-inspection'),
   },
+  '50-asset-issuer-discovery': {
+    name: '50-asset-issuer-discovery',
+    description:
+      'Query Horizon for an asset by code and issuer, inspect trustline counts and authorization flags',
+    run: loadExample('../examples/50-asset-issuer-discovery'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code (blank discovers a recently indexed asset):',
+      },
+      {
+        type: 'input',
+        name: 'assetIssuer',
+        message: 'Asset issuer account ID (required when asset code is set):',
+      },
+    ],
+  },
+  '52-account-balance-history': {
+    name: '52-account-balance-history',
+    description: 'Reconstruct a simple native XLM balance history from recent Horizon effects',
+    run: loadExample('../examples/52-account-balance-history'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of recent effects to retrieve (1-200):',
+        default: '25',
+      },
+    ],
+  },
+  '53-ledger-inspection': {
+    name: '53-ledger-inspection',
+    description:
+      'Retrieve and inspect a Horizon ledger sequence, close time, counts, and network parameters',
+    run: loadExample('../examples/53-ledger-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'ledgerSequence',
+        message: 'Ledger sequence (blank uses the latest closed ledger):',
+      },
+    ],
+  },
+  '59-account-offer-inspection': {
+    name: '59-account-offer-inspection',
+    description: "Inspect an account's active SDEX offers, assets, prices, and approximate volumes",
+    run: loadExample('../examples/59-account-offer-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank finds an account with offers when possible):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of offers to retrieve (1-200):',
+        default: '20',
+      },
+    ],
+  },
   '46-transaction-detail-inspection': {
     name: '46-transaction-detail-inspection',
     description: 'Retrieve a Horizon transaction by hash and inspect its metadata and XDR',
@@ -340,6 +428,43 @@ export const examples: Record<string, Example> = {
         type: 'input',
         name: 'transactionHash',
         message: 'Optional transaction hash (blank searches recent failed transactions):',
+      },
+    ],
+  },
+  '55-trade-history': {
+    name: '55-trade-history',
+    description:
+      'Retrieve completed SDEX trades for an asset pair and summarize volume and average price',
+    run: loadExample('../examples/55-trade-history'),
+    params: [
+      {
+        type: 'input',
+        name: 'baseAsset',
+        message: 'Base asset ("native" or CODE:ISSUER, blank uses a recently traded pair):',
+      },
+      {
+        type: 'input',
+        name: 'counterAsset',
+        message: 'Counter asset ("native" or CODE:ISSUER, blank uses a recently traded pair):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of trades to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
+  '56-account-flags-inspection': {
+    name: '56-account-flags-inspection',
+    description:
+      'Inspect and interpret Horizon account flags, master key state, and restrictive configurations',
+    run: loadExample('../examples/56-account-flags-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
       },
     ],
   },
@@ -420,5 +545,80 @@ export const examples: Record<string, Example> = {
         default: '10',
       },
     ],
+  },
+  '60-network-configuration': {
+    name: '60-network-configuration',
+    description:
+      'Configure Testnet/Mainnet Horizon, Soroban RPC, and network passphrase for transaction signing',
+    run: loadExample('../examples/60-network-configuration'),
+    params: [
+      {
+        type: 'list',
+        name: 'network',
+        message: 'Select Stellar network:',
+        default: 'testnet',
+        choices: [
+          { name: 'Testnet', value: 'testnet' },
+          { name: 'Mainnet (Public)', value: 'mainnet' },
+        ],
+      },
+    ],
+  },
+  '61-horizon-resource-filtering': {
+    name: '61-horizon-resource-filtering',
+    description:
+      'Demonstrate filtered Horizon queries across transactions, operations, payments, and effects',
+    run: loadExample('../examples/61-horizon-resource-filtering'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+    ],
+  },
+  '84-muxed-account-handling': {
+    name: '84-muxed-account-handling',
+    description: 'Create, parse, and validate muxed (M...) accounts and their identifiers',
+    run: loadExample('../examples/84-muxed-account-handling'),
+  },
+  '85-transaction-fee-estimation': {
+    name: '85-transaction-fee-estimation',
+    description: 'Estimate transaction fees from network fee stats across priority levels',
+    run: loadExample('../examples/85-transaction-fee-estimation'),
+  },
+  '86-transaction-memo-handling': {
+    name: '86-transaction-memo-handling',
+    description: 'Build, encode, and decode every supported Stellar transaction memo type',
+    run: loadExample('../examples/86-transaction-memo-handling'),
+  },
+  '87-transaction-envelope-inspection': {
+    name: '87-transaction-envelope-inspection',
+    description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
+    run: loadExample('../examples/87-transaction-envelope-inspection'),
+  },
+  '68-soroban-contract-simulation': {
+    name: '68-soroban-contract-simulation',
+    description:
+      'Simulate a Soroban contract invocation, inspect resource estimates and returned values, and assemble the transaction footprint',
+    run: loadExample('../examples/68-soroban-contract-simulation'),
+  },
+  '69-soroban-contract-storage': {
+    name: '69-soroban-contract-storage',
+    description:
+      'Retrieve and inspect Soroban contract storage entries, decode keys and values, and explain instance, persistent, and temporary durability',
+    run: loadExample('../examples/69-soroban-contract-storage'),
+  },
+  '70-soroban-authorization': {
+    name: '70-soroban-authorization',
+    description:
+      'Invoke an authorized Soroban contract method, inspect authorization entries, sign them, and distinguish auth from transaction signatures',
+    run: loadExample('../examples/70-soroban-authorization'),
+  },
+  '71-soroban-storage-update': {
+    name: '71-soroban-storage-update',
+    description:
+      'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
+    run: loadExample('../examples/71-soroban-storage-update'),
   },
 };

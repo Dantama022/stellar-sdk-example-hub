@@ -58,7 +58,8 @@ The repository currently includes the following runnable examples:
 33. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
 34. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
 35. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
-34. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
+36. **`96-fee-bump-recovery-workflow`**: Recover a low-fee transaction by submitting a higher-fee fee-bump replacement.
+37. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
 35. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
 35. **`35-revoke-sponsorship`**: Revoking sponsorship from a sponsored data entry and observing reserve responsibility shift back to the owner.
 36. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
@@ -88,6 +89,27 @@ The repository currently includes the following runnable examples:
 53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
 54. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
 55. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+54. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+50. **`50-asset-issuer-discovery`**: Querying Horizon for an issued asset by code and issuer, displaying trustline/holder counts and authorization flags.
+51. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+52. **`52-account-balance-history`**: Reconstructing a simple native XLM balance history from recent Horizon effects with transaction and ledger references.
+53. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
+54. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+55. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+56. **`60-network-configuration`**: Selecting Testnet vs Mainnet Horizon / Soroban RPC endpoints, binding `TransactionBuilder` to the correct network passphrase, detecting mismatched configuration, and explaining why a transaction signed for one network cannot be submitted to another.
+56. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
+57. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+59. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
+60. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
+61. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
+62. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
+63. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
+64. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signatures, signer hints, and XDR serialization round-trips.
+61. **`68-soroban-contract-simulation`**: Simulating a Soroban contract invocation, inspecting resource estimates and returned values, and assembling the footprint-bearing transaction without broadcasting.
+62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
+63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
+64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
 
 ## Installation
 
@@ -214,6 +236,105 @@ This example is read-only. For each event it prints the emitting contract, the l
 Contract events are **not** Horizon events. Horizon operations and effects are derived from protocol-defined changes to classic ledger state and are retained for the instance's full history; Soroban contract events are application-defined values the contract author chose to publish, live in transaction meta rather than ledger state, and are retained by Soroban RPC only for a rolling window (commonly around 24 hours). Because of that window, activity older than the retention period cannot be recovered by widening the ledger range — long-term event history has to be ingested as it happens. Queries that predate the window are narrowed automatically, and a contract with no events in range is reported as an empty result rather than an error.
 
 To generate events of your own, deploy a contract with `13-soroban-deploy` and invoke it with `05-soroban-invoke`, then pass the resulting contract ID to this example. Example `10-soroban-events` covers the same RPC method in a shorter, minimal form.
+Discover an asset issuer and trustline/holder counts:
+
+```bash
+npm run run-example 50-asset-issuer-discovery
+```
+
+Look up a specific issued asset by code and issuer:
+
+```bash
+npm run run-example -- 50-asset-issuer-discovery <asset-code> <issuer-account-id>
+```
+
+An issued asset is uniquely identified by `asset_code` + `asset_issuer` — the code alone is not unique. Leaving both blank makes the example discover a recently indexed asset on the connected network. Unknown or unindexed assets are reported as an empty result rather than a crash.
+
+Reconstruct a simple native XLM balance history from recent effects:
+
+```bash
+npm run run-example 52-account-balance-history
+```
+
+Inspect balance history for a specific account with a custom effect window:
+
+```bash
+npm run run-example -- 52-account-balance-history <account-id> 50
+```
+
+This example reconstructs chronological native XLM balance changes from `account_credited`, `account_debited`, and `account_created` effects. It is educational rather than a production ledger: history outside the retrieved window is inferred, and failed transactions produce no effects. The account ID and limit can also be supplied through `ACCOUNT_ID` and `HISTORY_LIMIT`.
+
+Inspect a Horizon ledger (latest when no sequence is given):
+
+```bash
+npm run run-example 53-ledger-inspection
+```
+
+Inspect a specific ledger sequence:
+
+```bash
+npm run run-example -- 53-ledger-inspection <ledger-sequence>
+```
+
+The ledger example displays sequence, close time, hash / previous hash, transaction and operation counts, protocol version, and base fee / reserve. Unavailable sequences (future or outside history retention) produce a clear error. The sequence can also be supplied through `LEDGER_SEQUENCE`.
+
+Audit the account-level flags of a recently active account:
+
+```bash
+npm run run-example 56-account-flags-inspection
+```
+
+Audit a specific account by passing its ID as an additional command-line argument:
+
+```bash
+npm run run-example -- 56-account-flags-inspection <account-id>
+```
+
+This example is read-only. It explains each flag, reconstructs the raw flag bitmask, reports the master key weight, and highlights restrictive configurations such as `AUTH_IMMUTABLE` or a disabled master key. Accounts with no flags set are reported as using default, permissionless behaviour. The account ID can also be supplied through the `ACCOUNT_ID` environment variable.
+
+Summarize recent SDEX trades for a recently traded asset pair:
+
+```bash
+npm run run-example 55-trade-history
+```
+
+Summarize trades for a specific pair by passing the base asset, counter asset, and result limit as additional command-line arguments:
+
+```bash
+npm run run-example -- 55-trade-history native USDC:<issuer-account-id> 25
+```
+
+Each side of the pair is given as `native` (or `XLM`) for the native asset, or as `CODE:ISSUER` for an issued asset; the same values can be supplied through the `BASE_ASSET`, `COUNTER_ASSET`, and `TRADE_LIMIT` environment variables. Prices are quoted as counter units per 1 base unit, so reversing the pair inverts every price. Leaving both assets blank makes the example discover a pair from the most recent trade on the connected network.
+
+This example reports **completed** trades, which is the counterpart to orderbook depth: `server.orderbook(base, counter)` returns the bids and asks that are currently resting and may never execute, while `server.trades().forAssetPair(...)` returns executions that already settled on the ledger. Alongside each trade's timestamp, price, amounts, and operation and transaction references, the example reports total traded volume, an unweighted average price, and the volume-weighted average price (VWAP). A pair with no trades is reported as an empty history rather than an error, since it indicates the market has never executed rather than that the request failed.
+
+Inspect Testnet vs Mainnet network configuration (Horizon, Soroban RPC, and passphrase):
+
+```bash
+npm run run-example 60-network-configuration
+```
+
+Select Mainnet explicitly via CLI or environment variable:
+
+```bash
+npm run run-example -- 60-network-configuration mainnet
+STELLAR_NETWORK=mainnet npm run run-example 60-network-configuration
+```
+
+The example prints the selected Horizon and Soroban RPC endpoints, binds `TransactionBuilder` to the matching network passphrase, rejects mismatched endpoint/passphrase combinations, and shows why a transaction signed for one network cannot be submitted to another. It never submits Mainnet transactions.
+Inspect an account's active SDEX offers:
+
+```bash
+npm run run-example 59-account-offer-inspection
+```
+
+Inspect offers for a specific account:
+
+```bash
+npm run run-example -- 59-account-offer-inspection <account-id>
+```
+
+This example is read-only. It lists offer IDs, selling/buying assets, amounts, prices (including rational representation), and approximate fill volume, and summarizes totals across active offers. Accounts with no offers produce a clear empty-state message. Leaving the account blank prefers an account that already has resting offers when Horizon has any. The account ID and limit can also be supplied through `ACCOUNT_ID` and `OFFER_LIMIT`.
 
 Run the ledger bounds example:
 
@@ -225,6 +346,12 @@ Run the fee-bump replacement workflow:
 
 ```bash
 npm run run-example 33-fee-bump-replacement
+```
+
+Run the fee-bump recovery workflow:
+
+```bash
+npm run run-example 96-fee-bump-recovery-workflow
 ```
 
 Inspect a specific transaction by supplying its hash as an additional command-line argument:
@@ -252,6 +379,56 @@ npm run run-example 44-resilient-horizon-stream
 ```
 
 The resilient stream tracks the last paging token, logs each reconnect attempt, and resumes from the saved cursor instead of replaying already-processed records.
+
+Simulate a Soroban contract invocation without broadcasting:
+
+```bash
+npm run run-example 68-soroban-contract-simulation
+```
+
+Supply a custom contract ID and method via environment variables:
+
+```bash
+CONTRACT_ID=<contract-id> CONTRACT_METHOD=<method> npm run run-example 68-soroban-contract-simulation
+```
+
+The example connects to Soroban RPC, builds an invocation transaction, submits it for simulation, and displays estimated resource usage (CPU instructions, read/write bytes, ledger footprint) and the returned value. It then assembles the footprint-bearing transaction without submitting — demonstrating the exact preparation steps required before signing and broadcasting.
+
+Inspect Soroban contract storage entries:
+
+```bash
+npm run run-example 69-soroban-contract-storage
+```
+
+Inspect storage for a specific contract:
+
+```bash
+CONTRACT_ID=<contract-id> npm run run-example 69-soroban-contract-storage
+```
+
+The example queries the contract's instance entry and a named persistent key, decodes and displays their values and live-until ledger sequences, demonstrates graceful handling of missing keys, and explains the difference between instance, persistent, and temporary storage durability — and how storage differs from contract events.
+
+Invoke an authorized Soroban contract method:
+
+```bash
+npm run run-example 70-soroban-authorization
+```
+
+The example funds an ephemeral account, builds a contract invocation, simulates to obtain authorization entries, inspects and signs each entry with the authorized keypair, assembles the transaction, and submits it — explaining at each step how Soroban authorization differs from ordinary transaction signatures.
+
+Demonstrate the Soroban storage update lifecycle:
+
+```bash
+npm run run-example 71-soroban-storage-update
+```
+
+Supply a custom contract and methods:
+
+```bash
+CONTRACT_ID=<id> CONTRACT_METHOD=increment CONTRACT_READ_METHOD=get npm run run-example 71-soroban-storage-update
+```
+
+The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 
