@@ -171,6 +171,8 @@
       "reason": "Requires live Soroban RPC, Friendbot funding, and a state-modifying contract on Testnet"
     },
     {
+      "match": "80-offline-transaction-workflow",
+      "reason": "Requires live Friendbot funding and Horizon Testnet transaction submission"
       "match": "81-transaction-preflight",
       "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
       "match": "83-multi-contract-transaction",

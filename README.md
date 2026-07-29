@@ -179,6 +179,7 @@ The repository currently includes the following runnable examples:
 62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+65. **`80-offline-transaction-workflow`**: Building an unsigned transaction, serializing it to XDR, signing it in a simulated offline (air-gapped) environment, gracefully handling corrupted XDR, and reconstructing and submitting the signed transaction.
 65. **`104-contract-restoration`**: Detecting archived Soroban contract ledger entries, building and simulating a `RestoreFootprint` transaction, submitting restoration when required, and verifying the contract becomes accessible again — with guidance on TTL extension versus restoration.
 65. **`106-scval-serialization`**: Converting JavaScript values to Soroban ScVal objects and back with reusable helpers, displaying raw XDR, and explaining common serialization pitfalls.
 65. **`105-contract-event-decoding`**: Retrieving Soroban contract events and decoding indexed topics and data payloads into human-readable values, with raw base64 XDR shown alongside decoded output.
@@ -557,6 +558,15 @@ The example reads the entry's `liveUntilLedgerSeq`, converts the remaining ledge
 
 The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
 
+Run the offline transaction preparation workflow:
+
+```bash
+npm run run-example 80-offline-transaction-workflow
+```
+
+The interactive runner (`npm run run-example` with no example name) also prompts for a custom payment amount before running.
+
+The example builds an unsigned payment transaction on an online machine, serializes it to XDR, simulates transferring that XDR to an air-gapped offline signer, signs it there, and returns the signed XDR. It also deliberately corrupts a copy of the signed XDR to demonstrate graceful error handling before reconstructing the real signed transaction and submitting it to the network — finishing with a short explainer on when and why offline (cold-storage/hardware-wallet) signing should be used.
 Detect archived Soroban contract state and demonstrate restoration:
 
 ```bash
