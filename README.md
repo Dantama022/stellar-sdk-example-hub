@@ -110,6 +110,7 @@ The repository currently includes the following runnable examples:
 62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
 63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
 64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+65. **`80-offline-transaction-workflow`**: Building an unsigned transaction, serializing it to XDR, signing it in a simulated offline (air-gapped) environment, gracefully handling corrupted XDR, and reconstructing and submitting the signed transaction.
 
 ## Installation
 
@@ -429,6 +430,16 @@ CONTRACT_ID=<id> CONTRACT_METHOD=increment CONTRACT_READ_METHOD=get npm run run-
 ```
 
 The example reads the initial storage value, simulates and submits a state-modifying transaction, polls for on-chain confirmation, and re-reads the storage to display a before-and-after comparison.
+
+Run the offline transaction preparation workflow:
+
+```bash
+npm run run-example 80-offline-transaction-workflow
+```
+
+The interactive runner (`npm run run-example` with no example name) also prompts for a custom payment amount before running.
+
+The example builds an unsigned payment transaction on an online machine, serializes it to XDR, simulates transferring that XDR to an air-gapped offline signer, signs it there, and returns the signed XDR. It also deliberately corrupts a copy of the signed XDR to demonstrate graceful error handling before reconstructing the real signed transaction and submitting it to the network — finishing with a short explainer on when and why offline (cold-storage/hardware-wallet) signing should be used.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 

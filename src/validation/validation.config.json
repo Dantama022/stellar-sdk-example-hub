@@ -133,6 +133,8 @@
     {
       "match": "67-soroban-contract-events",
       "reason": "Requires live Soroban RPC event data within the server retention window"
+    },
+    {
       "match": "50-asset-issuer-discovery",
       "reason": "Requires live Horizon asset index data"
     },
@@ -167,6 +169,10 @@
     {
       "match": "71-soroban-storage-update",
       "reason": "Requires live Soroban RPC, Friendbot funding, and a state-modifying contract on Testnet"
+    },
+    {
+      "match": "80-offline-transaction-workflow",
+      "reason": "Requires live Friendbot funding and Horizon Testnet transaction submission"
     }
   ]
 }

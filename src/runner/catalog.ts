@@ -621,4 +621,18 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
+  '80-offline-transaction-workflow': {
+    name: '80-offline-transaction-workflow',
+    description:
+      'Prepare and serialize an unsigned transaction, sign it in a simulated offline environment, handle corrupted XDR gracefully, and submit the reconstructed transaction',
+    run: loadExample('../examples/80-offline-transaction-workflow'),
+    params: [
+      {
+        type: 'input',
+        name: 'amount',
+        message: 'Enter payment amount (XLM):',
+        default: '10',
+      },
+    ],
+  },
 };
