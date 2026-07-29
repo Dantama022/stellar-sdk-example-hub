@@ -621,6 +621,29 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
+  '100-authorization-entry-inspection': {
+    name: '100-authorization-entry-inspection',
+    description:
+      'Decode a SorobanAuthorizationEntry: distinguish source-account from address credentials, walk the invocation tree, and read nonce and expiration',
+    run: loadExample('../examples/100-authorization-entry-inspection'),
+  },
+  '101-simulation-result-analysis': {
+    name: '101-simulation-result-analysis',
+    description:
+      'Interpret a simulateTransaction response: resource budget, ledger footprint, return value, diagnostic events, and restore preamble',
+    run: loadExample('../examples/101-simulation-result-analysis'),
+  },
+  '102-contract-storage-inspection': {
+    name: '102-contract-storage-inspection',
+    description:
+      'Probe contract storage keys across persistent and temporary durability, decode raw and native values, and handle missing keys gracefully',
+    run: loadExample('../examples/102-contract-storage-inspection'),
+  },
+  '103-storage-ttl-management': {
+    name: '103-storage-ttl-management',
+    description:
+      'Read a storage entry TTL, classify how much life it has left, and build, simulate, and submit an ExtendFootprintTTL transaction',
+    run: loadExample('../examples/103-storage-ttl-management'),
   '104-contract-restoration': {
     name: '104-contract-restoration',
     description:
