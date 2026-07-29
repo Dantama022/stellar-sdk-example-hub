@@ -626,5 +626,48 @@ export const examples: Record<string, Example> = {
     description:
       'Convert JavaScript values to Soroban ScVal objects and back with reusable helpers',
     run: loadExample('../examples/106-scval-serialization'),
+  '105-contract-event-decoding': {
+    name: '105-contract-event-decoding',
+    description:
+      'Retrieve Soroban contract events and decode topics and payloads with raw XDR side-by-side',
+    run: loadExample('../examples/105-contract-event-decoding'),
+  '107-contract-spec-introspection': {
+    name: '107-contract-spec-introspection',
+    description:
+      'Retrieve and parse Soroban contract specifications, displaying functions, types, and docs',
+    run: loadExample('../examples/107-contract-spec-introspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank uses native SAC on Testnet):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+      {
+        type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans ~24h):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to decode (1-50):',
+        default: '5',
+      },
+    ],
+        name: 'functionName',
+        message: 'Optional function name for dynamic selection:',
+      },
+    ],
+  '81-transaction-preflight': {
+    name: '81-transaction-preflight',
+    description:
+      'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
+    run: loadExample('../examples/81-transaction-preflight'),
+  '83-multi-contract-transaction': {
+    name: '83-multi-contract-transaction',
+    description:
+      'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
+    run: loadExample('../examples/83-multi-contract-transaction'),
   },
 };
