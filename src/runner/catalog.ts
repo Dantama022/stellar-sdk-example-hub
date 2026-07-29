@@ -626,6 +626,7 @@ export const examples: Record<string, Example> = {
     description:
       'Build, simulate, sign, and submit a Soroban contract invocation with custom time bounds, and demonstrate expired and invalid time-bounds handling',
     run: loadExample('../examples/82-transaction-time-bounds'),
+  },
   '80-offline-transaction-workflow': {
     name: '80-offline-transaction-workflow',
     description:
@@ -639,6 +640,7 @@ export const examples: Record<string, Example> = {
         default: '10',
       },
     ],
+  },
   '100-authorization-entry-inspection': {
     name: '100-authorization-entry-inspection',
     description:
@@ -662,26 +664,24 @@ export const examples: Record<string, Example> = {
     description:
       'Read a storage entry TTL, classify how much life it has left, and build, simulate, and submit an ExtendFootprintTTL transaction',
     run: loadExample('../examples/103-storage-ttl-management'),
+  },
   '104-contract-restoration': {
     name: '104-contract-restoration',
     description:
       'Detect archived Soroban contract state, simulate and submit RestoreFootprint, and verify accessibility',
     run: loadExample('../examples/104-contract-restoration'),
+  },
   '106-scval-serialization': {
     name: '106-scval-serialization',
     description:
       'Convert JavaScript values to Soroban ScVal objects and back with reusable helpers',
     run: loadExample('../examples/106-scval-serialization'),
+  },
   '105-contract-event-decoding': {
     name: '105-contract-event-decoding',
     description:
       'Retrieve Soroban contract events and decode topics and payloads with raw XDR side-by-side',
     run: loadExample('../examples/105-contract-event-decoding'),
-  '107-contract-spec-introspection': {
-    name: '107-contract-spec-introspection',
-    description:
-      'Retrieve and parse Soroban contract specifications, displaying functions, types, and docs',
-    run: loadExample('../examples/107-contract-spec-introspection'),
     params: [
       {
         type: 'input',
@@ -689,7 +689,6 @@ export const examples: Record<string, Example> = {
         message: 'Contract ID (blank uses native SAC on Testnet):',
         default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
       },
-    ],
       {
         type: 'input',
         name: 'startLedger',
@@ -702,19 +701,116 @@ export const examples: Record<string, Example> = {
         default: '5',
       },
     ],
+  },
+  '107-contract-spec-introspection': {
+    name: '107-contract-spec-introspection',
+    description:
+      'Retrieve and parse Soroban contract specifications, displaying functions, types, and docs',
+    run: loadExample('../examples/107-contract-spec-introspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank uses native SAC on Testnet):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+      {
+        type: 'input',
         name: 'functionName',
         message: 'Optional function name for dynamic selection:',
       },
     ],
+  },
   '81-transaction-preflight': {
     name: '81-transaction-preflight',
     description:
       'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
     run: loadExample('../examples/81-transaction-preflight'),
+  },
   '83-multi-contract-transaction': {
     name: '83-multi-contract-transaction',
     description:
       'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
     run: loadExample('../examples/83-multi-contract-transaction'),
+  },
+  '76-generated-client-example': {
+    name: '76-generated-client-example',
+    description:
+      'Build a client from a contract spec, invoke methods with typed arguments and decoded results, and compare it with manual invocation',
+    run: loadExample('../examples/76-generated-client-example'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank uses native SAC on Testnet):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+      {
+        type: 'confirm',
+        name: 'fetchSpec',
+        message: 'Fetch the spec off the ledger instead of embedding it?',
+        default: false,
+      },
+    ],
+  },
+  '77-transaction-restoration': {
+    name: '77-transaction-restoration',
+    description:
+      'Detect a restore preamble in simulation, submit RestoreFootprint for archived state, then rebuild and resubmit the original transaction',
+    run: loadExample('../examples/77-transaction-restoration'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank uses native SAC on Testnet):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+      {
+        type: 'input',
+        name: 'method',
+        message: 'Method to invoke:',
+        default: 'decimals',
+      },
+    ],
+  },
+  '78-contract-ttl-extension': {
+    name: '78-contract-ttl-extension',
+    description:
+      "Read a contract's instance and code TTLs, extend both with ExtendFootprintTTL, and verify the new expiry ledger",
+    run: loadExample('../examples/78-contract-ttl-extension'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank uses native SAC on Testnet):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+      {
+        type: 'input',
+        name: 'extendTo',
+        message: 'Ledgers to extend to:',
+        default: '100000',
+      },
+    ],
+  },
+  '79-transaction-event-decoding': {
+    name: '79-transaction-event-decoding',
+    description:
+      'Submit a contract invocation and decode the events from its transaction result metadata, contrasted with historical event queries',
+    run: loadExample('../examples/79-transaction-event-decoding'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank uses native SAC on Testnet):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+      {
+        type: 'input',
+        name: 'method',
+        message: 'Method to invoke:',
+        default: 'decimals',
+      },
+    ],
   },
 };
