@@ -707,6 +707,7 @@ export const examples: Record<string, Example> = {
     description:
       'Build, simulate, sign, and submit a Soroban contract invocation with custom time bounds, and demonstrate expired and invalid time-bounds handling',
     run: loadExample('../examples/82-transaction-time-bounds'),
+  },
   '80-offline-transaction-workflow': {
     name: '80-offline-transaction-workflow',
     description:
@@ -720,6 +721,7 @@ export const examples: Record<string, Example> = {
         default: '10',
       },
     ],
+  },
   '100-authorization-entry-inspection': {
     name: '100-authorization-entry-inspection',
     description:
@@ -743,21 +745,25 @@ export const examples: Record<string, Example> = {
     description:
       'Read a storage entry TTL, classify how much life it has left, and build, simulate, and submit an ExtendFootprintTTL transaction',
     run: loadExample('../examples/103-storage-ttl-management'),
+  },
   '104-contract-restoration': {
     name: '104-contract-restoration',
     description:
       'Detect archived Soroban contract state, simulate and submit RestoreFootprint, and verify accessibility',
     run: loadExample('../examples/104-contract-restoration'),
+  },
   '106-scval-serialization': {
     name: '106-scval-serialization',
     description:
       'Convert JavaScript values to Soroban ScVal objects and back with reusable helpers',
     run: loadExample('../examples/106-scval-serialization'),
+  },
   '105-contract-event-decoding': {
     name: '105-contract-event-decoding',
     description:
       'Retrieve Soroban contract events and decode topics and payloads with raw XDR side-by-side',
     run: loadExample('../examples/105-contract-event-decoding'),
+  },
   '107-contract-spec-introspection': {
     name: '107-contract-spec-introspection',
     description:
@@ -770,7 +776,6 @@ export const examples: Record<string, Example> = {
         message: 'Contract ID (blank uses native SAC on Testnet):',
         default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
       },
-    ],
       {
         type: 'input',
         name: 'startLedger',
@@ -782,20 +787,61 @@ export const examples: Record<string, Example> = {
         message: 'Number of events to decode (1-50):',
         default: '5',
       },
-    ],
+      {
+        type: 'input',
         name: 'functionName',
         message: 'Optional function name for dynamic selection:',
       },
     ],
+  },
   '81-transaction-preflight': {
     name: '81-transaction-preflight',
     description:
       'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
     run: loadExample('../examples/81-transaction-preflight'),
+  },
   '83-multi-contract-transaction': {
     name: '83-multi-contract-transaction',
     description:
       'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
     run: loadExample('../examples/83-multi-contract-transaction'),
+  },
+  '93-trustline-management': {
+    name: '93-trustline-management',
+    description:
+      'Create, inspect, update, and remove asset trustlines — demonstrating changeTrust, limit updates, authorization status, and the reserve cost of each subentry',
+    run: loadExample('../examples/93-trustline-management'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code for the trustline (blank uses DEMO):',
+        default: 'DEMO',
+      },
+    ],
+  },
+  '92-account-payment-stream': {
+    name: '92-account-payment-stream',
+    description:
+      'Subscribe to a Horizon account payment stream, display incoming and outgoing payments in real time, handle errors, and explain streaming versus polling',
+    run: loadExample('../examples/92-account-payment-stream'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to monitor (blank discovers a recently active account):',
+      },
+      {
+        type: 'list',
+        name: 'paymentFilter',
+        message: 'Payment direction filter:',
+        default: 'all',
+        choices: [
+          { name: 'All payments (incoming + outgoing)', value: 'all' },
+          { name: 'Incoming only', value: 'incoming' },
+          { name: 'Outgoing only', value: 'outgoing' },
+        ],
+      },
+    ],
   },
 };
