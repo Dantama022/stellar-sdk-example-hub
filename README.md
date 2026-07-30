@@ -191,10 +191,6 @@ The repository currently includes the following runnable examples:
 65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
 65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
 65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
-65. **`76-generated-client-example`**: Declaring a Soroban contract spec the way generated TypeScript bindings embed it, building a `contract.Client` from it (or fetching the spec off the ledger), invoking methods with named typed arguments and decoded native results, and contrasting the whole thing with hand-built manual invocation.
-65. **`77-transaction-restoration`**: Detecting from a simulation's `restorePreamble` that a transaction's footprint references archived state, submitting the matching `RestoreFootprint`, then rebuilding and resubmitting the original transaction against the restored ledger.
-65. **`78-contract-ttl-extension`**: Reading a contract's instance and code `liveUntilLedgerSeq`, reporting the remaining lifetime in ledgers and approximate days, extending both entries with `ExtendFootprintTTL`, and re-reading the ledger to verify the new expiry.
-65. **`79-transaction-event-decoding`**: Submitting a contract invocation and decoding the contract events belonging to that one transaction — topics, payloads, hash and ledger — and explaining how transaction-scoped event inspection differs from historical `getEvents` queries.
 
 ## Installation
 
@@ -658,44 +654,6 @@ npm run run-example -- 104-contract-restoration <contract-id>
 ```
 
 The same contract ID can be supplied through `CONTRACT_ID`. For accessible contracts the example simulates restoration and reports the estimated fee and footprint without submitting an unnecessary transaction. When simulation detects archived entries (`isSimulationRestore`), it prepares, submits, and polls a `RestoreFootprint` transaction, then re-checks accessibility. The output explains the difference between proactive `extendFootprintTtl` and reactive `restoreFootprint`.
-Use a spec-derived (generated) Soroban client:
-
-```bash
-npm run run-example 76-generated-client-example
-```
-
-The example declares the token interface as `ScSpec` entries — exactly what `stellar contract bindings typescript` embeds in a generated package — builds a `contract.Client` from them, lists the typed methods, and calls `decimals`, `symbol`, and `balance({ id })` with named arguments, printing each decoded result with its JavaScript type (`u32` to number, `String` to string, `i128` to bigint). It then performs the same `balance` call manually to show the six extra steps a client removes. Set `FETCH_SPEC=true` to read the spec off the ledger with `contract.Client.from()` instead; that path needs a WASM-backed contract, since Stellar Asset Contracts expose no spec.
-
-Detect and recover from archived state during transaction submission:
-
-```bash
-npm run run-example 77-transaction-restoration
-```
-
-The example simulates a contract invocation and inspects the result for a `restorePreamble`. When one is present it builds the `RestoreFootprint` transaction from that preamble verbatim, simulates, signs, submits, and waits for it, then rebuilds the original transaction from a freshly loaded account and resubmits it — a rebuild is required because footprints and resource fees are computed against ledger state. When nothing is archived it says so and still builds and prices an illustrative restore over the same footprint without submitting it. Point `CONTRACT_ID` at a contract whose persistent state has lapsed past its `liveUntilLedgerSeq` to exercise the full path.
-
-Inspect and extend a contract's TTL:
-
-```bash
-npm run run-example 78-contract-ttl-extension
-```
-
-Extend further, paying from a specific account:
-
-```bash
-SECRET_KEY=<secret> EXTEND_TO=500000 npm run run-example 78-contract-ttl-extension
-```
-
-The example validates the contract ID as a strkey before any network call, reads the instance entry and the CONTRACT_CODE entry it points at, and reports each one's remaining lifetime in both ledgers and approximate days. It then puts both entries in the read-only footprint of a single `ExtendFootprintTTL` transaction, simulates, signs, submits, and re-reads the ledger to confirm the new expiry. Because `extendTo` is applied as a maximum, extending an entry that already lives further out is a confirmed no-op rather than an error — the default target is the native token contract, which is already long-lived, so raise `EXTEND_TO` or choose a shorter-lived contract to see the value move. Rent is not tied to ownership, so an ephemeral Friendbot account pays by default.
-
-Decode the events emitted by a single transaction:
-
-```bash
-npm run run-example 79-transaction-event-decoding
-```
-
-By default the example transfers 10 XLM through the native token contract — a call that really does emit events — waits for confirmation, then extracts the contract events belonging to that transaction and prints each one's emitting contract, type, decoded topics and payload, alongside the transaction hash and ledger sequence. Transactions that emit nothing are reported as a normal outcome rather than a failure. The closing section contrasts this with `server.getEvents` (example 105). Note that protocol 23 introduced `TransactionMetaV4`, which the pinned SDK 13 cannot parse; when that happens the example says so and reads the same events from the event index filtered to the transaction's own hash.
-
 Convert JavaScript values to Soroban ScVal and back:
 
 ```bash
