@@ -102,10 +102,14 @@ The repository currently includes the following runnable examples:
 89. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
 90. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
 91. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
-92. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
-93. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
-94. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
-95. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signatures, signer hints, and XDR serialization round-trips.
+92. **`62-payment-history`**: Retrieving recent account payment records, identifying incoming and outgoing transfers, and displaying amounts, assets, counterparties, ledgers, timestamps, and transaction hashes.
+93. **`63-asset-discovery`**: Browsing Horizon asset records, filtering by asset code, distinguishing issuers, and displaying holder, balance, claimable-balance, liquidity-pool, and contract statistics.
+94. **`64-liquidity-pool-inspection`**: Browsing available liquidity pools or inspecting a pool ID, including reserve assets, balances, pool shares, fees, and participating accounts.
+95. **`65-offer-book-inspection`**: Inspecting active Stellar offers with selling and buying asset filters, seller details, prices, amounts, ledger references, and market summary statistics.
+96. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
+97. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
+98. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
+99. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signatures, signer hints, and XDR serialization round-trips.
 96. **`68-soroban-contract-simulation`**: Simulating a Soroban contract invocation, inspecting resource estimates and returned values, and assembling the footprint-bearing transaction without broadcasting.
 97. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
 98. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
@@ -416,6 +420,62 @@ npm run run-example -- 59-account-offer-inspection <account-id>
 ```
 
 This example is read-only. It lists offer IDs, selling/buying assets, amounts, prices (including rational representation), and approximate fill volume, and summarizes totals across active offers. Accounts with no offers produce a clear empty-state message. Leaving the account blank prefers an account that already has resting offers when Horizon has any. The account ID and limit can also be supplied through `ACCOUNT_ID` and `OFFER_LIMIT`.
+
+Inspect recent payment history for an account:
+
+```bash
+npm run run-example 62-payment-history
+```
+
+Supply an account and custom history limit:
+
+```bash
+npm run run-example -- 62-payment-history <account-id> 25
+```
+
+The example uses Horizon payment records rather than generic operations. It identifies incoming, outgoing, self, and related records; formats native XLM and issued assets; and displays counterparties, transaction hashes, ledger sequences, and timestamps. The account and limit can also be supplied through `ACCOUNT_ID` and `PAYMENT_HISTORY_LIMIT`. Accounts with no payment records produce a clear empty result.
+
+Discover issued Stellar assets:
+
+```bash
+npm run run-example 63-asset-discovery
+```
+
+Filter assets by code and set a result limit:
+
+```bash
+npm run run-example -- 63-asset-discovery USDC 25
+```
+
+The example displays the asset code, issuer, type, holder counts, balances, claimable-balance statistics, liquidity-pool holdings, and contract holdings where Horizon provides them. The same asset code can be used by several issuers, so an issued asset is identified by both code and issuer. Configuration is also available through `ASSET_CODE` and `ASSET_DISCOVERY_LIMIT`.
+
+Browse Horizon liquidity pools:
+
+```bash
+npm run run-example 64-liquidity-pool-inspection
+```
+
+Inspect one specific pool:
+
+```bash
+npm run run-example -- 64-liquidity-pool-inspection <liquidity-pool-id>
+```
+
+The example displays both participating assets, reserve balances, total pool shares, fee basis points, participating-account counts, and ledger metadata. Liquidity pool IDs are deterministic identifiers derived from canonical pool parameters. Configuration is also available through `LIQUIDITY_POOL_ID` and `LIQUIDITY_POOL_LIMIT`.
+
+Inspect active offers across the Stellar decentralized exchange:
+
+```bash
+npm run run-example 65-offer-book-inspection
+```
+
+Filter by selling asset, buying asset, and result limit:
+
+```bash
+npm run run-example -- 65-offer-book-inspection native USDC:<issuer-account-id> 25
+```
+
+The example displays offer IDs, sellers, selling and buying assets, remaining amounts, prices, approximate buying totals, and last-modified ledgers. It explains that offers are open seller-owned intentions, order books aggregate active market depth, trades are completed executions, and liquidity pools are AMM reserves. Configuration is also available through `SELLING_ASSET`, `BUYING_ASSET`, and `OFFER_BOOK_LIMIT`.
 
 Run the ledger bounds example:
 

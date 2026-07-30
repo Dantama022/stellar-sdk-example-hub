@@ -577,6 +577,87 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '62-payment-history': {
+    name: '62-payment-history',
+    description:
+      'Retrieve an account payment history, identify incoming and outgoing transfers, and display assets and transaction references',
+    run: loadExample('../examples/62-payment-history'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank discovers a recently active account):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of payment records to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
+  '63-asset-discovery': {
+    name: '63-asset-discovery',
+    description:
+      'Browse and search Horizon asset records by code, issuer, holder counts, balances, and claimable-balance statistics',
+    run: loadExample('../examples/63-asset-discovery'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Optional asset code filter (blank browses indexed assets):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of asset records to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
+  '64-liquidity-pool-inspection': {
+    name: '64-liquidity-pool-inspection',
+    description:
+      'Browse Horizon liquidity pools or inspect one pool ID, including reserves, shares, fees, and participants',
+    run: loadExample('../examples/64-liquidity-pool-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'poolId',
+        message: 'Optional 64-character pool ID (blank browses available pools):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of liquidity pools to retrieve (1-200):',
+        default: '5',
+      },
+    ],
+  },
+  '65-offer-book-inspection': {
+    name: '65-offer-book-inspection',
+    description:
+      'Inspect active Horizon offers with optional selling and buying asset filters and market summary statistics',
+    run: loadExample('../examples/65-offer-book-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'sellingAsset',
+        message: 'Optional selling asset ("native", "XLM", or CODE:ISSUER):',
+      },
+      {
+        type: 'input',
+        name: 'buyingAsset',
+        message: 'Optional buying asset ("native", "XLM", or CODE:ISSUER):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of active offers to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
   '84-muxed-account-handling': {
     name: '84-muxed-account-handling',
     description: 'Create, parse, and validate muxed (M...) accounts and their identifiers',
