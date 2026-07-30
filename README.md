@@ -88,6 +88,16 @@ The repository currently includes the following runnable examples:
 53. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
 54. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 55. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+56. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
+57. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+59. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
+60. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
+61. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
+52. **`52-account-balance-history`**: Reconstructing a simple native XLM balance history from recent Horizon effects with transaction and ledger references.
+53. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
+54. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+55. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
 56. **`60-network-configuration`**: Selecting Testnet vs Mainnet Horizon / Soroban RPC endpoints, binding `TransactionBuilder` to the correct network passphrase, detecting mismatched configuration, and explaining why a transaction signed for one network cannot be submitted to another.
 56. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
 57. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
@@ -175,6 +185,18 @@ Run account data entry management (create, update, remove):
 npm run run-example 47-account-data-entries
 ```
 
+Inspect decoded account data entries and Manage Data state:
+
+```bash
+npm run run-example 89-account-data-inspection
+```
+
+Query and inspect claimable balances with claimant-based Horizon filtering:
+
+```bash
+npm run run-example 88-claimable-balance-inspection
+```
+
 Run asset authorization flag and trustline authorization workflow:
 
 ```bash
@@ -185,6 +207,18 @@ Inspect claimable balances and claimant predicates:
 
 ```bash
 npm run run-example 49-claimable-balance-inspection
+```
+
+Inspect account data entries and decoded base64 values:
+
+```bash
+npm run run-example 89-account-data-inspection
+```
+
+Query and inspect claimable balances with claimant-based Horizon filtering:
+
+```bash
+npm run run-example 88-claimable-balance-inspection
 ```
 
 Discover an asset issuer and trustline/holder counts:
