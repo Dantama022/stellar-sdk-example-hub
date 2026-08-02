@@ -201,6 +201,8 @@ The repository currently includes the following runnable examples:
 65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
 65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
 65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
+66. **`93-trustline-management`**: Creating, inspecting, updating, and removing asset trustlines — demonstrating changeTrust operations, trust limit configuration, authorization status inspection, and the 0.5 XLM reserve cost of each subentry.
+67. **`92-account-payment-stream`**: Subscribing to a Horizon account payment stream, displaying incoming and outgoing payments in real time, handling stream errors with automatic reconnection, and explaining when streaming should be preferred over polling.
 
 ## Installation
 
@@ -747,6 +749,39 @@ CONTRACT_ID=<orchestrator-id> CONTRACT_ID_A=<contract-a-id> CONTRACT_ID_B=<contr
 ```
 
 Soroban only allows a single host-function (contract invocation) operation per transaction, so "multiple contract invocations in one transaction" is achieved by invoking one orchestrator/router contract whose method internally makes cross-contract calls into other contracts, rather than by adding several top-level `contract.call(...)` operations. The example builds that single orchestrator invocation with two downstream contract IDs as arguments, simulates it to display the combined resource footprint and authorization entries spanning every contract touched, signs and submits it, and explains why a failure anywhere in the call chain — including a downstream cross-contract call — rolls back the entire transaction atomically, and why execution order follows the orchestrator's own code path rather than the order arguments are listed.
+
+Run the trustline management lifecycle example:
+
+```bash
+npm run run-example 93-trustline-management
+```
+
+Use a custom asset code:
+
+```bash
+npm run run-example -- 93-trustline-management MYTOKEN
+```
+
+The example creates two ephemeral Testnet accounts (a holder and a simulated issuer), then walks through the complete trustline lifecycle: creating a trustline for a custom asset with an initial limit, inspecting all trustline details (asset code, issuer, balance, limit, authorization status, and buying/selling liabilities), updating the trust limit, demonstrating invalid asset handling, and finally removing the trustline by setting the limit to zero — recovering the 0.5 XLM reserve subentry cost.
+
+Each non-native Stellar asset requires an explicit opt-in from the receiving account before any payment of that asset can land. The changeTrust operation creates or updates a trustline when `limit > "0"` and removes it when `limit = "0"` (provided the balance is already zero). Each trustline consumes one account subentry, raising the minimum reserve by 0.5 XLM. The asset code can also be supplied through `ASSET_CODE`.
+
+Stream real-time payment events for an account:
+
+```bash
+npm run run-example 92-account-payment-stream
+```
+
+Monitor a specific account with optional direction filtering:
+
+```bash
+npm run run-example -- 92-account-payment-stream <account-id>
+ACCOUNT_ID=<account-id> PAYMENT_FILTER=incoming npm run run-example 92-account-payment-stream
+```
+
+The example connects to a Horizon server, resolves or discovers an account to monitor, opens a Server-Sent Events stream via `server.payments().forAccount(...).cursor('now').stream(...)`, and displays every new payment record in real time — including the transaction hash, payment type, source and destination accounts, asset information, amount, and timestamp. Each record is labelled as incoming, outgoing, self, or related relative to the monitored account.
+
+The `PAYMENT_FILTER` variable accepts `all` (default), `incoming`, or `outgoing`. Stream errors are logged with a reconnection notice rather than aborting — the SDK reconnects automatically after 15 seconds. Setting `STREAM_MAX_EVENTS` or `STREAM_DURATION_SECONDS` limits the run time, which is useful in CI. Leaving `ACCOUNT_ID` blank makes the example discover a recently active account, so it runs without any setup. Press Ctrl+C to shut down cleanly.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
 
