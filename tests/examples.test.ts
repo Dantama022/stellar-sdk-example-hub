@@ -37,8 +37,11 @@ import * as ex55 from '../src/examples/55-trade-history';
 import * as ex56 from '../src/examples/56-account-flags-inspection';
 import * as ex57 from '../src/examples/57-account-reserve-calculator';
 import * as ex58 from '../src/examples/58-account-relationship-discovery';
+import * as ex66 from '../src/examples/66-ledger-effects';
+import * as ex67 from '../src/examples/67-soroban-contract-events';
 import * as ex60 from '../src/examples/60-network-configuration';
 import * as ex59 from '../src/examples/59-account-offer-inspection';
+import * as ex96 from '../src/examples/96-fee-bump-recovery-workflow';
 
 import { examples } from '../src/runner/catalog';
 
@@ -81,8 +84,12 @@ describe('Examples Exports', () => {
       ex56,
       ex57,
       ex58,
-      ex60,
+      ex66,
+      ex67,
+        ex58,
       ex59,
+      ex60,
+      ex96,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -118,8 +125,11 @@ describe('Examples Exports', () => {
       '56-account-flags-inspection',
       '57-account-reserve-calculator',
       '58-account-relationship-discovery',
+      '66-ledger-effects',
+      '67-soroban-contract-events',
       '60-network-configuration',
       '59-account-offer-inspection',
+      '96-fee-bump-recovery-workflow',
     ]) {
       expect(examples[key]).toBeDefined();
     }

@@ -244,6 +244,26 @@ export const examples: Record<string, Example> = {
       'Wrap a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account',
     run: loadExample('../examples/33-fee-bump-replacement'),
   },
+  '96-fee-bump-recovery-workflow': {
+    name: '96-fee-bump-recovery-workflow',
+    description:
+      'Recover a low-fee transaction by wrapping it in a higher-fee fee-bump replacement',
+    run: loadExample('../examples/96-fee-bump-recovery-workflow'),
+    params: [
+      {
+        type: 'input',
+        name: 'innerBaseFee',
+        message: 'Enter the original transaction base fee in stroops:',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'bumpBaseFee',
+        message: 'Enter the fee-bump base fee in stroops:',
+        default: '500',
+      },
+    ],
+  },
   '37-strict-send-path-payment': {
     name: '37-strict-send-path-payment',
     description: 'Execute a strict-send path payment and observe the received amount',
@@ -478,6 +498,54 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '66-ledger-effects': {
+    name: '66-ledger-effects',
+    description:
+      'Retrieve every effect produced by one closed ledger, grouped by effect type with summary statistics',
+    run: loadExample('../examples/66-ledger-effects'),
+    params: [
+      {
+        type: 'input',
+        name: 'ledgerSequence',
+        message: 'Ledger sequence (blank uses the latest closed ledger):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of effects to retrieve (1-500):',
+        default: '25',
+      },
+    ],
+  },
+  '67-soroban-contract-events': {
+    name: '67-soroban-contract-events',
+    description:
+      'Query Soroban contract events over a ledger range and decode topics, payloads, and ledger references',
+    run: loadExample('../examples/67-soroban-contract-events'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank discovers a recently active contract):',
+      },
+      {
+        type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans the last ~24h of ledgers):',
+      },
+      {
+        type: 'input',
+        name: 'endLedger',
+        message: 'End ledger (blank queries up to the latest ledger):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
   '60-network-configuration': {
     name: '60-network-configuration',
     description:
@@ -506,6 +574,87 @@ export const examples: Record<string, Example> = {
         type: 'input',
         name: 'accountId',
         message: 'Optional account ID (blank uses recent active account):',
+      },
+    ],
+  },
+  '62-payment-history': {
+    name: '62-payment-history',
+    description:
+      'Retrieve an account payment history, identify incoming and outgoing transfers, and display assets and transaction references',
+    run: loadExample('../examples/62-payment-history'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Optional account ID (blank discovers a recently active account):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of payment records to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
+  '63-asset-discovery': {
+    name: '63-asset-discovery',
+    description:
+      'Browse and search Horizon asset records by code, issuer, holder counts, balances, and claimable-balance statistics',
+    run: loadExample('../examples/63-asset-discovery'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Optional asset code filter (blank browses indexed assets):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of asset records to retrieve (1-200):',
+        default: '10',
+      },
+    ],
+  },
+  '64-liquidity-pool-inspection': {
+    name: '64-liquidity-pool-inspection',
+    description:
+      'Browse Horizon liquidity pools or inspect one pool ID, including reserves, shares, fees, and participants',
+    run: loadExample('../examples/64-liquidity-pool-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'poolId',
+        message: 'Optional 64-character pool ID (blank browses available pools):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of liquidity pools to retrieve (1-200):',
+        default: '5',
+      },
+    ],
+  },
+  '65-offer-book-inspection': {
+    name: '65-offer-book-inspection',
+    description:
+      'Inspect active Horizon offers with optional selling and buying asset filters and market summary statistics',
+    run: loadExample('../examples/65-offer-book-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'sellingAsset',
+        message: 'Optional selling asset ("native", "XLM", or CODE:ISSUER):',
+      },
+      {
+        type: 'input',
+        name: 'buyingAsset',
+        message: 'Optional buying asset ("native", "XLM", or CODE:ISSUER):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of active offers to retrieve (1-200):',
+        default: '10',
       },
     ],
   },
@@ -562,5 +711,101 @@ export const examples: Record<string, Example> = {
     description:
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
+  },
+  '82-transaction-time-bounds': {
+    name: '82-transaction-time-bounds',
+    description:
+      'Build, simulate, sign, and submit a Soroban contract invocation with custom time bounds, and demonstrate expired and invalid time-bounds handling',
+    run: loadExample('../examples/82-transaction-time-bounds'),
+  '80-offline-transaction-workflow': {
+    name: '80-offline-transaction-workflow',
+    description:
+      'Prepare and serialize an unsigned transaction, sign it in a simulated offline environment, handle corrupted XDR gracefully, and submit the reconstructed transaction',
+    run: loadExample('../examples/80-offline-transaction-workflow'),
+    params: [
+      {
+        type: 'input',
+        name: 'amount',
+        message: 'Enter payment amount (XLM):',
+        default: '10',
+      },
+    ],
+  '100-authorization-entry-inspection': {
+    name: '100-authorization-entry-inspection',
+    description:
+      'Decode a SorobanAuthorizationEntry: distinguish source-account from address credentials, walk the invocation tree, and read nonce and expiration',
+    run: loadExample('../examples/100-authorization-entry-inspection'),
+  },
+  '101-simulation-result-analysis': {
+    name: '101-simulation-result-analysis',
+    description:
+      'Interpret a simulateTransaction response: resource budget, ledger footprint, return value, diagnostic events, and restore preamble',
+    run: loadExample('../examples/101-simulation-result-analysis'),
+  },
+  '102-contract-storage-inspection': {
+    name: '102-contract-storage-inspection',
+    description:
+      'Probe contract storage keys across persistent and temporary durability, decode raw and native values, and handle missing keys gracefully',
+    run: loadExample('../examples/102-contract-storage-inspection'),
+  },
+  '103-storage-ttl-management': {
+    name: '103-storage-ttl-management',
+    description:
+      'Read a storage entry TTL, classify how much life it has left, and build, simulate, and submit an ExtendFootprintTTL transaction',
+    run: loadExample('../examples/103-storage-ttl-management'),
+  '104-contract-restoration': {
+    name: '104-contract-restoration',
+    description:
+      'Detect archived Soroban contract state, simulate and submit RestoreFootprint, and verify accessibility',
+    run: loadExample('../examples/104-contract-restoration'),
+  '106-scval-serialization': {
+    name: '106-scval-serialization',
+    description:
+      'Convert JavaScript values to Soroban ScVal objects and back with reusable helpers',
+    run: loadExample('../examples/106-scval-serialization'),
+  '105-contract-event-decoding': {
+    name: '105-contract-event-decoding',
+    description:
+      'Retrieve Soroban contract events and decode topics and payloads with raw XDR side-by-side',
+    run: loadExample('../examples/105-contract-event-decoding'),
+  '107-contract-spec-introspection': {
+    name: '107-contract-spec-introspection',
+    description:
+      'Retrieve and parse Soroban contract specifications, displaying functions, types, and docs',
+    run: loadExample('../examples/107-contract-spec-introspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank uses native SAC on Testnet):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+    ],
+      {
+        type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans ~24h):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to decode (1-50):',
+        default: '5',
+      },
+    ],
+        name: 'functionName',
+        message: 'Optional function name for dynamic selection:',
+      },
+    ],
+  '81-transaction-preflight': {
+    name: '81-transaction-preflight',
+    description:
+      'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
+    run: loadExample('../examples/81-transaction-preflight'),
+  '83-multi-contract-transaction': {
+    name: '83-multi-contract-transaction',
+    description:
+      'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
+    run: loadExample('../examples/83-multi-contract-transaction'),
   },
 };
