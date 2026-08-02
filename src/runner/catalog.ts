@@ -678,6 +678,16 @@ export const examples: Record<string, Example> = {
     description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
     run: loadExample('../examples/87-transaction-envelope-inspection'),
   },
+  '88-claimable-balance-inspection': {
+    name: '88-claimable-balance-inspection',
+    description: 'Query and inspect claimable balances, assets, amounts, claimants, and predicates',
+    run: loadExample('../examples/88-claimable-balance-inspection'),
+  },
+  '89-account-data-inspection': {
+    name: '89-account-data-inspection',
+    description: 'Inspect account data entries, decode base64 values, and explain Manage Data state changes',
+    run: loadExample('../examples/89-account-data-inspection'),
+  },
   '68-soroban-contract-simulation': {
     name: '68-soroban-contract-simulation',
     description:
