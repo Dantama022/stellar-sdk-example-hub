@@ -854,4 +854,57 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '126-claimable-balance-management': {
+    name: '126-claimable-balance-management',
+    description:
+      'Discover, inspect, filter, and claim eligible Stellar claimable balances',
+    run: loadExample('../examples/126-claimable-balance-management'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetFilter',
+        message: 'Optional asset filter ("native" or CODE:ISSUER, blank shows all):',
+      },
+    ],
+  },
+  '128-account-authorization-flags': {
+    name: '128-account-authorization-flags',
+    description:
+      'Inspect and manage issuer account authorization flags and trustline authorization',
+    run: loadExample('../examples/128-account-authorization-flags'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code to demonstrate authorization on (blank uses AUTHCOIN):',
+        default: 'AUTHCOIN',
+      },
+    ],
+  },
+  '130-sponsored-reserve-management': {
+    name: '130-sponsored-reserve-management',
+    description:
+      'Sponsor a trustline and a data entry, inspect reserve responsibility, then revoke one entry\'s sponsorship',
+    run: loadExample('../examples/130-sponsored-reserve-management'),
+  },
+  '131-path-payment-route-inspection': {
+    name: '131-path-payment-route-inspection',
+    description:
+      'Discover and rank strict-receive path payment routes without submitting a payment',
+    run: loadExample('../examples/131-path-payment-route-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'destAmount',
+        message: 'Fixed destination amount to price routes for (blank uses 25):',
+        default: '25',
+      },
+      {
+        type: 'input',
+        name: 'maxRoutes',
+        message: 'Maximum number of routes to display (blank uses 5):',
+        default: '5',
+      },
+    ],
+  },
 };
