@@ -84,6 +84,7 @@ The repository currently includes the following runnable examples:
 71. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
 72. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
 73. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+74. **`148-result-code-decoder`**: Retrieving a transaction from Horizon and decoding transaction and operation result codes into categorized diagnostics, explanations, and troubleshooting suggestions.
 74. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 75. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
 76. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
@@ -109,7 +110,9 @@ The repository currently includes the following runnable examples:
 96. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
 97. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
 98. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
-99. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signatures, signer hints, and XDR serialization round-trips.
+99. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signer hints, and XDR serialization round-trips.
+100. **`150-mixed-operation-transaction`**: Building and inspecting one atomic transaction containing payment, Manage Data, and bump-sequence operations with operation-specific sources.
+101. **`151-fee-bump-wrapping`**: Wrapping a base64 transaction envelope in a fee-bump, validating preserved inner fields and signatures, and inspecting the outer envelope.
 96. **`68-soroban-contract-simulation`**: Simulating a Soroban contract invocation, inspecting resource estimates and returned values, and assembling the footprint-bearing transaction without broadcasting.
 97. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
 98. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
@@ -207,6 +210,10 @@ The repository currently includes the following runnable examples:
 69. **`128-account-authorization-flags`**: Inspecting and managing issuer authorization flags, with both allowTrust and setTrustLineFlags authorization workflows.
 70. **`130-sponsored-reserve-management`**: Sponsoring a trustline and a data entry, inspecting reserve responsibility, and revoking one entry's sponsorship.
 71. **`131-path-payment-route-inspection`**: Discovering and ranking strict-receive path payment routes without submitting a payment.
+68. **`139-account-offer-inspection`**: Inspect an account's open SDEX offers, grouped by trading pair with summary statistics.
+69. **`138-account-merge-preflight`**: Inspect a Stellar account to determine merge readiness and identify blocking ledger states.
+70. **`132-fee-bump-inspection`**: Decode and inspect fee-bump and normal transaction envelopes offline.
+71.  **`136-transaction-fee-estimation`**: Estimate minimum transaction fees using Horizon network fee statistics across operation sizes.
 
 ## Installation
 
@@ -273,6 +280,36 @@ Inspect Horizon effects for the latest transaction:
 ```bash
 npm run run-example 45-horizon-effects
 ```
+
+Decode transaction and operation result codes for a transaction hash:
+
+```bash
+npm run run-example -- 148-result-code-decoder <transaction-hash>
+```
+
+Print the same diagnostic report as JSON:
+
+```bash
+npm run run-example -- 148-result-code-decoder <transaction-hash> --json
+```
+
+The hash can also be supplied through `TRANSACTION_HASH`, the Horizon endpoint through `HORIZON_URL`, and JSON output through `JSON_OUTPUT=true`. Unknown result codes remain visible in the report with a generic explanation and protocol-documentation guidance.
+
+Build and inspect a mixed-operation transaction in dry-run mode:
+
+```bash
+npm run run-example -- 150-mixed-operation-transaction <source-account>
+```
+
+The example loads the source account from Horizon, validates the serialized envelope locally, and does not submit it. Use `--json` for structured output. `SOURCE_ACCOUNT`, `HORIZON_URL`, `DRY_RUN`, and `JSON_OUTPUT` can also configure the run; submission is intentionally disabled because the generated operation-specific accounts are demonstration identities.
+
+Wrap and validate a base64 inner transaction envelope as a fee bump:
+
+```bash
+npm run run-example -- 151-fee-bump-wrapping <inner-envelope-xdr> <fee-source-account> 500 --json
+```
+
+The example loads the fee-source account from Horizon, compares the inner source, sequence, operations, memo, time bounds, hash, and signatures before and after wrapping, and keeps submission disabled. Set `INNER_ENVELOPE_XDR`, `FEE_SOURCE_ACCOUNT`, `FEE_BUMP_BASE_FEE`, `HORIZON_URL`, and `JSON_OUTPUT` instead of passing arguments. Set `FEE_SOURCE_SECRET` only when demonstrating outer fee-bump signing; the secret is never printed.
 
 Run account data entry management (create, update, remove):
 

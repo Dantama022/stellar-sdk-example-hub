@@ -431,6 +431,25 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '148-result-code-decoder': {
+    name: '148-result-code-decoder',
+    description:
+      'Retrieve a transaction from Horizon and decode transaction and operation result codes into diagnostics',
+    run: loadExample('../examples/148-result-code-decoder'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Enter the 64-character transaction hash:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
   '55-trade-history': {
     name: '55-trade-history',
     description:
@@ -678,6 +697,99 @@ export const examples: Record<string, Example> = {
     description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
     run: loadExample('../examples/87-transaction-envelope-inspection'),
   },
+  '149-transaction-envelope-size': {
+    name: '149-transaction-envelope-size',
+    description:
+      'Build transactions and compare serialized XDR envelope sizes across operations, signatures, memos, and fee bumps',
+    run: loadExample('../examples/149-transaction-envelope-size'),
+    params: [
+      {
+        type: 'input',
+        name: 'operationCount',
+        message: 'Number of payment operations (0-100):',
+        default: '2',
+      },
+      {
+        type: 'input',
+        name: 'memoText',
+        message: 'Memo text (blank for the default memo):',
+        default: 'Envelope size analysis',
+      },
+      {
+        type: 'input',
+        name: 'extraSignatures',
+        message: 'Additional signatures beyond the source signer (0-20):',
+        default: '1',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '150-mixed-operation-transaction': {
+    name: '150-mixed-operation-transaction',
+    description:
+      'Build and inspect an atomic transaction containing payment, manageData, and bumpSequence operations',
+    run: loadExample('../examples/150-mixed-operation-transaction'),
+    params: [
+      {
+        type: 'input',
+        name: 'sourceAccount',
+        message: 'Existing Horizon source account ID:',
+      },
+      {
+        type: 'confirm',
+        name: 'dryRun',
+        message: 'Run as a dry run without submission?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '151-fee-bump-wrapping': {
+    name: '151-fee-bump-wrapping',
+    description:
+      'Wrap and validate a base64 Stellar transaction envelope with a fee-bump transaction without submitting it',
+    run: loadExample('../examples/151-fee-bump-wrapping'),
+    params: [
+      {
+        type: 'input',
+        name: 'innerEnvelope',
+        message: 'Base64-encoded inner transaction envelope:',
+      },
+      {
+        type: 'input',
+        name: 'feeSourceAccount',
+        message: 'Existing Horizon fee-source account ID:',
+      },
+      {
+        type: 'input',
+        name: 'bumpFee',
+        message: 'Fee-bump base fee in stroops:',
+        default: '500',
+      },
+      {
+        type: 'confirm',
+        name: 'dryRun',
+        message: 'Run as a dry run without submission?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
   '88-claimable-balance-inspection': {
     name: '88-claimable-balance-inspection',
     description: 'Query and inspect claimable balances, assets, amounts, claimants, and predicates',
@@ -904,6 +1016,75 @@ export const examples: Record<string, Example> = {
         name: 'maxRoutes',
         message: 'Maximum number of routes to display (blank uses 5):',
         default: '5',
+  '139-account-offer-inspection': {
+    name: '139-account-offer-inspection',
+    description: "Inspect an account's open SDEX offers, grouped by trading pair with summary statistics",
+    run: loadExample('../examples/139-account-offer-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Enter Stellar account ID to inspect offers:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '138-account-merge-preflight': {
+    name: '138-account-merge-preflight',
+    description: 'Inspect a Stellar account and determine whether it is ready for an account merge',
+    run: loadExample('../examples/138-account-merge-preflight'),
+    params: [
+      {
+        type: 'input',
+        name: 'sourceAccountId',
+        message: 'Enter source account ID (to be merged/deleted):',
+      },
+      {
+        type: 'input',
+        name: 'destinationAccountId',
+        message: 'Enter destination account ID:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '132-fee-bump-inspection': {
+    name: '132-fee-bump-inspection',
+    description: 'Decode and inspect a fee-bump transaction envelope entirely offline',
+    run: loadExample('../examples/132-fee-bump-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'envelopeXdr',
+        message: 'Enter base64 transaction envelope XDR (leave blank to generate sample):',
+      },
+    ],
+  },
+  '136-transaction-fee-estimation': {
+    name: '136-transaction-fee-estimation',
+    description: 'Estimate transaction fees from network fee statistics across operation sizes',
+    run: loadExample('../examples/136-transaction-fee-estimation'),
+    params: [
+      {
+        type: 'input',
+        name: 'operationCount',
+        message: 'Enter number of operations for fee estimation:',
+        default: '1',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
       },
     ],
   },
