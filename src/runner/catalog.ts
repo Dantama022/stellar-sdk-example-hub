@@ -854,4 +854,76 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '139-account-offer-inspection': {
+    name: '139-account-offer-inspection',
+    description: "Inspect an account's open SDEX offers, grouped by trading pair with summary statistics",
+    run: loadExample('../examples/139-account-offer-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Enter Stellar account ID to inspect offers:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '138-account-merge-preflight': {
+    name: '138-account-merge-preflight',
+    description: 'Inspect a Stellar account and determine whether it is ready for an account merge',
+    run: loadExample('../examples/138-account-merge-preflight'),
+    params: [
+      {
+        type: 'input',
+        name: 'sourceAccountId',
+        message: 'Enter source account ID (to be merged/deleted):',
+      },
+      {
+        type: 'input',
+        name: 'destinationAccountId',
+        message: 'Enter destination account ID:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '132-fee-bump-inspection': {
+    name: '132-fee-bump-inspection',
+    description: 'Decode and inspect a fee-bump transaction envelope entirely offline',
+    run: loadExample('../examples/132-fee-bump-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'envelopeXdr',
+        message: 'Enter base64 transaction envelope XDR (leave blank to generate sample):',
+      },
+    ],
+  },
+  '136-transaction-fee-estimation': {
+    name: '136-transaction-fee-estimation',
+    description: 'Estimate transaction fees from network fee statistics across operation sizes',
+    run: loadExample('../examples/136-transaction-fee-estimation'),
+    params: [
+      {
+        type: 'input',
+        name: 'operationCount',
+        message: 'Enter number of operations for fee estimation:',
+        default: '1',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
 };
