@@ -42,6 +42,10 @@ import * as ex67 from '../src/examples/67-soroban-contract-events';
 import * as ex60 from '../src/examples/60-network-configuration';
 import * as ex59 from '../src/examples/59-account-offer-inspection';
 import * as ex96 from '../src/examples/96-fee-bump-recovery-workflow';
+import * as ex139 from '../src/examples/139-account-offer-inspection';
+import * as ex138 from '../src/examples/138-account-merge-preflight';
+import * as ex132 from '../src/examples/132-fee-bump-inspection';
+import * as ex136 from '../src/examples/136-transaction-fee-estimation';
 
 import { examples } from '../src/runner/catalog';
 
@@ -90,6 +94,10 @@ describe('Examples Exports', () => {
       ex59,
       ex60,
       ex96,
+      ex139,
+      ex138,
+      ex132,
+      ex136,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -130,6 +138,10 @@ describe('Examples Exports', () => {
       '60-network-configuration',
       '59-account-offer-inspection',
       '96-fee-bump-recovery-workflow',
+      '139-account-offer-inspection',
+      '138-account-merge-preflight',
+      '132-fee-bump-inspection',
+      '136-transaction-fee-estimation',
     ]) {
       expect(examples[key]).toBeDefined();
     }
