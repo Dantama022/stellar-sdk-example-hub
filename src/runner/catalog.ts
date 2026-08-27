@@ -916,6 +916,110 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '108-dynamic-contract-invocation': {
+    name: '108-dynamic-contract-invocation',
+    description:
+      'Discover a Soroban contract specification at runtime, encode arguments dynamically, simulate the invocation, and decode the return value',
+    run: loadExample('../examples/108-dynamic-contract-invocation'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID:',
+        default: 'CDVSGPL3HFBGJ6ZEYQUAVE3OH3XE2ZE5ZT2GWPA3LKOYVD4UBPQJ2VHB',
+      },
+      {
+        type: 'input',
+        name: 'functionName',
+        message: 'Contract function to invoke:',
+        default: 'hello',
+      },
+      {
+        type: 'input',
+        name: 'argsJson',
+        message: 'Arguments as a JSON object:',
+        default: '{"to":"Soroban"}',
+      },
+    ],
+  },
+  '109-soroban-transaction-preparation': {
+    name: '109-soroban-transaction-preparation',
+    description:
+      'Build, simulate, prepare, and inspect a Soroban transaction before signing or submission',
+    run: loadExample('../examples/109-soroban-transaction-preparation'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID:',
+        default: 'CDVSGPL3HFBGJ6ZEYQUAVE3OH3XE2ZE5ZT2GWPA3LKOYVD4UBPQJ2VHB',
+      },
+      {
+        type: 'input',
+        name: 'functionName',
+        message: 'Contract function:',
+        default: 'hello',
+      },
+      {
+        type: 'input',
+        name: 'argument',
+        message: 'String argument:',
+        default: 'Soroban',
+      },
+    ],
+  },
+  '110-soroban-transaction-submission': {
+    name: '110-soroban-transaction-submission',
+    description:
+      'Prepare, sign, submit, poll, and inspect the final result of a Soroban transaction',
+    run: loadExample('../examples/110-soroban-transaction-submission'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID:',
+        default: 'CDVSGPL3HFBGJ6ZEYQUAVE3OH3XE2ZE5ZT2GWPA3LKOYVD4UBPQJ2VHB',
+      },
+      {
+        type: 'input',
+        name: 'functionName',
+        message: 'Contract function:',
+        default: 'hello',
+      },
+      {
+        type: 'input',
+        name: 'argument',
+        message: 'String argument:',
+        default: 'Soroban',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Polling interval in milliseconds:',
+        default: '1000',
+      },
+      {
+        type: 'input',
+        name: 'pollTimeoutMs',
+        message: 'Polling timeout in milliseconds:',
+        default: '30000',
+      },
+    ],
+  },
+  '111-soroban-transaction-error-diagnosis': {
+    name: '111-soroban-transaction-error-diagnosis',
+    description:
+      'Retrieve a failed Soroban transaction, classify the failure, decode diagnostics, and provide troubleshooting guidance',
+    run: loadExample('../examples/111-soroban-transaction-error-diagnosis'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message:
+          'Failed transaction hash (blank searches recent failed Soroban transactions):',
+      },
+    ],
+  },
   '81-transaction-preflight': {
     name: '81-transaction-preflight',
     description:
@@ -1016,6 +1120,9 @@ export const examples: Record<string, Example> = {
         name: 'maxRoutes',
         message: 'Maximum number of routes to display (blank uses 5):',
         default: '5',
+      },
+    ],
+  },
   '139-account-offer-inspection': {
     name: '139-account-offer-inspection',
     description: "Inspect an account's open SDEX offers, grouped by trading pair with summary statistics",

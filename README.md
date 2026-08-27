@@ -202,6 +202,10 @@ The repository currently includes the following runnable examples:
 65. **`106-scval-serialization`**: Converting JavaScript values to Soroban ScVal objects and back with reusable helpers, displaying raw XDR, and explaining common serialization pitfalls.
 65. **`105-contract-event-decoding`**: Retrieving Soroban contract events and decoding indexed topics and data payloads into human-readable values, with raw base64 XDR shown alongside decoded output.
 65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
+66. **`108-dynamic-contract-invocation`**: Discovering contract methods from runtime ScSpec metadata, encoding JavaScript arguments into the required `ScVal` types, simulating a dynamically constructed invocation, and decoding its return value.
+67. **`109-soroban-transaction-preparation`**: Building and simulating a Soroban invocation, extracting resource limits, fees, footprint and authorization data, applying the simulation result, and inspecting the prepared unsigned transaction XDR.
+68. **`110-soroban-transaction-submission`**: Preparing, signing and submitting a Soroban transaction, polling pending status until a terminal result, and displaying the hash, ledger, return value, resource allocation, fees and events.
+69. **`111-soroban-transaction-error-diagnosis`**: Retrieving failed Soroban transactions, decoding transaction and diagnostic XDR, identifying failed invocations, classifying failure categories, and displaying actionable troubleshooting guidance.
 65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
 65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 66. **`93-trustline-management`**: Creating, inspecting, updating, and removing asset trustlines — demonstrating changeTrust operations, trust limit configuration, authorization status inspection, and the 0.5 XLM reserve cost of each subentry.
@@ -764,6 +768,38 @@ npm run run-example -- 107-contract-spec-introspection <contract-id> balance
 ```
 
 The same values can be supplied through `CONTRACT_ID` and `CONTRACT_FUNCTION`. The example fetches WASM via Soroban RPC, parses ScSpec metadata with `spec-parser` utilities, lists functions, structs, enums, unions, and error enums, and shows how SDK tooling and explorers use the same metadata. Missing or empty specifications are reported gracefully.
+Run a contract method discovered dynamically from its Soroban specification:
+
+```bash
+npm run run-example 108-dynamic-contract-invocation
+```
+
+The example retrieves deployed contract WASM through Soroban RPC, parses the embedded contract specification, lists methods, selects one at runtime, converts JavaScript values into the exact `ScVal` types declared by the specification, simulates the invocation, and decodes the returned value. Invalid arguments and simulation failures are reported clearly.
+
+Prepare a Soroban transaction without signing or submitting it:
+
+```bash
+npm run run-example 109-soroban-transaction-preparation
+```
+
+The example builds and simulates a contract invocation, displays resource limits, Soroban fees, ledger footprint and authorization entries, applies the simulation with `rpc.assembleTransaction()`, verifies the prepared data, and prints the prepared transaction XDR. It also explains building, simulation, preparation, signing and submission as separate lifecycle stages.
+
+Run the complete Soroban submission and confirmation lifecycle:
+
+```bash
+npm run run-example 110-soroban-transaction-submission
+```
+
+By default the example creates a temporary Testnet account and funds it through Friendbot. It builds, simulates, prepares, signs and submits the invocation, then polls until success, failure, timeout or unavailability. Configure polling with `POLL_INTERVAL_MS` and `POLL_TIMEOUT_MS`, or provide a funded account through `SOURCE_SECRET`. The secret is never printed.
+
+Diagnose a failed Soroban transaction:
+
+```bash
+npm run run-example 111-soroban-transaction-error-diagnosis
+```
+
+Supply a specific failed transaction with `TRANSACTION_HASH=<transaction-hash>`. When no hash is supplied, the example searches recent Soroban RPC transaction history for a failed contract invocation. It distinguishes RPC, transaction, authorization, resource/fee, contract execution and state/archival failures, decodes available diagnostics and XDR, identifies the failed invocation where possible, and provides troubleshooting guidance. Missing diagnostic information is handled gracefully.
+
 Run the full Soroban transaction preflight workflow:
 
 ```bash
