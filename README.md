@@ -206,6 +206,10 @@ The repository currently includes the following runnable examples:
 65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 66. **`93-trustline-management`**: Creating, inspecting, updating, and removing asset trustlines — demonstrating changeTrust operations, trust limit configuration, authorization status inspection, and the 0.5 XLM reserve cost of each subentry.
 67. **`92-account-payment-stream`**: Subscribing to a Horizon account payment stream, displaying incoming and outgoing payments in real time, handling stream errors with automatic reconnection, and explaining when streaming should be preferred over polling.
+68. **`126-claimable-balance-management`**: Discovering, inspecting, filtering, and claiming eligible Stellar claimable balances end-to-end.
+69. **`128-account-authorization-flags`**: Inspecting and managing issuer authorization flags, with both allowTrust and setTrustLineFlags authorization workflows.
+70. **`130-sponsored-reserve-management`**: Sponsoring a trustline and a data entry, inspecting reserve responsibility, and revoking one entry's sponsorship.
+71. **`131-path-payment-route-inspection`**: Discovering and ranking strict-receive path payment routes without submitting a payment.
 68. **`139-account-offer-inspection`**: Inspect an account's open SDEX offers, grouped by trading pair with summary statistics.
 69. **`138-account-merge-preflight`**: Inspect a Stellar account to determine merge readiness and identify blocking ledger states.
 70. **`132-fee-bump-inspection`**: Decode and inspect fee-bump and normal transaction envelopes offline.
