@@ -1219,4 +1219,67 @@ export const examples: Record<string, Example> = {
     description: 'Inspect clawback configuration and construct a clawback transaction',
     run: loadExample('../examples/129-asset-clawback'),
   },
+  '144-transaction-memo-inspection': {
+    name: '144-transaction-memo-inspection',
+    description: 'Construct, inspect, decode, and validate Stellar transaction memos (Text, ID, Hash, Return)',
+    run: loadExample('../examples/144-transaction-memo-inspection'),
+    params: [
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '145-transaction-envelope-normalization': {
+    name: '145-transaction-envelope-normalization',
+    description: 'Decode, identify, normalize, and reconstruct Stellar transaction envelopes (standard and fee-bump)',
+    run: loadExample('../examples/145-transaction-envelope-normalization'),
+    params: [
+      {
+        type: 'input',
+        name: 'envelopeXdr',
+        message: 'Enter base64-encoded transaction envelope (optional):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '146-transaction-envelope-signing': {
+    name: '146-transaction-envelope-signing',
+    description: 'Demonstrate incremental transaction-envelope signing workflow with multiple signers',
+    run: loadExample('../examples/146-transaction-envelope-signing'),
+    params: [
+      {
+        type: 'number',
+        name: 'requiredSignatures',
+        message: 'Number of required signatures:',
+        default: 2,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '147-transaction-xdr-round-trip': {
+    name: '147-transaction-xdr-round-trip',
+    description: 'Validate XDR serialization/deserialization preserves transaction semantics',
+    run: loadExample('../examples/147-transaction-xdr-round-trip'),
+    params: [
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
 };

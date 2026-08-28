@@ -222,6 +222,10 @@ The repository currently includes the following runnable examples:
 73. **`125-liquidity-pool-simulation`**: Simulate deposit and withdrawal operations on a liquidity pool to estimate share and asset changes.
 74. **`127-trustline-management`**: Inspect, create, update, and remove asset trustlines for a Stellar account.
 75. **`129-asset-clawback`**: Verify clawback configurations and simulate/execute asset recovery operations.
+76. **`144-transaction-memo-inspection`**: Construct, inspect, decode, and validate Stellar transaction memos (Text, ID, Hash, Return) with size limits and usage guidelines.
+77. **`145-transaction-envelope-normalization`**: Decode, identify, normalize, and reconstruct Stellar transaction envelopes (standard and fee-bump) with semantic preservation verification.
+78. **`146-transaction-envelope-signing`**: Demonstrate incremental transaction-envelope signing workflow with multiple signers, envelope passing, and signature verification.
+79. **`147-transaction-xdr-round-trip`**: Validate XDR serialization/deserialization preserves transaction semantics with field-by-field comparison.
 
 ## Installation
 
