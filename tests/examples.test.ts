@@ -37,8 +37,19 @@ import * as ex55 from '../src/examples/55-trade-history';
 import * as ex56 from '../src/examples/56-account-flags-inspection';
 import * as ex57 from '../src/examples/57-account-reserve-calculator';
 import * as ex58 from '../src/examples/58-account-relationship-discovery';
+import * as ex66 from '../src/examples/66-ledger-effects';
+import * as ex67 from '../src/examples/67-soroban-contract-events';
 import * as ex60 from '../src/examples/60-network-configuration';
 import * as ex59 from '../src/examples/59-account-offer-inspection';
+import * as ex96 from '../src/examples/96-fee-bump-recovery-workflow';
+import * as ex139 from '../src/examples/139-account-offer-inspection';
+import * as ex138 from '../src/examples/138-account-merge-preflight';
+import * as ex132 from '../src/examples/132-fee-bump-inspection';
+import * as ex136 from '../src/examples/136-transaction-fee-estimation';
+import * as ex124 from '../src/examples/124-liquidity-pool-inspection';
+import * as ex125 from '../src/examples/125-liquidity-pool-simulation';
+import * as ex127 from '../src/examples/127-trustline-management';
+import * as ex129 from '../src/examples/129-asset-clawback';
 
 import { examples } from '../src/runner/catalog';
 
@@ -81,8 +92,20 @@ describe('Examples Exports', () => {
       ex56,
       ex57,
       ex58,
-      ex60,
+      ex66,
+      ex67,
+        ex58,
       ex59,
+      ex60,
+      ex96,
+      ex139,
+      ex138,
+      ex132,
+      ex136,
+      ex124,
+      ex125,
+      ex127,
+      ex129,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -118,8 +141,19 @@ describe('Examples Exports', () => {
       '56-account-flags-inspection',
       '57-account-reserve-calculator',
       '58-account-relationship-discovery',
+      '66-ledger-effects',
+      '67-soroban-contract-events',
       '60-network-configuration',
       '59-account-offer-inspection',
+      '96-fee-bump-recovery-workflow',
+      '139-account-offer-inspection',
+      '138-account-merge-preflight',
+      '132-fee-bump-inspection',
+      '136-transaction-fee-estimation',
+      '124-liquidity-pool-inspection',
+      '125-liquidity-pool-simulation',
+      '127-trustline-management',
+      '129-asset-clawback',
     ]) {
       expect(examples[key]).toBeDefined();
     }

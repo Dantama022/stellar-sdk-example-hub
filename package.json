@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^13.0.0",
+    "stellar-sdk-v16": "npm:@stellar/stellar-sdk@16.2.0",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "dotenv": "^16.4.5",
