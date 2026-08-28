@@ -141,7 +141,7 @@ function extractSignatureInfo(transaction: Transaction, signerPublicKey: string)
         signature,
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch {
       return {
         signerPublicKey,
         hint: 'error',
@@ -176,7 +176,11 @@ function createSigningStage(
 /**
  * Simulate signing by a specific signer
  */
-function signTransaction(transaction: Transaction, signer: Keypair, signerName: string): Transaction {
+function signTransaction(
+  transaction: Transaction,
+  signer: Keypair,
+  signerName: string,
+): Transaction {
   console.log(chalk.yellow(`\n--- Signing Stage: ${signerName} ---`));
   console.log(`Signer Public Key: ${signer.publicKey()}`);
   console.log(`Signer Name: ${signerName}`);
@@ -189,7 +193,6 @@ function signTransaction(transaction: Transaction, signer: Keypair, signerName: 
 
   return transaction;
 }
-
 
 /**
  * Verify transaction payload consistency
@@ -294,7 +297,7 @@ function attemptDuplicateSignature(transaction: Transaction, signer: Keypair): b
       console.log(chalk.yellow('⚠ Duplicate signature added (SDK allows it)'));
       return true;
     }
-  } catch (error) {
+  } catch {
     console.log(chalk.green('✓ Duplicate signature rejected with error'));
     return false;
   }
@@ -312,7 +315,7 @@ function attemptInvalidSignature(): boolean {
     // For demonstration, we'll just log that the SDK prevents this
     console.log(chalk.green('✓ SDK prevents invalid signatures through type safety'));
     return false;
-  } catch (error) {
+  } catch {
     console.log(chalk.green('✓ Invalid signature rejected with error'));
     return false;
   }
@@ -403,7 +406,9 @@ export async function run(params: EnvelopeSigningParams = {}): Promise<void> {
     }
 
     // Verify hash consistency
-    const hashConsistent = stages.every((stage) => stage.transactionHash === stages[0].transactionHash);
+    const hashConsistent = stages.every(
+      (stage) => stage.transactionHash === stages[0].transactionHash,
+    );
     if (hashConsistent) {
       console.log(chalk.green('✓ Transaction hash consistent across all stages'));
     } else {
@@ -413,9 +418,17 @@ export async function run(params: EnvelopeSigningParams = {}): Promise<void> {
     // Check signature sufficiency
     const sufficientSignatures = currentTx.signatures.length >= requiredSignatures;
     if (sufficientSignatures) {
-      console.log(chalk.green(`✓ Sufficient signatures collected (${currentTx.signatures.length}/${requiredSignatures})`));
+      console.log(
+        chalk.green(
+          `✓ Sufficient signatures collected (${currentTx.signatures.length}/${requiredSignatures})`,
+        ),
+      );
     } else {
-      console.log(chalk.red(`✗ Insufficient signatures (${currentTx.signatures.length}/${requiredSignatures})`));
+      console.log(
+        chalk.red(
+          `✗ Insufficient signatures (${currentTx.signatures.length}/${requiredSignatures})`,
+        ),
+      );
     }
 
     // Build result
@@ -456,7 +469,9 @@ export async function run(params: EnvelopeSigningParams = {}): Promise<void> {
       console.log(JSON.stringify({ error: 'Signing workflow failed', message }, null, 2));
     } else {
       console.error(chalk.red(`\n❌ Signing workflow failed: ${message}`));
-      console.error(chalk.gray('Ensure all signers are valid and the transaction is properly constructed.'));
+      console.error(
+        chalk.gray('Ensure all signers are valid and the transaction is properly constructed.'),
+      );
     }
     process.exit(1);
   }
