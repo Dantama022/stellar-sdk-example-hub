@@ -72,7 +72,9 @@ function extractSafeTransactionSummary(
     // Extract source account
     const sourceAccountBuffer = tx.sourceAccount().accountId().ed25519();
     const sourceAccountPublicKey = Keypair.fromPublicKey(
-      Buffer.concat([Buffer.from([0]), sourceAccountBuffer]).toString('base64').slice(1),
+      Buffer.concat([Buffer.from([0]), sourceAccountBuffer])
+        .toString('base64')
+        .slice(1),
     ).publicKey();
 
     // Calculate transaction hash
@@ -99,7 +101,7 @@ function extractSafeTransactionSummary(
     }));
 
     // Extract signer information safely (public keys only)
-    const signers = signatures.map(sig => {
+    const signers = signatures.map((sig) => {
       const hint = sig.hint().toString('hex');
       return `Signer hint: ${hint}`;
     });
@@ -128,7 +130,12 @@ function extractSafeTransactionSummary(
       sequence,
       memo: {
         type: memoInfo.type,
-        description: memoInfo.type === 'TEXT' ? '(text memo present)' : memoInfo.type === 'NONE' ? 'None' : 'Present',
+        description:
+          memoInfo.type === 'TEXT'
+            ? '(text memo present)'
+            : memoInfo.type === 'NONE'
+              ? 'None'
+              : 'Present',
       },
       timeBounds: {
         minTime,
@@ -163,10 +170,11 @@ function extractSafeMemoInfo(memo: xdr.Memo): { type: string; value?: string } {
       return { type: 'HASH', value: '(hash value)' };
     case 'memoTypeReturn':
       return { type: 'RETURN', value: '(return hash)' };
-    case 'memoTypeText':
+    case 'memoTypeText': {
       // For text memos, we'll return the actual value but flag it for risk
       const textValue = memo.text()?.toString() || '';
       return { type: 'TEXT', value: textValue };
+    }
     default:
       return { type: 'UNKNOWN' };
   }
@@ -180,14 +188,26 @@ function summarizeOperation(op: xdr.Operation): string {
     case 'createAccountOp': {
       const createAccountOp = body.createAccountOp();
       const destBuffer = createAccountOp?.destination().accountId().ed25519();
-      const destKey = destBuffer ? Keypair.fromPublicKey(Buffer.concat([Buffer.from([0]), destBuffer]).toString('base64').slice(1)).publicKey() : 'Unknown';
+      const _destKey = destBuffer
+        ? Keypair.fromPublicKey(
+            Buffer.concat([Buffer.from([0]), destBuffer])
+              .toString('base64')
+              .slice(1),
+          ).publicKey()
+        : 'Unknown';
       const amount = createAccountOp?.startingBalance().toString() || '0';
       return `Create account with ${amount} XLM starting balance`;
     }
     case 'paymentOp': {
       const paymentOp = body.paymentOp();
       const destBuffer = paymentOp?.destination().accountId().ed25519();
-      const destKey = destBuffer ? Keypair.fromPublicKey(Buffer.concat([Buffer.from([0]), destBuffer]).toString('base64').slice(1)).publicKey() : 'Unknown';
+      const _destKey = destBuffer
+        ? Keypair.fromPublicKey(
+            Buffer.concat([Buffer.from([0]), destBuffer])
+              .toString('base64')
+              .slice(1),
+          ).publicKey()
+        : 'Unknown';
       const amount = paymentOp?.amount().toString() || '0';
       return `Payment of ${amount} XLM`;
     }
@@ -283,10 +303,13 @@ function containsSensitivePatterns(text: string): boolean {
     /\b\d{13,19}\b/, // Credit card pattern
   ];
 
-  return sensitivePatterns.some(pattern => pattern.test(text));
+  return sensitivePatterns.some((pattern) => pattern.test(text));
 }
 
-function logSafeTransactionSummary(summary: SafeTransactionSummary, risks: RiskyTransactionData): void {
+function logSafeTransactionSummary(
+  summary: SafeTransactionSummary,
+  risks: RiskyTransactionData,
+): void {
   console.log('\n=== Safe Transaction Summary ===\n');
 
   console.log('Public Transaction Information:');
@@ -305,18 +328,22 @@ function logSafeTransactionSummary(summary: SafeTransactionSummary, risks: Risky
 
   console.log('\nTime Bounds:');
   console.log(`  Description: ${summary.timeBounds.description}`);
-  console.log(`  Min Time: ${summary.timeBounds.minTime} (${new Date(summary.timeBounds.minTime * 1000).toISOString()})`);
-  console.log(`  Max Time: ${summary.timeBounds.maxTime} (${new Date(summary.timeBounds.maxTime * 1000).toISOString()})`);
+  console.log(
+    `  Min Time: ${summary.timeBounds.minTime} (${new Date(summary.timeBounds.minTime * 1000).toISOString()})`,
+  );
+  console.log(
+    `  Max Time: ${summary.timeBounds.maxTime} (${new Date(summary.timeBounds.maxTime * 1000).toISOString()})`,
+  );
 
   console.log('\nOperations:');
-  summary.operations.forEach(op => {
+  summary.operations.forEach((op) => {
     console.log(`  [${op.index}] ${op.type}: ${op.summary}`);
   });
 
   console.log('\nSignatures:');
   console.log(`  Total Signatures: ${summary.signatures.count}`);
   if (summary.signatures.signers.length > 0) {
-    summary.signatures.signers.forEach(signer => {
+    summary.signatures.signers.forEach((signer) => {
       console.log(`    - ${signer}`);
     });
   } else {
@@ -325,7 +352,7 @@ function logSafeTransactionSummary(summary: SafeTransactionSummary, risks: Risky
 
   if (risks.warnings.length > 0) {
     console.log('\n⚠️  Security Warnings:');
-    risks.warnings.forEach(warning => {
+    risks.warnings.forEach((warning) => {
       console.log(`  ${warning}`);
     });
   }

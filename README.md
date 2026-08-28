@@ -230,6 +230,10 @@ The repository currently includes the following runnable examples:
 77. **`134-multisignature-threshold-inspection`**: Inspect an account's multisignature configuration (signers, weights, thresholds) and determine if a given transaction holds sufficient authorization.
 78. **`135-transaction-preflight-validation`**: Run local and network-dependent preflight validation checks (sequence, fees, time bounds, signatures) on a transaction envelope prior to submission.
 79. **`137-dynamic-fee-selection`**: Query Horizon fee statistics and dynamically calculate a transaction fee based on strategies like median, high priority, or custom multipliers, with safety caps.
+80. **`157-horizon-pagination`**: Reusable pagination across Horizon transactions, operations, and payments with duplicate prevention, early termination, timeouts, and metrics.
+81. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
+82. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
+83. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
 
 ## Installation
 
@@ -609,6 +613,34 @@ npm run run-example 44-resilient-horizon-stream
 ```
 
 The resilient stream tracks the last paging token, logs each reconnect attempt, and resumes from the saved cursor instead of replaying already-processed records.
+
+Paginate multiple Horizon collections with shared metrics and duplicate prevention:
+
+```bash
+npm run run-example 157-horizon-pagination
+```
+
+Use `--json` or `JSON_OUTPUT=true` for structured output. Configure `PAGE_SIZE`, `MAX_RECORDS`, `REQUEST_TIMEOUT_MS`, and `HORIZON_URL` as needed.
+
+Run a resilient Horizon stream with cursor resume and reconnect backoff:
+
+```bash
+npm run run-example 158-resilient-horizon-streaming
+```
+
+Filter streamed Horizon operations client-side while preserving the underlying cursor:
+
+```bash
+npm run run-example 159-horizon-stream-filtering
+```
+
+Demonstrate retry and rate-limit handling for Horizon requests:
+
+```bash
+npm run run-example 160-horizon-retry-rate-limit
+```
+
+All four examples support `--json` output and can be configured through environment variables such as `HORIZON_URL`, `JSON_OUTPUT`, and stream-specific settings documented in each example file.
 
 Simulate a Soroban contract invocation without broadcasting:
 

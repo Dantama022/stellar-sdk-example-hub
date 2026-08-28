@@ -251,9 +251,7 @@ export async function run(params?: AccountAuthorizationFlagsParams): Promise<voi
     fee: '100',
     networkPassphrase: Networks.TESTNET,
   })
-    .addOperation(
-      Operation.allowTrust({ trustor: target.publicKey(), assetCode, authorize: true }),
-    )
+    .addOperation(Operation.allowTrust({ trustor: target.publicKey(), assetCode, authorize: true }))
     .setTimeout(30)
     .build();
   allowTrustTx.sign(issuer);
@@ -301,8 +299,8 @@ export async function run(params?: AccountAuthorizationFlagsParams): Promise<voi
 
   log('\nRelationship between account flags and trustlines:');
   log('- AUTH_REQUIRED on the issuer forces every new trustline to start UNAUTHORIZED.');
-  log('- allowTrust and setTrustLineFlags both change one trustline\'s authorization state;');
-  log('  neither one changes the issuer\'s own account flags.');
+  log("- allowTrust and setTrustLineFlags both change one trustline's authorization state;");
+  log("  neither one changes the issuer's own account flags.");
   log('- AUTH_REVOCABLE must be set for authorize:false / authorized:false to succeed at all.');
   log('- AUTH_CLAWBACK_ENABLED permits Operation.clawback on this trustline (not executed here).');
   log('- Once AUTH_IMMUTABLE is set on the issuer, none of the above can change again.');

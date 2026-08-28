@@ -34,41 +34,57 @@ function demonstratePrimitives(): void {
 
   // Boolean — scvBool
   const boolVal = nativeToScVal(true, { type: 'bool' });
-  console.log(`  bool    true  → ${chalk.cyan(boolVal.switch().name)}  decoded: ${scValToNative(boolVal)}`);
+  console.log(
+    `  bool    true  → ${chalk.cyan(boolVal.switch().name)}  decoded: ${scValToNative(boolVal)}`,
+  );
 
   // Unsigned 32-bit integer — scvU32
   const u32Val = nativeToScVal(42, { type: 'u32' });
-  console.log(`  u32     42    → ${chalk.cyan(u32Val.switch().name)}  decoded: ${scValToNative(u32Val)}`);
+  console.log(
+    `  u32     42    → ${chalk.cyan(u32Val.switch().name)}  decoded: ${scValToNative(u32Val)}`,
+  );
 
   // Signed 32-bit integer — scvI32
   const i32Val = nativeToScVal(-7, { type: 'i32' });
-  console.log(`  i32     -7    → ${chalk.cyan(i32Val.switch().name)}  decoded: ${scValToNative(i32Val)}`);
+  console.log(
+    `  i32     -7    → ${chalk.cyan(i32Val.switch().name)}  decoded: ${scValToNative(i32Val)}`,
+  );
 
   // Unsigned 64-bit integer — scvU64 (JS BigInt required for >2^53)
   const u64Val = nativeToScVal(BigInt('18446744073709551615'), { type: 'u64' });
   console.log(`  u64     18446744073709551615 → ${chalk.cyan(u64Val.switch().name)}`);
 
   // Signed 128-bit integer — scvI128 (common for token amounts in Soroban)
-  const i128Val = nativeToScVal(BigInt('170141183460469231731687303715884105727'), { type: 'i128' });
+  const i128Val = nativeToScVal(BigInt('170141183460469231731687303715884105727'), {
+    type: 'i128',
+  });
   console.log(`  i128    (max i128) → ${chalk.cyan(i128Val.switch().name)}`);
 
   // String — scvString (UTF-8 bytes)
   const strVal = nativeToScVal('hello Soroban', { type: 'string' });
-  console.log(`  string  "hello Soroban" → ${chalk.cyan(strVal.switch().name)}  decoded: "${scValToNative(strVal)}"`);
+  console.log(
+    `  string  "hello Soroban" → ${chalk.cyan(strVal.switch().name)}  decoded: "${scValToNative(strVal)}"`,
+  );
 
   // Symbol — scvSymbol (short identifiers, at most 32 bytes, used for enum tags)
   const symVal = nativeToScVal('transfer', { type: 'symbol' });
-  console.log(`  symbol  "transfer" → ${chalk.cyan(symVal.switch().name)}  decoded: "${scValToNative(symVal)}"`);
+  console.log(
+    `  symbol  "transfer" → ${chalk.cyan(symVal.switch().name)}  decoded: "${scValToNative(symVal)}"`,
+  );
 
   // Bytes — scvBytes (raw byte buffer)
   const bytesVal = nativeToScVal(Buffer.from('deadbeef', 'hex'), { type: 'bytes' });
-  console.log(`  bytes   0xDEADBEEF → ${chalk.cyan(bytesVal.switch().name)}  decoded: ${(scValToNative(bytesVal) as Buffer).toString('hex')}`);
+  console.log(
+    `  bytes   0xDEADBEEF → ${chalk.cyan(bytesVal.switch().name)}  decoded: ${(scValToNative(bytesVal) as Buffer).toString('hex')}`,
+  );
 
   // Void — scvVoid (represents absence of a value, e.g. no-return functions)
   const voidVal = xdr.ScVal.scvVoid();
   console.log(`  void    (no value) → ${chalk.cyan(voidVal.switch().name)}`);
 
-  console.log(chalk.gray('\n  SDK tip: use nativeToScVal(value, { type }) for concise construction.'));
+  console.log(
+    chalk.gray('\n  SDK tip: use nativeToScVal(value, { type }) for concise construction.'),
+  );
   console.log(chalk.gray('  For explicit control use xdr.ScVal.scvU32(n), .scvBool(b), etc.'));
 }
 
@@ -103,14 +119,12 @@ function demonstrateVec(): void {
   const words = ['stellar', 'soroban', 'sdk'];
   const strVec = nativeToScVal(words, { type: 'vec', element: { type: 'string' } });
   const decodedWords = scValToNative(strVec) as string[];
-  console.log(`\n  Vec<string> ["${words.join('", "')}"] decoded: ["${decodedWords.join('", "')}"]`);
+  console.log(
+    `\n  Vec<string> ["${words.join('", "')}"] decoded: ["${decodedWords.join('", "')}"]`,
+  );
 
   // Manual construction — heterogeneous vec mixing u32 and symbol
-  const mixedVec = xdr.ScVal.scvVec([
-    xdr.ScVal.scvU32(99),
-    xdr.ScVal.scvSymbol('flag'),
-    xdr.ScVal.scvBool(true),
-  ]);
+  xdr.ScVal.scvVec([xdr.ScVal.scvU32(99), xdr.ScVal.scvSymbol('flag'), xdr.ScVal.scvBool(true)]);
   console.log(
     chalk.gray(
       `\n  Mixed vec (manual):  scvVec([scvU32(99), scvSymbol("flag"), scvBool(true)])\n` +
@@ -119,8 +133,14 @@ function demonstrateVec(): void {
     ),
   );
 
-  console.log(chalk.gray('\n  SDK tip: nativeToScVal([...], { type: "vec", element }) handles uniform arrays.'));
-  console.log(chalk.gray('  For mixed-type vecs construct each ScVal manually and wrap with scvVec([...]).'));
+  console.log(
+    chalk.gray(
+      '\n  SDK tip: nativeToScVal([...], { type: "vec", element }) handles uniform arrays.',
+    ),
+  );
+  console.log(
+    chalk.gray('  For mixed-type vecs construct each ScVal manually and wrap with scvVec([...]).'),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -188,12 +208,24 @@ function demonstrateMap(): void {
       val: xdr.ScVal.scvBool(true),
     }),
   ]);
-  console.log(chalk.gray(`\n  Manual scvMap:  { version: 2, active: true } → scvMap([ScMapEntry, ScMapEntry])`));
+  console.log(
+    chalk.gray(
+      `\n  Manual scvMap:  { version: 2, active: true } → scvMap([ScMapEntry, ScMapEntry])`,
+    ),
+  );
   const manualDecoded = scValToNative(manualMap) as [string, unknown][];
   manualDecoded.forEach(([k, v]) => console.log(`    "${k}" → ${v}`));
 
-  console.log(chalk.gray('\n  SDK tip: nativeToScVal([...pairs], { type: "map", key, value }) encodes uniformly-typed maps.'));
-  console.log(chalk.gray('  Use xdr.ScVal.scvMap([new xdr.ScMapEntry(...)]) for mixed or dynamic map construction.'));
+  console.log(
+    chalk.gray(
+      '\n  SDK tip: nativeToScVal([...pairs], { type: "map", key, value }) encodes uniformly-typed maps.',
+    ),
+  );
+  console.log(
+    chalk.gray(
+      '  Use xdr.ScVal.scvMap([new xdr.ScMapEntry(...)]) for mixed or dynamic map construction.',
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -258,8 +290,12 @@ function demonstrateStruct(): void {
   // When using contract.Spec, encoding is as simple as:
   //   spec.nativeToScVal({ name: 'MyToken', decimals: 7, total: 1_000_000_000n }, typeDefForTokenMetadata)
   // The Spec resolves field types automatically from the XDR spec entry.
-  console.log(chalk.gray('\n  SDK tip: with contract.Spec available, use spec.nativeToScVal(obj, typeDef)'));
-  console.log(chalk.gray('  for automatic field-type resolution. Without a Spec, build the scvMap manually'));
+  console.log(
+    chalk.gray('\n  SDK tip: with contract.Spec available, use spec.nativeToScVal(obj, typeDef)'),
+  );
+  console.log(
+    chalk.gray('  for automatic field-type resolution. Without a Spec, build the scvMap manually'),
+  );
   console.log(chalk.gray('  ensuring field order matches the Rust struct declaration.'));
 }
 
@@ -287,11 +323,15 @@ function demonstrateEnum(): void {
 
   // Rust:  pub enum Status { Active = 0, Paused = 1, Deprecated = 2 }
   // JS integer enum values are simple scvU32 wrappers.
-  const activeVal = xdr.ScVal.scvU32(0);   // Status::Active
-  const pausedVal = xdr.ScVal.scvU32(1);   // Status::Paused
+  const activeVal = xdr.ScVal.scvU32(0); // Status::Active
+  const pausedVal = xdr.ScVal.scvU32(1); // Status::Paused
 
-  console.log(`  Status::Active     (0) → ${chalk.cyan(activeVal.switch().name)}(${scValToNative(activeVal)})`);
-  console.log(`  Status::Paused     (1) → ${chalk.cyan(pausedVal.switch().name)}(${scValToNative(pausedVal)})`);
+  console.log(
+    `  Status::Active     (0) → ${chalk.cyan(activeVal.switch().name)}(${scValToNative(activeVal)})`,
+  );
+  console.log(
+    `  Status::Paused     (1) → ${chalk.cyan(pausedVal.switch().name)}(${scValToNative(pausedVal)})`,
+  );
 
   console.log(chalk.bold('\n━━━ Tagged Union — Rust Enum with Payload ━━━'));
 
@@ -310,12 +350,12 @@ function demonstrateEnum(): void {
   ]);
 
   // Event::Mint (void case) — scvVec([tag])
-  const mintEvent = xdr.ScVal.scvVec([
-    xdr.ScVal.scvSymbol('Mint'),
-  ]);
+  const mintEvent = xdr.ScVal.scvVec([xdr.ScVal.scvSymbol('Mint')]);
 
   console.log(`  Event::Transfer  → ${chalk.cyan(transferEvent.switch().name)}`);
-  console.log(`    elements: ${(transferEvent.vec() ?? []).map((v) => v.switch().name).join(', ')}`);
+  console.log(
+    `    elements: ${(transferEvent.vec() ?? []).map((v) => v.switch().name).join(', ')}`,
+  );
   const [transferTag, transferFrom, transferAmt] = transferEvent.vec() ?? [];
   console.log(`    tag:    "${scValToNative(transferTag)}"`);
   console.log(`    from:   ${scValToNative(transferFrom)}`);
@@ -325,8 +365,14 @@ function demonstrateEnum(): void {
   const [mintTag] = mintEvent.vec() ?? [];
   console.log(`    tag:    "${scValToNative(mintTag)}" (void case — no payload)`);
 
-  console.log(chalk.gray('\n  SDK tip: with contract.Spec use spec.nativeToScVal({ tag: "Transfer", values: [...] }, typeDef).'));
-  console.log(chalk.gray('  Without a Spec, build scvVec([scvSymbol(tag), ...payloadScVals]) manually.'));
+  console.log(
+    chalk.gray(
+      '\n  SDK tip: with contract.Spec use spec.nativeToScVal({ tag: "Transfer", values: [...] }, typeDef).',
+    ),
+  );
+  console.log(
+    chalk.gray('  Without a Spec, build scvVec([scvSymbol(tag), ...payloadScVals]) manually.'),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -347,11 +393,15 @@ function demonstrateOption(): void {
 
   // Option::Some(42) — the value itself
   const someVal = nativeToScVal(42, { type: 'u32' });
-  console.log(`  Option::Some(42)  → ${chalk.cyan(someVal.switch().name)}  decoded: ${scValToNative(someVal)}`);
+  console.log(
+    `  Option::Some(42)  → ${chalk.cyan(someVal.switch().name)}  decoded: ${scValToNative(someVal)}`,
+  );
 
   // Option::None — represented as scvVoid
   const noneVal = xdr.ScVal.scvVoid();
-  console.log(`  Option::None      → ${chalk.cyan(noneVal.switch().name)}  decoded: ${scValToNative(noneVal)}`);
+  console.log(
+    `  Option::None      → ${chalk.cyan(noneVal.switch().name)}  decoded: ${scValToNative(noneVal)}`,
+  );
 
   // Encoding helper — nullable JS value
   function encodeOption(value: number | null): xdr.ScVal {
@@ -361,10 +411,18 @@ function demonstrateOption(): void {
   const opt1 = encodeOption(99);
   const opt2 = encodeOption(null);
 
-  console.log(`\n  encodeOption(99)   → ${chalk.cyan(opt1.switch().name)}  round-trip: ${scValToNative(opt1)}`);
-  console.log(`  encodeOption(null) → ${chalk.cyan(opt2.switch().name)}  round-trip: ${scValToNative(opt2)}`);
+  console.log(
+    `\n  encodeOption(99)   → ${chalk.cyan(opt1.switch().name)}  round-trip: ${scValToNative(opt1)}`,
+  );
+  console.log(
+    `  encodeOption(null) → ${chalk.cyan(opt2.switch().name)}  round-trip: ${scValToNative(opt2)}`,
+  );
 
-  console.log(chalk.gray('\n  SDK tip: when calling spec.funcArgsToScVals(), pass null/undefined for optional'));
+  console.log(
+    chalk.gray(
+      '\n  SDK tip: when calling spec.funcArgsToScVals(), pass null/undefined for optional',
+    ),
+  );
   console.log(chalk.gray('  arguments and the Spec will emit scvVoid automatically.'));
 }
 
@@ -399,8 +457,12 @@ function demonstrateAddress(): void {
   const addrObj = Address.fromString(accountId);
   const directVal = addrObj.toScVal();
   console.log(`\n  Address.fromString().toScVal() → ${chalk.cyan(directVal.switch().name)}`);
-  console.log(chalk.gray('\n  SDK tip: both approaches are equivalent. Address.fromString() validates the'));
-  console.log(chalk.gray('  checksum and throws immediately if the string is not a valid Stellar address.'));
+  console.log(
+    chalk.gray('\n  SDK tip: both approaches are equivalent. Address.fromString() validates the'),
+  );
+  console.log(
+    chalk.gray('  checksum and throws immediately if the string is not a valid Stellar address.'),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -435,7 +497,9 @@ function demonstrateInvalidArguments(): void {
     nativeToScVal('GBADADDRESS', { type: 'address' });
     console.log(chalk.red('  [FAIL] Expected error was not thrown'));
   } catch (err: any) {
-    console.log(chalk.green(`  ✓ Invalid address → ${err.constructor.name}: ${err.message.slice(0, 80)}`));
+    console.log(
+      chalk.green(`  ✓ Invalid address → ${err.constructor.name}: ${err.message.slice(0, 80)}`),
+    );
   }
 
   // Case 3: integer out of u32 range
@@ -454,7 +518,9 @@ function demonstrateInvalidArguments(): void {
     console.log(chalk.green(`  ✓ null for non-optional → ${err.constructor.name}: ${err.message}`));
   }
 
-  console.log(chalk.gray('\n  SDK tip: validate types and ranges before calling nativeToScVal to surface'));
+  console.log(
+    chalk.gray('\n  SDK tip: validate types and ranges before calling nativeToScVal to surface'),
+  );
   console.log(chalk.gray('  errors locally rather than waiting for an RPC simulation response.'));
 }
 
@@ -486,7 +552,9 @@ async function demonstrateLiveSimulation(server: rpc.Server): Promise<void> {
   const keypair = Keypair.random();
   const fundRes = await fetch(`https://friendbot.stellar.org/?addr=${keypair.publicKey()}`);
   if (!fundRes.ok) {
-    console.warn(chalk.red(`  Friendbot request failed (${fundRes.status}). Skipping live simulation.`));
+    console.warn(
+      chalk.red(`  Friendbot request failed (${fundRes.status}). Skipping live simulation.`),
+    );
     return;
   }
   console.log(chalk.green(`  Funded: ${keypair.publicKey()}`));

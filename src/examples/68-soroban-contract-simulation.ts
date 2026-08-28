@@ -83,7 +83,7 @@ export async function run(): Promise<void> {
   const callArg = xdr.ScVal.scvSymbol('Stellar');
   const callOperation = contract.call(methodName, callArg);
 
-  let tx = new TransactionBuilder(sourceAccount, {
+  const tx = new TransactionBuilder(sourceAccount, {
     fee: '100',
     networkPassphrase: Networks.TESTNET,
   })
@@ -146,9 +146,7 @@ export async function run(): Promise<void> {
   const assembled = rpc.assembleTransaction(tx, simResult).build();
 
   console.log(
-    chalk.green(
-      'Transaction assembled with simulation footprint and updated resource fee.',
-    ),
+    chalk.green('Transaction assembled with simulation footprint and updated resource fee.'),
   );
   console.log(
     chalk.gray(
@@ -179,9 +177,7 @@ export async function run(): Promise<void> {
  */
 function displaySimulationResults(sim: rpc.Api.SimulateTransactionSuccessResponse): void {
   console.log(chalk.green('Simulation succeeded.'));
-  console.log(
-    chalk.bold('\n  Resource estimates:'),
-  );
+  console.log(chalk.bold('\n  Resource estimates:'));
   console.log(`    Minimum resource fee : ${sim.minResourceFee} stroops`);
 
   // The SorobanTransactionData contains detailed resource limits set by the node.
@@ -225,9 +221,7 @@ function displaySimulationResults(sim: rpc.Api.SimulateTransactionSuccessRespons
       console.log(`    [${idx}] SorobanAuthorizationEntry`);
     });
     console.log(
-      chalk.gray(
-        '    These entries must be signed (or pre-authorized) before submission.',
-      ),
+      chalk.gray('    These entries must be signed (or pre-authorized) before submission.'),
     );
   } else {
     console.log(chalk.gray('\n  (No authorization entries required for this invocation.)'));

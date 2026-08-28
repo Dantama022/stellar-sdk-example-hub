@@ -1,4 +1,12 @@
-import { TransactionBuilder, Networks, Keypair, FeeBumpTransaction, Account, Operation, Asset } from '@stellar/stellar-sdk';
+import {
+  TransactionBuilder,
+  Networks,
+  Keypair,
+  FeeBumpTransaction,
+  Account,
+  Operation,
+  Asset,
+} from '@stellar/stellar-sdk';
 
 export async function run(params?: any): Promise<void> {
   let xdr = params?.envelopeXdr;
@@ -8,15 +16,21 @@ export async function run(params?: any): Promise<void> {
     // Fallback: Generate a valid signed transaction dynamically to guarantee valid XDR
     const kp = Keypair.random();
     const account = new Account(kp.publicKey(), '1');
-    const txObj = new TransactionBuilder(account, { fee: '100', networkPassphrase: Networks.TESTNET })
-      .addOperation(Operation.payment({ destination: kp.publicKey(), asset: Asset.native(), amount: '1' }))
+    const txObj = new TransactionBuilder(account, {
+      fee: '100',
+      networkPassphrase: Networks.TESTNET,
+    })
+      .addOperation(
+        Operation.payment({ destination: kp.publicKey(), asset: Asset.native(), amount: '1' }),
+      )
       .setTimeout(1000)
       .build();
     txObj.sign(kp);
     xdr = txObj.toEnvelope().toXDR('base64');
     candidates = [kp.publicKey()];
   } else {
-    const candidateKeysInput = params?.publicKeys || 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7';
+    const candidateKeysInput =
+      params?.publicKeys || 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7';
     candidates = candidateKeysInput.split(',').map((k: string) => k.trim());
   }
 
@@ -48,7 +62,7 @@ export async function run(params?: any): Promise<void> {
             matchedKey = pk;
             break;
           }
-        } catch (e) {
+        } catch {
           // Ignore invalid keys
         }
       }
@@ -60,7 +74,6 @@ export async function run(params?: any): Promise<void> {
     });
 
     console.log(params?.json ? JSON.stringify(output, null, 2) : output);
-
   } catch (error: any) {
     console.error('Error verifying signatures:', error.message);
   }

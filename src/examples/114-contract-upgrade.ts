@@ -54,30 +54,17 @@ import chalk from 'chalk';
  * resultMetaXdr.
  */
 
-const RPC_URL =
-  process.env.SOROBAN_RPC_URL ||
-  'https://soroban-testnet.stellar.org';
+const RPC_URL = process.env.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org';
 
-const FRIEND_BOT_URL =
-  'https://friendbot.stellar.org';
+const FRIEND_BOT_URL = 'https://friendbot.stellar.org';
 
-const NETWORK_PASSPHRASE =
-  Networks.TESTNET;
+const NETWORK_PASSPHRASE = Networks.TESTNET;
 
-const BASE_FEE =
-  '100000';
+const BASE_FEE = '100000';
 
-const V1_WASM_PATH =
-  path.join(
-    __dirname,
-    '../contracts/sample-v1/upgradeable_v1.wasm',
-  );
+const V1_WASM_PATH = path.join(__dirname, '../contracts/sample-v1/upgradeable_v1.wasm');
 
-const V2_WASM_PATH =
-  path.join(
-    __dirname,
-    '../contracts/sample-v2/upgradeable_v2.wasm',
-  );
+const V2_WASM_PATH = path.join(__dirname, '../contracts/sample-v2/upgradeable_v2.wasm');
 
 interface RawRpcError {
   code: number;
@@ -93,11 +80,7 @@ interface RawRpcEnvelope<T> {
 }
 
 interface RawTransactionStatus {
-  status:
-    | 'SUCCESS'
-    | 'NOT_FOUND'
-    | 'FAILED'
-    | string;
+  status: 'SUCCESS' | 'NOT_FOUND' | 'FAILED' | string;
 
   txHash?: string;
   ledger?: number;
@@ -108,18 +91,15 @@ interface RawTransactionStatus {
 
 interface SimulatedOperation {
   transaction: Transaction;
-  simulation:
-    rpc.Api.SimulateTransactionSuccessResponse;
+  simulation: rpc.Api.SimulateTransactionSuccessResponse;
 }
 
 interface SubmittedOperation {
-  simulation:
-    rpc.Api.SimulateTransactionSuccessResponse;
+  simulation: rpc.Api.SimulateTransactionSuccessResponse;
 
   transactionHash: string;
 
-  confirmation:
-    RawTransactionStatus;
+  confirmation: RawTransactionStatus;
 }
 
 export interface UpgradeVerification {
@@ -134,23 +114,14 @@ export interface UpgradeVerification {
 /**
  * Convert unknown errors and RPC objects to readable output.
  */
-function errorMessage(
-  error: unknown,
-): string {
+function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
 
-  if (
-    error !== null &&
-    typeof error === 'object'
-  ) {
+  if (error !== null && typeof error === 'object') {
     try {
-      return JSON.stringify(
-        error,
-        null,
-        2,
-      );
+      return JSON.stringify(error, null, 2);
     } catch {
       return String(error);
     }
@@ -162,41 +133,22 @@ function errorMessage(
 /**
  * SHA-256 hash of Soroban WASM.
  */
-export function computeWasmHash(
-  wasm: Buffer,
-): Buffer {
-  return createHash('sha256')
-    .update(wasm)
-    .digest();
+export function computeWasmHash(wasm: Buffer): Buffer {
+  return createHash('sha256').update(wasm).digest();
 }
 
 /**
  * Load one of the repository's bundled contract implementations.
  */
-function loadWasm(
-  wasmPath: string,
-): Buffer {
-  if (
-    !fs.existsSync(
-      wasmPath,
-    )
-  ) {
-    throw new Error(
-      `Contract WASM was not found at ${wasmPath}`,
-    );
+function loadWasm(wasmPath: string): Buffer {
+  if (!fs.existsSync(wasmPath)) {
+    throw new Error(`Contract WASM was not found at ${wasmPath}`);
   }
 
-  const wasm =
-    fs.readFileSync(
-      wasmPath,
-    );
+  const wasm = fs.readFileSync(wasmPath);
 
-  if (
-    wasm.length <= 8
-  ) {
-    throw new Error(
-      `Contract WASM at ${wasmPath} is not a usable Soroban binary.`,
-    );
+  if (wasm.length <= 8) {
+    throw new Error(`Contract WASM at ${wasmPath} is not a usable Soroban binary.`);
   }
 
   return wasm;
@@ -205,30 +157,16 @@ function loadWasm(
 /**
  * Fund a temporary Testnet account.
  */
-async function fundAccount(
-  keypair: Keypair,
-  label: string,
-): Promise<void> {
-  console.log(
-    `  ${label}: ${keypair.publicKey()}`,
-  );
+async function fundAccount(keypair: Keypair, label: string): Promise<void> {
+  console.log(`  ${label}: ${keypair.publicKey()}`);
 
-  const response =
-    await fetch(
-      `${FRIEND_BOT_URL}/?addr=${keypair.publicKey()}`,
-    );
+  const response = await fetch(`${FRIEND_BOT_URL}/?addr=${keypair.publicKey()}`);
 
   if (!response.ok) {
-    throw new Error(
-      `Friendbot could not fund ${label}: HTTP ${response.status}`,
-    );
+    throw new Error(`Friendbot could not fund ${label}: HTTP ${response.status}`);
   }
 
-  console.log(
-    chalk.green(
-      `  ${label} funded.`,
-    ),
-  );
+  console.log(chalk.green(`  ${label} funded.`));
 }
 
 /**
@@ -241,50 +179,33 @@ async function rawRpcCall<T>(
   method: string,
   params: Record<string, unknown>,
 ): Promise<T> {
-  const response =
-    await fetch(
-      rpcUrl,
-      {
-        method: 'POST',
+  const response = await fetch(rpcUrl, {
+    method: 'POST',
 
-        headers: {
-          'Content-Type':
-            'application/json',
-        },
+    headers: {
+      'Content-Type': 'application/json',
+    },
 
-        body:
-          JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method,
-            params,
-          }),
-      },
-    );
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method,
+      params,
+    }),
+  });
 
   if (!response.ok) {
-    throw new Error(
-      `RPC ${method} returned HTTP ${response.status}.`,
-    );
+    throw new Error(`RPC ${method} returned HTTP ${response.status}.`);
   }
 
-  const envelope =
-    (await response.json()) as
-      RawRpcEnvelope<T>;
+  const envelope = (await response.json()) as RawRpcEnvelope<T>;
 
   if (envelope.error) {
-    throw new Error(
-      `RPC ${method} failed (${envelope.error.code}): ${envelope.error.message}`,
-    );
+    throw new Error(`RPC ${method} failed (${envelope.error.code}): ${envelope.error.message}`);
   }
 
-  if (
-    envelope.result ===
-    undefined
-  ) {
-    throw new Error(
-      `RPC ${method} returned no result.`,
-    );
+  if (envelope.result === undefined) {
+    throw new Error(`RPC ${method} returned no result.`);
   }
 
   return envelope.result;
@@ -298,53 +219,25 @@ async function pollTransactionStatusRaw(
   hash: string,
   attempts = 30,
 ): Promise<RawTransactionStatus> {
-  for (
-    let attempt = 1;
-    attempt <= attempts;
-    attempt += 1
-  ) {
-    const result =
-      await rawRpcCall<
-        RawTransactionStatus
-      >(
-        rpcUrl,
-        'getTransaction',
-        {
-          hash,
-        },
-      );
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const result = await rawRpcCall<RawTransactionStatus>(rpcUrl, 'getTransaction', {
+      hash,
+    });
 
-    if (
-      result.status ===
-        'SUCCESS' ||
-      result.status ===
-        'FAILED'
-    ) {
+    if (result.status === 'SUCCESS' || result.status === 'FAILED') {
       return result;
     }
 
-    if (
-      result.status !==
-      'NOT_FOUND'
-    ) {
-      throw new Error(
-        `Transaction ${hash} returned unexpected status "${result.status}".`,
-      );
+    if (result.status !== 'NOT_FOUND') {
+      throw new Error(`Transaction ${hash} returned unexpected status "${result.status}".`);
     }
 
-    await new Promise<void>(
-      (resolve) => {
-        setTimeout(
-          resolve,
-          1000,
-        );
-      },
-    );
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 1000);
+    });
   }
 
-  throw new Error(
-    `Transaction ${hash} was not confirmed after ${attempts} polling attempts.`,
-  );
+  throw new Error(`Transaction ${hash} was not confirmed after ${attempts} polling attempts.`);
 }
 
 /**
@@ -355,50 +248,25 @@ async function simulateOperation(
   signer: Keypair,
   operation: xdr.Operation,
 ): Promise<SimulatedOperation> {
-  const account =
-    await server.getAccount(
-      signer.publicKey(),
-    );
+  const account = await server.getAccount(signer.publicKey());
 
-  const transaction =
-    new TransactionBuilder(
-      account,
-      {
-        fee: BASE_FEE,
+  const transaction = new TransactionBuilder(account, {
+    fee: BASE_FEE,
 
-        networkPassphrase:
-          NETWORK_PASSPHRASE,
-      },
-    )
-      .addOperation(
-        operation,
-      )
-      .setTimeout(60)
-      .build();
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(operation)
+    .setTimeout(60)
+    .build();
 
-  const simulation =
-    await server.simulateTransaction(
-      transaction,
-    );
+  const simulation = await server.simulateTransaction(transaction);
 
-  if (
-    rpc.Api.isSimulationError(
-      simulation,
-    )
-  ) {
-    throw new Error(
-      `Simulation failed: ${simulation.error}`,
-    );
+  if (rpc.Api.isSimulationError(simulation)) {
+    throw new Error(`Simulation failed: ${simulation.error}`);
   }
 
-  if (
-    !rpc.Api.isSimulationSuccess(
-      simulation,
-    )
-  ) {
-    throw new Error(
-      'Soroban RPC returned an unexpected simulation response.',
-    );
+  if (!rpc.Api.isSimulationSuccess(simulation)) {
+    throw new Error('Soroban RPC returned an unexpected simulation response.');
   }
 
   return {
@@ -414,56 +282,28 @@ async function submitSimulation(
   server: rpc.Server,
   rpcUrl: string,
   signer: Keypair,
-  simulated:
-    SimulatedOperation,
+  simulated: SimulatedOperation,
 ): Promise<SubmittedOperation> {
-  let transaction =
-    rpc
-      .assembleTransaction(
-        simulated.transaction,
-        simulated.simulation,
-      )
-      .build();
+  const transaction = rpc.assembleTransaction(simulated.transaction, simulated.simulation).build();
 
-  transaction.sign(
-    signer,
-  );
+  transaction.sign(signer);
 
-  const submission =
-    await server.sendTransaction(
-      transaction,
-    );
+  const submission = await server.sendTransaction(transaction);
 
-  if (
-    submission.status ===
-    'ERROR'
-  ) {
-    throw new Error(
-      'Soroban transaction was rejected during submission.',
-    );
+  if (submission.status === 'ERROR') {
+    throw new Error('Soroban transaction was rejected during submission.');
   }
 
-  const confirmation =
-    await pollTransactionStatusRaw(
-      rpcUrl,
-      submission.hash,
-    );
+  const confirmation = await pollTransactionStatusRaw(rpcUrl, submission.hash);
 
-  if (
-    confirmation.status !==
-    'SUCCESS'
-  ) {
-    throw new Error(
-      `Transaction ${submission.hash} finished with status ${confirmation.status}.`,
-    );
+  if (confirmation.status !== 'SUCCESS') {
+    throw new Error(`Transaction ${submission.hash} finished with status ${confirmation.status}.`);
   }
 
   return {
-    simulation:
-      simulated.simulation,
+    simulation: simulated.simulation,
 
-    transactionHash:
-      submission.hash,
+    transactionHash: submission.hash,
 
     confirmation,
   };
@@ -478,78 +318,41 @@ async function submitOperation(
   signer: Keypair,
   operation: xdr.Operation,
 ): Promise<SubmittedOperation> {
-  const simulated =
-    await simulateOperation(
-      server,
-      signer,
-      operation,
-    );
+  const simulated = await simulateOperation(server, signer, operation);
 
-  return submitSimulation(
-    server,
-    rpcUrl,
-    signer,
-    simulated,
-  );
+  return submitSimulation(server, rpcUrl, signer, simulated);
 }
 
 /**
  * Read the contract address returned by createCustomContract simulation.
  */
-function contractIdFromSimulation(
-  simulation:
-    rpc.Api.SimulateTransactionSuccessResponse,
-): string {
-  const retval =
-    simulation.result?.retval;
+function contractIdFromSimulation(simulation: rpc.Api.SimulateTransactionSuccessResponse): string {
+  const retval = simulation.result?.retval;
 
   if (!retval) {
-    throw new Error(
-      'Contract deployment simulation returned no contract address.',
-    );
+    throw new Error('Contract deployment simulation returned no contract address.');
   }
 
-  return Address
-    .fromScVal(
-      retval,
-    )
-    .toString();
+  return Address.fromScVal(retval).toString();
 }
 
 /**
  * Return the required signer represented by an authorization entry.
  */
 export function getAuthorizationSigner(
-  entry:
-    xdr.SorobanAuthorizationEntry,
+  entry: xdr.SorobanAuthorizationEntry,
   transactionSource: string,
 ): string {
-  const credentials =
-    entry.credentials();
+  const credentials = entry.credentials();
 
-  const type =
-    credentials
-      .switch()
-      .name;
+  const type = credentials.switch().name;
 
-  if (
-    type ===
-    'sorobanCredentialsSourceAccount'
-  ) {
+  if (type === 'sorobanCredentialsSourceAccount') {
     return transactionSource;
   }
 
-  if (
-    type ===
-    'sorobanCredentialsAddress'
-  ) {
-    return Address
-      .fromScAddress(
-        credentials
-          .address()
-          .address(),
-      )
-      .toString();
+  if (type === 'sorobanCredentialsAddress') {
+    return Address.fromScAddress(credentials.address().address()).toString();
   }
 
   return `(unsupported: ${type})`;
@@ -559,26 +362,15 @@ export function getAuthorizationSigner(
  * Display authorization returned by simulation.
  */
 function displayAuthorization(
-  simulation:
-    rpc.Api.SimulateTransactionSuccessResponse,
+  simulation: rpc.Api.SimulateTransactionSuccessResponse,
   transactionSource: string,
 ): string {
-  const entries =
-    simulation.result?.auth ??
-    [];
+  const entries = simulation.result?.auth ?? [];
 
-  if (
-    entries.length === 0
-  ) {
-    console.log(
-      '  Authorization entries : 0',
-    );
+  if (entries.length === 0) {
+    console.log('  Authorization entries : 0');
 
-    console.log(
-      chalk.green(
-        '  Authorization status  : AUTHORIZED BY TRANSACTION SOURCE',
-      ),
-    );
+    console.log(chalk.green('  Authorization status  : AUTHORIZED BY TRANSACTION SOURCE'));
 
     console.log(
       chalk.gray(
@@ -586,50 +378,20 @@ function displayAuthorization(
       ),
     );
 
-    return (
-      'authorized by transaction source'
-    );
+    return 'authorized by transaction source';
   }
 
-  console.log(
-    `  Authorization entries : ${entries.length}`,
-  );
+  console.log(`  Authorization entries : ${entries.length}`);
 
-  entries.forEach(
-    (
-      entry,
-      index,
-    ) => {
-      const signer =
-        getAuthorizationSigner(
-          entry,
-          transactionSource,
-        );
+  entries.forEach((entry, index) => {
+    const signer = getAuthorizationSigner(entry, transactionSource);
 
-      console.log(
-        `    [${index}] required signer: ${signer}`,
-      );
+    console.log(`    [${index}] required signer: ${signer}`);
 
-      console.log(
-        `        credential type: ${
-          entry
-            .credentials()
-            .switch()
-            .name
-        }`,
-      );
-    },
-  );
+    console.log(`        credential type: ${entry.credentials().switch().name}`);
+  });
 
-  return entries
-    .map(
-      (entry) =>
-        getAuthorizationSigner(
-          entry,
-          transactionSource,
-        ),
-    )
-    .join(', ');
+  return entries.map((entry) => getAuthorizationSigner(entry, transactionSource)).join(', ');
 }
 
 /**
@@ -643,18 +405,11 @@ export async function identifyCurrentImplementation(
   wasm: Buffer;
   wasmHash: Buffer;
 }> {
-  const wasm =
-    await server
-      .getContractWasmByContractId(
-        contractId,
-      );
+  const wasm = await server.getContractWasmByContractId(contractId);
 
   return {
     wasm,
-    wasmHash:
-      computeWasmHash(
-        wasm,
-      ),
+    wasmHash: computeWasmHash(wasm),
   };
 }
 
@@ -667,60 +422,28 @@ async function invokeContractU32(
   contract: Contract,
   method: string,
 ): Promise<number> {
-  const account =
-    await server.getAccount(
-      source.publicKey(),
-    );
+  const account = await server.getAccount(source.publicKey());
 
-  const transaction =
-    new TransactionBuilder(
-      account,
-      {
-        fee: BASE_FEE,
+  const transaction = new TransactionBuilder(account, {
+    fee: BASE_FEE,
 
-        networkPassphrase:
-          NETWORK_PASSPHRASE,
-      },
-    )
-      .addOperation(
-        contract.call(
-          method,
-        ),
-      )
-      .setTimeout(60)
-      .build();
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call(method))
+    .setTimeout(60)
+    .build();
 
-  const simulation =
-    await server.simulateTransaction(
-      transaction,
-    );
+  const simulation = await server.simulateTransaction(transaction);
 
-  if (
-    rpc.Api.isSimulationError(
-      simulation,
-    )
-  ) {
-    throw new Error(
-      `${method} simulation failed: ${simulation.error}`,
-    );
+  if (rpc.Api.isSimulationError(simulation)) {
+    throw new Error(`${method} simulation failed: ${simulation.error}`);
   }
 
-  if (
-    !rpc.Api.isSimulationSuccess(
-      simulation,
-    ) ||
-    !simulation.result?.retval
-  ) {
-    throw new Error(
-      `Contract method ${method} returned no value.`,
-    );
+  if (!rpc.Api.isSimulationSuccess(simulation) || !simulation.result?.retval) {
+    throw new Error(`Contract method ${method} returned no value.`);
   }
 
-  return Number(
-    scValToNative(
-      simulation.result.retval,
-    ),
-  );
+  return Number(scValToNative(simulation.result.retval));
 }
 
 /**
@@ -739,126 +462,56 @@ async function demonstrateUnauthorizedUpgrade(
   contract: Contract,
   newWasmHash: Buffer,
 ): Promise<void> {
-  console.log(
-    chalk.yellow(
-      '\nUnauthorized upgrade demonstration',
-    ),
-  );
+  console.log(chalk.yellow('\nUnauthorized upgrade demonstration'));
 
-  console.log(
-    `  Attacker          : ${attacker.publicKey()}`,
-  );
+  console.log(`  Attacker          : ${attacker.publicKey()}`);
 
-  console.log(
-    `  Contract admin    : ${admin.publicKey()}`,
-  );
+  console.log(`  Contract admin    : ${admin.publicKey()}`);
 
-  const account =
-    await server.getAccount(
-      attacker.publicKey(),
-    );
+  const account = await server.getAccount(attacker.publicKey());
 
-  const operation =
-    contract.call(
-      'upgrade',
-      xdr.ScVal.scvBytes(
-        newWasmHash,
-      ),
-    );
+  const operation = contract.call('upgrade', xdr.ScVal.scvBytes(newWasmHash));
 
-  const transaction =
-    new TransactionBuilder(
-      account,
-      {
-        fee: BASE_FEE,
+  const transaction = new TransactionBuilder(account, {
+    fee: BASE_FEE,
 
-        networkPassphrase:
-          NETWORK_PASSPHRASE,
-      },
-    )
-      .addOperation(
-        operation,
-      )
-      .setTimeout(60)
-      .build();
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(operation)
+    .setTimeout(60)
+    .build();
 
-  const simulation =
-    await server.simulateTransaction(
-      transaction,
-    );
+  const simulation = await server.simulateTransaction(transaction);
 
-  if (
-    rpc.Api.isSimulationError(
-      simulation,
-    )
-  ) {
-    console.log(
-      chalk.green(
-        '  Unauthorized attempt rejected during simulation.',
-      ),
-    );
+  if (rpc.Api.isSimulationError(simulation)) {
+    console.log(chalk.green('  Unauthorized attempt rejected during simulation.'));
 
-    console.log(
-      chalk.gray(
-        `  Diagnostic: ${simulation.error}`,
-      ),
-    );
+    console.log(chalk.gray(`  Diagnostic: ${simulation.error}`));
 
     return;
   }
 
-  if (
-    !rpc.Api.isSimulationSuccess(
-      simulation,
-    )
-  ) {
-    console.log(
-      chalk.green(
-        '  Unauthorized attempt produced no successful simulation.',
-      ),
-    );
+  if (!rpc.Api.isSimulationSuccess(simulation)) {
+    console.log(chalk.green('  Unauthorized attempt produced no successful simulation.'));
 
     return;
   }
 
-  const authEntries =
-    simulation.result?.auth ??
-    [];
+  const authEntries = simulation.result?.auth ?? [];
 
-  console.log(
-    `  Simulation auth entries : ${authEntries.length}`,
+  console.log(`  Simulation auth entries : ${authEntries.length}`);
+
+  authEntries.forEach((entry, index) => {
+    const requiredSigner = getAuthorizationSigner(entry, attacker.publicKey());
+
+    console.log(`    [${index}] required signer: ${requiredSigner}`);
+  });
+
+  const requiresAdmin = authEntries.some(
+    (entry) => getAuthorizationSigner(entry, attacker.publicKey()) === admin.publicKey(),
   );
 
-  authEntries.forEach(
-    (
-      entry,
-      index,
-    ) => {
-      const requiredSigner =
-        getAuthorizationSigner(
-          entry,
-          attacker.publicKey(),
-        );
-
-      console.log(
-        `    [${index}] required signer: ${requiredSigner}`,
-      );
-    },
-  );
-
-  const requiresAdmin =
-    authEntries.some(
-      (entry) =>
-        getAuthorizationSigner(
-          entry,
-          attacker.publicKey(),
-        ) ===
-        admin.publicKey(),
-    );
-
-  if (
-    requiresAdmin
-  ) {
+  if (requiresAdmin) {
     console.log(
       chalk.green(
         '  Authorization check: simulation correctly requires the configured administrator.',
@@ -867,65 +520,33 @@ async function demonstrateUnauthorizedUpgrade(
   }
 
   console.log(
-    chalk.gray(
-      '  Submitting without the administrator\'s Soroban authorization signature...',
-    ),
+    chalk.gray("  Submitting without the administrator's Soroban authorization signature..."),
   );
 
-  let assembled =
-    rpc
-      .assembleTransaction(
-        transaction,
-        simulation,
-      )
-      .build();
+  const assembled = rpc.assembleTransaction(transaction, simulation).build();
 
   // Deliberately sign only the transaction envelope with the attacker.
-  assembled.sign(
-    attacker,
-  );
+  assembled.sign(attacker);
 
-  const submission =
-    await server.sendTransaction(
-      assembled,
-    );
+  const submission = await server.sendTransaction(assembled);
 
-  if (
-    submission.status ===
-    'ERROR'
-  ) {
+  if (submission.status === 'ERROR') {
+    console.log(chalk.green('  Unauthorized upgrade rejected at submission.'));
+
+    return;
+  }
+
+  const confirmation = await pollTransactionStatusRaw(rpcUrl, submission.hash);
+
+  if (confirmation.status === 'FAILED') {
     console.log(
-      chalk.green(
-        '  Unauthorized upgrade rejected at submission.',
-      ),
+      chalk.green(`  Unauthorized upgrade rejected on-chain. Transaction: ${submission.hash}`),
     );
 
     return;
   }
 
-  const confirmation =
-    await pollTransactionStatusRaw(
-      rpcUrl,
-      submission.hash,
-    );
-
-  if (
-    confirmation.status ===
-    'FAILED'
-  ) {
-    console.log(
-      chalk.green(
-        `  Unauthorized upgrade rejected on-chain. Transaction: ${submission.hash}`,
-      ),
-    );
-
-    return;
-  }
-
-  if (
-    confirmation.status ===
-    'SUCCESS'
-  ) {
+  if (confirmation.status === 'SUCCESS') {
     throw new Error(
       'SECURITY CHECK FAILED: an unauthorized account unexpectedly completed the upgrade.',
     );
@@ -947,83 +568,36 @@ async function demonstrateFailedUpgrade(
   admin: Keypair,
   contract: Contract,
 ): Promise<void> {
-  console.log(
-    chalk.yellow(
-      '\nFailed upgrade demonstration',
-    ),
-  );
+  console.log(chalk.yellow('\nFailed upgrade demonstration'));
 
-  const invalidWasmHash =
-    randomBytes(32);
+  const invalidWasmHash = randomBytes(32);
 
-  console.log(
-    `  Non-existent WASM hash: ${invalidWasmHash.toString(
-      'hex',
-    )}`,
-  );
+  console.log(`  Non-existent WASM hash: ${invalidWasmHash.toString('hex')}`);
 
-  const account =
-    await server.getAccount(
-      admin.publicKey(),
-    );
+  const account = await server.getAccount(admin.publicKey());
 
-  const transaction =
-    new TransactionBuilder(
-      account,
-      {
-        fee: BASE_FEE,
+  const transaction = new TransactionBuilder(account, {
+    fee: BASE_FEE,
 
-        networkPassphrase:
-          NETWORK_PASSPHRASE,
-      },
-    )
-      .addOperation(
-        contract.call(
-          'upgrade',
-          xdr.ScVal.scvBytes(
-            invalidWasmHash,
-          ),
-        ),
-      )
-      .setTimeout(60)
-      .build();
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call('upgrade', xdr.ScVal.scvBytes(invalidWasmHash)))
+    .setTimeout(60)
+    .build();
 
   try {
-    const simulation =
-      await server.simulateTransaction(
-        transaction,
-      );
+    const simulation = await server.simulateTransaction(transaction);
 
-    if (
-      rpc.Api.isSimulationError(
-        simulation,
-      )
-    ) {
-      console.log(
-        chalk.green(
-          '  Invalid implementation rejected during simulation.',
-        ),
-      );
+    if (rpc.Api.isSimulationError(simulation)) {
+      console.log(chalk.green('  Invalid implementation rejected during simulation.'));
 
-      console.log(
-        chalk.gray(
-          `  Diagnostic: ${simulation.error}`,
-        ),
-      );
+      console.log(chalk.gray(`  Diagnostic: ${simulation.error}`));
 
       return;
     }
 
-    if (
-      rpc.Api.isSimulationSuccess(
-        simulation,
-      )
-    ) {
-      console.log(
-        chalk.yellow(
-          '  Simulation did not reject the unknown hash immediately.',
-        ),
-      );
+    if (rpc.Api.isSimulationSuccess(simulation)) {
+      console.log(chalk.yellow('  Simulation did not reject the unknown hash immediately.'));
 
       console.log(
         chalk.gray(
@@ -1034,25 +608,11 @@ async function demonstrateFailedUpgrade(
       return;
     }
 
-    console.log(
-      chalk.green(
-        '  Invalid upgrade was not accepted.',
-      ),
-    );
+    console.log(chalk.green('  Invalid upgrade was not accepted.'));
   } catch (error: unknown) {
-    console.log(
-      chalk.green(
-        '  Invalid upgrade handled gracefully.',
-      ),
-    );
+    console.log(chalk.green('  Invalid upgrade handled gracefully.'));
 
-    console.log(
-      chalk.gray(
-        `  Diagnostic: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.log(chalk.gray(`  Diagnostic: ${errorMessage(error)}`));
   }
 }
 
@@ -1066,45 +626,19 @@ async function verifyUpgrade(
   contractId: string,
   expectedHash: Buffer,
 ): Promise<UpgradeVerification> {
-  const current =
-    await identifyCurrentImplementation(
-      server,
-      contractId,
-    );
+  const current = await identifyCurrentImplementation(server, contractId);
 
-  const version =
-    await invokeContractU32(
-      server,
-      source,
-      contract,
-      'version',
-    );
+  const version = await invokeContractU32(server, source, contract, 'version');
 
-  const newFunctionValue =
-    await invokeContractU32(
-      server,
-      source,
-      contract,
-      'new_v2_fn',
-    );
+  const newFunctionValue = await invokeContractU32(server, source, contract, 'new_v2_fn');
 
-  const expectedWasmHash =
-    expectedHash.toString(
-      'hex',
-    );
+  const expectedWasmHash = expectedHash.toString('hex');
 
-  const actualWasmHash =
-    current.wasmHash.toString(
-      'hex',
-    );
+  const actualWasmHash = current.wasmHash.toString('hex');
 
-  const wasmMatches =
-    actualWasmHash ===
-    expectedWasmHash;
+  const wasmMatches = actualWasmHash === expectedWasmHash;
 
-  const verified =
-    wasmMatches &&
-    version === 2;
+  const verified = wasmMatches && version === 2;
 
   return {
     expectedWasmHash,
@@ -1120,11 +654,7 @@ async function verifyUpgrade(
  * Run Example 114.
  */
 export async function run(): Promise<void> {
-  console.log(
-    chalk.bold(
-      'Soroban Contract Upgrade Example',
-    ),
-  );
+  console.log(chalk.bold('Soroban Contract Upgrade Example'));
 
   console.log(
     chalk.gray(
@@ -1132,129 +662,65 @@ export async function run(): Promise<void> {
     ),
   );
 
-  const server =
-    new rpc.Server(
-      RPC_URL,
-    );
+  const server = new rpc.Server(RPC_URL);
 
   // -----------------------------------------------------------------------
   // Step 1: Connect.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 1: Connecting to Soroban RPC...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 1: Connecting to Soroban RPC...'));
 
   try {
-    const latest =
-      await server.getLatestLedger();
+    const latest = await server.getLatestLedger();
 
-    console.log(
-      chalk.green(
-        `Connected. Latest ledger: ${latest.sequence}`,
-      ),
-    );
+    console.log(chalk.green(`Connected. Latest ledger: ${latest.sequence}`));
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `RPC connection failed: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`RPC connection failed: ${errorMessage(error)}`));
 
     return;
   }
 
-  console.log(
-    '  Network     : Testnet',
-  );
+  console.log('  Network     : Testnet');
 
-  console.log(
-    `  Soroban RPC : ${RPC_URL}`,
-  );
+  console.log(`  Soroban RPC : ${RPC_URL}`);
 
   // -----------------------------------------------------------------------
   // Step 2: Load v1 and v2.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 2: Preparing contract implementations...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 2: Preparing contract implementations...'));
 
-  let v1Wasm:
-    Buffer;
+  let v1Wasm: Buffer;
 
-  let v2Wasm:
-    Buffer;
+  let v2Wasm: Buffer;
 
   try {
-    v1Wasm =
-      loadWasm(
-        V1_WASM_PATH,
-      );
+    v1Wasm = loadWasm(V1_WASM_PATH);
 
-    v2Wasm =
-      loadWasm(
-        V2_WASM_PATH,
-      );
+    v2Wasm = loadWasm(V2_WASM_PATH);
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        errorMessage(error),
-      ),
-    );
+    console.error(chalk.red(errorMessage(error)));
 
     return;
   }
 
-  const v1WasmHash =
-    computeWasmHash(
-      v1Wasm,
-    );
+  const v1WasmHash = computeWasmHash(v1Wasm);
 
-  const v2WasmHash =
-    computeWasmHash(
-      v2Wasm,
-    );
+  const v2WasmHash = computeWasmHash(v2Wasm);
 
-  console.log(
-    `  v1 WASM path : ${V1_WASM_PATH}`,
-  );
+  console.log(`  v1 WASM path : ${V1_WASM_PATH}`);
 
-  console.log(
-    `  v1 WASM size : ${v1Wasm.length.toLocaleString()} bytes`,
-  );
+  console.log(`  v1 WASM size : ${v1Wasm.length.toLocaleString()} bytes`);
 
-  console.log(
-    `  v1 WASM hash : ${v1WasmHash.toString(
-      'hex',
-    )}`,
-  );
+  console.log(`  v1 WASM hash : ${v1WasmHash.toString('hex')}`);
 
-  console.log(
-    `  v2 WASM path : ${V2_WASM_PATH}`,
-  );
+  console.log(`  v2 WASM path : ${V2_WASM_PATH}`);
 
-  console.log(
-    `  v2 WASM size : ${v2Wasm.length.toLocaleString()} bytes`,
-  );
+  console.log(`  v2 WASM size : ${v2Wasm.length.toLocaleString()} bytes`);
 
-  console.log(
-    `  v2 WASM hash : ${v2WasmHash.toString(
-      'hex',
-    )}`,
-  );
+  console.log(`  v2 WASM hash : ${v2WasmHash.toString('hex')}`);
 
-  if (
-    v1WasmHash.equals(
-      v2WasmHash,
-    )
-  ) {
+  if (v1WasmHash.equals(v2WasmHash)) {
     console.error(
       chalk.red(
         'v1 and v2 have the same WASM hash; there is no implementation change to demonstrate.',
@@ -1268,36 +734,18 @@ export async function run(): Promise<void> {
   // Step 3: Create admin + attacker.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 3: Creating Testnet participants...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 3: Creating Testnet participants...'));
 
-  const admin =
-    Keypair.random();
+  const admin = Keypair.random();
 
-  const attacker =
-    Keypair.random();
+  const attacker = Keypair.random();
 
   try {
-    await fundAccount(
-      admin,
-      'Administrator',
-    );
+    await fundAccount(admin, 'Administrator');
 
-    await fundAccount(
-      attacker,
-      'Unauthorized account',
-    );
+    await fundAccount(attacker, 'Unauthorized account');
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Could not prepare Testnet accounts: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Could not prepare Testnet accounts: ${errorMessage(error)}`));
 
     return;
   }
@@ -1306,41 +754,24 @@ export async function run(): Promise<void> {
   // Step 4: Install v1.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 4: Installing v1 WASM...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 4: Installing v1 WASM...'));
 
   try {
-    const installed =
-      await submitOperation(
-        server,
-        RPC_URL,
-        admin,
+    const installed = await submitOperation(
+      server,
+      RPC_URL,
+      admin,
 
-        Operation.uploadContractWasm({
-          wasm: v1Wasm,
-        }),
-      );
-
-    console.log(
-      chalk.green(
-        'v1 WASM installed.',
-      ),
+      Operation.uploadContractWasm({
+        wasm: v1Wasm,
+      }),
     );
 
-    console.log(
-      `  Transaction hash : ${installed.transactionHash}`,
-    );
+    console.log(chalk.green('v1 WASM installed.'));
+
+    console.log(`  Transaction hash : ${installed.transactionHash}`);
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Could not install v1: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Could not install v1: ${errorMessage(error)}`));
 
     return;
   }
@@ -1349,147 +780,70 @@ export async function run(): Promise<void> {
   // Step 5: Deploy v1 with admin constructor.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 5: Deploying upgradeable v1 contract...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 5: Deploying upgradeable v1 contract...'));
 
-  let contractId:
-    string;
+  let contractId: string;
 
   try {
-    const deployment =
-      await submitOperation(
-        server,
-        RPC_URL,
-        admin,
+    const deployment = await submitOperation(
+      server,
+      RPC_URL,
+      admin,
 
-        Operation.createCustomContract({
-          address:
-            Address.fromString(
-              admin.publicKey(),
-            ),
+      Operation.createCustomContract({
+        address: Address.fromString(admin.publicKey()),
 
-          wasmHash:
-            v1WasmHash,
+        wasmHash: v1WasmHash,
 
-          salt:
-            randomBytes(32),
+        salt: randomBytes(32),
 
-          constructorArgs: [
-            Address
-              .fromString(
-                admin.publicKey(),
-              )
-              .toScVal(),
-          ],
-        }),
-      );
-
-    contractId =
-      contractIdFromSimulation(
-        deployment.simulation,
-      );
-
-    console.log(
-      chalk.green(
-        'v1 contract deployed.',
-      ),
+        constructorArgs: [Address.fromString(admin.publicKey()).toScVal()],
+      }),
     );
 
-    console.log(
-      `  Contract ID      : ${contractId}`,
-    );
+    contractId = contractIdFromSimulation(deployment.simulation);
 
-    console.log(
-      `  Deployment tx    : ${deployment.transactionHash}`,
-    );
+    console.log(chalk.green('v1 contract deployed.'));
+
+    console.log(`  Contract ID      : ${contractId}`);
+
+    console.log(`  Deployment tx    : ${deployment.transactionHash}`);
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Contract deployment failed: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Contract deployment failed: ${errorMessage(error)}`));
 
     return;
   }
 
-  const deployedContract =
-    new Contract(
-      contractId,
-    );
+  const deployedContract = new Contract(contractId);
 
   // -----------------------------------------------------------------------
   // Step 6: Identify current implementation before upgrade.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 6: Identifying current implementation...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 6: Identifying current implementation...'));
 
-  let previousImplementationHash:
-    Buffer;
+  let previousImplementationHash: Buffer;
 
   try {
-    const current =
-      await identifyCurrentImplementation(
-        server,
-        contractId,
-      );
+    const current = await identifyCurrentImplementation(server, contractId);
 
-    previousImplementationHash =
-      current.wasmHash;
+    previousImplementationHash = current.wasmHash;
 
-    const versionBefore =
-      await invokeContractU32(
-        server,
-        admin,
-        deployedContract,
-        'version',
-      );
+    const versionBefore = await invokeContractU32(server, admin, deployedContract, 'version');
 
-    console.log(
-      `  Contract ID       : ${contractId}`,
-    );
+    console.log(`  Contract ID       : ${contractId}`);
 
-    console.log(
-      `  Previous WASM hash: ${previousImplementationHash.toString(
-        'hex',
-      )}`,
-    );
+    console.log(`  Previous WASM hash: ${previousImplementationHash.toString('hex')}`);
 
-    console.log(
-      `  Version before    : ${versionBefore}`,
-    );
+    console.log(`  Version before    : ${versionBefore}`);
 
-    if (
-      !previousImplementationHash.equals(
-        v1WasmHash,
-      )
-    ) {
-      throw new Error(
-        'Current contract implementation does not match the expected v1 WASM hash.',
-      );
+    if (!previousImplementationHash.equals(v1WasmHash)) {
+      throw new Error('Current contract implementation does not match the expected v1 WASM hash.');
     }
 
-    console.log(
-      chalk.green(
-        'Current implementation verified as v1.',
-      ),
-    );
+    console.log(chalk.green('Current implementation verified as v1.'));
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Could not identify current implementation: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Could not identify current implementation: ${errorMessage(error)}`));
 
     return;
   }
@@ -1498,47 +852,26 @@ export async function run(): Promise<void> {
   // Step 7: Install v2.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 7: Installing new v2 WASM...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 7: Installing new v2 WASM...'));
 
   try {
-    const upload =
-      await submitOperation(
-        server,
-        RPC_URL,
-        admin,
+    const upload = await submitOperation(
+      server,
+      RPC_URL,
+      admin,
 
-        Operation.uploadContractWasm({
-          wasm: v2Wasm,
-        }),
-      );
-
-    console.log(
-      chalk.green(
-        'v2 WASM installed.',
-      ),
+      Operation.uploadContractWasm({
+        wasm: v2Wasm,
+      }),
     );
 
-    console.log(
-      `  New WASM hash     : ${v2WasmHash.toString(
-        'hex',
-      )}`,
-    );
+    console.log(chalk.green('v2 WASM installed.'));
 
-    console.log(
-      `  Upload transaction: ${upload.transactionHash}`,
-    );
+    console.log(`  New WASM hash     : ${v2WasmHash.toString('hex')}`);
+
+    console.log(`  Upload transaction: ${upload.transactionHash}`);
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Could not install v2: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Could not install v2: ${errorMessage(error)}`));
 
     return;
   }
@@ -1547,11 +880,7 @@ export async function run(): Promise<void> {
   // Step 8: Unauthorized-upgrade rejection.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 8: Testing upgrade authorization...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 8: Testing upgrade authorization...'));
 
   try {
     await demonstrateUnauthorizedUpgrade(
@@ -1563,46 +892,22 @@ export async function run(): Promise<void> {
       v2WasmHash,
     );
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Authorization test failed unexpectedly: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Authorization test failed unexpectedly: ${errorMessage(error)}`));
 
     return;
   }
 
   // Confirm attacker did not alter the contract.
   try {
-    const afterUnauthorized =
-      await identifyCurrentImplementation(
-        server,
-        contractId,
-      );
+    const afterUnauthorized = await identifyCurrentImplementation(server, contractId);
 
-    if (
-      !afterUnauthorized.wasmHash.equals(
-        v1WasmHash,
-      )
-    ) {
-      throw new Error(
-        'Unauthorized test unexpectedly changed the contract implementation.',
-      );
+    if (!afterUnauthorized.wasmHash.equals(v1WasmHash)) {
+      throw new Error('Unauthorized test unexpectedly changed the contract implementation.');
     }
 
-    console.log(
-      chalk.green(
-        '  Contract remains on v1 after unauthorized attempt.',
-      ),
-    );
+    console.log(chalk.green('  Contract remains on v1 after unauthorized attempt.'));
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        errorMessage(error),
-      ),
-    );
+    console.error(chalk.red(errorMessage(error)));
 
     return;
   }
@@ -1611,97 +916,45 @@ export async function run(): Promise<void> {
   // Step 9: Failed-upgrade handling.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 9: Demonstrating failed-upgrade handling...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 9: Demonstrating failed-upgrade handling...'));
 
-  await demonstrateFailedUpgrade(
-    server,
-    admin,
-    deployedContract,
-  );
+  await demonstrateFailedUpgrade(server, admin, deployedContract);
 
   // -----------------------------------------------------------------------
   // Step 10: Build and SIMULATE authorized upgrade.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 10: Building and simulating authorized upgrade...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 10: Building and simulating authorized upgrade...'));
 
-  let upgradeSimulation:
-    SimulatedOperation;
+  let upgradeSimulation: SimulatedOperation;
 
   try {
-    upgradeSimulation =
-      await simulateOperation(
-        server,
-        admin,
+    upgradeSimulation = await simulateOperation(
+      server,
+      admin,
 
-        deployedContract.call(
-          'upgrade',
-          xdr.ScVal.scvBytes(
-            v2WasmHash,
-          ),
-        ),
-      );
-
-    console.log(
-      chalk.green(
-        'Upgrade simulation succeeded.',
-      ),
+      deployedContract.call('upgrade', xdr.ScVal.scvBytes(v2WasmHash)),
     );
 
-    console.log(
-      `  Contract ID        : ${contractId}`,
-    );
+    console.log(chalk.green('Upgrade simulation succeeded.'));
 
-    console.log(
-      `  Previous WASM hash : ${previousImplementationHash.toString(
-        'hex',
-      )}`,
-    );
+    console.log(`  Contract ID        : ${contractId}`);
 
-    console.log(
-      `  New WASM hash      : ${v2WasmHash.toString(
-        'hex',
-      )}`,
-    );
+    console.log(`  Previous WASM hash : ${previousImplementationHash.toString('hex')}`);
 
-    console.log(
-      `  Contract method    : upgrade`,
-    );
+    console.log(`  New WASM hash      : ${v2WasmHash.toString('hex')}`);
 
-    console.log(
-      `  Argument            : ${v2WasmHash.toString(
-        'hex',
-      )}`,
-    );
+    console.log(`  Contract method    : upgrade`);
 
-    console.log(
-      `  Minimum resource fee: ${upgradeSimulation.simulation.minResourceFee}`,
-    );
+    console.log(`  Argument            : ${v2WasmHash.toString('hex')}`);
 
-    console.log(
-      '\n  Upgrade authorization:',
-    );
+    console.log(`  Minimum resource fee: ${upgradeSimulation.simulation.minResourceFee}`);
 
-    displayAuthorization(
-      upgradeSimulation.simulation,
-      admin.publicKey(),
-    );
+    console.log('\n  Upgrade authorization:');
+
+    displayAuthorization(upgradeSimulation.simulation, admin.publicKey());
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Authorized upgrade simulation failed: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Authorized upgrade simulation failed: ${errorMessage(error)}`));
 
     return;
   }
@@ -1710,56 +963,28 @@ export async function run(): Promise<void> {
   // Step 11: Sign and submit the SAME simulated upgrade.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 11: Signing and submitting upgrade...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 11: Signing and submitting upgrade...'));
 
-  let upgradeTransactionHash:
-    string;
+  let upgradeTransactionHash: string;
 
   try {
-    const upgrade =
-      await submitSimulation(
-        server,
-        RPC_URL,
-        admin,
-        upgradeSimulation,
-      );
+    const upgrade = await submitSimulation(server, RPC_URL, admin, upgradeSimulation);
 
-    upgradeTransactionHash =
-      upgrade.transactionHash;
+    upgradeTransactionHash = upgrade.transactionHash;
 
-    console.log(
-      chalk.green(
-        'Upgrade transaction confirmed.',
-      ),
-    );
+    console.log(chalk.green('Upgrade transaction confirmed.'));
 
-    console.log(
-      `  Upgrade transaction hash: ${upgradeTransactionHash}`,
-    );
+    console.log(`  Upgrade transaction hash: ${upgradeTransactionHash}`);
 
-    console.log(
-      `  Upgrade authorization    : AUTHORIZED`,
-    );
+    console.log(`  Upgrade authorization    : AUTHORIZED`);
 
     console.log(
       `  Confirmed ledger         : ${
-        upgrade.confirmation.ledger ??
-        upgrade.confirmation.latestLedger ??
-        'unknown'
+        upgrade.confirmation.ledger ?? upgrade.confirmation.latestLedger ?? 'unknown'
       }`,
     );
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Upgrade submission failed: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Upgrade submission failed: ${errorMessage(error)}`));
 
     return;
   }
@@ -1771,41 +996,22 @@ export async function run(): Promise<void> {
   // design belongs to the application contract, not the Stellar network.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 12: Running post-upgrade hook...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 12: Running post-upgrade hook...'));
 
   try {
-    const hook =
-      await submitOperation(
-        server,
-        RPC_URL,
-        admin,
+    const hook = await submitOperation(
+      server,
+      RPC_URL,
+      admin,
 
-        deployedContract.call(
-          'handle_upgrade',
-        ),
-      );
-
-    console.log(
-      chalk.green(
-        'Post-upgrade hook completed.',
-      ),
+      deployedContract.call('handle_upgrade'),
     );
 
-    console.log(
-      `  Hook transaction: ${hook.transactionHash}`,
-    );
+    console.log(chalk.green('Post-upgrade hook completed.'));
+
+    console.log(`  Hook transaction: ${hook.transactionHash}`);
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Post-upgrade hook failed: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Post-upgrade hook failed: ${errorMessage(error)}`));
 
     return;
   }
@@ -1814,104 +1020,50 @@ export async function run(): Promise<void> {
   // Step 13: Verify implementation and contract behavior.
   // -----------------------------------------------------------------------
 
-  console.log(
-    chalk.yellow(
-      '\nStep 13: Verifying upgraded implementation...',
-    ),
-  );
+  console.log(chalk.yellow('\nStep 13: Verifying upgraded implementation...'));
 
-  let verification:
-    UpgradeVerification;
+  let verification: UpgradeVerification;
 
   try {
-    verification =
-      await verifyUpgrade(
-        server,
-        admin,
-        deployedContract,
-        contractId,
-        v2WasmHash,
-      );
+    verification = await verifyUpgrade(server, admin, deployedContract, contractId, v2WasmHash);
   } catch (error: unknown) {
-    console.error(
-      chalk.red(
-        `Post-upgrade verification failed: ${errorMessage(
-          error,
-        )}`,
-      ),
-    );
+    console.error(chalk.red(`Post-upgrade verification failed: ${errorMessage(error)}`));
 
     return;
   }
 
-  console.log(
-    `  Contract ID         : ${contractId}`,
-  );
+  console.log(`  Contract ID         : ${contractId}`);
 
-  console.log(
-    `  Previous WASM hash  : ${previousImplementationHash.toString(
-      'hex',
-    )}`,
-  );
+  console.log(`  Previous WASM hash  : ${previousImplementationHash.toString('hex')}`);
 
-  console.log(
-    `  Expected new hash   : ${verification.expectedWasmHash}`,
-  );
+  console.log(`  Expected new hash   : ${verification.expectedWasmHash}`);
 
-  console.log(
-    `  Current WASM hash   : ${verification.actualWasmHash}`,
-  );
+  console.log(`  Current WASM hash   : ${verification.actualWasmHash}`);
 
-  console.log(
-    `  WASM hash matches   : ${
-      verification.wasmMatches
-        ? 'YES'
-        : 'NO'
-    }`,
-  );
+  console.log(`  WASM hash matches   : ${verification.wasmMatches ? 'YES' : 'NO'}`);
 
-  console.log(
-    `  Contract version    : ${verification.version}`,
-  );
+  console.log(`  Contract version    : ${verification.version}`);
 
-  console.log(
-    `  new_v2_fn() result  : ${verification.newFunctionValue}`,
-  );
+  console.log(`  new_v2_fn() result  : ${verification.newFunctionValue}`);
 
-  console.log(
-    `  Verification result : ${
-      verification.verified
-        ? 'SUCCESS'
-        : 'FAILED'
-    }`,
-  );
+  console.log(`  Verification result : ${verification.verified ? 'SUCCESS' : 'FAILED'}`);
 
-  if (
-    !verification.verified
-  ) {
-    console.error(
-      chalk.red(
-        'Upgrade verification did not satisfy the expected v2 state.',
-      ),
-    );
+  if (!verification.verified) {
+    console.error(chalk.red('Upgrade verification did not satisfy the expected v2 state.'));
 
     return;
   }
 
-  console.log(
-    chalk.green(
-      '\nContract upgrade verified successfully.',
-    ),
-  );
+  console.log(chalk.green('\nContract upgrade verified successfully.'));
 
   console.log(
     chalk.cyan(
       '\nHow Soroban upgrade authorization works:\n' +
-        '  - Soroban lets a contract replace its current WASM, but the network does not define the application\'s upgrade policy.\n' +
+        "  - Soroban lets a contract replace its current WASM, but the network does not define the application's upgrade policy.\n" +
         '  - The contract itself decides who may call its upgrade function.\n' +
         '  - This bundled contract stores an administrator and calls require_auth() before updating the current contract WASM.\n' +
         '  - When the administrator is also the transaction source, its transaction signature can satisfy source-account authorization.\n' +
-        '  - An unrelated transaction source cannot authorize the administrator\'s contract action merely by signing the transaction envelope.\n' +
+        "  - An unrelated transaction source cannot authorize the administrator's contract action merely by signing the transaction envelope.\n" +
         '  - Production contracts should carefully design administrator keys, multisig/governance, migrations, rollback plans, and implementation verification.',
     ),
   );
@@ -1920,19 +1072,11 @@ export async function run(): Promise<void> {
     chalk.cyan(
       '\nUpgrade summary:\n' +
         `  Contract ID            : ${contractId}\n` +
-        `  Previous WASM hash     : ${previousImplementationHash.toString(
-          'hex',
-        )}\n` +
-        `  New WASM hash          : ${v2WasmHash.toString(
-          'hex',
-        )}\n` +
+        `  Previous WASM hash     : ${previousImplementationHash.toString('hex')}\n` +
+        `  New WASM hash          : ${v2WasmHash.toString('hex')}\n` +
         `  Upgrade transaction    : ${upgradeTransactionHash}\n` +
         '  Upgrade authorization  : AUTHORIZED\n' +
-        `  Verification result    : ${
-          verification.verified
-            ? 'SUCCESS'
-            : 'FAILED'
-        }`,
+        `  Verification result    : ${verification.verified ? 'SUCCESS' : 'FAILED'}`,
     ),
   );
 }

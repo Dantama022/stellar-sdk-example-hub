@@ -93,9 +93,7 @@ async function fundAccount(publicKey: string): Promise<void> {
   );
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to fund account ${publicKey}: ${response.statusText}`,
-    );
+    throw new Error(`Failed to fund account ${publicKey}: ${response.statusText}`);
   }
 }
 
@@ -122,10 +120,7 @@ async function createSampleClaimableBalance(
         asset: Asset.native(),
         amount: '5',
         claimants: [
-          new Claimant(
-            claimant.publicKey(),
-            Claimant.predicateBeforeRelativeTime(String(60 * 60)),
-          ),
+          new Claimant(claimant.publicKey(), Claimant.predicateBeforeRelativeTime(String(60 * 60))),
         ],
       }),
     )
@@ -136,10 +131,12 @@ async function createSampleClaimableBalance(
   const submitResponse = await server.submitTransaction(transaction);
 
   const effectsPage = await server.effects().forTransaction(submitResponse.hash).call();
-  const created = (effectsPage.records as Array<{
-    type: string;
-    balance_id?: string;
-  }>).find((record) => record.type === 'claimable_balance_created');
+  const created = (
+    effectsPage.records as Array<{
+      type: string;
+      balance_id?: string;
+    }>
+  ).find((record) => record.type === 'claimable_balance_created');
 
   if (!created?.balance_id) {
     throw new Error('Failed to retrieve the created claimable balance ID from Horizon effects.');
@@ -171,15 +168,13 @@ function displayClaimableBalance(balance: ClaimableBalanceLike): void {
   });
 }
 
-export async function run(
-  params: ClaimableBalanceInspectionParams = {},
-): Promise<void> {
+export async function run(params: ClaimableBalanceInspectionParams = {}): Promise<void> {
   const horizonUrl = process.env.HORIZON_URL || DEFAULT_HORIZON_URL;
   const server = new Horizon.Server(horizonUrl);
 
   const accountId = params.accountId?.trim() || process.env.ACCOUNT_ID?.trim();
-  const claimableBalanceId = params.claimableBalanceId?.trim() ||
-    process.env.CLAIMABLE_BALANCE_ID?.trim();
+  const claimableBalanceId =
+    params.claimableBalanceId?.trim() || process.env.CLAIMABLE_BALANCE_ID?.trim();
   const limit = parseLimit(params.limit || process.env.RESULT_LIMIT);
 
   console.log('Starting Claimable Balance Inspection Example...');
@@ -232,7 +227,9 @@ Inspecting claimable balance ID: ${claimableBalanceId}`);
       );
     }
 
-    console.log(`\nQuerying claimable balances for claimant ${inspectedAccountId} (limit ${limit})...`);
+    console.log(
+      `\nQuerying claimable balances for claimant ${inspectedAccountId} (limit ${limit})...`,
+    );
     const page = await server
       .claimableBalances()
       .claimant(inspectedAccountId)

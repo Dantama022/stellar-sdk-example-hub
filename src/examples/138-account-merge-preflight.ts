@@ -77,7 +77,7 @@ export async function run(params?: any): Promise<void> {
 
   try {
     console.log(chalk.cyan('\nFetching account states from Horizon...'));
-    
+
     // Fetch source and destination accounts concurrently
     const [sourceAccount, destResponse] = await Promise.all([
       server.loadAccount(sourceAccountId),
@@ -101,8 +101,12 @@ export async function run(params?: any): Promise<void> {
     // 1. Inspect Trustlines & Non-native Balances
     const nonNativeBalances = sourceAccount.balances.filter((b: any) => b.asset_type !== 'native');
     if (nonNativeBalances.length > 0) {
-      blockingConditions.push(`Account has ${nonNativeBalances.length} active trustlines / non-native asset balance(s).`);
-      remediationSuggestions.push('Remove all trustlines and clear non-native asset balances before merging.');
+      blockingConditions.push(
+        `Account has ${nonNativeBalances.length} active trustlines / non-native asset balance(s).`,
+      );
+      remediationSuggestions.push(
+        'Remove all trustlines and clear non-native asset balances before merging.',
+      );
     }
 
     // 2. Inspect Open Offers
@@ -115,7 +119,9 @@ export async function run(params?: any): Promise<void> {
     const extraSigners = sourceAccount.signers.filter((s: any) => s.key !== sourceAccountId);
     if (extraSigners.length > 0) {
       blockingConditions.push(`Account has ${extraSigners.length} auxiliary signer(s) configured.`);
-      remediationSuggestions.push('Remove extra signers or reduce their weights/thresholds if required.');
+      remediationSuggestions.push(
+        'Remove extra signers or reduce their weights/thresholds if required.',
+      );
     }
 
     // 4. Inspect Liabilities
@@ -135,14 +141,18 @@ export async function run(params?: any): Promise<void> {
     const numSponsored = (sourceAccount as any).num_sponsored || 0;
     const numSponsoring = (sourceAccount as any).num_sponsoring || 0;
     if (numSponsored > 0 || numSponsoring > 0) {
-      blockingConditions.push(`Active sponsorship state detected (Sponsored: ${numSponsored}, Sponsoring: ${numSponsoring}).`);
-      remediationSuggestions.push('Revoke or end sponsorship relations before executing account merge.');
+      blockingConditions.push(
+        `Active sponsorship state detected (Sponsored: ${numSponsored}, Sponsoring: ${numSponsoring}).`,
+      );
+      remediationSuggestions.push(
+        'Revoke or end sponsorship relations before executing account merge.',
+      );
     }
 
     // Calculate native balance & transferable balance
     const nativeBalanceObj = sourceAccount.balances.find((b: any) => b.asset_type === 'native');
     const xlmBalance = nativeBalanceObj ? nativeBalanceObj.balance : '0';
-    
+
     // Account merge transfers the entire remaining XLM balance to the destination
     const transferableBalance = xlmBalance;
     const isMergeReady = blockingConditions.length === 0;
@@ -175,7 +185,9 @@ export async function run(params?: any): Promise<void> {
     console.log(`  Destination Account: ${destinationAccountId}`);
     console.log(`  XLM Balance:         ${xlmBalance} XLM`);
     console.log(`  Transferable Amount: ${transferableBalance} XLM`);
-    console.log(`  Merge Ready?         ${isMergeReady ? chalk.green('YES ✅') : chalk.red('NO ❌')}`);
+    console.log(
+      `  Merge Ready?         ${isMergeReady ? chalk.green('YES ✅') : chalk.red('NO ❌')}`,
+    );
 
     if (!isMergeReady) {
       console.log(chalk.bold.yellow('\n🚧 Blocking Conditions:'));
@@ -184,12 +196,16 @@ export async function run(params?: any): Promise<void> {
       console.log(chalk.bold.blue('\n💡 Remediation Suggestions:'));
       remediationSuggestions.forEach((r) => console.log(`  - ${r}`));
     } else {
-      console.log(chalk.green('\n✨ Account is fully cleared and ready for merging via AccountMerge operation!'));
+      console.log(
+        chalk.green(
+          '\n✨ Account is fully cleared and ready for merging via AccountMerge operation!',
+        ),
+      );
     }
-
   } catch (error: any) {
     if (error.response?.status === 404) {
-      if (isJson) return console.log(JSON.stringify({ error: 'Source account not found on network.' }));
+      if (isJson)
+        return console.log(JSON.stringify({ error: 'Source account not found on network.' }));
       console.error(chalk.red('\n❌ Source account not found on the network.'));
     } else {
       if (isJson) return console.log(JSON.stringify({ error: error.message }));

@@ -41,12 +41,6 @@ interface TransactionDetails {
   };
 }
 
-interface ComparisonResult {
-  envelope1: TransactionDetails;
-  envelope2: TransactionDetails;
-  differences: string[];
-}
-
 function decodeTransactionEnvelope(envelopeXdr: string): TransactionDetails {
   try {
     // Parse the base64-encoded XDR
@@ -73,7 +67,9 @@ function decodeTransactionEnvelope(envelopeXdr: string): TransactionDetails {
 
     return txDetails;
   } catch (error) {
-    throw new Error(`Failed to decode transaction envelope: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to decode transaction envelope: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -189,7 +185,10 @@ function extractOperationDetails(op: xdr.Operation): Record<string, unknown> {
     const createAccountOp = body.createAccountOp();
     if (createAccountOp) {
       details.destination = Keypair.fromPublicKey(
-        Buffer.from(createAccountOp.destination().accountId().ed25519().toString('hex'), 'hex').toString('base64'),
+        Buffer.from(
+          createAccountOp.destination().accountId().ed25519().toString('hex'),
+          'hex',
+        ).toString('base64'),
       ).publicKey();
       details.startingBalance = createAccountOp.startingBalance().toString();
     }
@@ -197,7 +196,9 @@ function extractOperationDetails(op: xdr.Operation): Record<string, unknown> {
     const paymentOp = body.paymentOp();
     if (paymentOp) {
       details.destination = Keypair.fromPublicKey(
-        Buffer.from(paymentOp.destination().accountId().ed25519().toString('hex'), 'hex').toString('base64'),
+        Buffer.from(paymentOp.destination().accountId().ed25519().toString('hex'), 'hex').toString(
+          'base64',
+        ),
       ).publicKey();
       details.amount = paymentOp.amount().toString();
     }
@@ -224,12 +225,17 @@ function extractNetworkPassphrase(tx: xdr.Transaction): string {
   return 'Network-specific (check context)';
 }
 
-function compareTransactionDetails(details1: TransactionDetails, details2: TransactionDetails): string[] {
+function compareTransactionDetails(
+  details1: TransactionDetails,
+  details2: TransactionDetails,
+): string[] {
   const differences: string[] = [];
 
   // Compare source accounts
   if (details1.sourceAccount !== details2.sourceAccount) {
-    differences.push(`Source Account differs: ${details1.sourceAccount} vs ${details2.sourceAccount}`);
+    differences.push(
+      `Source Account differs: ${details1.sourceAccount} vs ${details2.sourceAccount}`,
+    );
   }
 
   // Compare fees
@@ -350,7 +356,9 @@ export async function run(): Promise<void> {
   console.log(`Source Account: ${details1.sourceAccount}`);
   console.log(`Fee: ${details1.fee} stroops`);
   console.log(`Sequence: ${details1.sequence}`);
-  console.log(`Memo: ${details1.memo.type}${details1.memo.value ? ` - ${details1.memo.value}` : ''}`);
+  console.log(
+    `Memo: ${details1.memo.type}${details1.memo.value ? ` - ${details1.memo.value}` : ''}`,
+  );
   console.log(`Operations: ${details1.operationCount}`);
   console.log(`Signatures: ${details1.signatureCount}`);
   if (details1.timeBounds) {
@@ -362,7 +370,9 @@ export async function run(): Promise<void> {
   console.log(`Source Account: ${details2.sourceAccount}`);
   console.log(`Fee: ${details2.fee} stroops`);
   console.log(`Sequence: ${details2.sequence}`);
-  console.log(`Memo: ${details2.memo.type}${details2.memo.value ? ` - ${details2.memo.value}` : ''}`);
+  console.log(
+    `Memo: ${details2.memo.type}${details2.memo.value ? ` - ${details2.memo.value}` : ''}`,
+  );
   console.log(`Operations: ${details2.operationCount}`);
   console.log(`Signatures: ${details2.signatureCount}`);
   if (details2.timeBounds) {

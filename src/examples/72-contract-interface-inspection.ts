@@ -1,4 +1,4 @@
-import { Contract, contract, xdr, rpc } from '@stellar/stellar-sdk';
+import { contract, xdr, rpc } from '@stellar/stellar-sdk';
 import chalk from 'chalk';
 
 /**
@@ -190,10 +190,7 @@ function displayUnions(entries: xdr.ScSpecEntry[]): void {
         }
         case xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value: {
           const tc = c.tupleCase();
-          const types = tc
-            .type()
-            .map(resolveTypeName)
-            .join(', ');
+          const types = tc.type().map(resolveTypeName).join(', ');
           console.log(`    ${tc.name().toString()}(${chalk.cyan(types)})`);
           break;
         }
@@ -293,9 +290,7 @@ export async function run(params?: { contractId?: string }): Promise<void> {
   // Validate that the provided value looks like a Stellar contract address.
   if (!contractId.startsWith('C') || contractId.length !== 56) {
     console.error(
-      chalk.red(
-        'Error: contract ID must be a 56-character Stellar address starting with "C".',
-      ),
+      chalk.red('Error: contract ID must be a 56-character Stellar address starting with "C".'),
     );
     return;
   }
@@ -311,7 +306,9 @@ export async function run(params?: { contractId?: string }): Promise<void> {
   let wasm: Buffer;
   try {
     wasm = await fetchContractWasm(server, contractId);
-    console.log(chalk.green(`WASM fetched successfully. Size: ${wasm.length.toLocaleString()} bytes.`));
+    console.log(
+      chalk.green(`WASM fetched successfully. Size: ${wasm.length.toLocaleString()} bytes.`),
+    );
   } catch (err: any) {
     // Handle the most common failure modes gracefully so that the example
     // remains useful as a learning resource even when the network is
@@ -370,9 +367,7 @@ export async function run(params?: { contractId?: string }): Promise<void> {
   }
 
   if (spec.entries.length === 0) {
-    console.warn(
-      chalk.yellow('The contract spec is empty — no interface metadata is available.'),
-    );
+    console.warn(chalk.yellow('The contract spec is empty — no interface metadata is available.'));
     return;
   }
 
@@ -402,14 +397,13 @@ export async function run(params?: { contractId?: string }): Promise<void> {
   // knowing the field names and types of those structs or the variant names of
   // those enums.
   // -----------------------------------------------------------------------
-  const hasCustomTypes =
-    spec.entries.some(
-      (e) =>
-        e.switch().value === xdr.ScSpecEntryKind.scSpecEntryUdtStructV0().value ||
-        e.switch().value === xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0().value ||
-        e.switch().value === xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0().value ||
-        e.switch().value === xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value,
-    );
+  const hasCustomTypes = spec.entries.some(
+    (e) =>
+      e.switch().value === xdr.ScSpecEntryKind.scSpecEntryUdtStructV0().value ||
+      e.switch().value === xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0().value ||
+      e.switch().value === xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0().value ||
+      e.switch().value === xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value,
+  );
 
   if (hasCustomTypes) {
     console.log(chalk.bold('\n━━━ User-Defined Types ━━━'));

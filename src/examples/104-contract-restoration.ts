@@ -167,8 +167,7 @@ export async function assessArchiveStatus(
     details.push(`Probe simulation failed: ${err?.message ?? String(err)}`);
   }
 
-  const ttlExpired =
-    liveUntilLedgerSeq !== undefined && liveUntilLedgerSeq < latestLedger;
+  const ttlExpired = liveUntilLedgerSeq !== undefined && liveUntilLedgerSeq < latestLedger;
 
   let status: ArchiveStatus = 'unknown';
   if (simulationNeedsRestore || ttlExpired) {
@@ -188,10 +187,7 @@ export function formatArchiveStatus(assessment: ArchiveAssessment): string {
         ? 'ACCESSIBLE — no restoration needed'
         : 'UNKNOWN — inspect diagnostics below';
 
-  const lines = [
-    `Archive status : ${label}`,
-    `Latest ledger  : ${assessment.latestLedger}`,
-  ];
+  const lines = [`Archive status : ${label}`, `Latest ledger  : ${assessment.latestLedger}`];
   if (assessment.liveUntilLedgerSeq !== undefined) {
     lines.push(`TTL expires at : ledger ${assessment.liveUntilLedgerSeq}`);
   }
@@ -212,12 +208,13 @@ export function describeTtlVsRestoration(): string {
 }
 
 function formatFootprint(footprint: RestorationFootprint): string {
-  return footprint.labels
-    .map((label, index) => `  [${index + 1}] ${label}`)
-    .join('\n');
+  return footprint.labels.map((label, index) => `  [${index + 1}] ${label}`).join('\n');
 }
 
-async function pollForSuccess(server: rpc.Server, hash: string): Promise<rpc.Api.GetTransactionResponse> {
+async function pollForSuccess(
+  server: rpc.Server,
+  hash: string,
+): Promise<rpc.Api.GetTransactionResponse> {
   const response = await server.pollTransaction(hash, { attempts: POLL_ATTEMPTS });
   if (response.status !== rpc.Api.GetTransactionStatus.SUCCESS) {
     throw new Error(`Restoration transaction finished with status ${response.status}`);
@@ -316,10 +313,12 @@ export async function run(params: ContractRestorationParams = {}): Promise<void>
   if (rpc.Api.isSimulationError(restoreSim)) {
     console.log(chalk.red('Restoration simulation failed.'));
     console.log(chalk.gray(restoreSim.error));
-    console.log(chalk.cyan(
-      '\nCommon causes: footprint keys are not archived, invalid contract ID, ' +
-        'or the RPC node rejected the operation. No fees were spent.',
-    ));
+    console.log(
+      chalk.cyan(
+        '\nCommon causes: footprint keys are not archived, invalid contract ID, ' +
+          'or the RPC node rejected the operation. No fees were spent.',
+      ),
+    );
     return;
   }
 
@@ -328,13 +327,15 @@ export async function run(params: ContractRestorationParams = {}): Promise<void>
   console.log(`Estimated restoration resource fee: ${restorationFee} stroops`);
 
   if (assessment.status !== 'archived') {
-    console.log(chalk.cyan(
-      '\nContract is currently accessible — skipping on-chain restoration submission.',
-    ));
-    console.log(chalk.gray(
-      'The simulation above shows the fee and footprint you would pay if the ' +
-        'contract instance and WASM were archived.',
-    ));
+    console.log(
+      chalk.cyan('\nContract is currently accessible — skipping on-chain restoration submission.'),
+    );
+    console.log(
+      chalk.gray(
+        'The simulation above shows the fee and footprint you would pay if the ' +
+          'contract instance and WASM were archived.',
+      ),
+    );
     console.log(chalk.green('\nContract restoration example completed (diagnostics only).'));
     return;
   }

@@ -20,7 +20,12 @@ import {
 interface DemoCase {
   label: string;
   value: unknown;
-  hint: { type: string; element?: { type: string }; key?: { type: string }; value?: { type: string } };
+  hint: {
+    type: string;
+    element?: { type: string };
+    key?: { type: string };
+    value?: { type: string };
+  };
 }
 
 const DEMO_CASES: DemoCase[] = [

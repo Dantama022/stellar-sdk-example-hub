@@ -1,11 +1,4 @@
-import {
-  Keypair,
-  TransactionBuilder,
-  Account,
-  Networks,
-  Horizon,
-  rpc,
-} from '@stellar/stellar-sdk';
+import { Keypair, TransactionBuilder, Account, Networks, Horizon, rpc } from '@stellar/stellar-sdk';
 
 /**
  * Example 155: Network Configuration Validation
@@ -115,7 +108,7 @@ async function probeEndpoint(url: string): Promise<EndpointInfo> {
     endpointInfo.isReachable = response.ok || response.status < 500;
 
     return endpointInfo;
-  } catch (error) {
+  } catch {
     endpointInfo.isReachable = false;
     return endpointInfo;
   }
@@ -171,7 +164,11 @@ function validateNetworkConfiguration(
   }
 
   // Validate that endpoint matches network configuration
-  if (endpointInfo.isReachable && matchedConfig.horizonUrl && matchedConfig.horizonUrl !== endpointInfo.url) {
+  if (
+    endpointInfo.isReachable &&
+    matchedConfig.horizonUrl &&
+    matchedConfig.horizonUrl !== endpointInfo.url
+  ) {
     // Allow both testnet endpoints
     if (
       !(
@@ -179,9 +176,7 @@ function validateNetworkConfiguration(
         (endpointInfo.url.includes('futurenet') && matchedConfig.horizonUrl.includes('futurenet'))
       )
     ) {
-      warnings.push(
-        `Endpoint URL ${endpointInfo.url} may not match network ${matchedConfig.name}`,
-      );
+      warnings.push(`Endpoint URL ${endpointInfo.url} may not match network ${matchedConfig.name}`);
       recommendations.push(`Consider using ${matchedConfig.horizonUrl} instead`);
     }
   }
@@ -216,14 +211,14 @@ function printValidationResult(result: ValidationResult): void {
 
   if (result.warnings.length > 0) {
     console.log('\n⚠️  Warnings:');
-    result.warnings.forEach(warning => {
+    result.warnings.forEach((warning) => {
       console.log(`  - ${warning}`);
     });
   }
 
   if (result.recommendations.length > 0) {
     console.log('\n💡 Recommendations:');
-    result.recommendations.forEach(rec => {
+    result.recommendations.forEach((rec) => {
       console.log(`  - ${rec}`);
     });
   }
@@ -266,10 +261,7 @@ export async function run(): Promise<void> {
   // Example 1: Validate known Test Network endpoint
   console.log('--- Example 1: Test Network Configuration ---');
   const testnetEndpointInfo = await probeEndpoint('https://horizon-testnet.stellar.org');
-  const testnetValidation = validateNetworkConfiguration(
-    testnetEndpointInfo,
-    Networks.TESTNET,
-  );
+  const testnetValidation = validateNetworkConfiguration(testnetEndpointInfo, Networks.TESTNET);
   printValidationResult(testnetValidation);
 
   // Example 2: Validate Public Network endpoint
@@ -300,8 +292,8 @@ export async function run(): Promise<void> {
   const keypair = Keypair.random();
   const sourceAccount = new Account(keypair.publicKey(), '100');
 
-  // Build a transaction for Test Network
-  const tx = new TransactionBuilder(sourceAccount, {
+  // Build a transaction for Test Network (demonstration only — not submitted)
+  void new TransactionBuilder(sourceAccount, {
     fee: '100',
     networkPassphrase: Networks.TESTNET,
   })
@@ -347,7 +339,7 @@ export async function run(): Promise<void> {
   console.log('   Fail fast rather than discovering issues at submission\n');
 
   console.log('4. RECOMMENDED NETWORK ENDPOINTS');
-  Object.entries(KNOWN_NETWORKS).forEach(([key, config]) => {
+  Object.entries(KNOWN_NETWORKS).forEach(([, config]) => {
     console.log(`   ${config.name}:`);
     if (config.horizonUrl) console.log(`     Horizon: ${config.horizonUrl}`);
     if (config.sorobanRpcUrl) console.log(`     Soroban RPC: ${config.sorobanRpcUrl}`);

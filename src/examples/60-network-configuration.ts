@@ -204,14 +204,13 @@ export function resolveNetworkConfiguration(
     process.env.STELLAR_NETWORK || process.env.NETWORK || null,
   );
 
-  const horizonOverride =
-    params.horizonUrl?.trim() || process.env.HORIZON_URL?.trim() || undefined;
+  const horizonOverride = params.horizonUrl?.trim() || process.env.HORIZON_URL?.trim() || undefined;
   const rpcOverride =
     params.sorobanRpcUrl?.trim() || process.env.SOROBAN_RPC_URL?.trim() || undefined;
   const passphraseOverride =
     params.networkPassphrase?.trim() || process.env.NETWORK_PASSPHRASE?.trim() || undefined;
 
-  let network =
+  const network =
     normalizeNetworkName(params.network) ||
     cliNetwork ||
     envNetwork ||
@@ -287,10 +286,7 @@ export function buildDemoPaymentTransaction(
 /**
  * Explain why a transaction signed for one network cannot be submitted to another.
  */
-export function explainNetworkSignatureBinding(
-  testnetHash: string,
-  mainnetHash: string,
-): string {
+export function explainNetworkSignatureBinding(testnetHash: string, mainnetHash: string): string {
   const lines = [
     '=== Why network passphrases matter for signatures ===',
     '',

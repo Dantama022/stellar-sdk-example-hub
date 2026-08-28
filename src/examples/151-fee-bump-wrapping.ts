@@ -99,7 +99,9 @@ export function decodeInnerTransaction(
   try {
     const decoded = TransactionBuilder.fromXDR(encodedEnvelope.trim(), networkPassphrase);
     if (!(decoded instanceof Transaction)) {
-      throw new Error('Expected a standard Transaction envelope, but received a fee-bump envelope.');
+      throw new Error(
+        'Expected a standard Transaction envelope, but received a fee-bump envelope.',
+      );
     }
     return decoded;
   } catch (error) {
@@ -246,16 +248,26 @@ export function formatFeeBumpReport(report: FeeBumpReport): string {
 
 export async function run(params: FeeBumpWrappingParams = {}): Promise<void> {
   const encodedEnvelope =
-    params.innerEnvelope?.trim() || process.env.INNER_ENVELOPE_XDR?.trim() || process.argv[3]?.trim();
+    params.innerEnvelope?.trim() ||
+    process.env.INNER_ENVELOPE_XDR?.trim() ||
+    process.argv[3]?.trim();
   const feeSourceAccount =
-    params.feeSourceAccount?.trim() || process.env.FEE_SOURCE_ACCOUNT?.trim() || process.argv[4]?.trim();
-  const bumpFee = params.bumpFee?.trim() || process.env.FEE_BUMP_BASE_FEE?.trim() || process.argv[5]?.trim() || DEFAULT_BUMP_FEE;
+    params.feeSourceAccount?.trim() ||
+    process.env.FEE_SOURCE_ACCOUNT?.trim() ||
+    process.argv[4]?.trim();
+  const bumpFee =
+    params.bumpFee?.trim() ||
+    process.env.FEE_BUMP_BASE_FEE?.trim() ||
+    process.argv[5]?.trim() ||
+    DEFAULT_BUMP_FEE;
   const json = wantsJson(params);
   const dryRun = wantsDryRun(params);
 
   try {
     if (!dryRun) {
-      throw new Error('Submission is intentionally disabled; use dry-run mode to inspect and sign safely.');
+      throw new Error(
+        'Submission is intentionally disabled; use dry-run mode to inspect and sign safely.',
+      );
     }
     if (!encodedEnvelope) throw new Error('Provide a base64-encoded inner transaction envelope.');
     if (!feeSourceAccount) throw new Error('Provide an existing fee-source account ID.');
@@ -276,7 +288,10 @@ export async function run(params: FeeBumpWrappingParams = {}): Promise<void> {
     else console.log(formatFeeBumpReport(report));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (json) console.log(JSON.stringify({ error: 'Unable to wrap fee-bump transaction', message }, null, 2));
+    if (json)
+      console.log(
+        JSON.stringify({ error: 'Unable to wrap fee-bump transaction', message }, null, 2),
+      );
     else console.error(`Unable to wrap fee-bump transaction: ${message}`);
   }
 }

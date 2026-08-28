@@ -66,7 +66,7 @@ function buildInvokeTx(
  * a variant in the contract's #[contracterror] enum.
  */
 function decodeScError(err: xdr.ScError): string {
-  const typeName: string = err.switch().name;  // e.g. 'sceContract', 'sceWasmVm'
+  const typeName: string = err.switch().name; // e.g. 'sceContract', 'sceWasmVm'
 
   // Contract-defined errors carry a u32 code that maps to the contract's
   // own error enum.  The code is in err.contractCode() for ScErrorType.sceContract.
@@ -77,7 +77,7 @@ function decodeScError(err: xdr.ScError): string {
 
   // All other error types (host, wasm, value, auth, context, etc.) carry an
   // ScErrorCode instead.  The code name is self-describing.
-  const codeName: string = err.code().name;   // e.g. 'scecArithDomain', 'scecInvalidInput'
+  const codeName: string = err.code().name; // e.g. 'scecArithDomain', 'scecInvalidInput'
   return `Host error  type=${typeName}  code=${codeName}`;
 }
 
@@ -121,10 +121,12 @@ async function waitForTransaction(
  */
 function demonstratePreflightErrors(): void {
   console.log(chalk.bold('\n━━━ Category A: Pre-flight / SDK Validation Errors ━━━'));
-  console.log(chalk.gray(
-    '  These are thrown synchronously — no network involved.\n' +
-    '  Cause: passing the wrong JS type or an out-of-range value to nativeToScVal.\n',
-  ));
+  console.log(
+    chalk.gray(
+      '  These are thrown synchronously — no network involved.\n' +
+        '  Cause: passing the wrong JS type or an out-of-range value to nativeToScVal.\n',
+    ),
+  );
 
   // A-1: String passed where a number is required
   try {
@@ -144,20 +146,26 @@ function demonstratePreflightErrors(): void {
   try {
     nativeToScVal('GBADADDRESS', { type: 'address' });
   } catch (err: any) {
-    console.log(chalk.green(`  ✓ A-3 Invalid address → ${err.constructor.name}: ${err.message.slice(0, 72)}`));
+    console.log(
+      chalk.green(`  ✓ A-3 Invalid address → ${err.constructor.name}: ${err.message.slice(0, 72)}`),
+    );
   }
 
   // A-4: null for a non-optional field
   try {
     nativeToScVal(null as unknown as number, { type: 'u32' });
   } catch (err: any) {
-    console.log(chalk.green(`  ✓ A-4 null for non-optional → ${err.constructor.name}: ${err.message}`));
+    console.log(
+      chalk.green(`  ✓ A-4 null for non-optional → ${err.constructor.name}: ${err.message}`),
+    );
   }
 
-  console.log(chalk.gray(
-    '\n  Remedy: validate types and ranges in your application code before calling\n' +
-    '  nativeToScVal(). These errors never surface as RPC errors.',
-  ));
+  console.log(
+    chalk.gray(
+      '\n  Remedy: validate types and ranges in your application code before calling\n' +
+        '  nativeToScVal(). These errors never surface as RPC errors.',
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -185,10 +193,12 @@ async function demonstrateSimulationErrors(
   callerPublicKey: string,
 ): Promise<void> {
   console.log(chalk.bold('\n━━━ Category B: Simulation Failures ━━━'));
-  console.log(chalk.gray(
-    '  simulateTransaction returns an error response — no exception thrown.\n' +
-    '  Detect with: rpc.Api.isSimulationError(simResult)\n',
-  ));
+  console.log(
+    chalk.gray(
+      '  simulateTransaction returns an error response — no exception thrown.\n' +
+        '  Detect with: rpc.Api.isSimulationError(simResult)\n',
+    ),
+  );
 
   // ── B-1: Non-existent contract ────────────────────────────────────────────
   console.log(chalk.yellow('  B-1: Calling a contract that is not deployed…'));
@@ -233,19 +243,18 @@ async function demonstrateSimulationErrors(
   {
     const sacId = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
     // balance(id: Address) — but we pass scvSymbol("bad_arg") instead
-    const tx = buildInvokeTx(
-      sacId,
-      'balance',
-      [xdr.ScVal.scvSymbol('bad_arg')],
-      callerPublicKey,
-    );
+    const tx = buildInvokeTx(sacId, 'balance', [xdr.ScVal.scvSymbol('bad_arg')], callerPublicKey);
 
     const sim = await server.simulateTransaction(tx);
 
     if (rpc.Api.isSimulationError(sim)) {
       const brief = sim.error.split('\n')[0].slice(0, 120);
       console.log(chalk.red(`    ✗ Simulation error: ${brief}`));
-      console.log(chalk.cyan('    Remedy: use nativeToScVal(addr, { type: "address" }) for Address arguments.'));
+      console.log(
+        chalk.cyan(
+          '    Remedy: use nativeToScVal(addr, { type: "address" }) for Address arguments.',
+        ),
+      );
     } else {
       console.log(chalk.gray('    (Simulation unexpectedly succeeded)'));
     }
@@ -255,13 +264,15 @@ async function demonstrateSimulationErrors(
   // A SimulateTransactionRestoreResponse has both success fields AND a
   // restorePreamble.  It means the simulation ran successfully but requires
   // a preceding RestoreFootprint transaction before submission.
-  console.log(chalk.gray(
-    '\n  B-4 (conceptual): When rpc.Api.isSimulationRestore(sim) is true,\n' +
-    '  a ledger entry the contract needs has expired.  You must submit a\n' +
-    '  RestoreFootprint transaction first, then retry the original call.\n' +
-    '  The sim.restorePreamble.transactionData field contains the footprint\n' +
-    '  to restore.  Use rpc.assembleTransaction() with that data to build it.',
-  ));
+  console.log(
+    chalk.gray(
+      '\n  B-4 (conceptual): When rpc.Api.isSimulationRestore(sim) is true,\n' +
+        '  a ledger entry the contract needs has expired.  You must submit a\n' +
+        '  RestoreFootprint transaction first, then retry the original call.\n' +
+        '  The sim.restorePreamble.transactionData field contains the footprint\n' +
+        '  to restore.  Use rpc.assembleTransaction() with that data to build it.',
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -286,15 +297,14 @@ async function demonstrateSimulationErrors(
  * the transaction reaches a ledger, while Category D failures happen during
  * ledger application after the transaction was accepted.
  */
-async function demonstrateSubmissionError(
-  server: rpc.Server,
-  keypair: Keypair,
-): Promise<void> {
+async function demonstrateSubmissionError(server: rpc.Server, keypair: Keypair): Promise<void> {
   console.log(chalk.bold('\n━━━ Category C: Transaction Submission Error ━━━'));
-  console.log(chalk.gray(
-    '  sendTransaction returns status="ERROR" when the RPC node rejects the envelope.\n' +
-    '  Detect with: response.status === "ERROR"\n',
-  ));
+  console.log(
+    chalk.gray(
+      '  sendTransaction returns status="ERROR" when the RPC node rejects the envelope.\n' +
+        '  Detect with: response.status === "ERROR"\n',
+    ),
+  );
 
   // Build a transaction that is not simulation-assembled (no resource footprint).
   // Submitting a Soroban invoke without assembling it will fail with a bad auth
@@ -307,7 +317,9 @@ async function demonstrateSubmissionError(
   // This will be rejected at the submission gate.
   tx.sign(keypair);
 
-  console.log(chalk.yellow('  Submitting a transaction without assembling (no Soroban resource data)…'));
+  console.log(
+    chalk.yellow('  Submitting a transaction without assembling (no Soroban resource data)…'),
+  );
   const sendResp = await server.sendTransaction(tx);
 
   if (sendResp.status === 'ERROR') {
@@ -326,15 +338,23 @@ async function demonstrateSubmissionError(
       console.log(`    Diagnostic events: ${sendResp.diagnosticEvents.length} event(s) attached`);
     }
 
-    console.log(chalk.cyan(
-      '    Remedy: always simulate first with server.simulateTransaction() and\n' +
-      '    assemble with rpc.assembleTransaction() before signing and submitting.',
-    ));
+    console.log(
+      chalk.cyan(
+        '    Remedy: always simulate first with server.simulateTransaction() and\n' +
+          '    assemble with rpc.assembleTransaction() before signing and submitting.',
+      ),
+    );
   } else if (sendResp.status === 'PENDING' || sendResp.status === 'DUPLICATE') {
     // The node accepted it even without assembly — report and move on
-    console.log(chalk.gray(`  Submission status: ${sendResp.status} (accepted; skipping submission error demo)`));
+    console.log(
+      chalk.gray(
+        `  Submission status: ${sendResp.status} (accepted; skipping submission error demo)`,
+      ),
+    );
   } else if (sendResp.status === 'TRY_AGAIN_LATER') {
-    console.log(chalk.yellow('  Node is busy (TRY_AGAIN_LATER). Retry the send after a short delay.'));
+    console.log(
+      chalk.yellow('  Node is busy (TRY_AGAIN_LATER). Retry the send after a short delay.'),
+    );
   }
 }
 
@@ -359,26 +379,25 @@ async function demonstrateSubmissionError(
  * using a transaction that we know will fail due to authorization: calling
  * transfer() on the native SAC without the required signature authorisation.
  */
-async function demonstrateExecutionFailure(
-  server: rpc.Server,
-  keypair: Keypair,
-): Promise<void> {
+async function demonstrateExecutionFailure(server: rpc.Server, keypair: Keypair): Promise<void> {
   console.log(chalk.bold('\n━━━ Category D: Transaction Execution Failure ━━━'));
-  console.log(chalk.gray(
-    '  sendTransaction → PENDING, then getTransaction → FAILED.\n' +
-    '  Detect with: resp.status === GetTransactionStatus.FAILED\n',
-  ));
+  console.log(
+    chalk.gray(
+      '  sendTransaction → PENDING, then getTransaction → FAILED.\n' +
+        '  Detect with: resp.status === GetTransactionStatus.FAILED\n',
+    ),
+  );
 
   const sacId = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
-  const dest  = Keypair.random().publicKey();
+  const dest = Keypair.random().publicKey();
 
   // Transfer requires the "from" account to have authorised the invocation via
   // a SorobanAuthorizationEntry.  We intentionally omit that authorisation so
   // the on-chain execution fails with an auth error.
   const args = [
     nativeToScVal(keypair.publicKey(), { type: 'address' }), // from
-    nativeToScVal(dest,                { type: 'address' }), // to
-    nativeToScVal(BigInt('1'),         { type: 'i128'    }), // amount
+    nativeToScVal(dest, { type: 'address' }), // to
+    nativeToScVal(BigInt('1'), { type: 'i128' }), // amount
   ];
 
   let tx = buildInvokeTx(sacId, 'transfer', args, keypair.publicKey());
@@ -390,27 +409,31 @@ async function demonstrateExecutionFailure(
     // Auth errors on transfers often surface at simulation time as well.
     const brief = sim.error.split('\n')[0].slice(0, 120);
     console.log(chalk.red(`  ✗ Simulation-level auth error (Category B/D overlap): ${brief}`));
-    console.log(chalk.gray(
-      '  This contract enforces authorisation at simulation time.\n' +
-      '  The pattern below still applies when the error reaches execution.',
-    ));
+    console.log(
+      chalk.gray(
+        '  This contract enforces authorisation at simulation time.\n' +
+          '  The pattern below still applies when the error reaches execution.',
+      ),
+    );
 
     // Show how you would decode a FAILED getTransaction response.
-    console.log(chalk.gray(
-      '\n  Decoding a GetFailedTransactionResponse:\n' +
-      '  ─────────────────────────────────────────\n' +
-      '  const result = resp.resultXdr;  // xdr.TransactionResult\n' +
-      '  const txCode = result.result().switch().name;  // e.g. "txFailed"\n' +
-      '\n' +
-      '  if (txCode === "txFailed") {\n' +
-      '    const opResults = result.result().results() ?? [];\n' +
-      '    opResults.forEach((op, i) => {\n' +
-      '      // For InvokeHostFunction: op.tr().invokeHostFunctionResult()\n' +
-      '      const opCode = op.switch().name;  // "opInner" when op ran\n' +
-      '      console.log(`Op[${i}]: ${opCode}`);\n' +
-      '    });\n' +
-      '  }',
-    ));
+    console.log(
+      chalk.gray(
+        '\n  Decoding a GetFailedTransactionResponse:\n' +
+          '  ─────────────────────────────────────────\n' +
+          '  const result = resp.resultXdr;  // xdr.TransactionResult\n' +
+          '  const txCode = result.result().switch().name;  // e.g. "txFailed"\n' +
+          '\n' +
+          '  if (txCode === "txFailed") {\n' +
+          '    const opResults = result.result().results() ?? [];\n' +
+          '    opResults.forEach((op, i) => {\n' +
+          '      // For InvokeHostFunction: op.tr().invokeHostFunctionResult()\n' +
+          '      const opCode = op.switch().name;  // "opInner" when op ran\n' +
+          '      console.log(`Op[${i}]: ${opCode}`);\n' +
+          '    });\n' +
+          '  }',
+      ),
+    );
     return;
   }
 
@@ -425,7 +448,9 @@ async function demonstrateExecutionFailure(
     // Rejected at submission gate (also a valid outcome for missing auth)
     const code = sendResp.errorResult?.result().switch().name ?? 'unknown';
     console.log(chalk.red(`  ✗ Submission error: ${code}`));
-    console.log(chalk.cyan('    Remedy: include SorobanAuthorizationEntry signed by the "from" account.'));
+    console.log(
+      chalk.cyan('    Remedy: include SorobanAuthorizationEntry signed by the "from" account.'),
+    );
     return;
   }
 
@@ -479,7 +504,9 @@ async function demonstrateExecutionFailure(
       console.log(`    Diagnostic events: ${finalResp.diagnosticEventsXdr.length} event(s)`);
     }
 
-    console.log(chalk.cyan('    Remedy: include the required SorobanAuthorizationEntry for transfer().'));
+    console.log(
+      chalk.cyan('    Remedy: include the required SorobanAuthorizationEntry for transfer().'),
+    );
   } else if (finalResp.status === rpc.Api.GetTransactionStatus.SUCCESS) {
     console.log(chalk.green('  Transaction succeeded (auth was not required in this context).'));
   }
@@ -507,11 +534,13 @@ async function demonstrateExecutionFailure(
  */
 function demonstrateContractApplicationError(): void {
   console.log(chalk.bold('\n━━━ Category E: Contract Application Error (scvError) ━━━'));
-  console.log(chalk.gray(
-    '  A contract may return scvError to signal a domain-level failure.\n' +
-    '  This is different from a simulation failure — the RPC call "succeeded"\n' +
-    '  but the contract itself signals an error via its return value.\n',
-  ));
+  console.log(
+    chalk.gray(
+      '  A contract may return scvError to signal a domain-level failure.\n' +
+        '  This is different from a simulation failure — the RPC call "succeeded"\n' +
+        '  but the contract itself signals an error via its return value.\n',
+    ),
+  );
 
   // ── E-1: Construct example scvError values to show the wire format ─────────
   // ScError is a struct with two fields:
@@ -531,17 +560,19 @@ function demonstrateContractApplicationError(): void {
   console.log(`    Contract code: ${chalk.yellow(String(errScVal.error().contractCode()))}`);
 
   // ── E-2: Detection pattern in a simulation result ─────────────────────────
-  console.log(chalk.gray(
-    '\n  Detection pattern in simulation results:\n' +
-    '  ──────────────────────────────────────────\n' +
-    '  if (!rpc.Api.isSimulationError(sim) && sim.result?.retval) {\n' +
-    '    const retval = sim.result.retval;\n' +
-    '    if (retval.switch().value === xdr.ScValType.scvError().value) {\n' +
-    '      const scErr = retval.error();\n' +
-    '      console.log(decodeScError(scErr));\n' +
-    '    }\n' +
-    '  }',
-  ));
+  console.log(
+    chalk.gray(
+      '\n  Detection pattern in simulation results:\n' +
+        '  ──────────────────────────────────────────\n' +
+        '  if (!rpc.Api.isSimulationError(sim) && sim.result?.retval) {\n' +
+        '    const retval = sim.result.retval;\n' +
+        '    if (retval.switch().value === xdr.ScValType.scvError().value) {\n' +
+        '      const scErr = retval.error();\n' +
+        '      console.log(decodeScError(scErr));\n' +
+        '    }\n' +
+        '  }',
+    ),
+  );
 
   // ── E-3: Decode and map codes to human-readable messages ──────────────────
   console.log('\n  Decoding contract error codes:');
@@ -569,13 +600,15 @@ function demonstrateContractApplicationError(): void {
   console.log(`\n  Host value error: ${chalk.yellow(decodeScError(hostErr))}`);
   console.log(chalk.gray('  (Arithmetic domain errors occur e.g. on division by zero)'));
 
-  console.log(chalk.cyan(
-    '\n  Recommended pattern:\n' +
-    '  1. Fetch the contract ScSpec (see example 72).\n' +
-    '  2. Build a map from error code number → name/doc using spec.errorCases().\n' +
-    '  3. After simulation or getTransaction, check retval.switch() === scvError,\n' +
-    '     extract retval.error().contractCode(), and look up the message.',
-  ));
+  console.log(
+    chalk.cyan(
+      '\n  Recommended pattern:\n' +
+        '  1. Fetch the contract ScSpec (see example 72).\n' +
+        '  2. Build a map from error code number → name/doc using spec.errorCases().\n' +
+        '  3. After simulation or getTransaction, check retval.switch() === scvError,\n' +
+        '     extract retval.error().contractCode(), and look up the message.',
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -618,28 +651,38 @@ async function demonstrateNetworkError(): Promise<void> {
       err?.code === 'ECONNREFUSED';
 
     if (isNetworkErr) {
-      console.log(chalk.green(`  ✓ F-1 Network error caught → ${err.constructor.name}: ${err.message.slice(0, 80)}`));
+      console.log(
+        chalk.green(
+          `  ✓ F-1 Network error caught → ${err.constructor.name}: ${err.message.slice(0, 80)}`,
+        ),
+      );
     } else {
       // Some environments throw a different error type; still caught
-      console.log(chalk.green(`  ✓ F-1 Error caught → ${err.constructor.name}: ${err.message?.slice(0, 80) ?? String(err)}`));
+      console.log(
+        chalk.green(
+          `  ✓ F-1 Error caught → ${err.constructor.name}: ${err.message?.slice(0, 80) ?? String(err)}`,
+        ),
+      );
     }
   }
 
-  console.log(chalk.gray(
-    '\n  Recommended handling pattern:\n' +
-    '  try {\n' +
-    '    const result = await server.simulateTransaction(tx);\n' +
-    '    // … handle result\n' +
-    '  } catch (err) {\n' +
-    '    if (err?.message?.includes("fetch") || err?.code === "ECONNREFUSED") {\n' +
-    '      // Network unreachable — retry with back-off\n' +
-    '    } else if (err?.response?.status === 429) {\n' +
-    '      // Rate limited — wait and retry\n' +
-    '    } else {\n' +
-    '      // Unknown — log and surface to the user\n' +
-    '    }\n' +
-    '  }',
-  ));
+  console.log(
+    chalk.gray(
+      '\n  Recommended handling pattern:\n' +
+        '  try {\n' +
+        '    const result = await server.simulateTransaction(tx);\n' +
+        '    // … handle result\n' +
+        '  } catch (err) {\n' +
+        '    if (err?.message?.includes("fetch") || err?.code === "ECONNREFUSED") {\n' +
+        '      // Network unreachable — retry with back-off\n' +
+        '    } else if (err?.response?.status === 429) {\n' +
+        '      // Rate limited — wait and retry\n' +
+        '    } else {\n' +
+        '      // Unknown — log and surface to the user\n' +
+        '    }\n' +
+        '  }',
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -656,7 +699,7 @@ async function demonstrateSuccess(server: rpc.Server, callerPublicKey: string): 
 
   const sacId = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
   const idArg = nativeToScVal(callerPublicKey, { type: 'address' });
-  const tx    = buildInvokeTx(sacId, 'balance', [idArg], callerPublicKey);
+  const tx = buildInvokeTx(sacId, 'balance', [idArg], callerPublicKey);
 
   const sim = await server.simulateTransaction(tx);
 
@@ -668,12 +711,14 @@ async function demonstrateSuccess(server: rpc.Server, callerPublicKey: string): 
   const retval = sim.result?.retval;
   const retvalType = retval?.switch().name ?? 'void';
   console.log(chalk.green(`  ✓ Simulation success — retval type: ${retvalType}`));
-  console.log(chalk.gray(
-    '  A SUCCESS path has:\n' +
-    '    rpc.Api.isSimulationError(sim)   → false\n' +
-    '    rpc.Api.isSimulationSuccess(sim) → true\n' +
-    '    sim.result.retval.switch().name  → (not scvError)',
-  ));
+  console.log(
+    chalk.gray(
+      '  A SUCCESS path has:\n' +
+        '    rpc.Api.isSimulationError(sim)   → false\n' +
+        '    rpc.Api.isSimulationSuccess(sim) → true\n' +
+        '    sim.result.retval.switch().name  → (not scvError)',
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -735,7 +780,11 @@ export async function run(): Promise<void> {
     if (funded) {
       console.log(chalk.green(`Funded: ${keypair.publicKey()}`));
     } else {
-      console.log(chalk.yellow(`Friendbot returned ${fundRes.status} — live tests will proceed with best-effort.`));
+      console.log(
+        chalk.yellow(
+          `Friendbot returned ${fundRes.status} — live tests will proceed with best-effort.`,
+        ),
+      );
     }
   } catch (err: any) {
     console.log(chalk.yellow(`Friendbot unreachable (${err.message?.slice(0, 60)}). Continuing…`));
@@ -778,24 +827,26 @@ export async function run(): Promise<void> {
 
   // ── Summary ───────────────────────────────────────────────────────────────
   console.log(chalk.bold.green('\n━━━ Error Handling Decision Tree ━━━'));
-  console.log(chalk.cyan(
-    '  Before any network call:\n' +
-    '    try { nativeToScVal(...) } catch (e) { /* Category A */ }\n' +
-    '\n' +
-    '  After simulateTransaction(tx):\n' +
-    '    if (rpc.Api.isSimulationRestore(sim))  → Category B-4: restore first\n' +
-    '    if (rpc.Api.isSimulationError(sim))    → Category B:   fix invocation\n' +
-    '    if (sim.result.retval.switch() === scvError) → Category E: app error\n' +
-    '\n' +
-    '  After sendTransaction(tx):\n' +
-    '    if (status === "ERROR")          → Category C: fix envelope\n' +
-    '    if (status === "TRY_AGAIN_LATER")→ retry with back-off\n' +
-    '    if (status === "PENDING")        → poll getTransaction(hash)\n' +
-    '\n' +
-    '  After getTransaction(hash):\n' +
-    '    if (status === FAILED)           → Category D: decode resultXdr\n' +
-    '    if (status === SUCCESS && retval.switch() === scvError) → Category E\n' +
-    '\n' +
-    '  Caught exception from any RPC call → Category F: network/transport',
-  ));
+  console.log(
+    chalk.cyan(
+      '  Before any network call:\n' +
+        '    try { nativeToScVal(...) } catch (e) { /* Category A */ }\n' +
+        '\n' +
+        '  After simulateTransaction(tx):\n' +
+        '    if (rpc.Api.isSimulationRestore(sim))  → Category B-4: restore first\n' +
+        '    if (rpc.Api.isSimulationError(sim))    → Category B:   fix invocation\n' +
+        '    if (sim.result.retval.switch() === scvError) → Category E: app error\n' +
+        '\n' +
+        '  After sendTransaction(tx):\n' +
+        '    if (status === "ERROR")          → Category C: fix envelope\n' +
+        '    if (status === "TRY_AGAIN_LATER")→ retry with back-off\n' +
+        '    if (status === "PENDING")        → poll getTransaction(hash)\n' +
+        '\n' +
+        '  After getTransaction(hash):\n' +
+        '    if (status === FAILED)           → Category D: decode resultXdr\n' +
+        '    if (status === SUCCESS && retval.switch() === scvError) → Category E\n' +
+        '\n' +
+        '  Caught exception from any RPC call → Category F: network/transport',
+    ),
+  );
 }

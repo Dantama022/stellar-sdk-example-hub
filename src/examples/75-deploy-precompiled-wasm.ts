@@ -97,9 +97,7 @@ async function submitAndPoll(
   const finalResp = await server.pollTransaction(sendResp.hash, { attempts: 30 });
 
   if (finalResp.status !== rpc.Api.GetTransactionStatus.SUCCESS) {
-    throw new Error(
-      `Transaction ${sendResp.hash} finished with status: ${finalResp.status}`,
-    );
+    throw new Error(`Transaction ${sendResp.hash} finished with status: ${finalResp.status}`);
   }
 
   return simulation;
@@ -120,10 +118,12 @@ function loadAndValidateWasm(filePath: string): Buffer | null {
   // Check existence
   if (!fs.existsSync(filePath)) {
     console.error(chalk.red(`  Error: WASM file not found at: ${filePath}`));
-    console.error(chalk.gray(
-      '  Place a compiled .wasm artifact at the path above, or pass a custom\n' +
-      '  path via the WASM_PATH environment variable.',
-    ));
+    console.error(
+      chalk.gray(
+        '  Place a compiled .wasm artifact at the path above, or pass a custom\n' +
+          '  path via the WASM_PATH environment variable.',
+      ),
+    );
     return null;
   }
 
@@ -144,12 +144,14 @@ function loadAndValidateWasm(filePath: string): Buffer | null {
   // Validate WebAssembly magic number: \0asm
   const WASM_MAGIC = Buffer.from([0x00, 0x61, 0x73, 0x6d]);
   if (buf.length < 4 || !buf.slice(0, 4).equals(WASM_MAGIC)) {
-    console.error(chalk.red(
-      `  Error: File does not start with the WebAssembly magic number (\\0asm).\n` +
-      `  Got: 0x${buf.slice(0, 4).toString('hex').toUpperCase()}\n` +
-      `  Expected: 0x${WASM_MAGIC.toString('hex').toUpperCase()}\n` +
-      `  The file may be corrupted, truncated, or not a compiled WASM binary.`,
-    ));
+    console.error(
+      chalk.red(
+        `  Error: File does not start with the WebAssembly magic number (\\0asm).\n` +
+          `  Got: 0x${buf.slice(0, 4).toString('hex').toUpperCase()}\n` +
+          `  Expected: 0x${WASM_MAGIC.toString('hex').toUpperCase()}\n` +
+          `  The file may be corrupted, truncated, or not a compiled WASM binary.`,
+      ),
+    );
     return null;
   }
 
@@ -179,10 +181,12 @@ async function verifyDeployment(server: rpc.Server, contractId: string): Promise
   const resp = await server.getLedgerEntries(instanceKey);
 
   if (!resp.entries || resp.entries.length === 0) {
-    console.warn(chalk.yellow(
-      '  Warning: getLedgerEntries returned no entries for the deployed contract.\n' +
-      '  The contract may have been archived or the ledger state has not yet propagated.',
-    ));
+    console.warn(
+      chalk.yellow(
+        '  Warning: getLedgerEntries returned no entries for the deployed contract.\n' +
+          '  The contract may have been archived or the ledger state has not yet propagated.',
+      ),
+    );
     return;
   }
 
@@ -259,11 +263,13 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
   console.log(chalk.green(`  ✓ WASM loaded.`));
   console.log(`    File size:    ${wasmSize.toLocaleString()} bytes`);
   console.log(`    SHA-256 hash: ${localHash.toString('hex')}`);
-  console.log(chalk.gray(
-    '\n  The SHA-256 hash is the on-chain key for the ContractCode ledger entry.\n' +
-    '  The network stores the binary exactly once under this key regardless of\n' +
-    '  how many contracts reference it.',
-  ));
+  console.log(
+    chalk.gray(
+      '\n  The SHA-256 hash is the on-chain key for the ContractCode ledger entry.\n' +
+        '  The network stores the binary exactly once under this key regardless of\n' +
+        '  how many contracts reference it.',
+    ),
+  );
 
   // ── Step 2: Fund a deployer account ──────────────────────────────────────
   console.log(chalk.yellow('\nStep 2: Funding deployer account via Friendbot…'));
@@ -273,10 +279,12 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
 
   const fundRes = await fetch(`https://friendbot.stellar.org/?addr=${deployer.publicKey()}`);
   if (!fundRes.ok) {
-    console.error(chalk.red(
-      `  Friendbot returned HTTP ${fundRes.status}.\n` +
-      '  The Testnet faucet may be rate-limited. Wait a moment and retry.',
-    ));
+    console.error(
+      chalk.red(
+        `  Friendbot returned HTTP ${fundRes.status}.\n` +
+          '  The Testnet faucet may be rate-limited. Wait a moment and retry.',
+      ),
+    );
     return;
   }
   console.log(chalk.green('  ✓ Deployer funded with XLM.'));
@@ -295,10 +303,12 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
   // entry.  The simulation will still succeed and the same hash will be
   // returned.
   console.log(chalk.yellow('\nStep 3: Uploading WASM to the network…'));
-  console.log(chalk.gray(
-    '  This creates a ContractCode ledger entry keyed by the WASM hash.\n' +
-    '  Multiple contracts can share code by referencing the same hash.',
-  ));
+  console.log(
+    chalk.gray(
+      '  This creates a ContractCode ledger entry keyed by the WASM hash.\n' +
+        '  Multiple contracts can share code by referencing the same hash.',
+    ),
+  );
 
   let uploadSim: rpc.Api.SimulateTransactionResponse;
   try {
@@ -311,10 +321,12 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
   } catch (err: any) {
     console.error(chalk.red(`\n  Upload failed: ${err.message}`));
     if (err.message?.includes('ExceededLimit') || err.message?.includes('too large')) {
-      console.error(chalk.gray(
-        '  The WASM binary exceeds the network size limit.\n' +
-        '  Try a smaller contract or split the code across multiple uploads.',
-      ));
+      console.error(
+        chalk.gray(
+          '  The WASM binary exceeds the network size limit.\n' +
+            '  Try a smaller contract or split the code across multiple uploads.',
+        ),
+      );
     }
     return;
   }
@@ -336,10 +348,12 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
   if (hashMatch) {
     console.log(chalk.green('    Hash matches local SHA-256 computation ✓'));
   } else {
-    console.warn(chalk.yellow(
-      `    Warning: installed hash (${installedHash.toString('hex')}) ` +
-      `differs from local hash (${localHash.toString('hex')}).`,
-    ));
+    console.warn(
+      chalk.yellow(
+        `    Warning: installed hash (${installedHash.toString('hex')}) ` +
+          `differs from local hash (${localHash.toString('hex')}).`,
+      ),
+    );
   }
 
   // ── Step 4: Deploy a contract instance ───────────────────────────────────
@@ -355,11 +369,13 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
   // because the simulation would detect the collision and the submission would
   // be idempotent for the same deployer+salt+wasmHash combination.
   console.log(chalk.yellow('\nStep 4: Deploying contract instance…'));
-  console.log(chalk.gray(
-    '  This creates a ContractData (instance) ledger entry that points\n' +
-    '  at the uploaded WASM hash.\n' +
-    '  ContractID = hash(networkPassphrase + deployerAddress + salt + wasmHash)',
-  ));
+  console.log(
+    chalk.gray(
+      '  This creates a ContractData (instance) ledger entry that points\n' +
+        '  at the uploaded WASM hash.\n' +
+        '  ContractID = hash(networkPassphrase + deployerAddress + salt + wasmHash)',
+    ),
+  );
 
   let deploySim: rpc.Api.SimulateTransactionResponse;
   try {
@@ -376,10 +392,12 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
   } catch (err: any) {
     console.error(chalk.red(`\n  Deploy failed: ${err.message}`));
     if (err.message?.includes('already exists') || err.message?.includes('EXISTING')) {
-      console.error(chalk.gray(
-        '  A contract with this deployer+salt combination already exists.\n' +
-        '  Change DEPLOY_SALT or use a different deployer keypair to deploy a new instance.',
-      ));
+      console.error(
+        chalk.gray(
+          '  A contract with this deployer+salt combination already exists.\n' +
+            '  Change DEPLOY_SALT or use a different deployer keypair to deploy a new instance.',
+        ),
+      );
     }
     return;
   }
@@ -394,18 +412,22 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
   try {
     contractId = Address.fromScVal(deploySim.result.retval).toString();
   } catch (err: any) {
-    console.error(chalk.red(`  Could not decode contract address from return value: ${err.message}`));
+    console.error(
+      chalk.red(`  Could not decode contract address from return value: ${err.message}`),
+    );
     return;
   }
 
   console.log(chalk.green('  ✓ Contract deployed successfully.'));
   console.log(`    Contract ID: ${chalk.cyan(contractId)}`);
-  console.log(chalk.gray(
-    '\n  How to use this contract ID:\n' +
-    '    const contract = new Contract(contractId);\n' +
-    '    const callOp   = contract.call("methodName", ...args);\n' +
-    '    // Simulate, assemble, sign, submit — see example 05-soroban-invoke.',
-  ));
+  console.log(
+    chalk.gray(
+      '\n  How to use this contract ID:\n' +
+        '    const contract = new Contract(contractId);\n' +
+        '    const callOp   = contract.call("methodName", ...args);\n' +
+        '    // Simulate, assemble, sign, submit — see example 05-soroban-invoke.',
+    ),
+  );
 
   // ── Step 5: Verify the deployment by reading the ledger entry ─────────────
   try {
@@ -423,19 +445,21 @@ export async function run(params?: { wasmPath?: string }): Promise<void> {
   console.log(`  Contract ID:   ${chalk.cyan(contractId)}`);
   console.log(`  Network:       ${networkPassphrase}`);
   console.log(`  Deployer:      ${deployer.publicKey()}`);
-  console.log(chalk.cyan(
-    '\nDeployment workflow recap:\n' +
-    '  1. Load the .wasm artifact from disk and validate the magic number.\n' +
-    '  2. Compute SHA-256 hash locally for cross-checking.\n' +
-    '  3. Submit Operation.uploadContractWasm({ wasm }) — creates the ContractCode entry.\n' +
-    '  4. Submit Operation.createCustomContract({ address, wasmHash, salt }) —\n' +
-    '     creates the ContractData (instance) entry; returns the contract address.\n' +
-    '  5. Call getLedgerEntries(instanceKey) to confirm the instance is live.\n' +
-    '\n' +
-    'Multiple deployments:\n' +
-    '  - The same WASM binary only needs to be uploaded once across all contracts\n' +
-    '    that share the code — uploadContractWasm is idempotent for the same hash.\n' +
-    '  - To deploy additional instances of the same WASM, change the salt or the\n' +
-    '    deployer address; the wasmHash remains the same.',
-  ));
+  console.log(
+    chalk.cyan(
+      '\nDeployment workflow recap:\n' +
+        '  1. Load the .wasm artifact from disk and validate the magic number.\n' +
+        '  2. Compute SHA-256 hash locally for cross-checking.\n' +
+        '  3. Submit Operation.uploadContractWasm({ wasm }) — creates the ContractCode entry.\n' +
+        '  4. Submit Operation.createCustomContract({ address, wasmHash, salt }) —\n' +
+        '     creates the ContractData (instance) entry; returns the contract address.\n' +
+        '  5. Call getLedgerEntries(instanceKey) to confirm the instance is live.\n' +
+        '\n' +
+        'Multiple deployments:\n' +
+        '  - The same WASM binary only needs to be uploaded once across all contracts\n' +
+        '    that share the code — uploadContractWasm is idempotent for the same hash.\n' +
+        '  - To deploy additional instances of the same WASM, change the salt or the\n' +
+        '    deployer address; the wasmHash remains the same.',
+    ),
+  );
 }

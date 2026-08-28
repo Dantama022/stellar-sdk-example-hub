@@ -601,6 +601,7 @@ export const examples: Record<string, Example> = {
     description:
       'Inspect account reserve requirements, subentries, liabilities, and estimated spendable XLM',
     run: loadExample('../examples/140-account-reserve-analysis'),
+  },
   '62-payment-history': {
     name: '62-payment-history',
     description:
@@ -610,17 +611,13 @@ export const examples: Record<string, Example> = {
       {
         type: 'input',
         name: 'accountId',
-        message: 'Optional account ID (blank uses recent active account):',
+        message: 'Optional account ID (blank discovers a recently active account):',
       },
       {
-        type: 'list',
-        name: 'json',
-        message: 'Output format:',
-        default: 'false',
-        choices: [
-          { name: 'Human-readable', value: 'false' },
-          { name: 'JSON', value: 'true' },
-        ],
+        type: 'input',
+        name: 'limit',
+        message: 'Number of payment records to retrieve (1-200):',
+        default: '10',
       },
     ],
   },
@@ -697,16 +694,6 @@ export const examples: Record<string, Example> = {
           { name: 'Human-readable', value: 'false' },
           { name: 'JSON', value: 'true' },
         ],
-      },
-    ],
-  },
-        message: 'Optional account ID (blank discovers a recently active account):',
-      },
-      {
-        type: 'input',
-        name: 'limit',
-        message: 'Number of payment records to retrieve (1-200):',
-        default: '10',
       },
     ],
   },
@@ -892,7 +879,8 @@ export const examples: Record<string, Example> = {
   },
   '89-account-data-inspection': {
     name: '89-account-data-inspection',
-    description: 'Inspect account data entries, decode base64 values, and explain Manage Data state changes',
+    description:
+      'Inspect account data entries, decode base64 values, and explain Manage Data state changes',
     run: loadExample('../examples/89-account-data-inspection'),
   },
   '68-soroban-contract-simulation': {
@@ -1110,8 +1098,7 @@ export const examples: Record<string, Example> = {
       {
         type: 'input',
         name: 'transactionHash',
-        message:
-          'Failed transaction hash (blank searches recent failed Soroban transactions):',
+        message: 'Failed transaction hash (blank searches recent failed Soroban transactions):',
       },
     ],
   },
@@ -1167,8 +1154,7 @@ export const examples: Record<string, Example> = {
   },
   '126-claimable-balance-management': {
     name: '126-claimable-balance-management',
-    description:
-      'Discover, inspect, filter, and claim eligible Stellar claimable balances',
+    description: 'Discover, inspect, filter, and claim eligible Stellar claimable balances',
     run: loadExample('../examples/126-claimable-balance-management'),
     params: [
       {
@@ -1195,7 +1181,7 @@ export const examples: Record<string, Example> = {
   '130-sponsored-reserve-management': {
     name: '130-sponsored-reserve-management',
     description:
-      'Sponsor a trustline and a data entry, inspect reserve responsibility, then revoke one entry\'s sponsorship',
+      "Sponsor a trustline and a data entry, inspect reserve responsibility, then revoke one entry's sponsorship",
     run: loadExample('../examples/130-sponsored-reserve-management'),
   },
   '131-path-payment-route-inspection': {
@@ -1220,7 +1206,8 @@ export const examples: Record<string, Example> = {
   },
   '139-account-offer-inspection': {
     name: '139-account-offer-inspection',
-    description: "Inspect an account's open SDEX offers, grouped by trading pair with summary statistics",
+    description:
+      "Inspect an account's open SDEX offers, grouped by trading pair with summary statistics",
     run: loadExample('../examples/139-account-offer-inspection'),
     params: [
       {
@@ -1295,7 +1282,12 @@ export const examples: Record<string, Example> = {
     description: 'Retrieve and analyze a Stellar liquidity pool state and reserves',
     run: loadExample('../examples/124-liquidity-pool-inspection'),
     params: [
-      { type: 'input', name: 'assetA', message: 'Enter Asset A (native or CODE:ISSUER):', default: 'native' },
+      {
+        type: 'input',
+        name: 'assetA',
+        message: 'Enter Asset A (native or CODE:ISSUER):',
+        default: 'native',
+      },
       { type: 'input', name: 'assetB', message: 'Enter Asset B (CODE:ISSUER):' },
     ],
   },
@@ -1320,7 +1312,11 @@ export const examples: Record<string, Example> = {
     run: loadExample('../examples/133-transaction-signature-verification'),
     params: [
       { type: 'input', name: 'envelopeXdr', message: 'Enter base64 transaction envelope:' },
-      { type: 'input', name: 'publicKeys', message: 'Enter comma-separated public keys to verify against:' },
+      {
+        type: 'input',
+        name: 'publicKeys',
+        message: 'Enter comma-separated public keys to verify against:',
+      },
     ],
   },
   '134-multisignature-threshold-inspection': {
@@ -1337,5 +1333,122 @@ export const examples: Record<string, Example> = {
     name: '137-dynamic-fee-selection',
     description: 'Retrieve fee stats and calculate transaction fees using dynamic strategies',
     run: loadExample('../examples/137-dynamic-fee-selection'),
+  },
+  '157-horizon-pagination': {
+    name: '157-horizon-pagination',
+    description:
+      'Traverse multiple Horizon collections with reusable pagination, duplicate prevention, and metrics',
+    run: loadExample('../examples/157-horizon-pagination'),
+    params: [
+      {
+        type: 'input',
+        name: 'pageSize',
+        message: 'Records per page:',
+        default: '5',
+      },
+      {
+        type: 'input',
+        name: 'maxRecords',
+        message: 'Maximum records per collection:',
+        default: '15',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '158-resilient-horizon-streaming': {
+    name: '158-resilient-horizon-streaming',
+    description:
+      'Consume a Horizon stream with cursor resume, duplicate filtering, and exponential backoff reconnects',
+    run: loadExample('../examples/158-resilient-horizon-streaming'),
+    params: [
+      {
+        type: 'list',
+        name: 'resource',
+        message: 'Horizon stream resource:',
+        choices: ['payments', 'operations', 'transactions'],
+        default: 'payments',
+      },
+      {
+        type: 'input',
+        name: 'maxEvents',
+        message: 'Maximum events before stopping (blank = duration only):',
+        default: '3',
+      },
+      {
+        type: 'input',
+        name: 'streamDurationSeconds',
+        message: 'Stream duration in seconds:',
+        default: '8',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '159-horizon-stream-filtering': {
+    name: '159-horizon-stream-filtering',
+    description:
+      'Apply client-side AND/OR filters to Horizon operation streams while preserving the underlying cursor',
+    run: loadExample('../examples/159-horizon-stream-filtering'),
+    params: [
+      {
+        type: 'list',
+        name: 'filterMode',
+        message: 'Filter evaluation mode:',
+        choices: ['and', 'or'],
+        default: 'and',
+      },
+      {
+        type: 'input',
+        name: 'operationType',
+        message: 'Operation type filter:',
+        default: 'payment',
+      },
+      {
+        type: 'input',
+        name: 'maxEvents',
+        message: 'Maximum accepted events:',
+        default: '3',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '160-horizon-retry-rate-limit': {
+    name: '160-horizon-retry-rate-limit',
+    description:
+      'Retry transient Horizon failures and rate limits with Retry-After parsing and request diagnostics',
+    run: loadExample('../examples/160-horizon-retry-rate-limit'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID for sample requests (optional):',
+      },
+      {
+        type: 'input',
+        name: 'maxRetries',
+        message: 'Maximum retry attempts:',
+        default: '4',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
   },
 };

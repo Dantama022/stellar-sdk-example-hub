@@ -1,8 +1,10 @@
 import { Horizon } from '@stellar/stellar-sdk';
 
 export async function run(params?: any): Promise<void> {
-  const server = new Horizon.Server(process.env.HORIZON_URL || 'https://horizon-testnet.stellar.org');
-  
+  const server = new Horizon.Server(
+    process.env.HORIZON_URL || 'https://horizon-testnet.stellar.org',
+  );
+
   const strategy = params?.strategy || 'median'; // 'min', 'median', 'high', 'custom'
   const customMultiplier = parseFloat(params?.multiplier || '1.2');
   const maxFee = parseInt(params?.maxFee || '10000');
@@ -10,7 +12,7 @@ export async function run(params?: any): Promise<void> {
 
   try {
     const feeStats = await server.feeStats();
-    
+
     // Using cast to 'any' to bypass strict TS checking for the underlying JSON properties
     const baseFee = parseInt((feeStats as any).last_ledger_base_fee || '100');
     const p50 = parseInt((feeStats as any).p50_accepted_fee || '100');
@@ -43,21 +45,20 @@ export async function run(params?: any): Promise<void> {
       statistics: {
         baseFee,
         p50,
-        p90
+        p90,
       },
       configuration: {
         strategy,
         opCount,
-        maxFeeLimit: maxFee
+        maxFeeLimit: maxFee,
       },
       calculation: {
         selectedPerOpFee,
-        finalFee
-      }
+        finalFee,
+      },
     };
 
     console.log(params?.json ? JSON.stringify(output, null, 2) : output);
-
   } catch (error: any) {
     console.error('Error fetching fee statistics:', error.message);
   }

@@ -169,6 +169,8 @@
     {
       "match": "143-transaction-time-bounds",
       "reason": "Requires live Friendbot funding and Testnet time-bound transaction submission"
+    },
+    {
       "match": "68-soroban-contract-simulation",
       "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
     },
@@ -187,12 +189,26 @@
     {
       "match": "82-transaction-time-bounds",
       "reason": "Depends on live Testnet timing and Soroban RPC transaction acceptance windows"
+    },
+    {
       "match": "80-offline-transaction-workflow",
       "reason": "Requires live Friendbot funding and Horizon Testnet transaction submission"
+    },
+    {
       "match": "81-transaction-preflight",
       "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+    },
+    {
       "match": "83-multi-contract-transaction",
       "reason": "Requires live Soroban RPC and deployed contracts on Testnet"
+    },
+    {
+      "match": "158-resilient-horizon-streaming",
+      "reason": "Keeps a live Horizon SSE connection open with manual reconnection handling"
+    },
+    {
+      "match": "159-horizon-stream-filtering",
+      "reason": "Keeps a live Horizon SSE connection open for client-side filtering"
     }
   ]
 }
