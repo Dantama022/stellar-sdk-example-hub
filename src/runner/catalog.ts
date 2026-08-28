@@ -1195,4 +1195,28 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '124-liquidity-pool-inspection': {
+    name: '124-liquidity-pool-inspection',
+    description: 'Retrieve and analyze a Stellar liquidity pool state and reserves',
+    run: loadExample('../examples/124-liquidity-pool-inspection'),
+    params: [
+      { type: 'input', name: 'assetA', message: 'Enter Asset A (native or CODE:ISSUER):', default: 'native' },
+      { type: 'input', name: 'assetB', message: 'Enter Asset B (CODE:ISSUER):' },
+    ],
+  },
+  '125-liquidity-pool-simulation': {
+    name: '125-liquidity-pool-simulation',
+    description: 'Simulate liquidity pool deposit and withdrawal operations',
+    run: loadExample('../examples/125-liquidity-pool-simulation'),
+  },
+  '127-trustline-management': {
+    name: '127-trustline-management',
+    description: 'Retrieve, inspect, create, modify, and remove Stellar trustlines',
+    run: loadExample('../examples/127-trustline-management'),
+  },
+  '129-asset-clawback': {
+    name: '129-asset-clawback',
+    description: 'Inspect clawback configuration and construct a clawback transaction',
+    run: loadExample('../examples/129-asset-clawback'),
+  },
 };

@@ -46,6 +46,10 @@ import * as ex139 from '../src/examples/139-account-offer-inspection';
 import * as ex138 from '../src/examples/138-account-merge-preflight';
 import * as ex132 from '../src/examples/132-fee-bump-inspection';
 import * as ex136 from '../src/examples/136-transaction-fee-estimation';
+import * as ex124 from '../src/examples/124-liquidity-pool-inspection';
+import * as ex125 from '../src/examples/125-liquidity-pool-simulation';
+import * as ex127 from '../src/examples/127-trustline-management';
+import * as ex129 from '../src/examples/129-asset-clawback';
 
 import { examples } from '../src/runner/catalog';
 
@@ -98,6 +102,10 @@ describe('Examples Exports', () => {
       ex138,
       ex132,
       ex136,
+      ex124,
+      ex125,
+      ex127,
+      ex129,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -142,6 +150,10 @@ describe('Examples Exports', () => {
       '138-account-merge-preflight',
       '132-fee-bump-inspection',
       '136-transaction-fee-estimation',
+      '124-liquidity-pool-inspection',
+      '125-liquidity-pool-simulation',
+      '127-trustline-management',
+      '129-asset-clawback',
     ]) {
       expect(examples[key]).toBeDefined();
     }
