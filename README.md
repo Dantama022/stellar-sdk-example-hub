@@ -214,6 +214,10 @@ The repository currently includes the following runnable examples:
 69. **`138-account-merge-preflight`**: Inspect a Stellar account to determine merge readiness and identify blocking ledger states.
 70. **`132-fee-bump-inspection`**: Decode and inspect fee-bump and normal transaction envelopes offline.
 71.  **`136-transaction-fee-estimation`**: Estimate minimum transaction fees using Horizon network fee statistics across operation sizes.
+72. **`124-liquidity-pool-inspection`**: Retrieve and analyze an existing Stellar liquidity pool, its reserves, shares, and fees.
+73. **`125-liquidity-pool-simulation`**: Simulate deposit and withdrawal operations on a liquidity pool to estimate share and asset changes.
+74. **`127-trustline-management`**: Inspect, create, update, and remove asset trustlines for a Stellar account.
+75. **`129-asset-clawback`**: Verify clawback configurations and simulate/execute asset recovery operations.
 
 ## Installation
 
