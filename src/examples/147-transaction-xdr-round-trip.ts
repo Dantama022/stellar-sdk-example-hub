@@ -100,7 +100,11 @@ function buildRepresentativeTransaction(sourceAccount: Account, destination: str
 /**
  * Build a fee-bump transaction for round-trip testing
  */
-function buildFeeBumpTransaction(sourceAccount: Account, destination: string, sponsor: Keypair): FeeBumpTransaction {
+function buildFeeBumpTransaction(
+  sourceAccount: Account,
+  destination: string,
+  sponsor: Keypair,
+): FeeBumpTransaction {
   const innerTx = buildRepresentativeTransaction(sourceAccount, destination);
   innerTx.sign(sponsor);
 
@@ -122,8 +126,12 @@ function compareTransactionFields(
   const originalTx = original instanceof FeeBumpTransaction ? original.innerTransaction : original;
   const decodedTx = decoded instanceof FeeBumpTransaction ? decoded.innerTransaction : decoded;
 
-  const memoOriginal = originalTx.memo ? `${originalTx.memo.type}:${originalTx.memo.value || ''}` : 'NONE';
-  const memoDecoded = decodedTx.memo ? `${decodedTx.memo.type}:${decodedTx.memo.value || ''}` : 'NONE';
+  const memoOriginal = originalTx.memo
+    ? `${originalTx.memo.type}:${originalTx.memo.value || ''}`
+    : 'NONE';
+  const memoDecoded = decodedTx.memo
+    ? `${decodedTx.memo.type}:${decodedTx.memo.value || ''}`
+    : 'NONE';
 
   const timeBoundsOriginal = (originalTx as any).timeBounds
     ? `${(originalTx as any).timeBounds.minTime}-${(originalTx as any).timeBounds.maxTime}`
@@ -178,22 +186,32 @@ function detectSemanticDifferences(comparison: TransactionFieldComparison): stri
   const differences: string[] = [];
 
   if (!comparison.sourceAccount.matches) {
-    differences.push(`Source account differs: ${comparison.sourceAccount.original} vs ${comparison.sourceAccount.decoded}`);
+    differences.push(
+      `Source account differs: ${comparison.sourceAccount.original} vs ${comparison.sourceAccount.decoded}`,
+    );
   }
   if (!comparison.sequence.matches) {
-    differences.push(`Sequence number differs: ${comparison.sequence.original} vs ${comparison.sequence.decoded}`);
+    differences.push(
+      `Sequence number differs: ${comparison.sequence.original} vs ${comparison.sequence.decoded}`,
+    );
   }
   if (!comparison.fee.matches) {
-    differences.push(`Fee differs: ${comparison.fee.original} vs ${comparison.fee.decoded} stroops`);
+    differences.push(
+      `Fee differs: ${comparison.fee.original} vs ${comparison.fee.decoded} stroops`,
+    );
   }
   if (!comparison.operations.matches) {
-    differences.push(`Operation count differs: ${comparison.operations.original} vs ${comparison.operations.decoded}`);
+    differences.push(
+      `Operation count differs: ${comparison.operations.original} vs ${comparison.operations.decoded}`,
+    );
   }
   if (!comparison.memo.matches) {
     differences.push(`Memo differs: ${comparison.memo.original} vs ${comparison.memo.decoded}`);
   }
   if (!comparison.timeBounds.matches) {
-    differences.push(`Time bounds differ: ${comparison.timeBounds.original} vs ${comparison.timeBounds.decoded}`);
+    differences.push(
+      `Time bounds differ: ${comparison.timeBounds.original} vs ${comparison.timeBounds.decoded}`,
+    );
   }
 
   return differences;
@@ -219,7 +237,9 @@ function performRoundTripValidation(
   try {
     decoded = TransactionBuilder.fromXDR(originalXdr, networkPassphrase);
   } catch (error) {
-    throw new Error(`Failed to decode XDR: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to decode XDR: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 
   // Serialize decoded transaction to XDR
@@ -282,43 +302,57 @@ function formatRoundTripResult(result: RoundTripResult): string {
   );
 
   lines.push(chalk.bold('\nField Comparison:'));
-  lines.push(`  Source Account: ${result.fieldComparison.sourceAccount.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`);
+  lines.push(
+    `  Source Account: ${result.fieldComparison.sourceAccount.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`,
+  );
   if (!result.fieldComparison.sourceAccount.matches) {
     lines.push(`    Original: ${result.fieldComparison.sourceAccount.original}`);
     lines.push(`    Decoded:  ${result.fieldComparison.sourceAccount.decoded}`);
   }
 
-  lines.push(`  Sequence: ${result.fieldComparison.sequence.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`);
+  lines.push(
+    `  Sequence: ${result.fieldComparison.sequence.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`,
+  );
   if (!result.fieldComparison.sequence.matches) {
     lines.push(`    Original: ${result.fieldComparison.sequence.original}`);
     lines.push(`    Decoded:  ${result.fieldComparison.sequence.decoded}`);
   }
 
-  lines.push(`  Fee: ${result.fieldComparison.fee.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`);
+  lines.push(
+    `  Fee: ${result.fieldComparison.fee.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`,
+  );
   if (!result.fieldComparison.fee.matches) {
     lines.push(`    Original: ${result.fieldComparison.fee.original} stroops`);
     lines.push(`    Decoded:  ${result.fieldComparison.fee.decoded} stroops`);
   }
 
-  lines.push(`  Operations: ${result.fieldComparison.operations.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`);
+  lines.push(
+    `  Operations: ${result.fieldComparison.operations.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`,
+  );
   if (!result.fieldComparison.operations.matches) {
     lines.push(`    Original: ${result.fieldComparison.operations.original} operations`);
     lines.push(`    Decoded:  ${result.fieldComparison.operations.decoded} operations`);
   }
 
-  lines.push(`  Memo: ${result.fieldComparison.memo.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`);
+  lines.push(
+    `  Memo: ${result.fieldComparison.memo.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`,
+  );
   if (!result.fieldComparison.memo.matches) {
     lines.push(`    Original: ${result.fieldComparison.memo.original}`);
     lines.push(`    Decoded:  ${result.fieldComparison.memo.decoded}`);
   }
 
-  lines.push(`  Time Bounds: ${result.fieldComparison.timeBounds.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`);
+  lines.push(
+    `  Time Bounds: ${result.fieldComparison.timeBounds.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`,
+  );
   if (!result.fieldComparison.timeBounds.matches) {
     lines.push(`    Original: ${result.fieldComparison.timeBounds.original}`);
     lines.push(`    Decoded:  ${result.fieldComparison.timeBounds.decoded}`);
   }
 
-  lines.push(`  Network: ${result.fieldComparison.network.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`);
+  lines.push(
+    `  Network: ${result.fieldComparison.network.matches ? chalk.green('MATCH') : chalk.red('MISMATCH')}`,
+  );
 
   if (result.semanticDifferences.length > 0) {
     lines.push(chalk.bold('\nSemantic Differences Detected:'));
@@ -397,7 +431,11 @@ export async function run(params: XdrRoundTripParams = {}): Promise<void> {
 
     // Test fee-bump transaction
     console.log(chalk.yellow('\nStep 4: Building fee-bump transaction...'));
-    const feeBumpTx = buildFeeBumpTransaction(account, destinationKeypair.publicKey(), sponsorKeypair);
+    const feeBumpTx = buildFeeBumpTransaction(
+      account,
+      destinationKeypair.publicKey(),
+      sponsorKeypair,
+    );
     console.log(chalk.green('✓ Fee-bump transaction built'));
 
     console.log(chalk.yellow('\nStep 5: Performing XDR round-trip validation on fee-bump...'));
@@ -409,7 +447,9 @@ export async function run(params: XdrRoundTripParams = {}): Promise<void> {
 
     // Display results
     if (json) {
-      console.log('\n' + JSON.stringify({ standardResult, feeBumpResult, malformedHandled }, null, 2));
+      console.log(
+        '\n' + JSON.stringify({ standardResult, feeBumpResult, malformedHandled }, null, 2),
+      );
     } else {
       console.log(chalk.bold('\n=== Standard Transaction Round-Trip ==='));
       console.log(formatRoundTripResult(standardResult));

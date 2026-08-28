@@ -109,11 +109,16 @@ function wantsJson(params: EnvelopeNormalizationParams): boolean {
 /**
  * Decode a base64-encoded transaction envelope
  */
-function decodeEnvelope(envelopeXdr: string, networkPassphrase: string = Networks.TESTNET): Transaction | FeeBumpTransaction {
+function decodeEnvelope(
+  envelopeXdr: string,
+  networkPassphrase: string = Networks.TESTNET,
+): Transaction | FeeBumpTransaction {
   try {
     return TransactionBuilder.fromXDR(envelopeXdr, networkPassphrase);
   } catch (error) {
-    throw new Error(`Invalid transaction envelope XDR: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Invalid transaction envelope XDR: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -157,8 +162,10 @@ function normalizeMemo(memo: any): NormalizedMemo {
  * Normalize time bounds
  */
 function normalizeTimeBounds(transaction: Transaction): NormalizedTimeBounds | undefined {
-  const timeBounds = (transaction as unknown as { timeBounds?: { minTime: number; maxTime: number } }).timeBounds;
-  
+  const timeBounds = (
+    transaction as unknown as { timeBounds?: { minTime: number; maxTime: number } }
+  ).timeBounds;
+
   if (!timeBounds || (timeBounds.minTime === 0 && timeBounds.maxTime === 0)) {
     return undefined;
   }
@@ -292,7 +299,7 @@ function normalizeSignatures(signatures: any[]): NormalizedSignature[] {
           signature: 'unknown',
         };
       }
-    } catch (error) {
+    } catch {
       return {
         hint: 'error',
         signature: 'error',
@@ -344,9 +351,12 @@ function normalizeFeeBumpTransaction(
 /**
  * Reconstruct a transaction from normalized data
  */
-function reconstructTransaction(normalized: NormalizedTransaction, networkPassphrase: string): Transaction {
+function reconstructTransaction(
+  normalized: NormalizedTransaction,
+  networkPassphrase: string,
+): Transaction {
   const account = new Account(normalized.sourceAccount, normalized.sequence);
-  
+
   const builder = new TransactionBuilder(account, {
     fee: normalized.fee,
     networkPassphrase,
@@ -358,7 +368,7 @@ function reconstructTransaction(normalized: NormalizedTransaction, networkPassph
       ...op.details,
       source: op.sourceAccount,
     };
-    
+
     switch (op.type) {
       case 'createAccount':
         builder.addOperation(Operation.createAccount(operationParams as any));
@@ -427,7 +437,9 @@ function reconstructTransaction(normalized: NormalizedTransaction, networkPassph
 
   // Add time bounds
   if (normalized.timeBounds) {
-    builder.setTimeout(parseInt(normalized.timeBounds.maxTime) - parseInt(normalized.timeBounds.minTime));
+    builder.setTimeout(
+      parseInt(normalized.timeBounds.maxTime) - parseInt(normalized.timeBounds.minTime),
+    );
   } else {
     builder.setTimeout(30);
   }
@@ -443,14 +455,16 @@ function compareSemanticPreservation(
   reconstructed: Transaction,
 ): NormalizationResult['semanticPreservation'] {
   const originalTx = original instanceof FeeBumpTransaction ? original.innerTransaction : original;
-  
+
   return {
     sourceAccount: originalTx.source === reconstructed.source,
     sequence: originalTx.sequence === reconstructed.sequence,
     fee: originalTx.fee === reconstructed.fee,
     operations: originalTx.operations.length === reconstructed.operations.length,
     memo: JSON.stringify(originalTx.memo) === JSON.stringify(reconstructed.memo),
-    timeBounds: JSON.stringify((originalTx as any).timeBounds) === JSON.stringify((reconstructed as any).timeBounds),
+    timeBounds:
+      JSON.stringify((originalTx as any).timeBounds) ===
+      JSON.stringify((reconstructed as any).timeBounds),
     signatures: originalTx.signatures.length === reconstructed.signatures.length,
   };
 }
@@ -464,11 +478,11 @@ export function normalizeTransactionEnvelope(
 ): NormalizationResult {
   // Decode the envelope
   const transaction = decodeEnvelope(envelopeXdr, networkPassphrase);
-  
+
   // Identify envelope type and normalize
   let normalizedTransaction: NormalizedTransaction | NormalizedFeeBumpTransaction;
   let originalHash: string;
-  
+
   if (transaction instanceof FeeBumpTransaction) {
     normalizedTransaction = normalizeFeeBumpTransaction(transaction, networkPassphrase);
     originalHash = transaction.hash().toString('hex');
@@ -485,13 +499,18 @@ export function normalizeTransactionEnvelope(
 
   if (!(transaction instanceof FeeBumpTransaction)) {
     try {
-      const reconstructed = reconstructTransaction(normalizedTransaction as NormalizedTransaction, networkPassphrase);
+      const reconstructed = reconstructTransaction(
+        normalizedTransaction as NormalizedTransaction,
+        networkPassphrase,
+      );
       reconstructedEnvelopeXdr = reconstructed.toXDR();
       reconstructedHash = reconstructed.hash().toString('hex');
       hashMatches = originalHash === reconstructedHash;
       semanticPreservation = compareSemanticPreservation(transaction, reconstructed);
     } catch (error) {
-      console.warn(`Reconstruction failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.warn(
+        `Reconstruction failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       semanticPreservation = {
         sourceAccount: false,
         sequence: false,
@@ -593,10 +612,7 @@ function formatNormalizationResult(result: NormalizationResult): string {
     });
   }
 
-  lines.push(
-    chalk.bold('\nHash Verification:'),
-    `  Original Hash: ${result.originalHash}`,
-  );
+  lines.push(chalk.bold('\nHash Verification:'), `  Original Hash: ${result.originalHash}`);
 
   if (result.reconstructedHash) {
     lines.push(
@@ -676,7 +692,7 @@ export async function run(params: EnvelopeNormalizationParams = {}): Promise<voi
   if (!envelopeXdr) {
     console.log(chalk.yellow('\nNo envelope XDR provided. Creating sample transactions...'));
     const samples = createSampleTransactions();
-    
+
     // Use the fee-bump transaction as it's more complex
     envelopeXdr = samples.feeBump;
     console.log(chalk.gray('Created sample fee-bump transaction for demonstration.'));
@@ -698,7 +714,9 @@ export async function run(params: EnvelopeNormalizationParams = {}): Promise<voi
     if (allPreserved) {
       console.log(chalk.green('✓ All transaction semantics preserved'));
     } else {
-      console.log(chalk.yellow('⚠ Some transaction fields may have been modified during normalization'));
+      console.log(
+        chalk.yellow('⚠ Some transaction fields may have been modified during normalization'),
+      );
     }
 
     // Display results
@@ -713,7 +731,7 @@ export async function run(params: EnvelopeNormalizationParams = {}): Promise<voi
       console.log(chalk.yellow('\n\n--- Additional: Standard Transaction Example ---\n'));
       const samples = createSampleTransactions();
       const standardResult = normalizeTransactionEnvelope(samples.standard, Networks.TESTNET);
-      
+
       if (wantsJson(params)) {
         console.log('\n' + JSON.stringify(standardResult, null, 2));
       } else {
@@ -734,12 +752,16 @@ export async function run(params: EnvelopeNormalizationParams = {}): Promise<voi
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    
+
     if (wantsJson(params)) {
       console.log(JSON.stringify({ error: 'Normalization failed', message }, null, 2));
     } else {
       console.error(chalk.red(`\n❌ Normalization failed: ${message}`));
-      console.error(chalk.gray('Ensure the provided envelope XDR is a valid base64-encoded Stellar transaction.'));
+      console.error(
+        chalk.gray(
+          'Ensure the provided envelope XDR is a valid base64-encoded Stellar transaction.',
+        ),
+      );
     }
     process.exit(1);
   }

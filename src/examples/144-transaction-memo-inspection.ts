@@ -1,11 +1,4 @@
-import {
-  Account,
-  Keypair,
-  Memo,
-  Networks,
-  TransactionBuilder,
-  xdr,
-} from '@stellar/stellar-sdk';
+import { Account, Keypair, Memo, Networks, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import chalk from 'chalk';
 
 /**
@@ -86,7 +79,7 @@ function utf8ByteLength(str: string): number {
  */
 function validateAndConstructTextMemo(value: string): MemoInfo {
   const byteLength = utf8ByteLength(value);
-  
+
   if (byteLength === 0) {
     return {
       type: 'MemoText',
@@ -98,7 +91,7 @@ function validateAndConstructTextMemo(value: string): MemoInfo {
       error: 'MemoText cannot be empty',
     };
   }
-  
+
   if (byteLength > MEMO_TEXT_MAX_BYTES) {
     return {
       type: 'MemoText',
@@ -110,7 +103,7 @@ function validateAndConstructTextMemo(value: string): MemoInfo {
       error: `MemoText exceeds ${MEMO_TEXT_MAX_BYTES} byte limit (is ${byteLength} bytes)`,
     };
   }
-  
+
   try {
     const memoXdr = xdr.Memo.memoText(Buffer.from(value, 'utf-8'));
     return {
@@ -139,7 +132,7 @@ function validateAndConstructTextMemo(value: string): MemoInfo {
  */
 function validateAndConstructIdMemo(value: string | number | bigint): MemoInfo {
   let numValue: bigint;
-  
+
   try {
     if (typeof value === 'bigint') {
       numValue = value;
@@ -170,7 +163,7 @@ function validateAndConstructIdMemo(value: string | number | bigint): MemoInfo {
       error: 'MemoID must be a valid integer',
     };
   }
-  
+
   if (numValue < 0) {
     return {
       type: 'MemoID',
@@ -182,7 +175,7 @@ function validateAndConstructIdMemo(value: string | number | bigint): MemoInfo {
       error: 'MemoID cannot be negative',
     };
   }
-  
+
   if (numValue > MEMO_ID_MAX) {
     return {
       type: 'MemoID',
@@ -194,7 +187,7 @@ function validateAndConstructIdMemo(value: string | number | bigint): MemoInfo {
       error: `MemoID exceeds maximum value of ${MEMO_ID_MAX}`,
     };
   }
-  
+
   try {
     const memoXdr = xdr.Memo.memoId(xdr.Uint64.fromString(numValue.toString()));
     return {
@@ -224,7 +217,7 @@ function validateAndConstructIdMemo(value: string | number | bigint): MemoInfo {
 function validateAndConstructHashMemo(hexValue: string): MemoInfo {
   // Remove 0x prefix if present
   const cleanHex = hexValue.startsWith('0x') ? hexValue.slice(2) : hexValue;
-  
+
   if (cleanHex.length === 0) {
     return {
       type: 'MemoHash',
@@ -236,7 +229,7 @@ function validateAndConstructHashMemo(hexValue: string): MemoInfo {
       error: 'MemoHash cannot be empty',
     };
   }
-  
+
   // Validate hex format
   if (!/^[0-9a-fA-F]*$/.test(cleanHex)) {
     return {
@@ -249,9 +242,9 @@ function validateAndConstructHashMemo(hexValue: string): MemoInfo {
       error: 'MemoHash must be a valid hexadecimal string',
     };
   }
-  
+
   const byteLength = cleanHex.length / 2;
-  
+
   if (byteLength !== MEMO_HASH_SIZE) {
     return {
       type: 'MemoHash',
@@ -263,7 +256,7 @@ function validateAndConstructHashMemo(hexValue: string): MemoInfo {
       error: `MemoHash must be exactly ${MEMO_HASH_SIZE} bytes (is ${byteLength} bytes)`,
     };
   }
-  
+
   try {
     const memoXdr = xdr.Memo.memoHash(Buffer.from(cleanHex, 'hex'));
     return {
@@ -293,7 +286,7 @@ function validateAndConstructHashMemo(hexValue: string): MemoInfo {
 function validateAndConstructReturnMemo(hexValue: string): MemoInfo {
   // Remove 0x prefix if present
   const cleanHex = hexValue.startsWith('0x') ? hexValue.slice(2) : hexValue;
-  
+
   if (cleanHex.length === 0) {
     return {
       type: 'MemoReturn',
@@ -305,7 +298,7 @@ function validateAndConstructReturnMemo(hexValue: string): MemoInfo {
       error: 'MemoReturn cannot be empty',
     };
   }
-  
+
   // Validate hex format
   if (!/^[0-9a-fA-F]*$/.test(cleanHex)) {
     return {
@@ -318,9 +311,9 @@ function validateAndConstructReturnMemo(hexValue: string): MemoInfo {
       error: 'MemoReturn must be a valid hexadecimal string',
     };
   }
-  
+
   const byteLength = cleanHex.length / 2;
-  
+
   if (byteLength !== MEMO_HASH_SIZE) {
     return {
       type: 'MemoReturn',
@@ -332,7 +325,7 @@ function validateAndConstructReturnMemo(hexValue: string): MemoInfo {
       error: `MemoReturn must be exactly ${MEMO_HASH_SIZE} bytes (is ${byteLength} bytes)`,
     };
   }
-  
+
   try {
     const memoXdr = xdr.Memo.memoReturn(Buffer.from(cleanHex, 'hex'));
     return {
@@ -388,7 +381,7 @@ function convertUserInputToMemo(input: string, type: string): MemoInfo {
 function createTransactionWithMemo(memo: Memo): string {
   const keypair = Keypair.random();
   const account = new Account(keypair.publicKey(), '0');
-  
+
   const transaction = new TransactionBuilder(account, {
     fee: '100',
     networkPassphrase: Networks.TESTNET,
@@ -396,7 +389,7 @@ function createTransactionWithMemo(memo: Memo): string {
     .addMemo(memo)
     .setTimeout(30)
     .build();
-  
+
   return transaction.toXDR();
 }
 
@@ -412,13 +405,13 @@ function formatMemoInfo(info: MemoInfo): string {
     `  Decoded value: ${info.decodedValue}`,
     `  Size: ${info.sizeBytes} bytes`,
   ];
-  
+
   if (info.valid) {
     lines.push(`  Encoded (base64): ${info.encodedRepresentation.substring(0, 50)}...`);
   } else {
     lines.push(chalk.red(`  Error: ${info.error}`));
   }
-  
+
   return lines.join('\n');
 }
 
@@ -430,11 +423,11 @@ function formatInspectionReport(report: MemoInspectionReport): string {
     chalk.bold('\n=== Stellar Transaction Memo Inspection Report ===\n'),
     chalk.bold('Memo Type Demonstrations:'),
   ];
-  
+
   for (const memo of report.memos) {
     lines.push(formatMemoInfo(memo));
   }
-  
+
   lines.push(chalk.bold('\nValidation Results:'));
   lines.push(
     `  MemoText: ${report.validationResults.textMemo.valid ? chalk.green('VALID') : chalk.red('INVALID')}`,
@@ -443,7 +436,7 @@ function formatInspectionReport(report: MemoInspectionReport): string {
   if (report.validationResults.textMemo.error) {
     lines.push(chalk.red(`    Error: ${report.validationResults.textMemo.error}`));
   }
-  
+
   lines.push(
     `  MemoID: ${report.validationResults.idMemo.valid ? chalk.green('VALID') : chalk.red('INVALID')}`,
   );
@@ -451,7 +444,7 @@ function formatInspectionReport(report: MemoInspectionReport): string {
   if (report.validationResults.idMemo.error) {
     lines.push(chalk.red(`    Error: ${report.validationResults.idMemo.error}`));
   }
-  
+
   lines.push(
     `  MemoHash: ${report.validationResults.hashMemo.valid ? chalk.green('VALID') : chalk.red('INVALID')}`,
   );
@@ -459,7 +452,7 @@ function formatInspectionReport(report: MemoInspectionReport): string {
   if (report.validationResults.hashMemo.error) {
     lines.push(chalk.red(`    Error: ${report.validationResults.hashMemo.error}`));
   }
-  
+
   lines.push(
     `  MemoReturn: ${report.validationResults.returnMemo.valid ? chalk.green('VALID') : chalk.red('INVALID')}`,
   );
@@ -467,12 +460,12 @@ function formatInspectionReport(report: MemoInspectionReport): string {
   if (report.validationResults.returnMemo.error) {
     lines.push(chalk.red(`    Error: ${report.validationResults.returnMemo.error}`));
   }
-  
+
   lines.push(chalk.bold('\nUsage Guidelines:'));
   for (const guideline of report.usageGuidelines) {
     lines.push(`  - ${guideline}`);
   }
-  
+
   return lines.join('\n');
 }
 
@@ -602,7 +595,9 @@ export async function run(params: MemoInspectionParams = {}): Promise<void> {
   const parsedTextTx = TransactionBuilder.fromXDR(txWithTextMemo, Networks.TESTNET) as any;
   const textMemoFromTx = parsedTextTx.memo;
   const textValue = textMemoFromTx.value;
-  const textEncoded = Buffer.isBuffer(textValue) ? textValue.toString('hex') : String(textValue ?? '');
+  const textEncoded = Buffer.isBuffer(textValue)
+    ? textValue.toString('hex')
+    : String(textValue ?? '');
   console.log(chalk.green(`✓ Decoded from transaction: ${textMemoFromTx.type} = "${textEncoded}"`));
 
   const parsedIdTx = TransactionBuilder.fromXDR(txWithIdMemo, Networks.TESTNET) as any;
@@ -614,14 +609,20 @@ export async function run(params: MemoInspectionParams = {}): Promise<void> {
   const parsedHashTx = TransactionBuilder.fromXDR(txWithHashMemo, Networks.TESTNET) as any;
   const hashMemoFromTx = parsedHashTx.memo;
   const hashValue = hashMemoFromTx.value;
-  const hashEncoded = Buffer.isBuffer(hashValue) ? hashValue.toString('hex') : String(hashValue ?? '');
+  const hashEncoded = Buffer.isBuffer(hashValue)
+    ? hashValue.toString('hex')
+    : String(hashValue ?? '');
   console.log(chalk.green(`✓ Decoded from transaction: ${hashMemoFromTx.type} = "${hashEncoded}"`));
 
   const parsedReturnTx = TransactionBuilder.fromXDR(txWithReturnMemo, Networks.TESTNET) as any;
   const returnMemoFromTx = parsedReturnTx.memo;
   const returnValue = returnMemoFromTx.value;
-  const returnEncoded = Buffer.isBuffer(returnValue) ? returnValue.toString('hex') : String(returnValue ?? '');
-  console.log(chalk.green(`✓ Decoded from transaction: ${returnMemoFromTx.type} = "${returnEncoded}"`));
+  const returnEncoded = Buffer.isBuffer(returnValue)
+    ? returnValue.toString('hex')
+    : String(returnValue ?? '');
+  console.log(
+    chalk.green(`✓ Decoded from transaction: ${returnMemoFromTx.type} = "${returnEncoded}"`),
+  );
 
   // ──────────────────────────────────────────────────────────────────────────
   // Step 5: Demonstrate user input conversion
@@ -631,7 +632,9 @@ export async function run(params: MemoInspectionParams = {}): Promise<void> {
   const userInput = '12345';
   const asText = convertUserInputToMemo(userInput, 'text');
   const asId = convertUserInputToMemo(userInput, 'id');
-  console.log(chalk.green(`✓ Input "${userInput}" as MemoText: ${asText.valid ? 'valid' : 'invalid'}`));
+  console.log(
+    chalk.green(`✓ Input "${userInput}" as MemoText: ${asText.valid ? 'valid' : 'invalid'}`),
+  );
   console.log(chalk.green(`✓ Input "${userInput}" as MemoID: ${asId.valid ? 'valid' : 'invalid'}`));
 
   // ──────────────────────────────────────────────────────────────────────────
