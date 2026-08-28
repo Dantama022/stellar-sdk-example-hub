@@ -50,6 +50,10 @@ import * as ex124 from '../src/examples/124-liquidity-pool-inspection';
 import * as ex125 from '../src/examples/125-liquidity-pool-simulation';
 import * as ex127 from '../src/examples/127-trustline-management';
 import * as ex129 from '../src/examples/129-asset-clawback';
+import * as ex133 from '../src/examples/133-transaction-signature-verification';
+import * as ex134 from '../src/examples/134-multisignature-threshold-inspection';
+import * as ex135 from '../src/examples/135-transaction-preflight-validation';
+import * as ex137 from '../src/examples/137-dynamic-fee-selection';
 
 import { examples } from '../src/runner/catalog';
 
@@ -94,7 +98,7 @@ describe('Examples Exports', () => {
       ex58,
       ex66,
       ex67,
-        ex58,
+      ex58,
       ex59,
       ex60,
       ex96,
@@ -106,6 +110,10 @@ describe('Examples Exports', () => {
       ex125,
       ex127,
       ex129,
+      ex133,
+      ex134,
+      ex135,
+      ex137,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -154,6 +162,10 @@ describe('Examples Exports', () => {
       '125-liquidity-pool-simulation',
       '127-trustline-management',
       '129-asset-clawback',
+      '133-transaction-signature-verification',
+      '134-multisignature-threshold-inspection',
+      '135-transaction-preflight-validation',
+      '137-dynamic-fee-selection',
     ]) {
       expect(examples[key]).toBeDefined();
     }

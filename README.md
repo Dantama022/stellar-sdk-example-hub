@@ -188,6 +188,10 @@ The repository currently includes the following runnable examples:
 58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
 59. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
 60. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
+61. **`140-account-reserve-analysis`**: Inspecting an account's total XLM balance, reserve requirements, subentries, liabilities, sponsorship relationships, and estimated spendable XLM.
+62. **`141-sequence-number-management`**: Retrieving on-ledger sequence numbers, allocating sequences locally for multiple pending transactions, detecting stale sequences, and refreshing from Horizon.
+63. **`142-batch-transaction-construction`**: Constructing, inspecting, and optionally submitting a batch of independent transactions from one account with correctly ordered sequential sequence numbers.
+64. **`143-transaction-time-bounds`**: Constructing transactions with time bounds, evaluating validity status (not-yet-valid, valid, expired), observing txTOO_EARLY and txTOO_LATE rejections, and detecting invalid ranges.
 61. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
 62. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
 63. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
@@ -222,10 +226,10 @@ The repository currently includes the following runnable examples:
 73. **`125-liquidity-pool-simulation`**: Simulate deposit and withdrawal operations on a liquidity pool to estimate share and asset changes.
 74. **`127-trustline-management`**: Inspect, create, update, and remove asset trustlines for a Stellar account.
 75. **`129-asset-clawback`**: Verify clawback configurations and simulate/execute asset recovery operations.
-76. **`144-transaction-memo-inspection`**: Construct, inspect, decode, and validate Stellar transaction memos (Text, ID, Hash, Return) with size limits and usage guidelines.
-77. **`145-transaction-envelope-normalization`**: Decode, identify, normalize, and reconstruct Stellar transaction envelopes (standard and fee-bump) with semantic preservation verification.
-78. **`146-transaction-envelope-signing`**: Demonstrate incremental transaction-envelope signing workflow with multiple signers, envelope passing, and signature verification.
-79. **`147-transaction-xdr-round-trip`**: Validate XDR serialization/deserialization preserves transaction semantics with field-by-field comparison.
+76. **`133-transaction-signature-verification`**: Decode a Stellar transaction envelope, extract signer hints, and cryptographically verify signatures against candidate public keys offline.
+77. **`134-multisignature-threshold-inspection`**: Inspect an account's multisignature configuration (signers, weights, thresholds) and determine if a given transaction holds sufficient authorization.
+78. **`135-transaction-preflight-validation`**: Run local and network-dependent preflight validation checks (sequence, fees, time bounds, signatures) on a transaction envelope prior to submission.
+79. **`137-dynamic-fee-selection`**: Query Horizon fee statistics and dynamically calculate a transaction fee based on strategies like median, high priority, or custom multipliers, with safety caps.
 
 ## Installation
 
@@ -869,6 +873,48 @@ The example connects to a Horizon server, resolves or discovers an account to mo
 The `PAYMENT_FILTER` variable accepts `all` (default), `incoming`, or `outgoing`. Stream errors are logged with a reconnection notice rather than aborting — the SDK reconnects automatically after 15 seconds. Setting `STREAM_MAX_EVENTS` or `STREAM_DURATION_SECONDS` limits the run time, which is useful in CI. Leaving `ACCOUNT_ID` blank makes the example discover a recently active account, so it runs without any setup. Press Ctrl+C to shut down cleanly.
 
 _Note: You can configure custom environment variables in a local `.env` file, including `HORIZON_URL`, `SOROBAN_RPC_URL`, `NETWORK_PASSPHRASE`, and `TRANSACTION_HASH`._
+
+Run the account reserve and spendable balance analysis example:
+
+```bash
+npm run run-example 140-account-reserve-analysis
+```
+
+Analyse reserves for a specific account:
+
+```bash
+npm run run-example -- 140-account-reserve-analysis <account-id>
+```
+
+Output as JSON:
+
+```bash
+OUTPUT_JSON=true npm run run-example 140-account-reserve-analysis
+```
+
+Run the sequence number management example:
+
+```bash
+npm run run-example 141-sequence-number-management
+```
+
+Run the batch transaction construction example:
+
+```bash
+npm run run-example 142-batch-transaction-construction
+```
+
+Run in dry-run mode (build and inspect without submitting):
+
+```bash
+DRY_RUN=true npm run run-example 142-batch-transaction-construction
+```
+
+Run the transaction time bounds example:
+
+```bash
+npm run run-example 143-transaction-time-bounds
+```
 
 ## Automated Example Validation
 

@@ -596,6 +596,11 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '140-account-reserve-analysis': {
+    name: '140-account-reserve-analysis',
+    description:
+      'Inspect account reserve requirements, subentries, liabilities, and estimated spendable XLM',
+    run: loadExample('../examples/140-account-reserve-analysis'),
   '62-payment-history': {
     name: '62-payment-history',
     description:
@@ -605,6 +610,96 @@ export const examples: Record<string, Example> = {
       {
         type: 'input',
         name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '141-sequence-number-management': {
+    name: '141-sequence-number-management',
+    description:
+      'Retrieve, allocate, detect stale, and manage Stellar account sequence numbers across transactions',
+    run: loadExample('../examples/141-sequence-number-management'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionCount',
+        message: 'Number of sequential transactions to build and submit (default 3):',
+        default: '3',
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '142-batch-transaction-construction': {
+    name: '142-batch-transaction-construction',
+    description:
+      'Construct, inspect, and optionally submit a batch of independent transactions with sequential sequence numbers',
+    run: loadExample('../examples/142-batch-transaction-construction'),
+    params: [
+      {
+        type: 'input',
+        name: 'batchSize',
+        message: 'Number of transactions in the batch (default 3):',
+        default: '3',
+      },
+      {
+        type: 'list',
+        name: 'dryRun',
+        message: 'Run mode:',
+        default: 'false',
+        choices: [
+          { name: 'Submit transactions', value: 'false' },
+          { name: 'Dry-run (inspect only, no submission)', value: 'true' },
+        ],
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '143-transaction-time-bounds': {
+    name: '143-transaction-time-bounds',
+    description:
+      'Construct, inspect, validate, and submit transactions with time bounds; observe txTOO_EARLY and txTOO_LATE',
+    run: loadExample('../examples/143-transaction-time-bounds'),
+    params: [
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
         message: 'Optional account ID (blank discovers a recently active account):',
       },
       {
@@ -1219,67 +1314,28 @@ export const examples: Record<string, Example> = {
     description: 'Inspect clawback configuration and construct a clawback transaction',
     run: loadExample('../examples/129-asset-clawback'),
   },
-  '144-transaction-memo-inspection': {
-    name: '144-transaction-memo-inspection',
-    description: 'Construct, inspect, decode, and validate Stellar transaction memos (Text, ID, Hash, Return)',
-    run: loadExample('../examples/144-transaction-memo-inspection'),
+  '133-transaction-signature-verification': {
+    name: '133-transaction-signature-verification',
+    description: 'Decode a transaction envelope and verify its cryptographic signatures offline',
+    run: loadExample('../examples/133-transaction-signature-verification'),
     params: [
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output results in JSON format?',
-        default: false,
-      },
+      { type: 'input', name: 'envelopeXdr', message: 'Enter base64 transaction envelope:' },
+      { type: 'input', name: 'publicKeys', message: 'Enter comma-separated public keys to verify against:' },
     ],
   },
-  '145-transaction-envelope-normalization': {
-    name: '145-transaction-envelope-normalization',
-    description: 'Decode, identify, normalize, and reconstruct Stellar transaction envelopes (standard and fee-bump)',
-    run: loadExample('../examples/145-transaction-envelope-normalization'),
-    params: [
-      {
-        type: 'input',
-        name: 'envelopeXdr',
-        message: 'Enter base64-encoded transaction envelope (optional):',
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output results in JSON format?',
-        default: false,
-      },
-    ],
+  '134-multisignature-threshold-inspection': {
+    name: '134-multisignature-threshold-inspection',
+    description: 'Inspect account signers, thresholds, and evaluate transaction authorization',
+    run: loadExample('../examples/134-multisignature-threshold-inspection'),
   },
-  '146-transaction-envelope-signing': {
-    name: '146-transaction-envelope-signing',
-    description: 'Demonstrate incremental transaction-envelope signing workflow with multiple signers',
-    run: loadExample('../examples/146-transaction-envelope-signing'),
-    params: [
-      {
-        type: 'number',
-        name: 'requiredSignatures',
-        message: 'Number of required signatures:',
-        default: 2,
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output results in JSON format?',
-        default: false,
-      },
-    ],
+  '135-transaction-preflight-validation': {
+    name: '135-transaction-preflight-validation',
+    description: 'Perform preflight validation checks on a transaction envelope before submission',
+    run: loadExample('../examples/135-transaction-preflight-validation'),
   },
-  '147-transaction-xdr-round-trip': {
-    name: '147-transaction-xdr-round-trip',
-    description: 'Validate XDR serialization/deserialization preserves transaction semantics',
-    run: loadExample('../examples/147-transaction-xdr-round-trip'),
-    params: [
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output results in JSON format?',
-        default: false,
-      },
-    ],
+  '137-dynamic-fee-selection': {
+    name: '137-dynamic-fee-selection',
+    description: 'Retrieve fee stats and calculate transaction fees using dynamic strategies',
+    run: loadExample('../examples/137-dynamic-fee-selection'),
   },
 };

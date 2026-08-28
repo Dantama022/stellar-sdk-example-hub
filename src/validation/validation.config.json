@@ -155,6 +155,20 @@
       "reason": "Requires live Horizon data across multiple resource endpoints"
     },
     {
+      "match": "140-account-reserve-analysis",
+      "reason": "Requires live Horizon account data"
+    },
+    {
+      "match": "141-sequence-number-management",
+      "reason": "Requires live Friendbot funding and Testnet transaction submission"
+    },
+    {
+      "match": "142-batch-transaction-construction",
+      "reason": "Requires live Friendbot funding and sequential Testnet transaction submission"
+    },
+    {
+      "match": "143-transaction-time-bounds",
+      "reason": "Requires live Friendbot funding and Testnet time-bound transaction submission"
       "match": "68-soroban-contract-simulation",
       "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
     },
