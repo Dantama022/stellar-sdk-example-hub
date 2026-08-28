@@ -596,6 +596,11 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '140-account-reserve-analysis': {
+    name: '140-account-reserve-analysis',
+    description:
+      'Inspect account reserve requirements, subentries, liabilities, and estimated spendable XLM',
+    run: loadExample('../examples/140-account-reserve-analysis'),
   '62-payment-history': {
     name: '62-payment-history',
     description:
@@ -605,6 +610,96 @@ export const examples: Record<string, Example> = {
       {
         type: 'input',
         name: 'accountId',
+        message: 'Optional account ID (blank uses recent active account):',
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '141-sequence-number-management': {
+    name: '141-sequence-number-management',
+    description:
+      'Retrieve, allocate, detect stale, and manage Stellar account sequence numbers across transactions',
+    run: loadExample('../examples/141-sequence-number-management'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionCount',
+        message: 'Number of sequential transactions to build and submit (default 3):',
+        default: '3',
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '142-batch-transaction-construction': {
+    name: '142-batch-transaction-construction',
+    description:
+      'Construct, inspect, and optionally submit a batch of independent transactions with sequential sequence numbers',
+    run: loadExample('../examples/142-batch-transaction-construction'),
+    params: [
+      {
+        type: 'input',
+        name: 'batchSize',
+        message: 'Number of transactions in the batch (default 3):',
+        default: '3',
+      },
+      {
+        type: 'list',
+        name: 'dryRun',
+        message: 'Run mode:',
+        default: 'false',
+        choices: [
+          { name: 'Submit transactions', value: 'false' },
+          { name: 'Dry-run (inspect only, no submission)', value: 'true' },
+        ],
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '143-transaction-time-bounds': {
+    name: '143-transaction-time-bounds',
+    description:
+      'Construct, inspect, validate, and submit transactions with time bounds; observe txTOO_EARLY and txTOO_LATE',
+    run: loadExample('../examples/143-transaction-time-bounds'),
+    params: [
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
         message: 'Optional account ID (blank discovers a recently active account):',
       },
       {
