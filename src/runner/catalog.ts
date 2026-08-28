@@ -916,47 +916,107 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
-  '112-soroban-authorization-signing': {
-    name: '112-soroban-authorization-signing',
+  '108-dynamic-contract-invocation': {
+    name: '108-dynamic-contract-invocation',
     description:
-      'Extract Soroban authorization entries from simulation, sign and verify them, demonstrate missing/invalid signatures, and distinguish contract authorization from transaction signatures',
-    run: loadExample('../examples/112-soroban-authorization-signing'),
-  },
-  '113-typed-contract-client': {
-    name: '113-typed-contract-client',
-    description:
-      'Retrieve a Soroban contract specification, construct a typed-style client, encode typed arguments, invoke generated methods, and decode typed return values',
-    run: loadExample('../examples/113-typed-contract-client'),
+      'Discover a Soroban contract specification at runtime, encode arguments dynamically, simulate the invocation, and decode the return value',
+    run: loadExample('../examples/108-dynamic-contract-invocation'),
     params: [
       {
         type: 'input',
         name: 'contractId',
-        message: 'Contract ID (blank deploys the bundled example contract):',
+        message: 'Contract ID:',
+        default: 'CDVSGPL3HFBGJ6ZEYQUAVE3OH3XE2ZE5ZT2GWPA3LKOYVD4UBPQJ2VHB',
+      },
+      {
+        type: 'input',
+        name: 'functionName',
+        message: 'Contract function to invoke:',
+        default: 'hello',
+      },
+      {
+        type: 'input',
+        name: 'argsJson',
+        message: 'Arguments as a JSON object:',
+        default: '{"to":"Soroban"}',
       },
     ],
   },
-  '114-contract-upgrade': {
-    name: '114-contract-upgrade',
+  '109-soroban-transaction-preparation': {
+    name: '109-soroban-transaction-preparation',
     description:
-      'Deploy and inspect an upgradeable Soroban contract, reject unauthorized upgrades, simulate and submit an authorized upgrade, and verify the new implementation',
-    run: loadExample('../examples/114-contract-upgrade'),
-  },
-  '115-stellar-asset-contract': {
-    name: '115-stellar-asset-contract',
-    description:
-      'Derive, deploy, inspect, and interact with a Stellar Asset Contract, decode ScVal state, simulate minting, and handle invalid or unsupported operations',
-    run: loadExample('../examples/115-stellar-asset-contract'),
+      'Build, simulate, prepare, and inspect a Soroban transaction before signing or submission',
+    run: loadExample('../examples/109-soroban-transaction-preparation'),
     params: [
       {
         type: 'input',
-        name: 'assetCode',
-        message: 'Asset code (blank uses DEMO):',
-        default: 'DEMO',
+        name: 'contractId',
+        message: 'Contract ID:',
+        default: 'CDVSGPL3HFBGJ6ZEYQUAVE3OH3XE2ZE5ZT2GWPA3LKOYVD4UBPQJ2VHB',
       },
       {
         type: 'input',
-        name: 'issuer',
-        message: 'Asset issuer account ID (blank generates a temporary Testnet issuer):',
+        name: 'functionName',
+        message: 'Contract function:',
+        default: 'hello',
+      },
+      {
+        type: 'input',
+        name: 'argument',
+        message: 'String argument:',
+        default: 'Soroban',
+      },
+    ],
+  },
+  '110-soroban-transaction-submission': {
+    name: '110-soroban-transaction-submission',
+    description:
+      'Prepare, sign, submit, poll, and inspect the final result of a Soroban transaction',
+    run: loadExample('../examples/110-soroban-transaction-submission'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID:',
+        default: 'CDVSGPL3HFBGJ6ZEYQUAVE3OH3XE2ZE5ZT2GWPA3LKOYVD4UBPQJ2VHB',
+      },
+      {
+        type: 'input',
+        name: 'functionName',
+        message: 'Contract function:',
+        default: 'hello',
+      },
+      {
+        type: 'input',
+        name: 'argument',
+        message: 'String argument:',
+        default: 'Soroban',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Polling interval in milliseconds:',
+        default: '1000',
+      },
+      {
+        type: 'input',
+        name: 'pollTimeoutMs',
+        message: 'Polling timeout in milliseconds:',
+        default: '30000',
+      },
+    ],
+  },
+  '111-soroban-transaction-error-diagnosis': {
+    name: '111-soroban-transaction-error-diagnosis',
+    description:
+      'Retrieve a failed Soroban transaction, classify the failure, decode diagnostics, and provide troubleshooting guidance',
+    run: loadExample('../examples/111-soroban-transaction-error-diagnosis'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message:
+          'Failed transaction hash (blank searches recent failed Soroban transactions):',
       },
     ],
   },
@@ -1134,5 +1194,29 @@ export const examples: Record<string, Example> = {
         default: false,
       },
     ],
+  },
+  '124-liquidity-pool-inspection': {
+    name: '124-liquidity-pool-inspection',
+    description: 'Retrieve and analyze a Stellar liquidity pool state and reserves',
+    run: loadExample('../examples/124-liquidity-pool-inspection'),
+    params: [
+      { type: 'input', name: 'assetA', message: 'Enter Asset A (native or CODE:ISSUER):', default: 'native' },
+      { type: 'input', name: 'assetB', message: 'Enter Asset B (CODE:ISSUER):' },
+    ],
+  },
+  '125-liquidity-pool-simulation': {
+    name: '125-liquidity-pool-simulation',
+    description: 'Simulate liquidity pool deposit and withdrawal operations',
+    run: loadExample('../examples/125-liquidity-pool-simulation'),
+  },
+  '127-trustline-management': {
+    name: '127-trustline-management',
+    description: 'Retrieve, inspect, create, modify, and remove Stellar trustlines',
+    run: loadExample('../examples/127-trustline-management'),
+  },
+  '129-asset-clawback': {
+    name: '129-asset-clawback',
+    description: 'Inspect clawback configuration and construct a clawback transaction',
+    run: loadExample('../examples/129-asset-clawback'),
   },
 };
