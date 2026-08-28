@@ -222,6 +222,10 @@ The repository currently includes the following runnable examples:
 73. **`125-liquidity-pool-simulation`**: Simulate deposit and withdrawal operations on a liquidity pool to estimate share and asset changes.
 74. **`127-trustline-management`**: Inspect, create, update, and remove asset trustlines for a Stellar account.
 75. **`129-asset-clawback`**: Verify clawback configurations and simulate/execute asset recovery operations.
+76. **`133-transaction-signature-verification`**: Decode a Stellar transaction envelope, extract signer hints, and cryptographically verify signatures against candidate public keys offline.
+77. **`134-multisignature-threshold-inspection`**: Inspect an account's multisignature configuration (signers, weights, thresholds) and determine if a given transaction holds sufficient authorization.
+78. **`135-transaction-preflight-validation`**: Run local and network-dependent preflight validation checks (sequence, fees, time bounds, signatures) on a transaction envelope prior to submission.
+79. **`137-dynamic-fee-selection`**: Query Horizon fee statistics and dynamically calculate a transaction fee based on strategies like median, high priority, or custom multipliers, with safety caps.
 
 ## Installation
 

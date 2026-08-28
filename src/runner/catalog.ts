@@ -1219,4 +1219,28 @@ export const examples: Record<string, Example> = {
     description: 'Inspect clawback configuration and construct a clawback transaction',
     run: loadExample('../examples/129-asset-clawback'),
   },
+  '133-transaction-signature-verification': {
+    name: '133-transaction-signature-verification',
+    description: 'Decode a transaction envelope and verify its cryptographic signatures offline',
+    run: loadExample('../examples/133-transaction-signature-verification'),
+    params: [
+      { type: 'input', name: 'envelopeXdr', message: 'Enter base64 transaction envelope:' },
+      { type: 'input', name: 'publicKeys', message: 'Enter comma-separated public keys to verify against:' },
+    ],
+  },
+  '134-multisignature-threshold-inspection': {
+    name: '134-multisignature-threshold-inspection',
+    description: 'Inspect account signers, thresholds, and evaluate transaction authorization',
+    run: loadExample('../examples/134-multisignature-threshold-inspection'),
+  },
+  '135-transaction-preflight-validation': {
+    name: '135-transaction-preflight-validation',
+    description: 'Perform preflight validation checks on a transaction envelope before submission',
+    run: loadExample('../examples/135-transaction-preflight-validation'),
+  },
+  '137-dynamic-fee-selection': {
+    name: '137-dynamic-fee-selection',
+    description: 'Retrieve fee stats and calculate transaction fees using dynamic strategies',
+    run: loadExample('../examples/137-dynamic-fee-selection'),
+  },
 };
