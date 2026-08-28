@@ -194,10 +194,14 @@ export async function run(params: MixedOperationParams = {}): Promise<void> {
 
   try {
     if (!sourceAccountId) {
-      throw new Error('Provide SOURCE_ACCOUNT for an existing account on the selected Horizon network.');
+      throw new Error(
+        'Provide SOURCE_ACCOUNT for an existing account on the selected Horizon network.',
+      );
     }
     if (!isDryRun(params)) {
-      throw new Error('Submission is intentionally disabled; this example is inspection-only and supports dry-run mode.');
+      throw new Error(
+        'Submission is intentionally disabled; this example is inspection-only and supports dry-run mode.',
+      );
     }
 
     const horizonUrl = process.env.HORIZON_URL || DEFAULT_HORIZON_URL;
@@ -216,7 +220,9 @@ export async function run(params: MixedOperationParams = {}): Promise<void> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (json) {
-      console.log(JSON.stringify({ error: 'Unable to build mixed-operation transaction', message }, null, 2));
+      console.log(
+        JSON.stringify({ error: 'Unable to build mixed-operation transaction', message }, null, 2),
+      );
     } else {
       console.error(`Unable to build mixed-operation transaction: ${message}`);
     }

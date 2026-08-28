@@ -190,9 +190,7 @@ function buildBatchTransaction(
 // ──────────────────────────────────────────────────────────────────────────────
 
 async function fundAccount(publicKey: string): Promise<void> {
-  const response = await fetch(
-    `${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`,
-  );
+  const response = await fetch(`${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`);
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Friendbot funding failed for ${publicKey}. HTTP ${response.status}: ${body}`);
@@ -222,13 +220,9 @@ function summariseTransaction(tx: Transaction, index: number): BatchTransactionS
 export async function run(params: RunParams = {}): Promise<void> {
   const horizonUrl = process.env.HORIZON_URL ?? DEFAULT_HORIZON_URL;
   const dryRun =
-    params.dryRun === true ||
-    process.env.DRY_RUN === 'true' ||
-    process.argv.includes('--dry-run');
+    params.dryRun === true || process.env.DRY_RUN === 'true' || process.argv.includes('--dry-run');
   const outputJson =
-    params.json === true ||
-    process.env.OUTPUT_JSON === 'true' ||
-    process.argv.includes('--json');
+    params.json === true || process.env.OUTPUT_JSON === 'true' || process.argv.includes('--json');
   const batchSize =
     params.batchSize ??
     (process.env.BATCH_SIZE ? parseInt(process.env.BATCH_SIZE, 10) : undefined) ??
@@ -282,7 +276,9 @@ export async function run(params: RunParams = {}): Promise<void> {
   }
 
   console.log('  ✓ All sequence numbers are unique and contiguous.');
-  console.log(`  ✓ Sequence range: ${transactions[0].sequence} → ${transactions[transactions.length - 1].sequence}`);
+  console.log(
+    `  ✓ Sequence range: ${transactions[0].sequence} → ${transactions[transactions.length - 1].sequence}`,
+  );
 
   // ── Explain the distinction ───────────────────────────────────────────────
   console.log('\n── Operation Batching vs Transaction Batching ─────────────');
@@ -313,7 +309,9 @@ export async function run(params: RunParams = {}): Promise<void> {
       try {
         const result = await server.submitTransaction(tx);
         submittedHashes.push(result.hash);
-        console.log(`  Transaction #${i + 1} (sequence ${tx.sequence}) accepted — hash: ${result.hash}`);
+        console.log(
+          `  Transaction #${i + 1} (sequence ${tx.sequence}) accepted — hash: ${result.hash}`,
+        );
       } catch (err: any) {
         const code = err?.response?.data?.extras?.result_codes?.transaction ?? 'unknown';
         // A failed transaction does not advance the sequence counter, so a gap

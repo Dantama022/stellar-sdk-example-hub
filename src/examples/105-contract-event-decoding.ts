@@ -105,20 +105,24 @@ export async function run(params: ContractEventDecodingParams = {}): Promise<voi
   const events = response.events ?? [];
   if (events.length === 0) {
     console.log('\nNo contract events found in the queried ledger range.');
-    console.log('This is a valid empty result — try a more recent start ledger or another contract.');
+    console.log(
+      'This is a valid empty result — try a more recent start ledger or another contract.',
+    );
     return;
   }
 
   console.log(`\nRetrieved ${events.length} event(s). Decoding topics and payloads...\n`);
 
   events.forEach((event, index) => {
-    console.log(formatEventDecodingReport({
-      contractId,
-      ledger: event.ledger ?? 0,
-      txHash: event.txHash ?? '',
-      topics: event.topic ?? [],
-      value: event.value,
-    }));
+    console.log(
+      formatEventDecodingReport({
+        contractId,
+        ledger: event.ledger ?? 0,
+        txHash: event.txHash ?? '',
+        topics: event.topic ?? [],
+        value: event.value,
+      }),
+    );
 
     const topicComparisons = (event.topic ?? []).map(compareScVal);
     const payloadComparison = compareScVal(event.value);

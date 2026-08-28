@@ -21,9 +21,7 @@ describe('126-claimable-balance-management', () => {
     });
 
     it('renders not/and/or predicates recursively', () => {
-      expect(stringifyClaimPredicate({ not: { unconditional: true } })).toBe(
-        'not(unconditional)',
-      );
+      expect(stringifyClaimPredicate({ not: { unconditional: true } })).toBe('not(unconditional)');
       expect(
         stringifyClaimPredicate({
           and: [{ unconditional: true }, { before_absolute_time: '10' }],
@@ -43,12 +41,10 @@ describe('126-claimable-balance-management', () => {
     });
 
     it('evaluates before_absolute_time against the provided clock', () => {
-      expect(
-        evaluatePredicateEligibility({ before_absolute_time: '2000' }, 1000),
-      ).toBe('ELIGIBLE');
-      expect(
-        evaluatePredicateEligibility({ before_absolute_time: '2000' }, 3000),
-      ).toBe('NOT_ELIGIBLE');
+      expect(evaluatePredicateEligibility({ before_absolute_time: '2000' }, 1000)).toBe('ELIGIBLE');
+      expect(evaluatePredicateEligibility({ before_absolute_time: '2000' }, 3000)).toBe(
+        'NOT_ELIGIBLE',
+      );
     });
 
     it('is UNKNOWN for before_relative_time predicates', () => {
@@ -61,22 +57,31 @@ describe('126-claimable-balance-management', () => {
 
     it('requires all branches ELIGIBLE for and()', () => {
       expect(
-        evaluatePredicateEligibility({
-          and: [{ unconditional: true }, { before_absolute_time: '2000' }],
-        }, 1000),
+        evaluatePredicateEligibility(
+          {
+            and: [{ unconditional: true }, { before_absolute_time: '2000' }],
+          },
+          1000,
+        ),
       ).toBe('ELIGIBLE');
       expect(
-        evaluatePredicateEligibility({
-          and: [{ unconditional: true }, { before_absolute_time: '2000' }],
-        }, 3000),
+        evaluatePredicateEligibility(
+          {
+            and: [{ unconditional: true }, { before_absolute_time: '2000' }],
+          },
+          3000,
+        ),
       ).toBe('NOT_ELIGIBLE');
     });
 
     it('requires any branch ELIGIBLE for or()', () => {
       expect(
-        evaluatePredicateEligibility({
-          or: [{ before_absolute_time: '2000' }, { unconditional: true }],
-        }, 3000),
+        evaluatePredicateEligibility(
+          {
+            or: [{ before_absolute_time: '2000' }, { unconditional: true }],
+          },
+          3000,
+        ),
       ).toBe('ELIGIBLE');
     });
 

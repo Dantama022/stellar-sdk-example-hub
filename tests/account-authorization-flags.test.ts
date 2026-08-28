@@ -42,7 +42,11 @@ describe('128-account-authorization-flags', () => {
   describe('isAuthorizationLocked', () => {
     it('is true only when auth_immutable is set', () => {
       expect(
-        isAuthorizationLocked({ auth_required: false, auth_revocable: false, auth_immutable: true }),
+        isAuthorizationLocked({
+          auth_required: false,
+          auth_revocable: false,
+          auth_immutable: true,
+        }),
       ).toBe(true);
       expect(
         isAuthorizationLocked({ auth_required: true, auth_revocable: true, auth_immutable: false }),

@@ -51,9 +51,7 @@ export async function run(): Promise<void> {
 
   console.log(chalk.bold('Soroban Contract Storage Update Example'));
   console.log(
-    chalk.gray(
-      'Read initial state → invoke a state-modifying method → verify the updated value.',
-    ),
+    chalk.gray('Read initial state → invoke a state-modifying method → verify the updated value.'),
   );
   console.log(chalk.blue(`\nConnecting to Soroban RPC: ${rpcUrl}`));
 
@@ -244,10 +242,7 @@ export async function run(): Promise<void> {
     console.log(chalk.green('Transaction confirmed on-chain.'));
 
     // Display the return value of the update method (e.g. the new counter value).
-    if (
-      rpc.Api.isSimulationSuccess(simResult) &&
-      simResult.result?.retval
-    ) {
+    if (rpc.Api.isSimulationSuccess(simResult) && simResult.result?.retval) {
       try {
         const retVal = scValToNative(simResult.result.retval);
         console.log(`  Return value from ${updateMethod}: ${formatNative(retVal)}`);
@@ -301,7 +296,7 @@ async function simulateReadValue(
     const sourceAccount = await server.getAccount(keypair.publicKey()).catch(
       // If the account isn't funded, fall back to a mock sequence so we can
       // still simulate (simulation doesn't validate account state).
-      () => ({ accountId: () => keypair.publicKey(), sequenceNumber: () => '0' } as any),
+      () => ({ accountId: () => keypair.publicKey(), sequenceNumber: () => '0' }) as any,
     );
 
     const readOp = contract.call(method);
@@ -328,11 +323,7 @@ async function simulateReadValue(
 /**
  * Displays a formatted before-and-after comparison of the storage value.
  */
-function displayStorageTransition(
-  before: unknown,
-  after: unknown,
-  method: string,
-): void {
+function displayStorageTransition(before: unknown, after: unknown, method: string): void {
   const fmtBefore = before !== null ? formatNative(before) : '(unavailable)';
   const fmtAfter = after !== null ? formatNative(after) : '(unavailable)';
 
@@ -342,9 +333,7 @@ function displayStorageTransition(
 
   if (before !== null && after !== null) {
     if (String(before) !== String(after)) {
-      console.log(
-        chalk.green('\n  ✔  Storage was successfully updated on-chain.'),
-      );
+      console.log(chalk.green('\n  ✔  Storage was successfully updated on-chain.'));
     } else {
       console.log(
         chalk.yellow(

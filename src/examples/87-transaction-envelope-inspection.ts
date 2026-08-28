@@ -87,7 +87,9 @@ export async function run(): Promise<void> {
   console.log(xdr);
 
   const restored = parseEnvelopeXdr(xdr, Networks.TESTNET);
-  console.log(`\nRound-trip successful: hash matches = ${restored.hash().equals(transaction.hash())}`);
+  console.log(
+    `\nRound-trip successful: hash matches = ${restored.hash().equals(transaction.hash())}`,
+  );
   console.log(`Restored signature count: ${restored.signatures.length}`);
 
   try {

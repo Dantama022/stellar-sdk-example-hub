@@ -148,7 +148,10 @@ export function analyseAccountReserves(
 ): ReserveAnalysisResult {
   // Native balance and liabilities
   const nativeEntry = account.balances.find((b) => b.asset_type === 'native') as
-    | (Horizon.HorizonApi.BalanceLine & { selling_liabilities?: string; buying_liabilities?: string })
+    | (Horizon.HorizonApi.BalanceLine & {
+        selling_liabilities?: string;
+        buying_liabilities?: string;
+      })
     | undefined;
 
   const totalXlmBalance = nativeEntry ? parseFloat(nativeEntry.balance) : 0;
@@ -189,9 +192,7 @@ export function analyseAccountReserves(
   const warnings: string[] = [];
 
   if (estimatedSpendable === 0) {
-    warnings.push(
-      'WARNING: This account has NO spendable XLM. Any outgoing payment will fail.',
-    );
+    warnings.push('WARNING: This account has NO spendable XLM. Any outgoing payment will fail.');
   } else if (estimatedSpendable < 1) {
     warnings.push(
       `WARNING: Spendable balance is very low (${estimatedSpendable.toFixed(7)} XLM). ` +
@@ -252,8 +253,12 @@ function printReport(result: ReserveAnalysisResult): void {
 
   console.log('\n── Balance ────────────────────────────────────────────────');
   console.log(`${pad('Total XLM Balance:')}${result.totalXlmBalance.toFixed(7)} XLM`);
-  console.log(`${pad('Selling Liabilities (SDEX offers:')}${result.sellingLiabilities.toFixed(7)} XLM`);
-  console.log(`${pad('Buying Liabilities (SDEX bids):')}${result.buyingLiabilities.toFixed(7)} XLM`);
+  console.log(
+    `${pad('Selling Liabilities (SDEX offers:')}${result.sellingLiabilities.toFixed(7)} XLM`,
+  );
+  console.log(
+    `${pad('Buying Liabilities (SDEX bids):')}${result.buyingLiabilities.toFixed(7)} XLM`,
+  );
 
   console.log('\n── Reserve Breakdown ──────────────────────────────────────');
   console.log(`${pad('Base Reserve Rate:')}${result.baseReserve} XLM per entry`);
@@ -268,7 +273,9 @@ function printReport(result: ReserveAnalysisResult): void {
   console.log('\n── Calculated Reserves ────────────────────────────────────');
   console.log(`${pad('Minimum Required Reserve:')}${result.minimumReserve.toFixed(7)} XLM`);
   console.log(`${pad('Estimated Spendable XLM:')}${result.estimatedSpendable.toFixed(7)} XLM`);
-  console.log(`${pad('Recoverable via Entry Removal:')}${result.recoverableReserve.toFixed(7)} XLM`);
+  console.log(
+    `${pad('Recoverable via Entry Removal:')}${result.recoverableReserve.toFixed(7)} XLM`,
+  );
 
   if (result.warnings.length > 0) {
     console.log('\n── Warnings / Notes ───────────────────────────────────────');
@@ -278,10 +285,16 @@ function printReport(result: ReserveAnalysisResult): void {
   console.log('\n── How Reserves Work ──────────────────────────────────────');
   console.log('  • Every Stellar account must hold a minimum XLM balance (the minimum reserve).');
   console.log('  • Each subentry (trustline, offer, signer, data entry) adds 1 × base reserve.');
-  console.log('  • Sponsored subentries shift reserve cost to the sponsor, not the account holder.');
+  console.log(
+    '  • Sponsored subentries shift reserve cost to the sponsor, not the account holder.',
+  );
   console.log('  • Selling liabilities lock XLM into open SDEX offers — that XLM cannot be spent.');
-  console.log('  • To recover locked reserve, remove eligible subentries (offers, trustlines, etc.).');
-  console.log('  • Submitting a payment that would drop the balance below the minimum reserve fails.');
+  console.log(
+    '  • To recover locked reserve, remove eligible subentries (offers, trustlines, etc.).',
+  );
+  console.log(
+    '  • Submitting a payment that would drop the balance below the minimum reserve fails.',
+  );
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -294,16 +307,12 @@ function printReport(result: ReserveAnalysisResult): void {
 export async function run(params: RunParams = {}): Promise<void> {
   const horizonUrl = process.env.HORIZON_URL ?? DEFAULT_HORIZON_URL;
   const outputJson =
-    params.json === true ||
-    process.env.OUTPUT_JSON === 'true' ||
-    process.argv.includes('--json');
+    params.json === true || process.env.OUTPUT_JSON === 'true' || process.argv.includes('--json');
 
   const server = new Horizon.Server(horizonUrl);
 
   let accountId =
-    params.accountId?.trim() ||
-    process.env.ACCOUNT_ID?.trim() ||
-    process.argv[3]?.trim();
+    params.accountId?.trim() || process.env.ACCOUNT_ID?.trim() || process.argv[3]?.trim();
 
   console.log('Starting Account Reserve Analysis Example...');
   console.log(`Using Horizon: ${horizonUrl}`);
@@ -314,7 +323,8 @@ export async function run(params: RunParams = {}): Promise<void> {
     try {
       const recentOps = await server.operations().order('desc').limit(1).call();
       if (recentOps.records.length > 0) {
-        accountId = (recentOps.records[0] as any).source_account ?? (recentOps.records[0] as any).account;
+        accountId =
+          (recentOps.records[0] as any).source_account ?? (recentOps.records[0] as any).account;
       }
     } catch {
       // fallback below

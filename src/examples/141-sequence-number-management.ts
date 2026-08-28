@@ -222,14 +222,10 @@ export function buildSequencedTransaction(
 // ──────────────────────────────────────────────────────────────────────────────
 
 async function fundAccount(publicKey: string): Promise<void> {
-  const response = await fetch(
-    `${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`,
-  );
+  const response = await fetch(`${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`);
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(
-      `Friendbot could not fund ${publicKey}. HTTP ${response.status}: ${body}`,
-    );
+    throw new Error(`Friendbot could not fund ${publicKey}. HTTP ${response.status}: ${body}`);
   }
 }
 
@@ -260,9 +256,7 @@ function getResultCode(error: unknown): string | null {
 export async function run(params: RunParams = {}): Promise<void> {
   const horizonUrl = process.env.HORIZON_URL ?? DEFAULT_HORIZON_URL;
   const outputJson =
-    params.json === true ||
-    process.env.OUTPUT_JSON === 'true' ||
-    process.argv.includes('--json');
+    params.json === true || process.env.OUTPUT_JSON === 'true' || process.argv.includes('--json');
 
   const txCount = params.transactionCount ?? 3;
   const server = new Horizon.Server(horizonUrl);

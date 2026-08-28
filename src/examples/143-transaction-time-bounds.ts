@@ -127,11 +127,9 @@ export function inspectTimeBounds(
   const remainingSeconds =
     maxTime > 0 && status !== 'EXPIRED' ? Math.max(0, maxTime - nowSeconds) : null;
 
-  const secondsUntilValid =
-    status === 'NOT_YET_VALID' ? Math.max(0, minTime - nowSeconds) : null;
+  const secondsUntilValid = status === 'NOT_YET_VALID' ? Math.max(0, minTime - nowSeconds) : null;
 
-  const expiredAgoSeconds =
-    status === 'EXPIRED' ? Math.max(0, nowSeconds - maxTime) : null;
+  const expiredAgoSeconds = status === 'EXPIRED' ? Math.max(0, nowSeconds - maxTime) : null;
 
   return {
     minTime: minTime > 0 ? minTime : null,
@@ -215,7 +213,9 @@ function printInspection(label: string, inspection: TimeBoundsInspection): void 
   console.log(`\n  ── ${label} ──`);
   console.log(`    minTime (earliest valid):    ${formatTimestamp(inspection.minTime)}`);
   console.log(`    maxTime (latest valid):      ${formatTimestamp(inspection.maxTime)}`);
-  console.log(`    Current time:                ${inspection.currentTime} (${new Date(inspection.currentTime * 1000).toISOString()})`);
+  console.log(
+    `    Current time:                ${inspection.currentTime} (${new Date(inspection.currentTime * 1000).toISOString()})`,
+  );
   console.log(`    Status:                      ${statusIcon[inspection.status]}`);
 
   if (inspection.remainingSeconds !== null) {
@@ -234,9 +234,7 @@ function printInspection(label: string, inspection: TimeBoundsInspection): void 
 // ──────────────────────────────────────────────────────────────────────────────
 
 async function fundAccount(publicKey: string): Promise<void> {
-  const response = await fetch(
-    `${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`,
-  );
+  const response = await fetch(`${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`);
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Friendbot funding failed for ${publicKey}. HTTP ${response.status}: ${body}`);
@@ -271,9 +269,7 @@ function getResultCode(error: unknown): string | null {
 export async function run(params: RunParams = {}): Promise<void> {
   const horizonUrl = process.env.HORIZON_URL ?? DEFAULT_HORIZON_URL;
   const outputJson =
-    params.json === true ||
-    process.env.OUTPUT_JSON === 'true' ||
-    process.argv.includes('--json');
+    params.json === true || process.env.OUTPUT_JSON === 'true' || process.argv.includes('--json');
 
   const server = new Horizon.Server(horizonUrl);
   const nowSeconds = Math.floor(Date.now() / 1000);
@@ -388,8 +384,8 @@ export async function run(params: RunParams = {}): Promise<void> {
   const validTx = buildTimeBoundedTransaction(
     freshAccount,
     keypair,
-    nowSeconds - 60,   // opened 1 minute ago
-    nowSeconds + 600,  // closes in 10 minutes
+    nowSeconds - 60, // opened 1 minute ago
+    nowSeconds + 600, // closes in 10 minutes
     'valid-submission',
   );
   const validResult = await server.submitTransaction(validTx);
@@ -404,7 +400,7 @@ export async function run(params: RunParams = {}): Promise<void> {
     accountAfterValid,
     keypair,
     0,
-    nowSeconds - 30,  // expired 30 seconds ago
+    nowSeconds - 30, // expired 30 seconds ago
     'expired-submission',
   );
   try {

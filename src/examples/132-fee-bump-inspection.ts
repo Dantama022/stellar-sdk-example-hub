@@ -1,5 +1,6 @@
 import {
   Asset,
+  Account,
   Keypair,
   Networks,
   Operation,
@@ -71,8 +72,7 @@ export async function run(params?: any): Promise<void> {
   if (!envelopeXdr) {
     const sourceKeypair = Keypair.random();
     const feeSourceKeypair = Keypair.random();
-    
-    const { Account } = require('@stellar/stellar-sdk');
+
     const account = new Account(sourceKeypair.publicKey(), '1');
     const innerTx = new TransactionBuilder(account, {
       fee: '100',
@@ -99,7 +99,9 @@ export async function run(params?: any): Promise<void> {
     feeBumpTx.sign(feeSourceKeypair);
 
     envelopeXdr = feeBumpTx.toXDR();
-    console.log(chalk.gray('No XDR provided. Generated a sample fee-bump transaction envelope offline.'));
+    console.log(
+      chalk.gray('No XDR provided. Generated a sample fee-bump transaction envelope offline.'),
+    );
   }
 
   try {
@@ -108,7 +110,7 @@ export async function run(params?: any): Promise<void> {
     console.log(chalk.bold.cyan('\n📋 Inspection Report:'));
     console.log(`  Envelope Type:     ${summary.envelopeType}`);
     console.log(`  Is Fee-Bump?       ${summary.isFeeBump ? 'YES ✅' : 'NO ❌'}`);
-    
+
     if (summary.isFeeBump) {
       console.log(`  Outer Fee Source:  ${summary.feeSource}`);
       console.log(`  Fee-Bump Fee:      ${summary.feeBumpFee} stroops`);
@@ -123,7 +125,6 @@ export async function run(params?: any): Promise<void> {
     console.log(`  Operation Types:   ${summary.operationTypes.join(', ') || 'None'}`);
     console.log(`  Signatures Count:  ${summary.signaturesCount}`);
     console.log(`  Signer Hints:      ${summary.signerHints.join(', ') || 'None'}`);
-
   } catch (error: any) {
     console.error(chalk.red(`\n❌ Error parsing transaction envelope: ${error.message}`));
   }

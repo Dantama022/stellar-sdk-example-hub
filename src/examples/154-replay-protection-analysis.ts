@@ -33,7 +33,10 @@ interface ReplayProtectionAnalysis {
   };
 }
 
-function analyzeReplayProtection(txEnvelopeXdr: string, networkPassphrase: string): ReplayProtectionAnalysis {
+function analyzeReplayProtection(
+  txEnvelopeXdr: string,
+  networkPassphrase: string,
+): ReplayProtectionAnalysis {
   try {
     // Decode the transaction envelope
     const envelope = xdr.TransactionEnvelope.fromXDR(txEnvelopeXdr, 'base64');
@@ -51,7 +54,9 @@ function analyzeReplayProtection(txEnvelopeXdr: string, networkPassphrase: strin
     // Extract source account
     const sourceAccountBuffer = tx.sourceAccount().accountId().ed25519();
     const sourceAccountPublicKey = Keypair.fromPublicKey(
-      Buffer.concat([Buffer.from([0]), sourceAccountBuffer]).toString('base64').slice(1),
+      Buffer.concat([Buffer.from([0]), sourceAccountBuffer])
+        .toString('base64')
+        .slice(1),
     ).publicKey();
 
     // Extract sequence number
@@ -83,14 +88,15 @@ function analyzeReplayProtection(txEnvelopeXdr: string, networkPassphrase: strin
 
     // Network Protection
     networkProtection = `Network passphrase "${networkPassphrase}" binds transaction to specific network`;
-    networkProtection += '\n    - Transaction cannot be replayed on networks with different passphrases';
-    networkProtection += '\n    - Provides strong isolation between Public/Test/Development networks';
+    networkProtection +=
+      '\n    - Transaction cannot be replayed on networks with different passphrases';
+    networkProtection +=
+      '\n    - Provides strong isolation between Public/Test/Development networks';
     protectionLevel = 'MODERATE';
 
     // Temporal Protection
     if (!hasLowerBound && !hasUpperBound) {
-      temporalProtection =
-        'WEAK: No time bounds - transaction is valid indefinitely once accepted';
+      temporalProtection = 'WEAK: No time bounds - transaction is valid indefinitely once accepted';
       temporalProtection += '\n    - Higher risk of accidental replay if account state is reset';
     } else if (hasLowerBound && hasUpperBound) {
       const now = Math.floor(Date.now() / 1000);
@@ -140,7 +146,13 @@ function analyzeReplayProtection(txEnvelopeXdr: string, networkPassphrase: strin
     }
 
     // Determine overall risk
-    const overallRisk = determineOverallRisk(sequence, hasLowerBound, hasUpperBound, minTime, maxTime);
+    const overallRisk = determineOverallRisk(
+      sequence,
+      hasLowerBound,
+      hasUpperBound,
+      minTime,
+      maxTime,
+    );
 
     const timeBoundsDescription = describeTimeBounds(minTime, maxTime);
 

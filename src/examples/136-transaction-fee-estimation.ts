@@ -11,9 +11,12 @@ export interface FeeEstimationResult {
   feeBumpEstimatedXlm: string;
 }
 
-export function calculateTransactionFees(baseFeeStroops: number, operationCount: number): FeeEstimationResult {
+export function calculateTransactionFees(
+  baseFeeStroops: number,
+  operationCount: number,
+): FeeEstimationResult {
   const minFeeStroops = baseFeeStroops * Math.max(1, operationCount);
-  const feeBumpStroops = minFeeStroops + baseFeeStroops * 2; 
+  const feeBumpStroops = minFeeStroops + baseFeeStroops * 2;
 
   return {
     baseFeeInStroops: baseFeeStroops,
@@ -75,31 +78,42 @@ export async function run(params?: any): Promise<void> {
     }
 
     console.log(chalk.bold.cyan('\n📋 Network Fee Overview:'));
-    console.log(`  Current Base Fee:  ${baseFeeStroops} stroops (${(baseFeeStroops / 10_000_000).toFixed(7)} XLM)`);
+    console.log(
+      `  Current Base Fee:  ${baseFeeStroops} stroops (${(baseFeeStroops / 10_000_000).toFixed(7)} XLM)`,
+    );
     console.log(`  Ledger Capacity:   ${feeStats.ledger_capacity_usage || 'N/A'}`);
     console.log(`  P50 Accepted Fee:  ${feeStats.p50_accepted_fee || baseFeeStroops} stroops`);
     console.log(`  P95 Accepted Fee:  ${feeStats.p95_accepted_fee || baseFeeStroops} stroops`);
 
     console.log(chalk.bold.cyan(`\n📊 Fee Estimation Breakdown (${operationCount} operation(s)):`));
-    console.log(`  Minimum Fee:       ${multiOpEst.minimumFeeStroops} stroops (${multiOpEst.minimumFeeXlm} XLM)`);
-    console.log(`  Fee-Bump Estimate: ${multiOpEst.feeBumpEstimatedStroops} stroops (${multiOpEst.feeBumpEstimatedXlm} XLM)`);
+    console.log(
+      `  Minimum Fee:       ${multiOpEst.minimumFeeStroops} stroops (${multiOpEst.minimumFeeXlm} XLM)`,
+    );
+    console.log(
+      `  Fee-Bump Estimate: ${multiOpEst.feeBumpEstimatedStroops} stroops (${multiOpEst.feeBumpEstimatedXlm} XLM)`,
+    );
 
     console.log(chalk.bold.yellow('\n💡 Fee Comparison Across Sizes:'));
     [1, 2, 5, 10].forEach((count) => {
       const est = calculateTransactionFees(baseFeeStroops, count);
-      console.log(`  - ${count} operation(s): ${est.minimumFeeStroops} stroops (${est.minimumFeeXlm} XLM)`);
+      console.log(
+        `  - ${count} operation(s): ${est.minimumFeeStroops} stroops (${est.minimumFeeXlm} XLM)`,
+      );
     });
-
   } catch (error: any) {
-    const errPayload = { error: `Failed to retrieve fee statistics from Horizon: ${error.message}` };
+    const errPayload = {
+      error: `Failed to retrieve fee statistics from Horizon: ${error.message}`,
+    };
     if (isJson) {
       console.log(JSON.stringify(errPayload, null, 2));
       return;
     }
     console.error(chalk.red(`\n❌ ${errPayload.error}`));
     console.log(chalk.yellow('⚠️ Falling back to default network base fee (100 stroops).'));
-    
+
     const fallbackEst = calculateTransactionFees(100, operationCount);
-    console.log(`  Fallback Estimate (${operationCount} ops): ${fallbackEst.minimumFeeStroops} stroops (${fallbackEst.minimumFeeXlm} XLM)`);
+    console.log(
+      `  Fallback Estimate (${operationCount} ops): ${fallbackEst.minimumFeeStroops} stroops (${fallbackEst.minimumFeeXlm} XLM)`,
+    );
   }
 }

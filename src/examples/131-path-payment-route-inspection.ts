@@ -1,4 +1,11 @@
-import { Asset, Horizon, Keypair, Networks, Operation, TransactionBuilder } from '@stellar/stellar-sdk';
+import {
+  Asset,
+  Horizon,
+  Keypair,
+  Networks,
+  Operation,
+  TransactionBuilder,
+} from '@stellar/stellar-sdk';
 
 const DEFAULT_HORIZON_URL = 'https://horizon-testnet.stellar.org';
 const DEFAULT_MAX_ROUTES = 5;
@@ -169,7 +176,9 @@ async function createDemoMarket(
 function displayRoute(index: number, route: RouteReport): void {
   console.log(`\nRoute ${index + 1}:`);
   console.log(`  Path: ${route.hops.join(' -> ')}`);
-  console.log(`  Intermediate assets: ${route.intermediateAssets.length > 0 ? route.intermediateAssets.join(', ') : 'none (direct)'}`);
+  console.log(
+    `  Intermediate assets: ${route.intermediateAssets.length > 0 ? route.intermediateAssets.join(', ') : 'none (direct)'}`,
+  );
   console.log(`  Source amount (required): ${route.sourceAmount}`);
   console.log(`  Destination amount (fixed): ${route.destinationAmount}`);
   console.log(`  Effective rate (dest per source unit): ${route.effectiveRate}`);
@@ -197,9 +206,7 @@ export async function run(params?: PathPaymentRouteInspectionParams): Promise<vo
 
   log('Starting Path Payment Route Inspection Example...');
   log(`Using Horizon: ${horizonUrl}`);
-  log(
-    'This example only discovers and ranks routes; it never constructs or submits a payment.',
-  );
+  log('This example only discovers and ranks routes; it never constructs or submits a payment.');
 
   let sourceAccountId = process.env.SOURCE_ACCOUNT?.trim();
   let destAsset: Asset;
@@ -258,21 +265,33 @@ export async function run(params?: PathPaymentRouteInspectionParams): Promise<vo
 
   const best = ranked[0];
   log(`\nMost efficient route: ${best.hops.join(' -> ')}`);
-  log(`It requires spending only ${best.sourceAmount} to receive the fixed ${best.destinationAmount}.`);
+  log(
+    `It requires spending only ${best.sourceAmount} to receive the fixed ${best.destinationAmount}.`,
+  );
 
   log('\nHow routing works:');
   log('- Each hop in "path" is a Stellar asset the payment is converted through en route.');
-  log('- Horizon evaluates both SDEX order books and AMM liquidity pools when finding a hop\'s rate.');
-  log('- A shorter path is not automatically cheaper — it depends entirely on available liquidity depth.');
-  log('- strictReceivePaths fixes the destination amount and varies the source cost (this example).');
-  log('- strictSendPaths does the opposite: it fixes the source amount and varies the destination received.');
+  log(
+    "- Horizon evaluates both SDEX order books and AMM liquidity pools when finding a hop's rate.",
+  );
+  log(
+    '- A shorter path is not automatically cheaper — it depends entirely on available liquidity depth.',
+  );
+  log(
+    '- strictReceivePaths fixes the destination amount and varies the source cost (this example).',
+  );
+  log(
+    '- strictSendPaths does the opposite: it fixes the source amount and varies the destination received.',
+  );
 
   if (jsonOutput) {
     console.log(
       JSON.stringify(
         {
           sourceAccountId,
-          destAsset: destAsset.isNative() ? 'native' : `${destAsset.getCode()}:${destAsset.getIssuer()}`,
+          destAsset: destAsset.isNative()
+            ? 'native'
+            : `${destAsset.getCode()}:${destAsset.getIssuer()}`,
           destAmount,
           routeCount: records.length,
           routes: ranked,

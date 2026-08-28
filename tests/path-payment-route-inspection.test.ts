@@ -19,13 +19,16 @@ describe('131-path-payment-route-inspection', () => {
     });
 
     it('formats an issued asset with a truncated issuer', () => {
-      expect(formatAsset({ asset_type: 'credit_alphanum4', asset_code: 'USD', asset_issuer: ISSUER })).toBe(
-        `USD:${ISSUER.slice(0, 8)}…`,
-      );
+      expect(
+        formatAsset({ asset_type: 'credit_alphanum4', asset_code: 'USD', asset_issuer: ISSUER }),
+      ).toBe(`USD:${ISSUER.slice(0, 8)}…`);
     });
 
     it('formats a full path of hops', () => {
-      const path = [{ asset_type: 'native' }, { asset_type: 'credit_alphanum4', asset_code: 'USD', asset_issuer: ISSUER }];
+      const path = [
+        { asset_type: 'native' },
+        { asset_type: 'credit_alphanum4', asset_code: 'USD', asset_issuer: ISSUER },
+      ];
       expect(formatPath(path)).toEqual(['XLM', `USD:${ISSUER.slice(0, 8)}…`]);
     });
   });
@@ -65,8 +68,20 @@ describe('131-path-payment-route-inspection', () => {
   describe('rankRoutesByEfficiency', () => {
     it('sorts ascending by source amount', () => {
       const routes: RouteReport[] = [
-        { hops: [], intermediateAssets: [], sourceAmount: '20', destinationAmount: '25', effectiveRate: '1' },
-        { hops: [], intermediateAssets: [], sourceAmount: '10', destinationAmount: '25', effectiveRate: '2' },
+        {
+          hops: [],
+          intermediateAssets: [],
+          sourceAmount: '20',
+          destinationAmount: '25',
+          effectiveRate: '1',
+        },
+        {
+          hops: [],
+          intermediateAssets: [],
+          sourceAmount: '10',
+          destinationAmount: '25',
+          effectiveRate: '2',
+        },
       ];
       const ranked = rankRoutesByEfficiency(routes);
       expect(ranked[0].sourceAmount).toBe('10');
@@ -75,8 +90,20 @@ describe('131-path-payment-route-inspection', () => {
 
     it('does not mutate the original array', () => {
       const routes: RouteReport[] = [
-        { hops: [], intermediateAssets: [], sourceAmount: '20', destinationAmount: '25', effectiveRate: '1' },
-        { hops: [], intermediateAssets: [], sourceAmount: '10', destinationAmount: '25', effectiveRate: '2' },
+        {
+          hops: [],
+          intermediateAssets: [],
+          sourceAmount: '20',
+          destinationAmount: '25',
+          effectiveRate: '1',
+        },
+        {
+          hops: [],
+          intermediateAssets: [],
+          sourceAmount: '10',
+          destinationAmount: '25',
+          effectiveRate: '2',
+        },
       ];
       rankRoutesByEfficiency(routes);
       expect(routes[0].sourceAmount).toBe('20');

@@ -47,7 +47,7 @@ export async function run(params?: any): Promise<void> {
         name: 'json',
         message: 'Output results in JSON format?',
         default: false,
-      }
+      },
     ]);
     accountId = prompt.accountId;
     isJson = prompt.json;
@@ -55,7 +55,8 @@ export async function run(params?: any): Promise<void> {
 
   // Graceful Handling: Invalid Account ID
   if (!accountId || !StrKey.isValidEd25519PublicKey(accountId)) {
-    const errMsg = 'Invalid account ID. Please provide a valid Stellar public key (starting with G).';
+    const errMsg =
+      'Invalid account ID. Please provide a valid Stellar public key (starting with G).';
     if (isJson) {
       console.log(JSON.stringify({ error: errMsg }, null, 2));
       return;
@@ -85,7 +86,7 @@ export async function run(params?: any): Promise<void> {
     offers.forEach((offer) => {
       const selling = formatAsset(offer.selling);
       const buying = formatAsset(offer.buying);
-      
+
       const pair = [selling, buying].sort().join(' / ');
       if (!groupedOffers[pair]) groupedOffers[pair] = [];
       groupedOffers[pair].push(offer);
@@ -112,7 +113,7 @@ export async function run(params?: any): Promise<void> {
       pairOffers.forEach((o) => {
         const amt = parseFloat(o.amount);
         const price = parseFloat(o.price);
-        
+
         totalAmount += amt;
         sumPrice += price;
 
@@ -134,17 +135,23 @@ export async function run(params?: any): Promise<void> {
     });
 
     if (isJson) {
-      console.log(JSON.stringify({ accountId, offers: formattedOffers, summary: summaryStats }, null, 2));
+      console.log(
+        JSON.stringify({ accountId, offers: formattedOffers, summary: summaryStats }, null, 2),
+      );
       return;
     }
 
     // Console Output
     console.log(chalk.cyan(`\nFound ${offers.length} active offer(s) for ${accountId}:\n`));
-    
+
     formattedOffers.forEach((o) => {
       console.log(`${chalk.bold('Offer ID:')} ${o.id}`);
-      console.log(`  ${chalk.gray('Selling:')} ${o.sellingAsset} | ${chalk.gray('Buying:')} ${o.buyingAsset}`);
-      console.log(`  ${chalk.gray('Amount:')} ${o.amount} | ${chalk.gray('Price:')} ${o.priceDecimal} (${o.price})`);
+      console.log(
+        `  ${chalk.gray('Selling:')} ${o.sellingAsset} | ${chalk.gray('Buying:')} ${o.buyingAsset}`,
+      );
+      console.log(
+        `  ${chalk.gray('Amount:')} ${o.amount} | ${chalk.gray('Price:')} ${o.priceDecimal} (${o.price})`,
+      );
       console.log(`  ${chalk.gray('Type:')} ${o.type}`);
       console.log('---');
     });
@@ -158,10 +165,10 @@ export async function run(params?: any): Promise<void> {
       console.log(`  Lowest Ask:     ${stat.lowestSellPrice ? stat.lowestSellPrice : 'N/A'}`);
       console.log(`  Highest Bid:    ${stat.highestBuyPrice ? stat.highestBuyPrice : 'N/A'}`);
     });
-
   } catch (error: any) {
     if (error.response?.status === 404) {
-      if (isJson) return console.log(JSON.stringify({ error: 'Account not found on the network.' }));
+      if (isJson)
+        return console.log(JSON.stringify({ error: 'Account not found on the network.' }));
       console.error(chalk.red('\n❌ Account not found on the network. It may be unfunded.'));
     } else {
       if (isJson) return console.log(JSON.stringify({ error: error.message }));

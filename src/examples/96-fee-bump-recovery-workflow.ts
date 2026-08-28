@@ -14,9 +14,7 @@ const DEFAULT_BUMP_BASE_FEE = 500;
 const CONFIRMATION_CHECK_DELAY_MS = 1500;
 
 async function fundAccount(publicKey: string): Promise<void> {
-  const response = await fetch(
-    `${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`,
-  );
+  const response = await fetch(`${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`);
   if (!response.ok) {
     throw new Error(`Friendbot funding failed for ${publicKey}: ${response.statusText}`);
   }
@@ -76,10 +74,7 @@ async function waitForTransactionConfirmation(
   return isTransactionConfirmed(server, hash);
 }
 
-export async function run(params?: {
-  innerBaseFee?: string;
-  bumpBaseFee?: string;
-}): Promise<void> {
+export async function run(params?: { innerBaseFee?: string; bumpBaseFee?: string }): Promise<void> {
   const server = new Horizon.Server(HORIZON_URL);
   const innerBaseFee = normalizeFee(
     params?.innerBaseFee || process.env.INNER_BASE_FEE,
@@ -156,13 +151,19 @@ export async function run(params?: {
       console.log('  This is a candidate for fee-bump recovery.');
     } else {
       console.log('  Checking whether the original transaction may still have been included...');
-      originalConfirmed = await waitForTransactionConfirmation(server, originalHash, CONFIRMATION_CHECK_DELAY_MS);
+      originalConfirmed = await waitForTransactionConfirmation(
+        server,
+        originalHash,
+        CONFIRMATION_CHECK_DELAY_MS,
+      );
     }
   }
 
   if (originalConfirmed) {
     console.log('\nOriginal transaction is confirmed on ledger. No recovery needed.');
-    console.log('If you want to retry with a higher fee, create a new inner transaction and fee bump.');
+    console.log(
+      'If you want to retry with a higher fee, create a new inner transaction and fee bump.',
+    );
     return;
   }
 
@@ -181,7 +182,9 @@ export async function run(params?: {
   console.log('Step 4: Build the fee-bump transaction using the original inner transaction...');
   console.log(`  Inner operation count : ${innerOps}`);
   console.log(`  Fee-bump base fee     : ${bumpBaseFee} stroops/op`);
-  console.log(`  Total fee charged     : ${totalReplacementFee} stroops (${stroopsToXlm(totalReplacementFee)} XLM)`);
+  console.log(
+    `  Total fee charged     : ${totalReplacementFee} stroops (${stroopsToXlm(totalReplacementFee)} XLM)`,
+  );
 
   const feeBumpTransaction = TransactionBuilder.buildFeeBumpTransaction(
     feePayer.publicKey(),
@@ -213,8 +216,12 @@ export async function run(params?: {
 
   console.log();
   console.log('=== Recovery Summary ===');
-  console.log('  • Original transaction was built with a low fee and could not be confirmed immediately.');
+  console.log(
+    '  • Original transaction was built with a low fee and could not be confirmed immediately.',
+  );
   console.log('  • The replacement fee-bump transaction preserved the signed inner transaction.');
-  console.log('  • A separate fee payer paid the higher fee without re-signing the inner transaction.');
+  console.log(
+    '  • A separate fee payer paid the higher fee without re-signing the inner transaction.',
+  );
   console.log('  • Original and replacement hashes are shown for audit and tracing.');
 }

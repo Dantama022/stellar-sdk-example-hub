@@ -83,10 +83,7 @@ function authFlagLabel(flag: string): string {
   }
 }
 
-function printTrustline(
-  tl: BalanceLine,
-  label = 'Trustline details',
-): void {
+function printTrustline(tl: BalanceLine, label = 'Trustline details'): void {
   if (tl.asset_type === 'native') {
     console.log(chalk.gray(`  ${label}: native XLM (no trustline required)`));
     return;
@@ -99,12 +96,8 @@ function printTrustline(
   console.log(`    Balance:             ${issued.balance}`);
   console.log(`    Limit:               ${formatLimit(issued.limit)}`);
   console.log(`    Authorization:       ${authFlagLabel(String(issued.is_authorized ? 1 : 0))}`);
-  console.log(
-    `    Buying liabilities:  ${issued.buying_liabilities ?? '0'}`,
-  );
-  console.log(
-    `    Selling liabilities: ${issued.selling_liabilities ?? '0'}`,
-  );
+  console.log(`    Buying liabilities:  ${issued.buying_liabilities ?? '0'}`);
+  console.log(`    Selling liabilities: ${issued.selling_liabilities ?? '0'}`);
 }
 
 async function fundAccount(publicKey: string): Promise<void> {
@@ -181,10 +174,7 @@ The changeTrust operation creates, updates, or removes a trustline:
   console.log(`  Issuer public key:  ${issuer.publicKey()}`);
 
   console.log(chalk.gray('  Funding both accounts via Friendbot…'));
-  await Promise.all([
-    fundAccount(holder.publicKey()),
-    fundAccount(issuer.publicKey()),
-  ]);
+  await Promise.all([fundAccount(holder.publicKey()), fundAccount(issuer.publicKey())]);
   console.log(chalk.green('  Both accounts funded.'));
 
   const asset = new Asset(assetCode, issuer.publicKey());
@@ -196,15 +186,17 @@ The changeTrust operation creates, updates, or removes a trustline:
   let holderAccount = await server.loadAccount(holder.publicKey());
   const nativeBefore = holderAccount.balances.find((b) => b.asset_type === 'native')!;
   const subEntriesBefore = holderAccount.subentry_count;
-  console.log(
-    `  XLM balance:   ${nativeBefore.balance}`,
-  );
+  console.log(`  XLM balance:   ${nativeBefore.balance}`);
   console.log(`  Subentries:    ${subEntriesBefore}  (each costs 0.5 XLM reserve)`);
-  console.log(`  Trustlines:    ${holderAccount.balances.filter((b) => b.asset_type !== 'native').length}`);
+  console.log(
+    `  Trustlines:    ${holderAccount.balances.filter((b) => b.asset_type !== 'native').length}`,
+  );
 
   // ── Step 2: Create trustline with a custom limit ───────────────────────────
   const initialLimit = '5000';
-  console.log(chalk.cyan(`\nStep 2 — Creating trustline for ${asset.code} with limit ${initialLimit}`));
+  console.log(
+    chalk.cyan(`\nStep 2 — Creating trustline for ${asset.code} with limit ${initialLimit}`),
+  );
 
   holderAccount = await server.loadAccount(holder.publicKey());
   const createHash = await submitChangeTrust(
@@ -244,7 +236,9 @@ The changeTrust operation creates, updates, or removes a trustline:
   const subEntriesAfterCreate = holderAccount.subentry_count;
   const nativeAfterCreate = holderAccount.balances.find((b) => b.asset_type === 'native')!;
   console.log(`\n  XLM balance after create:  ${nativeAfterCreate.balance}`);
-  console.log(`  Subentries after create:   ${subEntriesAfterCreate}  (+${subEntriesAfterCreate - subEntriesBefore} from trustline)`);
+  console.log(
+    `  Subentries after create:   ${subEntriesAfterCreate}  (+${subEntriesAfterCreate - subEntriesBefore} from trustline)`,
+  );
   console.log(`
   Authorization flags explained:
     0 — deauthorized         (issuer has revoked the account's permission)
@@ -274,9 +268,7 @@ The changeTrust operation creates, updates, or removes a trustline:
 
   holderAccount = await server.loadAccount(holder.publicKey());
   const updatedTrustline = holderAccount.balances.find(
-    (b) =>
-      b.asset_type !== 'native' &&
-      (b as BalanceLineAsset).asset_code === assetCode,
+    (b) => b.asset_type !== 'native' && (b as BalanceLineAsset).asset_code === assetCode,
   )!;
   printTrustline(updatedTrustline, 'Trustline after limit update');
 
@@ -319,7 +311,7 @@ The changeTrust operation creates, updates, or removes a trustline:
     holderAccount,
     holder,
     asset,
-    '0',                 // limit = "0" removes the trustline
+    '0', // limit = "0" removes the trustline
     networkPassphrase,
   );
   console.log(chalk.green(`  Trustline removed.  Transaction hash: ${removeHash}`));
@@ -336,9 +328,7 @@ The changeTrust operation creates, updates, or removes a trustline:
 
   holderAccount = await server.loadAccount(holder.publicKey());
   const removedTrustline = holderAccount.balances.find(
-    (b) =>
-      b.asset_type !== 'native' &&
-      (b as BalanceLineAsset).asset_code === assetCode,
+    (b) => b.asset_type !== 'native' && (b as BalanceLineAsset).asset_code === assetCode,
   );
 
   if (removedTrustline) {

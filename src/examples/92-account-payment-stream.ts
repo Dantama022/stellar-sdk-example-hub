@@ -166,10 +166,14 @@ function classifyPayment(
 
 function directionChalk(direction: 'incoming' | 'outgoing' | 'self' | 'related'): string {
   switch (direction) {
-    case 'incoming': return chalk.green('↙ INCOMING');
-    case 'outgoing': return chalk.red('↗ OUTGOING');
-    case 'self':     return chalk.blue('⇌ SELF');
-    default:         return chalk.gray('~ RELATED');
+    case 'incoming':
+      return chalk.green('↙ INCOMING');
+    case 'outgoing':
+      return chalk.red('↗ OUTGOING');
+    case 'self':
+      return chalk.blue('⇌ SELF');
+    default:
+      return chalk.gray('~ RELATED');
   }
 }
 
@@ -441,11 +445,7 @@ operations — any operation that credits or debits an account.
             const direction = classifyPayment(record, accountId!);
 
             // Apply the optional filter
-            if (
-              paymentFilter !== 'all' &&
-              direction !== paymentFilter &&
-              direction !== 'self'
-            ) {
+            if (paymentFilter !== 'all' && direction !== paymentFilter && direction !== 'self') {
               return; // skip filtered-out direction
             }
 
@@ -471,10 +471,7 @@ operations — any operation that credits or debits an account.
             );
 
             // If the error looks fatal (account deleted, auth revoked), stop.
-            if (
-              typeof msg === 'string' &&
-              (msg.includes('Not Found') || msg.includes('404'))
-            ) {
+            if (typeof msg === 'string' && (msg.includes('Not Found') || msg.includes('404'))) {
               fail(
                 new Error(
                   `Account "${accountId}" was not found on Horizon.  The account may have been merged or the ID is incorrect.`,

@@ -112,12 +112,7 @@ export async function run(): Promise<void> {
     ),
   );
 
-  await inspectNamedKey(
-    server,
-    contractId,
-    xdr.ScVal.scvSymbol('nonexistent_key'),
-    'persistent',
-  );
+  await inspectNamedKey(server, contractId, xdr.ScVal.scvSymbol('nonexistent_key'), 'persistent');
 
   // ──────────────────────────────────────────────────────────────────────────
   // Step 5: Explain storage vs events
@@ -152,7 +147,7 @@ async function inspectContractInstance(server: rpc.Server, contractId: string): 
       rpc.Durability.Persistent,
     );
 
-    if (!entry || !entry.val) {
+    if (!entry?.val) {
       console.log(chalk.gray('  Instance entry not found — contract may be archived or expired.'));
       return;
     }
@@ -187,7 +182,7 @@ async function inspectNamedKey(
   try {
     const entry = await server.getContractData(contractId, key, rpcDurability);
 
-    if (!entry || !entry.val) {
+    if (!entry?.val) {
       console.log(chalk.gray(`  Key ${keyLabel}: not found (entry absent or expired).`));
       return;
     }
@@ -241,16 +236,17 @@ function displayLedgerEntry(label: string, entry: rpc.Api.LedgerEntryResult): vo
  * and contract events.
  */
 function displayStorageVsEventsExplanation(): void {
-  console.log(
-    chalk.bold('\n  Contract storage vs. contract events — key differences:\n'),
-  );
+  console.log(chalk.bold('\n  Contract storage vs. contract events — key differences:\n'));
   const rows: [string, string][] = [
     ['Storage', 'Mutable, queryable at any time via getLedgerEntries'],
     ['Storage', 'Persists between transactions; may be archived and restored'],
-    ['Storage', '3 tiers: Instance (shared config), Persistent (long-lived), Temporary (TTL-bound)'],
-    ['Events',  'Immutable log of what happened during past transactions'],
-    ['Events',  'Queryable via getEvents with a ledger range and contract filter'],
-    ['Events',  'Pruned from node history after the retention window; not queryable forever'],
+    [
+      'Storage',
+      '3 tiers: Instance (shared config), Persistent (long-lived), Temporary (TTL-bound)',
+    ],
+    ['Events', 'Immutable log of what happened during past transactions'],
+    ['Events', 'Queryable via getEvents with a ledger range and contract filter'],
+    ['Events', 'Pruned from node history after the retention window; not queryable forever'],
   ];
   rows.forEach(([kind, description]) => {
     const colour = kind === 'Storage' ? chalk.green : chalk.magenta;

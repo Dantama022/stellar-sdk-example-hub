@@ -173,7 +173,9 @@ export async function run(): Promise<void> {
 
   log('Starting Sponsored Reserve Management Example...');
   log(`Using Horizon: ${horizonUrl}`);
-  log('Sponsorship lifecycle: begin -> sponsored trustline -> sponsored data -> end -> revoke one entry');
+  log(
+    'Sponsorship lifecycle: begin -> sponsored trustline -> sponsored data -> end -> revoke one entry',
+  );
 
   const sponsor = Keypair.random();
   const sponsored = Keypair.random();
@@ -226,7 +228,9 @@ export async function run(): Promise<void> {
     networkPassphrase: Networks.TESTNET,
   })
     .addOperation(Operation.beginSponsoringFutureReserves({ sponsoredId: sponsored.publicKey() }))
-    .addOperation(Operation.createAccount({ destination: sponsored.publicKey(), startingBalance: '0' }))
+    .addOperation(
+      Operation.createAccount({ destination: sponsored.publicKey(), startingBalance: '0' }),
+    )
     .addOperation(Operation.changeTrust({ source: sponsored.publicKey(), asset, limit: '10000' }))
     .addOperation(
       Operation.manageData({
@@ -273,14 +277,18 @@ export async function run(): Promise<void> {
 
   log('\n--- Reserve responsibility ---');
   log(`  Base reserve: ${sponsorImpact.baseReserveXlm} XLM`);
-  log(`  Sponsor's additional reserve responsibility: ${sponsorImpact.outgoingReserveResponsibilityXlm} XLM`);
+  log(
+    `  Sponsor's additional reserve responsibility: ${sponsorImpact.outgoingReserveResponsibilityXlm} XLM`,
+  );
   log(`  Sponsored account's reserve relief: ${sponsoredImpact.incomingReserveReliefXlm} XLM`);
   log(
     '  Sponsorship changes who must maintain the reserve; it never transfers ownership of the entry itself.',
   );
 
   // ── End sponsorship of the data entry specifically ─────────────────────
-  log('\nRevoking sponsorship of the data entry (returning its reserve to the sponsored account)...');
+  log(
+    '\nRevoking sponsorship of the data entry (returning its reserve to the sponsored account)...',
+  );
   const revokeAccount = await server.loadAccount(sponsor.publicKey());
   const revokeTx = new TransactionBuilder(revokeAccount, {
     fee: '100',

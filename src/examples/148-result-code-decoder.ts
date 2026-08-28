@@ -119,18 +119,26 @@ export function classifyResultCode(code: string): ResultCodeCategory {
 
 export function explainResultCode(code: string): string {
   const normalized = code.toLowerCase();
-  return EXPLANATIONS[normalized] || `Unknown result code (${code}). Check the current Stellar protocol documentation.`;
+  return (
+    EXPLANATIONS[normalized] ||
+    `Unknown result code (${code}). Check the current Stellar protocol documentation.`
+  );
 }
 
 export function troubleshootingFor(code: string, category: ResultCodeCategory): string[] {
   const normalized = code.toLowerCase();
   const specific = SUGGESTIONS_BY_CODE[normalized];
   if (specific) return [specific];
-  if (normalized.startsWith('tx_')) return ['Inspect the transaction envelope, signatures, fee, sequence, and time bounds.'];
-  if (category === 'Offer errors') return ['Inspect the account offers and verify asset pairs, price, amount, and offer IDs.'];
-  if (category === 'Trustline errors') return ['Verify trustline limits, authorization flags, and the asset issuer.'];
-  if (category === 'Asset errors') return ['Verify the asset code, issuer account, and authorization state.'];
-  if (category === 'Payment errors') return ['Verify the source balance, destination account, asset, and trustlines.'];
+  if (normalized.startsWith('tx_'))
+    return ['Inspect the transaction envelope, signatures, fee, sequence, and time bounds.'];
+  if (category === 'Offer errors')
+    return ['Inspect the account offers and verify asset pairs, price, amount, and offer IDs.'];
+  if (category === 'Trustline errors')
+    return ['Verify trustline limits, authorization flags, and the asset issuer.'];
+  if (category === 'Asset errors')
+    return ['Verify the asset code, issuer account, and authorization state.'];
+  if (category === 'Payment errors')
+    return ['Verify the source balance, destination account, asset, and trustlines.'];
   return ['Look up the result code in the current Stellar protocol documentation before retrying.'];
 }
 
@@ -186,7 +194,8 @@ export function formatDiagnosticReport(report: ResultCodeDiagnosticReport): stri
     for (const operation of report.operations) {
       lines.push(
         `  Operation #${operation.operation}: ${operation.resultCode} [${operation.category}]${
-          operation.failed ? ' FAILED' : ''}`,
+          operation.failed ? ' FAILED' : ''
+        }`,
       );
       lines.push(`    ${operation.explanation}`);
     }
@@ -208,9 +217,13 @@ function wantsJson(params: ResultCodeDecoderParams): boolean {
 
 export async function run(params: ResultCodeDecoderParams = {}): Promise<void> {
   const transactionHash =
-    params.transactionHash?.trim() || process.env.TRANSACTION_HASH?.trim() || process.argv[3]?.trim();
+    params.transactionHash?.trim() ||
+    process.env.TRANSACTION_HASH?.trim() ||
+    process.argv[3]?.trim();
   if (!transactionHash || !TRANSACTION_HASH_PATTERN.test(transactionHash)) {
-    throw new Error('Provide a 64-character hexadecimal transaction hash. Use --json for JSON output.');
+    throw new Error(
+      'Provide a 64-character hexadecimal transaction hash. Use --json for JSON output.',
+    );
   }
 
   const horizonUrl = process.env.HORIZON_URL || DEFAULT_HORIZON_URL;

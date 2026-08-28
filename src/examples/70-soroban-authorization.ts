@@ -7,6 +7,7 @@ import {
   xdr,
   Account,
 } from '@stellar/stellar-sdk';
+import { createHash } from 'crypto';
 import chalk from 'chalk';
 
 /**
@@ -196,18 +197,13 @@ export async function run(): Promise<void> {
           const networkPassphrase = Networks.TESTNET;
           const preimage = xdr.HashIdPreimage.envelopeTypeSorobanAuthorization(
             new xdr.HashIdPreimageSorobanAuthorization({
-              networkId: Buffer.from(
-                require('crypto').createHash('sha256').update(networkPassphrase).digest(),
-              ),
+              networkId: Buffer.from(createHash('sha256').update(networkPassphrase).digest()),
               nonce: addrCreds.nonce(),
               signatureExpirationLedger: addrCreds.signatureExpirationLedger(),
               invocation: entry.rootInvocation(),
             }),
           );
-          const hash = require('crypto')
-            .createHash('sha256')
-            .update(preimage.toXDR())
-            .digest();
+          const hash = createHash('sha256').update(preimage.toXDR()).digest();
           const signature = authorizedKeypair.sign(hash);
 
           // Attach the signature as a map { public_key: bytes, signature: bytes }.
@@ -326,20 +322,13 @@ function displayAuthEntry(
 
     if (credType === 'sorobanCredentialsAddress') {
       const addrCreds = credentials.address();
-      const pubKeyHex = addrCreds
-        .address()
-        .accountId()
-        .ed25519()
-        .toString('hex')
-        .slice(0, 16);
+      const pubKeyHex = addrCreds.address().accountId().ed25519().toString('hex').slice(0, 16);
       console.log(`    Address      : ${pubKeyHex}…`);
       const validUntil = addrCreds.signatureExpirationLedger();
       console.log(`    Valid until  : ledger ${validUntil} (current: ${currentLedger})`);
       if (validUntil <= currentLedger) {
         console.log(
-          chalk.red(
-            '    ⚠  Expiry is in the past — set a valid signatureExpirationLedger.',
-          ),
+          chalk.red('    ⚠  Expiry is in the past — set a valid signatureExpirationLedger.'),
         );
       }
     }

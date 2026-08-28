@@ -1,4 +1,7 @@
+import { createRequire } from 'module';
 import { contract, xdr } from '@stellar/stellar-sdk';
+
+const requireSdkUtils = createRequire(__filename);
 
 export interface ParsedArgument {
   name: string;
@@ -60,7 +63,7 @@ export interface ParsedContractSpec {
 export function resolveTypeName(typeDef: xdr.ScSpecTypeDef): string {
   const t = typeDef.switch();
 
-  switch (t.name) {
+  switch (t.name as string) {
     case 'scSpecTypeVoid':
       return 'void';
     case 'scSpecTypeBool':
@@ -216,9 +219,7 @@ export function parseContractSpec(spec: contract.Spec): ParsedContractSpec {
   }
 
   const contractName =
-    functions.find((fn) => !fn.name.startsWith('__'))?.name ??
-    structs[0]?.name ??
-    null;
+    functions.find((fn) => !fn.name.startsWith('__'))?.name ?? structs[0]?.name ?? null;
 
   return {
     contractName,
@@ -319,7 +320,19 @@ export function formatContractSpecReport(parsed: ParsedContractSpec, contractId:
 /** Parses WASM bytes into a contract.Spec, returning null when metadata is absent. */
 export function specFromWasm(wasm: Buffer): contract.Spec | null {
   try {
-    return contract.Spec.fromWasm(wasm);
+    const wasmModule = new WebAssembly.Module(Uint8Array.from(wasm));
+    const sections = WebAssembly.Module.customSections(wasmModule, 'contractspecv0');
+    if (!sections.length) {
+      return null;
+    }
+
+    const { processSpecEntryStream } = requireSdkUtils(
+      '@stellar/stellar-sdk/lib/contract/utils',
+    ) as {
+      processSpecEntryStream: (buffer: Buffer) => xdr.ScSpecEntry[];
+    };
+    const entries = processSpecEntryStream(Buffer.from(sections[0]));
+    return new contract.Spec(entries);
   } catch {
     return null;
   }

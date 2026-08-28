@@ -1,10 +1,4 @@
-import {
-  Address,
-  nativeToScVal,
-  scValToNative,
-  StrKey,
-  xdr,
-} from '@stellar/stellar-sdk';
+import { Address, nativeToScVal, scValToNative, StrKey, xdr } from '@stellar/stellar-sdk';
 
 /** Supported JavaScript input types for Soroban ScVal encoding. */
 export type ScValJsInput =
@@ -15,10 +9,10 @@ export type ScValJsInput =
   | Uint8Array
   | Buffer
   | null
+  | { __type: string; value: unknown }
   | ScValJsInput[]
   | Map<ScValJsInput, ScValJsInput>
-  | Record<string, ScValJsInput>
-  | { __type: string; value: unknown };
+  | { [key: string]: ScValJsInput };
 
 export interface ScValTypeHint {
   type: string;
@@ -142,7 +136,7 @@ export function encodeNested(value: Record<string, unknown>): xdr.ScVal {
     if (Array.isArray(entry)) {
       return new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol(key),
-        val: nativeToScVal(entry, { type: 'vec', element: { type: 'u32' } }),
+        val: nativeToScVal(entry, { type: 'vec', element: { type: 'u32' } } as ScValTypeHint),
       });
     }
     if (entry && typeof entry === 'object') {

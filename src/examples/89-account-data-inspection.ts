@@ -40,9 +40,7 @@ async function fundAccount(publicKey: string): Promise<void> {
   );
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to fund account ${publicKey}: ${response.statusText}`,
-    );
+    throw new Error(`Failed to fund account ${publicKey}: ${response.statusText}`);
   }
 }
 
@@ -91,9 +89,7 @@ function displayAccountDataEntries(dataEntries: Record<string, string>): void {
   });
 }
 
-export async function run(
-  params: AccountDataInspectionParams = {},
-): Promise<void> {
+export async function run(params: AccountDataInspectionParams = {}): Promise<void> {
   const horizonUrl = process.env.HORIZON_URL || DEFAULT_HORIZON_URL;
   const server = new Horizon.Server(horizonUrl);
   const providedAccountId = params.accountId?.trim() || process.env.ACCOUNT_ID?.trim();
@@ -113,7 +109,9 @@ export async function run(
   let accountId = providedAccountId;
   if (!accountId) {
     const sampleAccount = Keypair.random();
-    console.log('No account ID was provided. Creating a sample account with example data entries...');
+    console.log(
+      'No account ID was provided. Creating a sample account with example data entries...',
+    );
     console.log(`Sample account: ${sampleAccount.publicKey()}`);
 
     await fundAccount(sampleAccount.publicKey());
@@ -135,9 +133,7 @@ export async function run(
     account = await server.loadAccount(accountId);
   } catch (error: unknown) {
     if (isHorizonNotFoundError(error)) {
-      console.log(
-        `Account ${accountId} was not found on the connected Horizon network.`,
-      );
+      console.log(`Account ${accountId} was not found on the connected Horizon network.`);
       return;
     }
     throw error;

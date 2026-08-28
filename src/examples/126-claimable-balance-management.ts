@@ -218,8 +218,9 @@ async function createDemoClaimableBalances(
   const submitResponse = await server.submitTransaction(transaction);
 
   const effectsPage = await server.effects().forTransaction(submitResponse.hash).call();
-  const createdEffects = (effectsPage.records as Array<{ type: string; balance_id?: string }>)
-    .filter((effect) => effect.type === 'claimable_balance_created');
+  const createdEffects = (
+    effectsPage.records as Array<{ type: string; balance_id?: string }>
+  ).filter((effect) => effect.type === 'claimable_balance_created');
 
   if (createdEffects.length < 2) {
     throw new Error('Expected two claimable_balance_created effects from the demo setup.');
@@ -329,7 +330,9 @@ export async function run(params?: ClaimableBalanceManagementParams): Promise<vo
   if (balances.length === 0) {
     log('\nNo claimable balances found for this account (or asset filter).');
     if (jsonOutput) {
-      console.log(JSON.stringify({ accountId, assetFilter: assetFilter ?? null, balances: [] }, null, 2));
+      console.log(
+        JSON.stringify({ accountId, assetFilter: assetFilter ?? null, balances: [] }, null, 2),
+      );
     }
     return;
   }
@@ -382,7 +385,7 @@ export async function run(params?: ClaimableBalanceManagementParams): Promise<vo
       continue;
     }
 
-    if (!claimantKeypair || claimantKeypair.publicKey() !== accountId) {
+    if (claimantKeypair?.publicKey() !== accountId) {
       entry.skipReason = 'Eligible, but no matching CLAIMANT_SECRET was supplied to sign a claim.';
       log(`  -> Skipping claim: ${entry.skipReason}`);
       report.push(entry);

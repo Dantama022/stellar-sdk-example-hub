@@ -45,9 +45,7 @@ export async function run(params: ContractSpecIntrospectionParams = {}): Promise
     process.argv[3]?.trim() ||
     DEFAULT_CONTRACT_ID;
   const functionName =
-    params.functionName?.trim() ||
-    process.env.CONTRACT_FUNCTION?.trim() ||
-    process.argv[4]?.trim();
+    params.functionName?.trim() || process.env.CONTRACT_FUNCTION?.trim() || process.argv[4]?.trim();
 
   console.log(chalk.bold('Soroban Contract Specification Introspection'));
   console.log(chalk.blue(`Soroban RPC: ${rpcUrl}`));
@@ -70,20 +68,24 @@ export async function run(params: ContractSpecIntrospectionParams = {}): Promise
     console.log(chalk.green(`WASM fetched (${wasm.length.toLocaleString()} bytes).`));
   } catch (err: any) {
     console.log(chalk.red(`Could not fetch WASM: ${err?.message ?? err}`));
-    console.log(chalk.cyan(
-      'Verify the contract ID is deployed on this network. Missing WASM usually means ' +
-        'the contract does not exist here or the RPC node is unreachable.',
-    ));
+    console.log(
+      chalk.cyan(
+        'Verify the contract ID is deployed on this network. Missing WASM usually means ' +
+          'the contract does not exist here or the RPC node is unreachable.',
+      ),
+    );
     return;
   }
 
   const spec = specFromWasm(wasm);
   if (!spec || spec.entries.length === 0) {
     console.log(chalk.yellow('\nNo contract specification metadata found in this WASM.'));
-    console.log(chalk.gray(
-      'Contracts compiled without soroban-sdk spec export, or with stripped metadata, ' +
-        'cannot be introspected at runtime. Use the contract source or Stellar CLI instead.',
-    ));
+    console.log(
+      chalk.gray(
+        'Contracts compiled without soroban-sdk spec export, or with stripped metadata, ' +
+          'cannot be introspected at runtime. Use the contract source or Stellar CLI instead.',
+      ),
+    );
     return;
   }
 
@@ -93,11 +95,13 @@ export async function run(params: ContractSpecIntrospectionParams = {}): Promise
   const selected = selectFunction(parsed, functionName);
   console.log(chalk.bold('\nDynamic function selection'));
   if (!selected) {
-    console.log(chalk.yellow(
-      functionName
-        ? `Function "${functionName}" was not found in the specification.`
-        : 'No exported functions are available to select.',
-    ));
+    console.log(
+      chalk.yellow(
+        functionName
+          ? `Function "${functionName}" was not found in the specification.`
+          : 'No exported functions are available to select.',
+      ),
+    );
   } else {
     console.log(`Selected function: ${chalk.cyan(selected.name)}`);
     console.log(`Arguments:`);
@@ -119,13 +123,15 @@ export async function run(params: ContractSpecIntrospectionParams = {}): Promise
     }
   }
 
-  console.log(chalk.cyan(
-    '\nSDK and explorer usage:\n' +
-      '  - contract.Spec.fromWasm(wasm) powers runtime introspection in the JS SDK.\n' +
-      '  - Stellar CLI uses the same metadata for `stellar contract invoke -- --help`.\n' +
-      '  - Stellar Lab Contract Explorer renders forms from spec.jsonSchema().\n' +
-      '  - contract.Client auto-generates typed methods from the parsed specification.',
-  ));
+  console.log(
+    chalk.cyan(
+      '\nSDK and explorer usage:\n' +
+        '  - contract.Spec.fromWasm(wasm) powers runtime introspection in the JS SDK.\n' +
+        '  - Stellar CLI uses the same metadata for `stellar contract invoke -- --help`.\n' +
+        '  - Stellar Lab Contract Explorer renders forms from spec.jsonSchema().\n' +
+        '  - contract.Client auto-generates typed methods from the parsed specification.',
+    ),
+  );
 
   console.log(chalk.green('\nContract specification introspection example completed.'));
 }
