@@ -202,6 +202,10 @@ The repository currently includes the following runnable examples:
 65. **`106-scval-serialization`**: Converting JavaScript values to Soroban ScVal objects and back with reusable helpers, displaying raw XDR, and explaining common serialization pitfalls.
 65. **`105-contract-event-decoding`**: Retrieving Soroban contract events and decoding indexed topics and data payloads into human-readable values, with raw base64 XDR shown alongside decoded output.
 65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
+65. **`112-soroban-authorization-signing`**: Extracting Soroban authorization entries from simulation, identifying required signers, demonstrating missing and invalid signatures, signing entries correctly, and distinguishing Soroban authorization from transaction-envelope signatures.
+65. **`113-typed-contract-client`**: Retrieving a deployed Soroban contract specification, parsing functions and types, constructing a typed-style client interface, encoding typed arguments, invoking generated methods, and decoding typed return values.
+65. **`114-contract-upgrade`**: Deploying an upgradeable Soroban contract, identifying its current WASM implementation, rejecting unauthorized and invalid upgrades, simulating and submitting an authorized upgrade, and verifying the new implementation.
+65. **`115-stellar-asset-contract`**: Configuring a classic Stellar asset, deriving and deploying its deterministic Stellar Asset Contract, inspecting the built-in SAC executable, reading token state, decoding ScVal values, and simulating a standard SAC operation.
 65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
 65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 66. **`93-trustline-management`**: Creating, inspecting, updating, and removing asset trustlines — demonstrating changeTrust operations, trust limit configuration, authorization status inspection, and the 0.5 XLM reserve cost of each subentry.
@@ -764,6 +768,38 @@ npm run run-example -- 107-contract-spec-introspection <contract-id> balance
 ```
 
 The same values can be supplied through `CONTRACT_ID` and `CONTRACT_FUNCTION`. The example fetches WASM via Soroban RPC, parses ScSpec metadata with `spec-parser` utilities, lists functions, structs, enums, unions, and error enums, and shows how SDK tooling and explorers use the same metadata. Missing or empty specifications are reported gracefully.
+Run the Soroban authorization-signing workflow:
+
+```bash
+npm run run-example 112-soroban-authorization-signing
+```
+
+The example creates separate Testnet fee-payer and asset-owner accounts, builds a Stellar Asset Contract transfer that requires authorization from the owner, simulates the invocation, extracts the returned `SorobanAuthorizationEntry`, identifies its required signer, and demonstrates both missing-signature and deliberately invalid-signature handling. It then signs the real authorization entry, verifies the signature locally, attaches it to the invocation, assembles the transaction, and separately signs the transaction envelope — clearly showing the difference between transaction-level signatures and Soroban contract authorization.
+
+Generate and use a typed-style Soroban contract client:
+
+```bash
+npm run run-example 113-typed-contract-client
+```
+
+By default the example deploys the repository's bundled `upgradeable_v1.wasm` contract to Testnet so it does not depend on an external sample deployment remaining alive. It retrieves the deployed WASM through Soroban RPC, parses its embedded contract specification, lists methods and type signatures, constructs a TypeScript-style client interface, converts typed JavaScript values into `ScVal` arguments, invokes a generated `version()` method, and displays the decoded JavaScript return value. A specific deployed WASM-backed contract may instead be supplied through `CONTRACT_ID`.
+
+Run a complete Soroban contract-upgrade workflow:
+
+```bash
+npm run run-example 114-contract-upgrade
+```
+
+The example uses the repository's bundled v1 and v2 upgradeable contracts. It installs and deploys v1, records the current WASM hash and version, installs v2, demonstrates rejection of an unauthorized upgrade, handles a non-existent implementation hash gracefully, explicitly simulates the authorized upgrade before submission, displays its authorization requirements, submits the upgrade, runs the post-upgrade hook, and verifies the resulting WASM hash, `version()`, and v2-only functionality.
+
+Interact with a Stellar Asset Contract:
+
+```bash
+npm run run-example 115-stellar-asset-contract
+```
+
+The example creates a temporary issued Testnet asset by default, derives its deterministic SAC contract ID from the classic asset code and issuer, simulates and deploys the SAC, verifies that the contract instance uses Stellar's built-in Stellar Asset executable, reads `name()`, `symbol()`, `decimals()`, `admin()`, and `balance()`, and displays both raw `ScVal` and decoded values. It also simulates an authorized `mint()` operation without submitting it, demonstrates unsupported-method handling, and validates invalid asset configurations before any network-changing operation. The interactive runner allows a custom asset code and issuer; `ASSET_CODE` may also be set for direct runs.
+
 Run the full Soroban transaction preflight workflow:
 
 ```bash

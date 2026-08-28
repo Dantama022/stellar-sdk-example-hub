@@ -916,6 +916,50 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '112-soroban-authorization-signing': {
+    name: '112-soroban-authorization-signing',
+    description:
+      'Extract Soroban authorization entries from simulation, sign and verify them, demonstrate missing/invalid signatures, and distinguish contract authorization from transaction signatures',
+    run: loadExample('../examples/112-soroban-authorization-signing'),
+  },
+  '113-typed-contract-client': {
+    name: '113-typed-contract-client',
+    description:
+      'Retrieve a Soroban contract specification, construct a typed-style client, encode typed arguments, invoke generated methods, and decode typed return values',
+    run: loadExample('../examples/113-typed-contract-client'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank deploys the bundled example contract):',
+      },
+    ],
+  },
+  '114-contract-upgrade': {
+    name: '114-contract-upgrade',
+    description:
+      'Deploy and inspect an upgradeable Soroban contract, reject unauthorized upgrades, simulate and submit an authorized upgrade, and verify the new implementation',
+    run: loadExample('../examples/114-contract-upgrade'),
+  },
+  '115-stellar-asset-contract': {
+    name: '115-stellar-asset-contract',
+    description:
+      'Derive, deploy, inspect, and interact with a Stellar Asset Contract, decode ScVal state, simulate minting, and handle invalid or unsupported operations',
+    run: loadExample('../examples/115-stellar-asset-contract'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code (blank uses DEMO):',
+        default: 'DEMO',
+      },
+      {
+        type: 'input',
+        name: 'issuer',
+        message: 'Asset issuer account ID (blank generates a temporary Testnet issuer):',
+      },
+    ],
+  },
   '81-transaction-preflight': {
     name: '81-transaction-preflight',
     description:
@@ -1016,6 +1060,9 @@ export const examples: Record<string, Example> = {
         name: 'maxRoutes',
         message: 'Maximum number of routes to display (blank uses 5):',
         default: '5',
+      },
+    ],
+  },
   '139-account-offer-inspection': {
     name: '139-account-offer-inspection',
     description: "Inspect an account's open SDEX offers, grouped by trading pair with summary statistics",
