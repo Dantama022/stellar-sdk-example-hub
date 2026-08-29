@@ -1451,4 +1451,24 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '165-payment-reconciliation': {
+    name: '165-payment-reconciliation',
+    description: 'Inspect recent account payments and derive a minimal reconciliation summary',
+    run: loadExample('../examples/165-payment-reconciliation'),
+  },
+  '166-persistent-payment-monitoring': {
+    name: '166-persistent-payment-monitoring',
+    description: 'Inspect recent account payments and derive a minimal monitoring checkpoint',
+    run: loadExample('../examples/166-persistent-payment-monitoring'),
+  },
+  '167-asset-and-trustline-inspection': {
+    name: '167-asset-and-trustline-inspection',
+    description: 'Inspect account trustlines and summarize non-native asset holdings',
+    run: loadExample('../examples/167-asset-and-trustline-inspection'),
+  },
+  '168-issuer-authorization-inspection': {
+    name: '168-issuer-authorization-inspection',
+    description: 'Inspect asset authorization flags and trustline authorization-related balances',
+    run: loadExample('../examples/168-issuer-authorization-inspection'),
+  },
 };
