@@ -1451,4 +1451,24 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '161-horizon-server-health': {
+    name: '161-horizon-server-health',
+    description: 'Inspect Horizon root metadata and derive a simple server health summary',
+    run: loadExample('../examples/161-horizon-server-health'),
+  },
+  '162-horizon-ledger-sync': {
+    name: '162-horizon-ledger-sync',
+    description: 'Inspect the latest ledger close time and derive a simple synchronization status',
+    run: loadExample('../examples/162-horizon-ledger-sync'),
+  },
+  '163-account-transaction-history': {
+    name: '163-account-transaction-history',
+    description: 'Inspect a Stellar account transaction history and summarize recent transaction flow',
+    run: loadExample('../examples/163-account-transaction-history'),
+  },
+  '164-account-operation-history': {
+    name: '164-account-operation-history',
+    description: 'Inspect a Stellar account operation history and summarize recent operation types',
+    run: loadExample('../examples/164-account-operation-history'),
+  },
 };
