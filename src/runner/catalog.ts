@@ -1469,7 +1469,8 @@ export const examples: Record<string, Example> = {
   },
   '163-account-transaction-history': {
     name: '163-account-transaction-history',
-    description: 'Inspect a Stellar account transaction history and summarize recent transaction flow',
+    description:
+      'Inspect a Stellar account transaction history and summarize recent transaction flow',
     run: loadExample('../examples/163-account-transaction-history'),
   },
   '164-account-operation-history': {
