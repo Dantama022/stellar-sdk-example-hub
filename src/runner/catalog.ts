@@ -373,4 +373,27 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '192-soroban-contract-code-inspection': {
+    name: '192-soroban-contract-code-inspection',
+    description:
+      'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
+    run: loadExample('../examples/192-soroban-contract-code-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID to inspect (blank uses default testnet contract):',
+      },
+      {
+        type: 'input',
+        name: 'expectedHash',
+        message: 'Optional expected code hash (hex) for verification:',
+      },
+      {
+        type: 'input',
+        name: 'wasmFile',
+        message: 'Optional path to WASM file to hash and compare:',
+      },
+    ],
+  },
 };

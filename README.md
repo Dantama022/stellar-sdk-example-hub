@@ -86,6 +86,7 @@ The repository currently includes the following runnable examples:
 51. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 52. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
 53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+54. **`192-soroban-contract-code-inspection`**: Inspecting Soroban contract code metadata, extracting the deployed code identifier, retrieving TTL and ledger information, and optionally comparing a supplied WASM hash against the on-chain code identifier.
 
 ## Installation
 
