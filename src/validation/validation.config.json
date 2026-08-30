@@ -129,6 +129,8 @@
     {
       "match": "192-soroban-contract-code-inspection",
       "reason": "Requires Soroban RPC availability and a deployed contract instance"
+    },
+    {
       "match": "66-ledger-effects",
       "reason": "Requires live Horizon ledger and effect data"
     },
@@ -211,6 +213,22 @@
     {
       "match": "159-horizon-stream-filtering",
       "reason": "Keeps a live Horizon SSE connection open for client-side filtering"
+    },
+    {
+      "match": "169-asset-holder-distribution",
+      "reason": "Requires live Horizon trustline data across paginated account pages"
+    },
+    {
+      "match": "170-account-balance-liability-analysis",
+      "reason": "Requires live Horizon account balance and liability data"
+    },
+    {
+      "match": "171-account-activity-profile",
+      "reason": "Requires live Horizon account, transaction, operation, and payment history"
+    },
+    {
+      "match": "172-horizon-request-tracing",
+      "reason": "Issues live Horizon requests, including deliberate failure and timeout cases"
     }
   ]
 }

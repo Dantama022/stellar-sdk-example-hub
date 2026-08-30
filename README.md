@@ -236,6 +236,10 @@ The repository currently includes the following runnable examples:
 81. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
 82. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 83. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
+84. **`169-asset-holder-distribution`**: Paging every trustline for an issued asset, aggregating supply statistics, ranking holders by balance, and reporting top-holder concentration.
+85. **`170-account-balance-liability-analysis`**: Analysing account balances, trustline limits, buying and selling liabilities, and derived available amounts against the minimum reserve.
+86. **`171-account-activity-profile`**: Building a read-only descriptive activity profile from account metadata, transaction, operation, and payment history with partial-failure reporting.
+87. **`172-horizon-request-tracing`**: Tracing Horizon requests with per-request timing, retry counts, HTTP status, slow-request detection, latency aggregation, and sanitized diagnostics.
 
 ## Installation
 
