@@ -236,6 +236,10 @@ The repository currently includes the following runnable examples:
 81. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
 82. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 83. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
+84. **`193-soroban-contract-interface`**: Inspecting deployed Soroban contract interfaces, exported functions, argument/return types, user-defined structs/enums/unions, and generating example call signatures.
+85. **`194-soroban-contract-client-generator`**: Generating strongly typed TypeScript contract client wrappers, type definitions, method signatures, and ScVal conversion helpers from a Soroban contract specification.
+86. **`195-soroban-interface-compatibility`**: Comparing two Soroban contract specifications to detect additions, removals, parameter/type changes, and classify breaking vs compatible modifications.
+87. **`196-soroban-authorization-preparation`**: Preparing, inspecting, decoding, and round-trip verifying Soroban authorization entries and invocation trees without requesting secret keys or signing.
 
 ## Installation
 

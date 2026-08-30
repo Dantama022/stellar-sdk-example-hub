@@ -1516,4 +1516,82 @@ export const examples: Record<string, Example> = {
     description: 'Inspect asset authorization flags and trustline authorization-related balances',
     run: loadExample('../examples/168-issuer-authorization-inspection'),
   },
+  '193-soroban-contract-interface': {
+    name: '193-soroban-contract-interface',
+    description: 'Inspect a deployed Soroban contract interface, exported functions, and user-defined types',
+    run: loadExample('../examples/193-soroban-contract-interface'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID to inspect:',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '194-soroban-contract-client-generator': {
+    name: '194-soroban-contract-client-generator',
+    description: 'Generate a strongly typed TypeScript contract-client wrapper from a Soroban contract specification',
+    run: loadExample('../examples/194-soroban-contract-client-generator'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID for client:',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON metadata?',
+        default: false,
+      },
+    ],
+  },
+  '195-soroban-interface-compatibility': {
+    name: '195-soroban-interface-compatibility',
+    description: 'Compare two Soroban contract specifications and report additions, removals, and breaking changes',
+    run: loadExample('../examples/195-soroban-interface-compatibility'),
+    params: [
+      {
+        type: 'confirm',
+        name: 'strictMode',
+        message: 'Enable strict compatibility mode?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '196-soroban-authorization-preparation': {
+    name: '196-soroban-authorization-preparation',
+    description: 'Prepare, inspect, decode, and verify Soroban authorization entries and invocation trees without signing',
+    run: loadExample('../examples/196-soroban-authorization-preparation'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Target Contract ID:',
+      },
+      {
+        type: 'input',
+        name: 'sourceAccount',
+        message: 'Authorizing public key:',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
 };
