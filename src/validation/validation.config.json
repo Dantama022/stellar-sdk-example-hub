@@ -211,6 +211,22 @@
     {
       "match": "159-horizon-stream-filtering",
       "reason": "Keeps a live Horizon SSE connection open for client-side filtering"
+    },
+    {
+      "match": "193-soroban-contract-interface",
+      "reason": "Requires Soroban RPC or sample spec entries"
+    },
+    {
+      "match": "194-soroban-contract-client-generator",
+      "reason": "Generates TypeScript source code from contract specification"
+    },
+    {
+      "match": "195-soroban-interface-compatibility",
+      "reason": "Compares contract specifications for compatibility"
+    },
+    {
+      "match": "196-soroban-authorization-preparation",
+      "reason": "Prepares and inspects Soroban authorization entries"
     }
   ]
 }
