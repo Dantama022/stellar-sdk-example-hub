@@ -939,6 +939,12 @@ export const examples: Record<string, Example> = {
       'Interpret a simulateTransaction response: resource budget, ledger footprint, return value, diagnostic events, and restore preamble',
     run: loadExample('../examples/101-simulation-result-analysis'),
   },
+  '181-soroban-footprint-comparison': {
+    name: '181-soroban-footprint-comparison',
+    description:
+      'Compare Soroban ledger footprints across multiple simulation results, detect shared entries, added/removed keys, access-mode changes, and identify the smaller footprint',
+    run: loadExample('../examples/181-soroban-footprint-comparison'),
+  },
   '102-contract-storage-inspection': {
     name: '102-contract-storage-inspection',
     description:
@@ -1470,6 +1476,7 @@ export const examples: Record<string, Example> = {
     name: '164-account-operation-history',
     description: 'Inspect a Stellar account operation history and summarize recent operation types',
     run: loadExample('../examples/164-account-operation-history'),
+  },
   '165-payment-reconciliation': {
     name: '165-payment-reconciliation',
     description: 'Inspect recent account payments and derive a minimal reconciliation summary',

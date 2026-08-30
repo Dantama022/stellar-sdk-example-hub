@@ -54,6 +54,7 @@ import * as ex133 from '../src/examples/133-transaction-signature-verification';
 import * as ex134 from '../src/examples/134-multisignature-threshold-inspection';
 import * as ex135 from '../src/examples/135-transaction-preflight-validation';
 import * as ex137 from '../src/examples/137-dynamic-fee-selection';
+import * as ex181 from '../src/examples/181-soroban-footprint-comparison';
 
 import { examples } from '../src/runner/catalog';
 
@@ -114,6 +115,7 @@ describe('Examples Exports', () => {
       ex134,
       ex135,
       ex137,
+      ex181,
     ]) {
       expect(typeof mod.run).toBe('function');
     }
@@ -166,9 +168,28 @@ describe('Examples Exports', () => {
       '134-multisignature-threshold-inspection',
       '135-transaction-preflight-validation',
       '137-dynamic-fee-selection',
+      '181-soroban-footprint-comparison',
     ]) {
       expect(examples[key]).toBeDefined();
     }
+  });
+
+  it('compares ledger footprint sets and detects shared and added entries', () => {
+    const footprintA = {
+      readOnly: ['contractData:alpha', 'contractData:beta'],
+      readWrite: ['contractData:gamma'],
+    };
+    const footprintB = {
+      readOnly: ['contractData:beta', 'contractData:delta'],
+      readWrite: ['contractData:gamma', 'contractData:epsilon'],
+    };
+
+    const result = ex181.compareFootprintSets([footprintA, footprintB], ['A', 'B']);
+
+    expect(result.sharedEntries).toEqual(['contractData:beta', 'contractData:gamma']);
+    expect(result.addedBySecond).toEqual(['contractData:delta', 'contractData:epsilon']);
+    expect(result.removedFromSecond).toEqual(['contractData:alpha']);
+    expect(result.smallestFootprint.label).toBe('A');
   });
 });
 
