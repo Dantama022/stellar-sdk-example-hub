@@ -212,6 +212,7 @@ The repository currently includes the following runnable examples:
 67. **`109-soroban-transaction-preparation`**: Building and simulating a Soroban invocation, extracting resource limits, fees, footprint and authorization data, applying the simulation result, and inspecting the prepared unsigned transaction XDR.
 68. **`110-soroban-transaction-submission`**: Preparing, signing and submitting a Soroban transaction, polling pending status until a terminal result, and displaying the hash, ledger, return value, resource allocation, fees and events.
 69. **`111-soroban-transaction-error-diagnosis`**: Retrieving failed Soroban transactions, decoding transaction and diagnostic XDR, identifying failed invocations, classifying failure categories, and displaying actionable troubleshooting guidance.
+70. **`188-soroban-transaction-inspection`**: Querying a Soroban transaction by hash, classifying its status, decoding the result/return value and diagnostics, and producing a structured read-only inspection report with polling and JSON output support.
 65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
 65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 66. **`93-trustline-management`**: Creating, inspecting, updating, and removing asset trustlines — demonstrating changeTrust operations, trust limit configuration, authorization status inspection, and the 0.5 XLM reserve cost of each subentry.
@@ -845,6 +846,14 @@ npm run run-example 111-soroban-transaction-error-diagnosis
 ```
 
 Supply a specific failed transaction with `TRANSACTION_HASH=<transaction-hash>`. When no hash is supplied, the example searches recent Soroban RPC transaction history for a failed contract invocation. It distinguishes RPC, transaction, authorization, resource/fee, contract execution and state/archival failures, decodes available diagnostics and XDR, identifies the failed invocation where possible, and provides troubleshooting guidance. Missing diagnostic information is handled gracefully.
+
+Inspect an arbitrary Soroban transaction by hash:
+
+```bash
+npm run run-example 188-soroban-transaction-inspection
+```
+
+Provide a transaction hash with `TRANSACTION_HASH=<hash>`, optionally set `POLL_INTERVAL_MS` and `POLL_TIMEOUT_MS`, and pass `--json` for machine-readable output. The example validates the hash, requests the transaction from Soroban RPC, handles not-found/pending/failed/success states, decodes any return value and event payloads, prints the raw XDR, and surfaces resource and fee information when the RPC response includes it.
 
 Run the full Soroban transaction preflight workflow:
 
