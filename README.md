@@ -236,6 +236,10 @@ The repository currently includes the following runnable examples:
 81. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
 82. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 83. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
+84. **`177-soroban-event-decoding`**: Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding, supporting configurable ledger ranges and event-type filtering.
+85. **`178-soroban-contract-storage`**: Inspect Soroban contract storage entries across instance, persistent, and temporary durability tiers with decoded keys, values, and TTL information.
+86. **`179-soroban-footprint-inspection`**: Extract and analyze the Soroban ledger footprint from a transaction simulation or envelope, distinguishing read-only from read-write entries and detecting duplicates.
+87. **`180-soroban-resource-analysis`**: Analyze Soroban resource usage from simulation results with CPU instructions, memory, ledger read/write metrics, utilization percentages, and near-limit detection.
 
 ## Installation
 
