@@ -522,6 +522,7 @@ export const examples: Record<string, Example> = {
     description:
       'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
     run: loadExample('../examples/192-soroban-contract-code-inspection'),
+  },
   '66-ledger-effects': {
     name: '66-ledger-effects',
     description:
@@ -561,26 +562,6 @@ export const examples: Record<string, Example> = {
         type: 'input',
         name: 'wasmFile',
         message: 'Optional path to WASM file to hash and compare:',
-      },
-    ],
-  },
-        message: 'Contract ID (blank discovers a recently active contract):',
-      },
-      {
-        type: 'input',
-        name: 'startLedger',
-        message: 'Start ledger (blank scans the last ~24h of ledgers):',
-      },
-      {
-        type: 'input',
-        name: 'endLedger',
-        message: 'End ledger (blank queries up to the latest ledger):',
-      },
-      {
-        type: 'input',
-        name: 'limit',
-        message: 'Number of events to retrieve (1-200):',
-        default: '10',
       },
     ],
   },
@@ -1516,6 +1497,11 @@ export const examples: Record<string, Example> = {
     description: 'Inspect asset authorization flags and trustline authorization-related balances',
     run: loadExample('../examples/168-issuer-authorization-inspection'),
   },
+  '177-soroban-event-decoding': {
+    name: '177-soroban-event-decoding',
+    description:
+      'Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding',
+    run: loadExample('../examples/177-soroban-event-decoding'),
   '193-soroban-contract-interface': {
     name: '193-soroban-contract-interface',
     description: 'Inspect a deployed Soroban contract interface, exported functions, and user-defined types',
@@ -1524,6 +1510,79 @@ export const examples: Record<string, Example> = {
       {
         type: 'input',
         name: 'contractId',
+        message: 'Contract ID (blank discovers a recently active contract):',
+      },
+      {
+        type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans the last ~24h of ledgers):',
+      },
+      {
+        type: 'input',
+        name: 'endLedger',
+        message: 'End ledger (blank queries up to the latest ledger):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to retrieve (1-200):',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'eventType',
+        message: 'Event type filter (contract, system, or diagnostic):',
+        default: 'contract',
+      },
+      {
+        type: 'input',
+        name: 'topicFilter',
+        message: 'Optional topic filter (e.g. "transfer"):',
+      },
+    ],
+  },
+  '178-soroban-contract-storage': {
+    name: '178-soroban-contract-storage',
+    description:
+      'Inspect Soroban contract storage entries across instance, persistent, and temporary durability tiers',
+    run: loadExample('../examples/178-soroban-contract-storage'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID:',
+        default: 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA',
+      },
+      {
+        type: 'input',
+        name: 'storageKey',
+        message: 'Optional storage key (e.g. "counter", "symbol:admin", "address:G..."):',
+      },
+    ],
+  },
+  '179-soroban-footprint-inspection': {
+    name: '179-soroban-footprint-inspection',
+    description:
+      'Extract and analyze the Soroban ledger footprint from a transaction simulation or envelope',
+    run: loadExample('../examples/179-soroban-footprint-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionXdr',
+        message: 'Optional base64 XDR (blank runs a demo simulation):',
+      },
+    ],
+  },
+  '180-soroban-resource-analysis': {
+    name: '180-soroban-resource-analysis',
+    description:
+      'Analyze Soroban resource usage from simulation results with utilization and near-limit detection',
+    run: loadExample('../examples/180-soroban-resource-analysis'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionXdr',
+        message: 'Optional base64 XDR (blank runs a demo simulation):',
         message: 'Contract ID to inspect:',
       },
       {
