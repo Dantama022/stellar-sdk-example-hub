@@ -235,6 +235,11 @@ The repository currently includes the following runnable examples:
 82. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 83. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
 
+84. **`116-soroban-token-contract`**: Inspect Soroban token metadata, balances, allowances, and optional total supply; construct and simulate a token transfer; and decode returned `ScVal` values.
+85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
+86. **`118-ledger-footprint-analysis`**: Simulate and compare Soroban ledger footprints, distinguish read-only and read-write entries, decode ledger keys, identify storage types, and display raw XDR.
+87. **`119-soroban-resource-fee-analysis`**: Simulate and compare Soroban CPU, memory, ledger I/O, transaction resource limits, resource fees, inclusion fees, and total estimated transaction cost.
+
 ## Installation
 
 Ensure you have [Node.js](https://nodejs.org/) version 18.0.0 or later installed.
