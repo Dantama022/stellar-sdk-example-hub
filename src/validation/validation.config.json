@@ -215,20 +215,20 @@
       "reason": "Keeps a live Horizon SSE connection open for client-side filtering"
     },
     {
-      "match": "169-asset-holder-distribution",
-      "reason": "Requires live Horizon trustline data across paginated account pages"
+      "match": "193-soroban-contract-interface",
+      "reason": "Requires Soroban RPC or sample spec entries"
     },
     {
-      "match": "170-account-balance-liability-analysis",
-      "reason": "Requires live Horizon account balance and liability data"
+      "match": "194-soroban-contract-client-generator",
+      "reason": "Generates TypeScript source code from contract specification"
     },
     {
-      "match": "171-account-activity-profile",
-      "reason": "Requires live Horizon account, transaction, operation, and payment history"
+      "match": "195-soroban-interface-compatibility",
+      "reason": "Compares contract specifications for compatibility"
     },
     {
-      "match": "172-horizon-request-tracing",
-      "reason": "Issues live Horizon requests, including deliberate failure and timeout cases"
+      "match": "196-soroban-authorization-preparation",
+      "reason": "Prepares and inspects Soroban authorization entries"
     }
   ]
 }

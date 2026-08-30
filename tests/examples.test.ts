@@ -55,6 +55,10 @@ import * as ex134 from '../src/examples/134-multisignature-threshold-inspection'
 import * as ex135 from '../src/examples/135-transaction-preflight-validation';
 import * as ex137 from '../src/examples/137-dynamic-fee-selection';
 import * as ex181 from '../src/examples/181-soroban-footprint-comparison';
+import * as ex193 from '../src/examples/193-soroban-contract-interface';
+import * as ex194 from '../src/examples/194-soroban-contract-client-generator';
+import * as ex195 from '../src/examples/195-soroban-interface-compatibility';
+import * as ex196 from '../src/examples/196-soroban-authorization-preparation';
 
 import { examples } from '../src/runner/catalog';
 
@@ -1059,5 +1063,125 @@ describe('ISSUE-059: Account Offer Inspection Unit Tests', () => {
     const readme = readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
     expect(readme).toContain('`59-account-offer-inspection`');
     expect(readme).toContain('npm run run-example 59-account-offer-inspection');
+  });
+});
+
+describe('ISSUE-193: Soroban Contract Interface Inspection Unit Tests', () => {
+  it('parses sample spec entries and extracts functions and UDTs', () => {
+    const sampleEntries = ex193.getSampleSpecEntries();
+    const spec = ex193.parseContractSpec(sampleEntries);
+
+    expect(spec.functions.length).toBeGreaterThan(0);
+    expect(spec.structs.length).toBeGreaterThan(0);
+    expect(spec.enums.length).toBeGreaterThan(0);
+    expect(spec.functions.find((f) => f.name === 'hello')).toBeDefined();
+  });
+
+  it('identifies functions that can be called without arguments', () => {
+    const sampleEntries = ex193.getSampleSpecEntries();
+    const spec = ex193.parseContractSpec(sampleEntries);
+    const versionFn = spec.functions.find((f) => f.name === 'version');
+    expect(versionFn?.canCallWithoutArgs).toBe(true);
+  });
+
+  it('formats interface summary report', () => {
+    const spec = ex193.parseContractSpec(ex193.getSampleSpecEntries());
+    const report = ex193.formatInterfaceSummary(spec, 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+    expect(report).toContain('Soroban Contract Interface Summary');
+    expect(report).toContain('CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+  });
+
+  it('registers example 193 in the catalog', () => {
+    expect(examples['193-soroban-contract-interface']).toBeDefined();
+  });
+});
+
+describe('ISSUE-194: Soroban Contract Client Generation Unit Tests', () => {
+  it('generates TypeScript client source code from parsed spec', () => {
+    const spec = ex193.parseContractSpec(ex193.getSampleSpecEntries());
+    const code = ex194.generateClientCode(spec, 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+
+    expect(code).toContain('export class ContractClient');
+    expect(code).toContain('buildHelloOp');
+    expect(code).toContain('decodeHelloResult');
+    expect(code).toContain('CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+  });
+
+  it('generates JSON metadata correctly', () => {
+    const spec = ex193.parseContractSpec(ex193.getSampleSpecEntries());
+    const meta: any = ex194.generateJsonMetadata(spec, 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+
+    expect(meta.contractId).toBe('CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+    expect(meta.generatedMethodsCount).toBe(spec.functions.length);
+  });
+
+  it('registers example 194 in the catalog', () => {
+    expect(examples['194-soroban-contract-client-generator']).toBeDefined();
+  });
+});
+
+describe('ISSUE-195: Soroban Interface Compatibility Checker Unit Tests', () => {
+  it('detects changes between V1 and V2 sample specs', () => {
+    const { v1, v2 } = ex195.getSampleV1V2Specs();
+    const report = ex195.checkInterfaceCompatibility(v1, v2, false);
+
+    expect(report.totalChanges).toBeGreaterThan(0);
+    expect(report.changes.some((c) => c.action === 'removed')).toBe(true);
+    expect(report.changes.some((c) => c.action === 'added')).toBe(true);
+  });
+
+  it('formats compatibility report string', () => {
+    const { v1, v2 } = ex195.getSampleV1V2Specs();
+    const report = ex195.checkInterfaceCompatibility(v1, v2, false);
+    const text = ex195.formatCompatibilityReport(report);
+
+    expect(text).toContain('Soroban Contract Interface Compatibility Report');
+    expect(text).toContain('Total Changes Detected');
+  });
+
+  it('registers example 195 in the catalog', () => {
+    expect(examples['195-soroban-interface-compatibility']).toBeDefined();
+  });
+});
+
+describe('ISSUE-196: Soroban Authorization Preparation Unit Tests', () => {
+  const contractId = 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA';
+  const address = 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7';
+
+  it('validates Stellar addresses and contract IDs', () => {
+    expect(ex196.isValidStellarId(address)).toBe(true);
+    expect(ex196.isValidStellarId(contractId)).toBe(true);
+    expect(ex196.isValidStellarId('invalid')).toBe(false);
+  });
+
+  it('constructs, serializes, decodes, and verifies round-trip consistency of authorization entries', () => {
+    const entry = ex196.createMockAuthorizationEntry(contractId, address, 'transfer');
+    const xdrBase64 = entry.toXDR('base64');
+    expect(xdrBase64).toBeDefined();
+
+    const isConsistent = ex196.verifyRoundTripConsistency(entry);
+    expect(isConsistent).toBe(true);
+  });
+
+  it('formats authorization tree summary', () => {
+    const detail = {
+      authorizedAddress: address,
+      credentialType: 'address' as const,
+      contractId,
+      functionName: 'transfer',
+      argsCount: 2,
+      subInvocationsCount: 0,
+      xdrBase64: 'AAAA...',
+      isSigned: false,
+    };
+    const tree = ex196.formatAuthorizationTree([detail]);
+
+    expect(tree).toContain('Prepared Soroban Authorization Tree');
+    expect(tree).toContain(address);
+    expect(tree).toContain('UNSIGNED');
+  });
+
+  it('registers example 196 in the catalog', () => {
+    expect(examples['196-soroban-authorization-preparation']).toBeDefined();
   });
 });
