@@ -143,6 +143,15 @@ export const examples: Record<string, Example> = {
     description: 'Intentionally trigger and parse Soroban RPC and transaction errors',
     run: loadExample('../examples/18-soroban-errors'),
   },
+  '189-soroban-transaction-polling': {
+    name: '189-soroban-transaction-polling',
+    description: 'Poll a Soroban transaction with backoff, retries, timeout, and cancellation',
+    run: loadExample('../examples/189-soroban-transaction-polling'),
+    params: [
+      { type: 'input', name: 'rpcUrl', message: 'Soroban RPC endpoint:', default: 'https://soroban-testnet.stellar.org' },
+      { type: 'input', name: 'transactionHash', message: 'Transaction hash:' },
+    ],
+  },
   '19-horizon-streaming': {
     name: '19-horizon-streaming',
     description: 'Subscribe to live Horizon payment events over Server-Sent Events',

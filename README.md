@@ -28,6 +28,7 @@ The repository currently includes the following runnable examples:
 15. **`16-batched-operations`**: Bundling multiple payment operations into one atomic transaction.
 16. **`17-offline-signing`**: Building unsigned transaction XDR, signing it offline, and verifying it.
 17. **`18-soroban-errors`**: Intentionally triggering and parsing Soroban RPC and simulation errors.
+18. **`189-soroban-transaction-polling`**: Polling Soroban transaction status with bounded exponential backoff, retries, timeout, and cancellation.
 18. **`19-horizon-streaming`**: Subscribing to live Horizon Testnet payment events through Server-Sent Events.
 19. **`20-sep10-authentication`**: SEP-10 challenge generation, signing, verification, and JWT issuance.
 20. **`21-sep24-deposit-withdrawal`**: Running SEP-24 interactive deposit and withdrawal against a Testnet anchor.
@@ -122,6 +123,14 @@ Run a specific example by passing its catalog name:
 ```bash
 npm run run-example 01-create-account
 ```
+
+Poll a Soroban transaction until it succeeds or fails:
+
+```bash
+npm run run-example -- 189-soroban-transaction-polling <transaction-hash>
+```
+
+Set `SOROBAN_RPC_URL`, `TRANSACTION_HASH`, and optionally `POLL_INTERVAL_MS`, `POLL_BACKOFF_MULTIPLIER`, `POLL_MAX_INTERVAL_MS`, `POLL_TIMEOUT_MS`, `POLL_RPC_RETRIES`, or `JSON_OUTPUT=true` to configure the workflow.
 
 Run the account-threshold configuration example:
 
