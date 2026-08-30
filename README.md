@@ -240,6 +240,10 @@ The repository currently includes the following runnable examples:
 85. **`178-soroban-contract-storage`**: Inspect Soroban contract storage entries across instance, persistent, and temporary durability tiers with decoded keys, values, and TTL information.
 86. **`179-soroban-footprint-inspection`**: Extract and analyze the Soroban ledger footprint from a transaction simulation or envelope, distinguishing read-only from read-write entries and detecting duplicates.
 87. **`180-soroban-resource-analysis`**: Analyze Soroban resource usage from simulation results with CPU instructions, memory, ledger read/write metrics, utilization percentages, and near-limit detection.
+84. **`193-soroban-contract-interface`**: Inspecting deployed Soroban contract interfaces, exported functions, argument/return types, user-defined structs/enums/unions, and generating example call signatures.
+85. **`194-soroban-contract-client-generator`**: Generating strongly typed TypeScript contract client wrappers, type definitions, method signatures, and ScVal conversion helpers from a Soroban contract specification.
+86. **`195-soroban-interface-compatibility`**: Comparing two Soroban contract specifications to detect additions, removals, parameter/type changes, and classify breaking vs compatible modifications.
+87. **`196-soroban-authorization-preparation`**: Preparing, inspecting, decoding, and round-trip verifying Soroban authorization entries and invocation trees without requesting secret keys or signing.
 
 ## Installation
 
