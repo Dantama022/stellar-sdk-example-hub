@@ -548,6 +548,36 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '191-soroban-contract-deployment-inspection': {
+    name: '191-soroban-contract-deployment-inspection',
+    description:
+      'Inspect a deployed Soroban contract: verify existence, retrieve instance and code ledger entries, extract TTL and code hash, and produce a read-only deployment verification report',
+    run: loadExample('../examples/191-soroban-contract-deployment-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC URL (blank uses testnet):',
+        default: 'https://soroban-testnet.stellar.org',
+      },
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (56-character C-address):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
   '192-soroban-contract-code-inspection': {
     name: '192-soroban-contract-code-inspection',
     description:
