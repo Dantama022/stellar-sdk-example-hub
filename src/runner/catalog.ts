@@ -517,6 +517,37 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '190-soroban-transaction-event-monitor': {
+    name: '190-soroban-transaction-event-monitor',
+    description:
+      'Monitor a submitted Soroban transaction, poll for its terminal state, and extract and decode emitted contract events',
+    run: loadExample('../examples/190-soroban-transaction-event-monitor'),
+    params: [
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC URL (blank uses testnet):',
+        default: 'https://soroban-testnet.stellar.org',
+      },
+      {
+        type: 'input',
+        name: 'txHash',
+        message: 'Transaction hash to monitor (64 hex characters):',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Poll interval in ms (blank uses 1500):',
+        default: '1500',
+      },
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Timeout in ms (blank uses 60000):',
+        default: '60000',
+      },
+    ],
+  },
   '192-soroban-contract-code-inspection': {
     name: '192-soroban-contract-code-inspection',
     description:
