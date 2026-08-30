@@ -127,6 +127,8 @@
       "reason": "Requires live Horizon account and operation data"
     },
     {
+      "match": "192-soroban-contract-code-inspection",
+      "reason": "Requires Soroban RPC availability and a deployed contract instance"
       "match": "66-ledger-effects",
       "reason": "Requires live Horizon ledger and effect data"
     },
