@@ -107,6 +107,14 @@
       "reason": "Requires live Horizon transaction data or fallback simulation"
     },
     {
+      "match": "55-trade-history",
+      "reason": "Requires live Horizon trade data for an active asset pair"
+    },
+    {
+      "match": "56-account-flags-inspection",
+      "reason": "Requires live Horizon account data"
+    },
+    {
       "match": "54-fee-stats",
       "reason": "Requires live Horizon fee statistics endpoint"
     },
@@ -121,6 +129,88 @@
     {
       "match": "192-soroban-contract-code-inspection",
       "reason": "Requires Soroban RPC availability and a deployed contract instance"
+      "match": "66-ledger-effects",
+      "reason": "Requires live Horizon ledger and effect data"
+    },
+    {
+      "match": "67-soroban-contract-events",
+      "reason": "Requires live Soroban RPC event data within the server retention window"
+    },
+    {
+      "match": "50-asset-issuer-discovery",
+      "reason": "Requires live Horizon asset index data"
+    },
+    {
+      "match": "52-account-balance-history",
+      "reason": "Requires live Horizon account effects data"
+    },
+    {
+      "match": "53-ledger-inspection",
+      "reason": "Requires live Horizon ledger data"
+    },
+    {
+      "match": "59-account-offer-inspection",
+      "reason": "Requires live Horizon account offer data"
+    },
+    {
+      "match": "61-horizon-resource-filtering",
+      "reason": "Requires live Horizon data across multiple resource endpoints"
+    },
+    {
+      "match": "140-account-reserve-analysis",
+      "reason": "Requires live Horizon account data"
+    },
+    {
+      "match": "141-sequence-number-management",
+      "reason": "Requires live Friendbot funding and Testnet transaction submission"
+    },
+    {
+      "match": "142-batch-transaction-construction",
+      "reason": "Requires live Friendbot funding and sequential Testnet transaction submission"
+    },
+    {
+      "match": "143-transaction-time-bounds",
+      "reason": "Requires live Friendbot funding and Testnet time-bound transaction submission"
+    },
+    {
+      "match": "68-soroban-contract-simulation",
+      "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+    },
+    {
+      "match": "69-soroban-contract-storage",
+      "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+    },
+    {
+      "match": "70-soroban-authorization",
+      "reason": "Requires live Soroban RPC, Friendbot funding, and a deployed contract on Testnet"
+    },
+    {
+      "match": "71-soroban-storage-update",
+      "reason": "Requires live Soroban RPC, Friendbot funding, and a state-modifying contract on Testnet"
+    },
+    {
+      "match": "82-transaction-time-bounds",
+      "reason": "Depends on live Testnet timing and Soroban RPC transaction acceptance windows"
+    },
+    {
+      "match": "80-offline-transaction-workflow",
+      "reason": "Requires live Friendbot funding and Horizon Testnet transaction submission"
+    },
+    {
+      "match": "81-transaction-preflight",
+      "reason": "Requires live Soroban RPC and a deployed contract on Testnet"
+    },
+    {
+      "match": "83-multi-contract-transaction",
+      "reason": "Requires live Soroban RPC and deployed contracts on Testnet"
+    },
+    {
+      "match": "158-resilient-horizon-streaming",
+      "reason": "Keeps a live Horizon SSE connection open with manual reconnection handling"
+    },
+    {
+      "match": "159-horizon-stream-filtering",
+      "reason": "Keeps a live Horizon SSE connection open for client-side filtering"
     }
   ]
 }

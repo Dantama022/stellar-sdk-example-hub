@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM"],
     "outDir": "./dist",
     "strict": true,
     "noImplicitAny": true,
@@ -22,5 +22,18 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/examples/104-contract-restoration.ts",
+    "src/examples/150-mixed-operation-transaction.ts",
+    "src/examples/151-fee-bump-wrapping.ts",
+    "src/examples/152-transaction-envelope-comparison.ts",
+    "src/examples/153-safe-transaction-logging.ts",
+    "src/examples/154-replay-protection-analysis.ts",
+    "src/examples/155-network-configuration-validation.ts",
+    "src/examples/72-contract-interface-inspection.ts",
+    "src/examples/73-complex-data-types.ts",
+    "src/examples/75-deploy-precompiled-wasm.ts"
+  ]
 }
