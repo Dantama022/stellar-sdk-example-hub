@@ -1689,6 +1689,29 @@ export const examples: Record<string, Example> = {
     description: 'Inspect asset authorization flags and trustline authorization-related balances',
     run: loadExample('../examples/168-issuer-authorization-inspection'),
   },
+  '116-soroban-token-contract': {
+    name: '116-soroban-token-contract',
+    description:
+      'Inspect Soroban token metadata, balances and allowances, construct a transfer, and simulate it before submission',
+    run: loadExample('../examples/116-soroban-token-contract'),
+  },
+  '117-soroban-auth-tree': {
+    name: '117-soroban-auth-tree',
+    description:
+      'Simulate Soroban authorization and visualize root and nested invocation trees',
+    run: loadExample('../examples/117-soroban-auth-tree'),
+  },
+  '118-ledger-footprint-analysis': {
+    name: '118-ledger-footprint-analysis',
+    description:
+      'Simulate, decode, summarize, and compare Soroban ledger footprints',
+    run: loadExample('../examples/118-ledger-footprint-analysis'),
+  },
+  '119-soroban-resource-fee-analysis': {
+    name: '119-soroban-resource-fee-analysis',
+    description:
+      'Compare Soroban CPU, memory, ledger I/O, resource limits, and estimated fees',
+    run: loadExample('../examples/119-soroban-resource-fee-analysis'),
   '177-soroban-event-decoding': {
     name: '177-soroban-event-decoding',
     description:

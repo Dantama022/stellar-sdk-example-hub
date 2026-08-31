@@ -250,6 +250,11 @@ The repository currently includes the following runnable examples:
 86. **`195-soroban-interface-compatibility`**: Comparing two Soroban contract specifications to detect additions, removals, parameter/type changes, and classify breaking vs compatible modifications.
 87. **`196-soroban-authorization-preparation`**: Preparing, inspecting, decoding, and round-trip verifying Soroban authorization entries and invocation trees without requesting secret keys or signing.
 
+84. **`116-soroban-token-contract`**: Inspect Soroban token metadata, balances, allowances, and optional total supply; construct and simulate a token transfer; and decode returned `ScVal` values.
+85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
+86. **`118-ledger-footprint-analysis`**: Simulate and compare Soroban ledger footprints, distinguish read-only and read-write entries, decode ledger keys, identify storage types, and display raw XDR.
+87. **`119-soroban-resource-fee-analysis`**: Simulate and compare Soroban CPU, memory, ledger I/O, transaction resource limits, resource fees, inclusion fees, and total estimated transaction cost.
+
 ## Installation
 
 Ensure you have [Node.js](https://nodejs.org/) version 18.0.0 or later installed.
