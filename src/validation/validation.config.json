@@ -31,6 +31,10 @@
       "reason": "Requires Soroban RPC responses from external services"
     },
     {
+      "match": "189-soroban-transaction-polling",
+      "reason": "Requires a supplied transaction hash and live Soroban RPC availability"
+    },
+    {
       "match": "20-sep10-authentication",
       "reason": "Requires live anchor and testnet network access for the live flow step"
     },
