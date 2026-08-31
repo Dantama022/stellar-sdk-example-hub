@@ -517,6 +517,12 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '192-soroban-contract-code-inspection': {
+    name: '192-soroban-contract-code-inspection',
+    description:
+      'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
+    run: loadExample('../examples/192-soroban-contract-code-inspection'),
+  },
   '66-ledger-effects': {
     name: '66-ledger-effects',
     description:
@@ -545,7 +551,7 @@ export const examples: Record<string, Example> = {
       {
         type: 'input',
         name: 'contractId',
-        message: 'Contract ID (blank discovers a recently active contract):',
+        message: 'Contract ID to inspect (blank uses default testnet contract):',
       },
       {
         type: 'input',
@@ -564,6 +570,54 @@ export const examples: Record<string, Example> = {
         default: '10',
       },
     ],
+  },
+  '188-soroban-transaction-inspection': {
+    name: '188-soroban-transaction-inspection',
+    description:
+      'Retrieve, inspect, and decode a Soroban transaction by hash with status detection, XDR analysis, event decoding, and optional polling',
+    run: loadExample('../examples/188-soroban-transaction-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Soroban transaction hash to inspect:',
+      },
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Optional RPC URL (blank uses testnet default):',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Polling interval in milliseconds:',
+        default: '2000',
+      },
+      {
+        type: 'input',
+        name: 'pollTimeoutMs',
+        message: 'Polling timeout in milliseconds:',
+        default: '30000',
+      },
+      {
+        type: 'confirm',
+        name: 'pollUntilFinal',
+        message: 'Poll until a final status is available?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '192-soroban-contract-code-inspection': {
+    name: '192-soroban-contract-code-inspection',
+    description:
+      'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
+    run: loadExample('../examples/192-soroban-contract-code-inspection'),
   },
   '60-network-configuration': {
     name: '60-network-configuration',
@@ -939,6 +993,12 @@ export const examples: Record<string, Example> = {
       'Interpret a simulateTransaction response: resource budget, ledger footprint, return value, diagnostic events, and restore preamble',
     run: loadExample('../examples/101-simulation-result-analysis'),
   },
+  '181-soroban-footprint-comparison': {
+    name: '181-soroban-footprint-comparison',
+    description:
+      'Compare Soroban ledger footprints across multiple simulation results, detect shared entries, added/removed keys, access-mode changes, and identify the smaller footprint',
+    run: loadExample('../examples/181-soroban-footprint-comparison'),
+  },
   '102-contract-storage-inspection': {
     name: '102-contract-storage-inspection',
     description:
@@ -1277,6 +1337,143 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '120-transaction-lifecycle-monitor': {
+    name: '120-transaction-lifecycle-monitor',
+    description:
+      'Poll Horizon for a transaction until it confirms, fails, times out, or is temporarily rate limited',
+    run: loadExample('../examples/120-transaction-lifecycle-monitor'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Transaction hash (blank uses the latest Horizon transaction):',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Polling interval in milliseconds:',
+        default: '2000',
+      },
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Polling timeout in milliseconds:',
+        default: '30000',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '121-account-history-pagination': {
+    name: '121-account-history-pagination',
+    description:
+      'Paginate an account operation history safely with record limits, operation filters, and duplicate prevention',
+    run: loadExample('../examples/121-account-history-pagination'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID (blank discovers a recently active account):',
+      },
+      {
+        type: 'input',
+        name: 'pageSize',
+        message: 'Horizon page size:',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'maxRecords',
+        message: 'Maximum records to process:',
+        default: '50',
+      },
+      {
+        type: 'input',
+        name: 'operationType',
+        message: 'Optional operation type filter (for example payment):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '122-order-book-inspection': {
+    name: '122-order-book-inspection',
+    description:
+      'Inspect Stellar order-book bids, asks, spread, midpoint, market depth, and available liquidity',
+    run: loadExample('../examples/122-order-book-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'sellingAsset',
+        message: 'Selling/base asset (native or CODE:ISSUER; blank auto-discovers a pair):',
+      },
+      {
+        type: 'input',
+        name: 'buyingAsset',
+        message: 'Buying/counter asset (native or CODE:ISSUER; blank auto-discovers a pair):',
+      },
+      {
+        type: 'input',
+        name: 'depth',
+        message: 'Order-book depth per side:',
+        default: '10',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '123-trade-history-analysis': {
+    name: '123-trade-history-analysis',
+    description:
+      'Retrieve historical Stellar trades and calculate price, volume, activity, and time-window statistics',
+    run: loadExample('../examples/123-trade-history-analysis'),
+    params: [
+      {
+        type: 'input',
+        name: 'sellingAsset',
+        message: 'Selling/base asset (native or CODE:ISSUER; blank auto-discovers a pair):',
+      },
+      {
+        type: 'input',
+        name: 'buyingAsset',
+        message: 'Buying/counter asset (native or CODE:ISSUER; blank auto-discovers a pair):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Maximum trade records to display:',
+        default: '20',
+      },
+      {
+        type: 'input',
+        name: 'fromTime',
+        message: 'Optional start time (ISO-8601 or Unix seconds):',
+      },
+      {
+        type: 'input',
+        name: 'toTime',
+        message: 'Optional end time (ISO-8601 or Unix seconds):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
   '124-liquidity-pool-inspection': {
     name: '124-liquidity-pool-inspection',
     description: 'Retrieve and analyze a Stellar liquidity pool state and reserves',
@@ -1463,7 +1660,8 @@ export const examples: Record<string, Example> = {
   },
   '163-account-transaction-history': {
     name: '163-account-transaction-history',
-    description: 'Inspect a Stellar account transaction history and summarize recent transaction flow',
+    description:
+      'Inspect a Stellar account transaction history and summarize recent transaction flow',
     run: loadExample('../examples/163-account-transaction-history'),
   },
   '164-account-operation-history': {
@@ -1514,5 +1712,160 @@ export const examples: Record<string, Example> = {
     description:
       'Compare Soroban CPU, memory, ledger I/O, resource limits, and estimated fees',
     run: loadExample('../examples/119-soroban-resource-fee-analysis'),
+  '177-soroban-event-decoding': {
+    name: '177-soroban-event-decoding',
+    description:
+      'Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding',
+    run: loadExample('../examples/177-soroban-event-decoding'),
+  '193-soroban-contract-interface': {
+    name: '193-soroban-contract-interface',
+    description: 'Inspect a deployed Soroban contract interface, exported functions, and user-defined types',
+    run: loadExample('../examples/193-soroban-contract-interface'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank discovers a recently active contract):',
+      },
+      {
+        type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans the last ~24h of ledgers):',
+      },
+      {
+        type: 'input',
+        name: 'endLedger',
+        message: 'End ledger (blank queries up to the latest ledger):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to retrieve (1-200):',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'eventType',
+        message: 'Event type filter (contract, system, or diagnostic):',
+        default: 'contract',
+      },
+      {
+        type: 'input',
+        name: 'topicFilter',
+        message: 'Optional topic filter (e.g. "transfer"):',
+      },
+    ],
+  },
+  '178-soroban-contract-storage': {
+    name: '178-soroban-contract-storage',
+    description:
+      'Inspect Soroban contract storage entries across instance, persistent, and temporary durability tiers',
+    run: loadExample('../examples/178-soroban-contract-storage'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID:',
+        default: 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA',
+      },
+      {
+        type: 'input',
+        name: 'storageKey',
+        message: 'Optional storage key (e.g. "counter", "symbol:admin", "address:G..."):',
+      },
+    ],
+  },
+  '179-soroban-footprint-inspection': {
+    name: '179-soroban-footprint-inspection',
+    description:
+      'Extract and analyze the Soroban ledger footprint from a transaction simulation or envelope',
+    run: loadExample('../examples/179-soroban-footprint-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionXdr',
+        message: 'Optional base64 XDR (blank runs a demo simulation):',
+      },
+    ],
+  },
+  '180-soroban-resource-analysis': {
+    name: '180-soroban-resource-analysis',
+    description:
+      'Analyze Soroban resource usage from simulation results with utilization and near-limit detection',
+    run: loadExample('../examples/180-soroban-resource-analysis'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionXdr',
+        message: 'Optional base64 XDR (blank runs a demo simulation):',
+        message: 'Contract ID to inspect:',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '194-soroban-contract-client-generator': {
+    name: '194-soroban-contract-client-generator',
+    description: 'Generate a strongly typed TypeScript contract-client wrapper from a Soroban contract specification',
+    run: loadExample('../examples/194-soroban-contract-client-generator'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID for client:',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON metadata?',
+        default: false,
+      },
+    ],
+  },
+  '195-soroban-interface-compatibility': {
+    name: '195-soroban-interface-compatibility',
+    description: 'Compare two Soroban contract specifications and report additions, removals, and breaking changes',
+    run: loadExample('../examples/195-soroban-interface-compatibility'),
+    params: [
+      {
+        type: 'confirm',
+        name: 'strictMode',
+        message: 'Enable strict compatibility mode?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '196-soroban-authorization-preparation': {
+    name: '196-soroban-authorization-preparation',
+    description: 'Prepare, inspect, decode, and verify Soroban authorization entries and invocation trees without signing',
+    run: loadExample('../examples/196-soroban-authorization-preparation'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Target Contract ID:',
+      },
+      {
+        type: 'input',
+        name: 'sourceAccount',
+        message: 'Authorizing public key:',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
   },
 };

@@ -119,6 +119,7 @@ The repository currently includes the following runnable examples:
 99. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
 100. **`100-authorization-entry-inspection`**: Decoding a `SorobanAuthorizationEntry` — distinguishing source-account from address credentials, walking the invocation tree including sub-invocations, decoding arguments, and reading the nonce and signature expiration ledger.
 101. **`101-simulation-result-analysis`**: Interpreting every part of a `simulateTransaction` response — classifying success, error and restore-required outcomes, reading the resource budget and ledger footprint, decoding the return value, and decoding diagnostic events.
+181. **`181-soroban-footprint-comparison`**: Comparing Soroban ledger footprints across multiple invocation variants, distinguishing read-only from read-write entries, spotting shared and divergent keys, flagging access-mode changes, and identifying the invocation with the smaller footprint.
 102. **`102-contract-storage-inspection`**: Probing contract storage keys across persistent and temporary durability, displaying raw `ScVal` XDR alongside decoded values, and handling missing keys and decoding failures without aborting the sweep.
 103. **`103-storage-ttl-management`**: Reading a storage entry's `liveUntilLedgerSeq`, classifying how much life it has left, and building, simulating and submitting an `ExtendFootprintTTL` transaction — plus when to restore an archived entry instead.
 23. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
@@ -163,6 +164,7 @@ The repository currently includes the following runnable examples:
 51. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
 52. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
 53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+54. **`192-soroban-contract-code-inspection`**: Inspecting Soroban contract code metadata, extracting the deployed code identifier, retrieving TTL and ledger information, and optionally comparing a supplied WASM hash against the on-chain code identifier.
 54. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
 55. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
 54. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
@@ -210,6 +212,7 @@ The repository currently includes the following runnable examples:
 67. **`109-soroban-transaction-preparation`**: Building and simulating a Soroban invocation, extracting resource limits, fees, footprint and authorization data, applying the simulation result, and inspecting the prepared unsigned transaction XDR.
 68. **`110-soroban-transaction-submission`**: Preparing, signing and submitting a Soroban transaction, polling pending status until a terminal result, and displaying the hash, ledger, return value, resource allocation, fees and events.
 69. **`111-soroban-transaction-error-diagnosis`**: Retrieving failed Soroban transactions, decoding transaction and diagnostic XDR, identifying failed invocations, classifying failure categories, and displaying actionable troubleshooting guidance.
+70. **`188-soroban-transaction-inspection`**: Querying a Soroban transaction by hash, classifying its status, decoding the result/return value and diagnostics, and producing a structured read-only inspection report with polling and JSON output support.
 65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
 65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
 66. **`93-trustline-management`**: Creating, inspecting, updating, and removing asset trustlines — demonstrating changeTrust operations, trust limit configuration, authorization status inspection, and the 0.5 XLM reserve cost of each subentry.
@@ -222,6 +225,10 @@ The repository currently includes the following runnable examples:
 69. **`138-account-merge-preflight`**: Inspect a Stellar account to determine merge readiness and identify blocking ledger states.
 70. **`132-fee-bump-inspection`**: Decode and inspect fee-bump and normal transaction envelopes offline.
 71.  **`136-transaction-fee-estimation`**: Estimate minimum transaction fees using Horizon network fee statistics across operation sizes.
+72. **`120-transaction-lifecycle-monitor`**: Monitor a Horizon transaction until confirmation, failure, timeout, or temporary rate limiting, with ledger, fee, operation-count, and result information.
+73. **`121-account-history-pagination`**: Traverse an account's Horizon operation history page by page with configurable page size, record limits, operation filtering, cursor-safe traversal, and duplicate prevention.
+74. **`122-order-book-inspection`**: Inspect a Stellar trading pair's bids, asks, best prices, spread, midpoint, configurable depth, and summarized liquidity.
+75. **`123-trade-history-analysis`**: Retrieve historical trades for a Stellar pair, filter by time, and calculate high, low, average price, traded volume, and trade count.
 72. **`124-liquidity-pool-inspection`**: Retrieve and analyze an existing Stellar liquidity pool, its reserves, shares, and fees.
 73. **`125-liquidity-pool-simulation`**: Simulate deposit and withdrawal operations on a liquidity pool to estimate share and asset changes.
 74. **`127-trustline-management`**: Inspect, create, update, and remove asset trustlines for a Stellar account.
@@ -234,6 +241,14 @@ The repository currently includes the following runnable examples:
 81. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
 82. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 83. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
+84. **`177-soroban-event-decoding`**: Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding, supporting configurable ledger ranges and event-type filtering.
+85. **`178-soroban-contract-storage`**: Inspect Soroban contract storage entries across instance, persistent, and temporary durability tiers with decoded keys, values, and TTL information.
+86. **`179-soroban-footprint-inspection`**: Extract and analyze the Soroban ledger footprint from a transaction simulation or envelope, distinguishing read-only from read-write entries and detecting duplicates.
+87. **`180-soroban-resource-analysis`**: Analyze Soroban resource usage from simulation results with CPU instructions, memory, ledger read/write metrics, utilization percentages, and near-limit detection.
+84. **`193-soroban-contract-interface`**: Inspecting deployed Soroban contract interfaces, exported functions, argument/return types, user-defined structs/enums/unions, and generating example call signatures.
+85. **`194-soroban-contract-client-generator`**: Generating strongly typed TypeScript contract client wrappers, type definitions, method signatures, and ScVal conversion helpers from a Soroban contract specification.
+86. **`195-soroban-interface-compatibility`**: Comparing two Soroban contract specifications to detect additions, removals, parameter/type changes, and classify breaking vs compatible modifications.
+87. **`196-soroban-authorization-preparation`**: Preparing, inspecting, decoding, and round-trip verifying Soroban authorization entries and invocation trees without requesting secret keys or signing.
 
 84. **`116-soroban-token-contract`**: Inspect Soroban token metadata, balances, allowances, and optional total supply; construct and simulate a token transfer; and decode returned `ScVal` values.
 85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
@@ -849,6 +864,14 @@ npm run run-example 111-soroban-transaction-error-diagnosis
 
 Supply a specific failed transaction with `TRANSACTION_HASH=<transaction-hash>`. When no hash is supplied, the example searches recent Soroban RPC transaction history for a failed contract invocation. It distinguishes RPC, transaction, authorization, resource/fee, contract execution and state/archival failures, decodes available diagnostics and XDR, identifies the failed invocation where possible, and provides troubleshooting guidance. Missing diagnostic information is handled gracefully.
 
+Inspect an arbitrary Soroban transaction by hash:
+
+```bash
+npm run run-example 188-soroban-transaction-inspection
+```
+
+Provide a transaction hash with `TRANSACTION_HASH=<hash>`, optionally set `POLL_INTERVAL_MS` and `POLL_TIMEOUT_MS`, and pass `--json` for machine-readable output. The example validates the hash, requests the transaction from Soroban RPC, handles not-found/pending/failed/success states, decodes any return value and event payloads, prints the raw XDR, and surfaces resource and fee information when the RPC response includes it.
+
 Run the full Soroban transaction preflight workflow:
 
 ```bash
@@ -1036,3 +1059,37 @@ Contributions are welcome. To add or improve an example, read [CONTRIBUTING.md](
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+
+## Horizon Market and History Examples 120-123
+
+Monitor a transaction through its Horizon lifecycle:
+
+```bash
+npm run run-example 120-transaction-lifecycle-monitor
+```
+
+Set `TRANSACTION_HASH`, `POLL_INTERVAL_MS`, `POLL_TIMEOUT_MS`, and `JSON_OUTPUT=true` to configure non-interactive monitoring. If no hash is supplied, the example uses the latest Horizon transaction so it remains directly runnable.
+
+Paginate an account's historical operations:
+
+```bash
+npm run run-example 121-account-history-pagination
+```
+
+Use `ACCOUNT_ID`, `PAGE_SIZE`, `MAX_RECORDS`, `OPERATION_TYPE`, and `JSON_OUTPUT=true` to configure account-history traversal. The example follows Horizon pagination links, prevents duplicate records, and stops at the requested maximum.
+
+Inspect current order-book depth:
+
+```bash
+npm run run-example 122-order-book-inspection
+```
+
+Use `SELLING_ASSET`, `BUYING_ASSET`, `ORDER_BOOK_DEPTH`, and `JSON_OUTPUT=true`. Assets use `native`/`XLM` or `CODE:ISSUER`. Without an explicit pair, the example derives a recently traded pair from Horizon.
+
+Analyze historical trades:
+
+```bash
+npm run run-example 123-trade-history-analysis
+```
+
+Use `SELLING_ASSET`, `BUYING_ASSET`, `TRADE_HISTORY_LIMIT`, `TRADE_FROM_TIME`, `TRADE_TO_TIME`, and `JSON_OUTPUT=true`. Time filters accept ISO-8601 values or Unix timestamps in seconds. Empty markets are reported as a valid zero-trade result.

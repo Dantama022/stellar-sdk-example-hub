@@ -67,6 +67,20 @@
     "testMatch": [
       "**/tests/**/*.test.ts"
     ],
+    "transform": {
+      "^.+\\.[tj]sx?$": [
+        "ts-jest",
+        {
+          "useESM": true
+        }
+      ]
+    },
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(stellar-sdk-v16|@noble|uint8array-extras))"
+    ],
     "collectCoverageFrom": [
       "src/**/*.ts",
       "!src/runner.ts",
