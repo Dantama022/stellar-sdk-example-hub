@@ -1868,4 +1868,44 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '173-transaction-fee-estimation': {
+    name: '173-transaction-fee-estimation',
+    description: 'Retrieve network fee information and compare transaction fee strategies, per-operation fees, and fee-bump fees',
+    run: loadExample('../examples/173-transaction-fee-estimation'),
+    params: [
+      { type: 'input', name: 'operationCount', message: 'Operation count:', default: 3 },
+      { type: 'input', name: 'maxFee', message: 'Maximum fee (stroops):', default: 100000 },
+      { type: 'confirm', name: 'offline', message: 'Calculate offline (skip Horizon)?', default: false },
+      { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
+    ],
+  },
+  '174-transaction-preflight-validation': {
+    name: '174-transaction-preflight-validation',
+    description: 'Validate a transaction envelope structure, fee, sequence, time bounds, and memo before signing or submitting',
+    run: loadExample('../examples/174-transaction-preflight-validation'),
+    params: [
+      { type: 'input', name: 'envelopeXdr', message: 'Transaction envelope XDR:' },
+      { type: 'input', name: 'expectedSequence', message: 'Current account sequence (optional):' },
+      { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
+    ],
+  },
+  '175-transaction-result-analysis': {
+    name: '175-transaction-result-analysis',
+    description: 'Decode transaction and operation result codes into a structured diagnostic report with remediation hints',
+    run: loadExample('../examples/175-transaction-result-analysis'),
+    params: [
+      { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
+    ],
+  },
+  '176-soroban-contract-invocation': {
+    name: '176-soroban-contract-invocation',
+    description: 'Prepare and inspect a Soroban contract invocation transaction, including ScVal arguments, envelope XDR, and hash',
+    run: loadExample('../examples/176-soroban-contract-invocation'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Contract ID:' },
+      { type: 'input', name: 'method', message: 'Method name:' },
+      { type: 'input', name: 'sourceAccount', message: 'Source account public key:' },
+      { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
+    ],
+  },
 };

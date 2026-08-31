@@ -249,6 +249,10 @@ The repository currently includes the following runnable examples:
 85. **`194-soroban-contract-client-generator`**: Generating strongly typed TypeScript contract client wrappers, type definitions, method signatures, and ScVal conversion helpers from a Soroban contract specification.
 86. **`195-soroban-interface-compatibility`**: Comparing two Soroban contract specifications to detect additions, removals, parameter/type changes, and classify breaking vs compatible modifications.
 87. **`196-soroban-authorization-preparation`**: Preparing, inspecting, decoding, and round-trip verifying Soroban authorization entries and invocation trees without requesting secret keys or signing.
+88. **`173-transaction-fee-estimation`**: Retrieving network fee information and comparing economy, standard, and priority fee strategies including fee-bump fees.
+89. **`174-transaction-preflight-validation`**: Validating transaction structure, fee, sequence number, time bounds, and memo before signing, without ever submitting.
+90. **`175-transaction-result-analysis`**: Decoding transaction and operation result codes into a structured diagnostic report with remediation hints.
+91. **`176-soroban-contract-invocation`**: Preparing a Soroban contract invocation transaction with encoded ScVal arguments, envelope XDR, and transaction hash.
 
 84. **`116-soroban-token-contract`**: Inspect Soroban token metadata, balances, allowances, and optional total supply; construct and simulate a token transfer; and decode returned `ScVal` values.
 85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
