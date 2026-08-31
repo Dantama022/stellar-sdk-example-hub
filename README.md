@@ -225,6 +225,10 @@ The repository currently includes the following runnable examples:
 69. **`138-account-merge-preflight`**: Inspect a Stellar account to determine merge readiness and identify blocking ledger states.
 70. **`132-fee-bump-inspection`**: Decode and inspect fee-bump and normal transaction envelopes offline.
 71.  **`136-transaction-fee-estimation`**: Estimate minimum transaction fees using Horizon network fee statistics across operation sizes.
+72. **`120-transaction-lifecycle-monitor`**: Monitor a Horizon transaction until confirmation, failure, timeout, or temporary rate limiting, with ledger, fee, operation-count, and result information.
+73. **`121-account-history-pagination`**: Traverse an account's Horizon operation history page by page with configurable page size, record limits, operation filtering, cursor-safe traversal, and duplicate prevention.
+74. **`122-order-book-inspection`**: Inspect a Stellar trading pair's bids, asks, best prices, spread, midpoint, configurable depth, and summarized liquidity.
+75. **`123-trade-history-analysis`**: Retrieve historical trades for a Stellar pair, filter by time, and calculate high, low, average price, traded volume, and trade count.
 72. **`124-liquidity-pool-inspection`**: Retrieve and analyze an existing Stellar liquidity pool, its reserves, shares, and fees.
 73. **`125-liquidity-pool-simulation`**: Simulate deposit and withdrawal operations on a liquidity pool to estimate share and asset changes.
 74. **`127-trustline-management`**: Inspect, create, update, and remove asset trustlines for a Stellar account.
@@ -1050,3 +1054,37 @@ Contributions are welcome. To add or improve an example, read [CONTRIBUTING.md](
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+
+## Horizon Market and History Examples 120-123
+
+Monitor a transaction through its Horizon lifecycle:
+
+```bash
+npm run run-example 120-transaction-lifecycle-monitor
+```
+
+Set `TRANSACTION_HASH`, `POLL_INTERVAL_MS`, `POLL_TIMEOUT_MS`, and `JSON_OUTPUT=true` to configure non-interactive monitoring. If no hash is supplied, the example uses the latest Horizon transaction so it remains directly runnable.
+
+Paginate an account's historical operations:
+
+```bash
+npm run run-example 121-account-history-pagination
+```
+
+Use `ACCOUNT_ID`, `PAGE_SIZE`, `MAX_RECORDS`, `OPERATION_TYPE`, and `JSON_OUTPUT=true` to configure account-history traversal. The example follows Horizon pagination links, prevents duplicate records, and stops at the requested maximum.
+
+Inspect current order-book depth:
+
+```bash
+npm run run-example 122-order-book-inspection
+```
+
+Use `SELLING_ASSET`, `BUYING_ASSET`, `ORDER_BOOK_DEPTH`, and `JSON_OUTPUT=true`. Assets use `native`/`XLM` or `CODE:ISSUER`. Without an explicit pair, the example derives a recently traded pair from Horizon.
+
+Analyze historical trades:
+
+```bash
+npm run run-example 123-trade-history-analysis
+```
+
+Use `SELLING_ASSET`, `BUYING_ASSET`, `TRADE_HISTORY_LIMIT`, `TRADE_FROM_TIME`, `TRADE_TO_TIME`, and `JSON_OUTPUT=true`. Time filters accept ISO-8601 values or Unix timestamps in seconds. Empty markets are reported as a valid zero-trade result.

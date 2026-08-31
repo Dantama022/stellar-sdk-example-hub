@@ -1337,6 +1337,143 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '120-transaction-lifecycle-monitor': {
+    name: '120-transaction-lifecycle-monitor',
+    description:
+      'Poll Horizon for a transaction until it confirms, fails, times out, or is temporarily rate limited',
+    run: loadExample('../examples/120-transaction-lifecycle-monitor'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Transaction hash (blank uses the latest Horizon transaction):',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Polling interval in milliseconds:',
+        default: '2000',
+      },
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Polling timeout in milliseconds:',
+        default: '30000',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '121-account-history-pagination': {
+    name: '121-account-history-pagination',
+    description:
+      'Paginate an account operation history safely with record limits, operation filters, and duplicate prevention',
+    run: loadExample('../examples/121-account-history-pagination'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID (blank discovers a recently active account):',
+      },
+      {
+        type: 'input',
+        name: 'pageSize',
+        message: 'Horizon page size:',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'maxRecords',
+        message: 'Maximum records to process:',
+        default: '50',
+      },
+      {
+        type: 'input',
+        name: 'operationType',
+        message: 'Optional operation type filter (for example payment):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '122-order-book-inspection': {
+    name: '122-order-book-inspection',
+    description:
+      'Inspect Stellar order-book bids, asks, spread, midpoint, market depth, and available liquidity',
+    run: loadExample('../examples/122-order-book-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'sellingAsset',
+        message: 'Selling/base asset (native or CODE:ISSUER; blank auto-discovers a pair):',
+      },
+      {
+        type: 'input',
+        name: 'buyingAsset',
+        message: 'Buying/counter asset (native or CODE:ISSUER; blank auto-discovers a pair):',
+      },
+      {
+        type: 'input',
+        name: 'depth',
+        message: 'Order-book depth per side:',
+        default: '10',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '123-trade-history-analysis': {
+    name: '123-trade-history-analysis',
+    description:
+      'Retrieve historical Stellar trades and calculate price, volume, activity, and time-window statistics',
+    run: loadExample('../examples/123-trade-history-analysis'),
+    params: [
+      {
+        type: 'input',
+        name: 'sellingAsset',
+        message: 'Selling/base asset (native or CODE:ISSUER; blank auto-discovers a pair):',
+      },
+      {
+        type: 'input',
+        name: 'buyingAsset',
+        message: 'Buying/counter asset (native or CODE:ISSUER; blank auto-discovers a pair):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Maximum trade records to display:',
+        default: '20',
+      },
+      {
+        type: 'input',
+        name: 'fromTime',
+        message: 'Optional start time (ISO-8601 or Unix seconds):',
+      },
+      {
+        type: 'input',
+        name: 'toTime',
+        message: 'Optional end time (ISO-8601 or Unix seconds):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
   '124-liquidity-pool-inspection': {
     name: '124-liquidity-pool-inspection',
     description: 'Retrieve and analyze a Stellar liquidity pool state and reserves',
