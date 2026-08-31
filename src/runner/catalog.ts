@@ -555,15 +555,69 @@ export const examples: Record<string, Example> = {
       },
       {
         type: 'input',
-        name: 'expectedHash',
-        message: 'Optional expected code hash (hex) for verification:',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans the last ~24h of ledgers):',
       },
       {
         type: 'input',
-        name: 'wasmFile',
-        message: 'Optional path to WASM file to hash and compare:',
+        name: 'endLedger',
+        message: 'End ledger (blank queries up to the latest ledger):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to retrieve (1-200):',
+        default: '10',
       },
     ],
+  },
+  '188-soroban-transaction-inspection': {
+    name: '188-soroban-transaction-inspection',
+    description:
+      'Retrieve, inspect, and decode a Soroban transaction by hash with status detection, XDR analysis, event decoding, and optional polling',
+    run: loadExample('../examples/188-soroban-transaction-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Soroban transaction hash to inspect:',
+      },
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Optional RPC URL (blank uses testnet default):',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Polling interval in milliseconds:',
+        default: '2000',
+      },
+      {
+        type: 'input',
+        name: 'pollTimeoutMs',
+        message: 'Polling timeout in milliseconds:',
+        default: '30000',
+      },
+      {
+        type: 'confirm',
+        name: 'pollUntilFinal',
+        message: 'Poll until a final status is available?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '192-soroban-contract-code-inspection': {
+    name: '192-soroban-contract-code-inspection',
+    description:
+      'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
+    run: loadExample('../examples/192-soroban-contract-code-inspection'),
   },
   '60-network-configuration': {
     name: '60-network-configuration',
