@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+
 import { xdr } from '@stellar/stellar-sdk';
 
 import {
@@ -7,7 +9,6 @@ import {
   extractCodeHash,
   classifyContractState,
   inspectContractDeployment,
-  DeploymentInspectionReport,
 } from '../src/examples/191-soroban-contract-deployment-inspection';
 import { examples } from '../src/runner/catalog';
 
@@ -40,10 +41,12 @@ function makeFakeInstanceEntry(codeHashHex: string, liveUntilLedgerSeq = 2000): 
   return { val: ledgerEntry, lastModifiedLedgerSeq: 900, liveUntilLedgerSeq };
 }
 
-function makeServer(overrides: Partial<{
-  getLatestLedger: () => Promise<any>;
-  getLedgerEntries: (...args: any[]) => Promise<any>;
-}> = {}): any {
+function makeServer(
+  overrides: Partial<{
+    getLatestLedger: () => Promise<any>;
+    getLedgerEntries: (...args: any[]) => Promise<any>;
+  }> = {},
+): any {
   return {
     getLatestLedger: overrides.getLatestLedger ?? (async () => ({ sequence: 1000 })),
     getLedgerEntries: overrides.getLedgerEntries ?? (async () => ({ entries: [] })),
@@ -124,7 +127,13 @@ describe('extractCodeHash', () => {
   });
 
   it('returns null for a non-contract-data entry shape', () => {
-    const mockEntry = { val: { data: () => { throw new Error('bad shape'); } } } as any;
+    const mockEntry = {
+      val: {
+        data: () => {
+          throw new Error('bad shape');
+        },
+      },
+    } as any;
     expect(extractCodeHash(mockEntry)).toBeNull();
   });
 });
@@ -157,7 +166,9 @@ describe('classifyContractState', () => {
 describe('inspectContractDeployment', () => {
   it('reports RPC error when getLatestLedger fails', async () => {
     const server = makeServer({
-      getLatestLedger: async () => { throw new Error('network timeout'); },
+      getLatestLedger: async () => {
+        throw new Error('network timeout');
+      },
     });
     const report = await inspectContractDeployment(server, VALID_ID, NETWORK);
     expect(report.error).toMatch(/RPC failure fetching latest ledger/);
@@ -176,7 +187,9 @@ describe('inspectContractDeployment', () => {
 
   it('reports RPC error when getLedgerEntries throws for instance', async () => {
     const server = makeServer({
-      getLedgerEntries: async () => { throw new Error('rpc down'); },
+      getLedgerEntries: async () => {
+        throw new Error('rpc down');
+      },
     });
     const report = await inspectContractDeployment(server, VALID_ID, NETWORK);
     expect(report.error).toMatch(/RPC failure fetching contract instance/);
@@ -185,7 +198,9 @@ describe('inspectContractDeployment', () => {
 
   it('detects archived state from error message', async () => {
     const server = makeServer({
-      getLedgerEntries: async () => { throw new Error('entry is archived and expired'); },
+      getLedgerEntries: async () => {
+        throw new Error('entry is archived and expired');
+      },
     });
     const report = await inspectContractDeployment(server, VALID_ID, NETWORK);
     expect(report.contractLedgerState).toBe('archived');
@@ -356,8 +371,7 @@ describe('runner catalog registration', () => {
 // ---------------------------------------------------------------------------
 describe('README catalog entry', () => {
   it('documents 191-soroban-contract-deployment-inspection in README.md', () => {
-    const fs = require('fs');
-    const readme = fs.readFileSync('README.md', 'utf8');
+    const readme = readFileSync('README.md', 'utf8');
     expect(readme).toContain('191-soroban-contract-deployment-inspection');
   });
 });

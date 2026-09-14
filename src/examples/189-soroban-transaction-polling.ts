@@ -56,23 +56,32 @@ function defaultSleep(milliseconds: number, signal?: AbortSignal): Promise<void>
       return;
     }
     const timer = setTimeout(resolve, milliseconds);
-    signal?.addEventListener('abort', () => {
-      clearTimeout(timer);
-      reject(new Error('Polling canceled.'));
-    }, { once: true });
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(new Error('Polling canceled.'));
+      },
+      { once: true },
+    );
   });
 }
 
 function errorStatus(error: unknown): number | undefined {
   if (typeof error !== 'object' || error === null) return undefined;
-  const candidate = error as { status?: unknown; statusCode?: unknown; response?: { status?: unknown } };
+  const candidate = error as {
+    status?: unknown;
+    statusCode?: unknown;
+    response?: { status?: unknown };
+  };
   const status = candidate.status ?? candidate.statusCode ?? candidate.response?.status;
   return typeof status === 'number' ? status : undefined;
 }
 
 export function isPermanentRpcError(error: unknown): boolean {
   const status = errorStatus(error);
-  if (status !== undefined) return status >= 400 && status < 500 && status !== 408 && status !== 429;
+  if (status !== undefined)
+    return status >= 400 && status < 500 && status !== 408 && status !== 429;
   if (typeof error === 'object' && error !== null) {
     const code = (error as { code?: unknown }).code;
     return typeof code === 'number' && code >= -32099 && code <= -32000;
@@ -82,7 +91,8 @@ export function isPermanentRpcError(error: unknown): boolean {
 
 function getStatus(response: unknown): TransactionStatus {
   const status = (response as { status?: unknown })?.status;
-  if (status === 'NOT_FOUND' || status === 'PENDING' || status === 'SUCCESS' || status === 'FAILED') return status;
+  if (status === 'NOT_FOUND' || status === 'PENDING' || status === 'SUCCESS' || status === 'FAILED')
+    return status;
   throw new Error(`Unexpected Soroban transaction status: ${String(status)}`);
 }
 
@@ -108,7 +118,12 @@ export async function pollTransactionStatus(
   let attempt = 0;
   let intervalMs = initialIntervalMs;
 
-  if (initialIntervalMs <= 0 || maxIntervalMs < initialIntervalMs || backoffMultiplier < 1 || timeoutMs <= 0) {
+  if (
+    initialIntervalMs <= 0 ||
+    maxIntervalMs < initialIntervalMs ||
+    backoffMultiplier < 1 ||
+    timeoutMs <= 0
+  ) {
     throw new Error('Polling intervals, multiplier, and timeout must be valid positive values.');
   }
 
@@ -117,17 +132,25 @@ export async function pollTransactionStatus(
     attempt += 1;
     let response: unknown;
     let retry = 0;
-    while (true) {
+    for (;;) {
       try {
         response = await getTransaction(transactionHash);
         break;
       } catch (error) {
         if (isPermanentRpcError(error) || retry >= maxRpcRetries) {
-          throw new Error(`Soroban RPC status query failed permanently: ${error instanceof Error ? error.message : String(error)}`);
+          throw new Error(
+            `Soroban RPC status query failed permanently: ${error instanceof Error ? error.message : String(error)}`,
+          );
         }
         retry += 1;
         const retryDelay = Math.min(maxIntervalMs, intervalMs * 2 ** retry);
-        options.onUpdate?.({ attempt, status: 'RPC_ERROR_RETRYING', waitMs: retryDelay, elapsedMs: now() - startedAt, rpcRetry: true });
+        options.onUpdate?.({
+          attempt,
+          status: 'RPC_ERROR_RETRYING',
+          waitMs: retryDelay,
+          elapsedMs: now() - startedAt,
+          rpcRetry: true,
+        });
         await sleep(retryDelay, options.signal);
       }
     }
@@ -135,7 +158,8 @@ export async function pollTransactionStatus(
     const status = getStatus(response);
     const elapsedMs = now() - startedAt;
     options.onUpdate?.({ attempt, status, waitMs: 0, elapsedMs, ledger: getLedger(response) });
-    if (status === 'SUCCESS' || status === 'FAILED') return { status, response, attempts: attempt, elapsedMs };
+    if (status === 'SUCCESS' || status === 'FAILED')
+      return { status, response, attempts: attempt, elapsedMs };
 
     const waitMs = Math.min(intervalMs, timeoutMs - elapsedMs);
     options.onUpdate?.({ attempt, status, waitMs, elapsedMs, ledger: getLedger(response) });
@@ -150,7 +174,9 @@ function outputUpdate(update: PollingUpdate, json: boolean): void {
   if (json) console.log(JSON.stringify(payload));
   else {
     const ledger = update.ledger === undefined ? '' : ` ledger=${update.ledger}`;
-    console.log(`Attempt ${update.attempt}: ${update.status}${ledger} | wait ${update.waitMs}ms | elapsed ${payload.elapsedSeconds}s`);
+    console.log(
+      `Attempt ${update.attempt}: ${update.status}${ledger} | wait ${update.waitMs}ms | elapsed ${payload.elapsedSeconds}s`,
+    );
   }
 }
 
@@ -161,10 +187,19 @@ function parameter(params: Record<string, unknown> | undefined, name: string): s
 
 export async function run(params?: Record<string, unknown>): Promise<void> {
   const args = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
-  const rpcUrl = parameter(params, 'rpcUrl') ?? process.env.SOROBAN_RPC_URL ?? 'https://soroban-testnet.stellar.org';
+  const rpcUrl =
+    parameter(params, 'rpcUrl') ??
+    process.env.SOROBAN_RPC_URL ??
+    'https://soroban-testnet.stellar.org';
   const hash = parameter(params, 'transactionHash') ?? process.env.TRANSACTION_HASH ?? args[1];
-  if (!hash) throw new Error('Provide a transaction hash through the runner, command line, or TRANSACTION_HASH.');
-  const json = parameter(params, 'json') === 'true' || process.env.JSON_OUTPUT === 'true' || process.argv.includes('--json');
+  if (!hash)
+    throw new Error(
+      'Provide a transaction hash through the runner, command line, or TRANSACTION_HASH.',
+    );
+  const json =
+    parameter(params, 'json') === 'true' ||
+    process.env.JSON_OUTPUT === 'true' ||
+    process.argv.includes('--json');
   const server = new rpc.Server(rpcUrl);
   const controller = new AbortController();
   const handleSigint = (): void => controller.abort();
@@ -187,7 +222,8 @@ export async function run(params?: Record<string, unknown>): Promise<void> {
   }
 }
 
-if (require.main === module) run().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+if (require.main === module)
+  run().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });

@@ -26,9 +26,7 @@ export function buildContractInstanceKey(contractId: string): xdr.LedgerKey {
 /** Build the LedgerKey for a ContractCode entry given a hex code hash. */
 export function buildContractCodeKey(codeHashHex: string): xdr.LedgerKey {
   const hashBytes = Buffer.from(codeHashHex, 'hex');
-  return xdr.LedgerKey.contractCode(
-    new xdr.LedgerKeyContractCode({ hash: hashBytes }),
-  );
+  return xdr.LedgerKey.contractCode(new xdr.LedgerKeyContractCode({ hash: hashBytes }));
 }
 
 /**
@@ -230,16 +228,24 @@ function printReport(report: DeploymentInspectionReport, jsonOutput: boolean): v
   console.log(`${chalk.bold('Contract ID:')}          ${report.contractId}`);
   console.log(`${chalk.bold('Network:')}              ${report.network}`);
   console.log(`${chalk.bold('Current Ledger:')}       ${report.currentLedger}`);
-  console.log(`${chalk.bold('Contract Ledger State:')} ${ledgerStateLabel(report.contractLedgerState)}`);
+  console.log(
+    `${chalk.bold('Contract Ledger State:')} ${ledgerStateLabel(report.contractLedgerState)}`,
+  );
 
   if (report.contractLedgerState === 'not_found') {
     console.log(chalk.red(`\nDiagnostic: ${report.error}`));
-    console.log(chalk.yellow('The contract ID may be incorrect, or the contract has not been deployed to this network.'));
+    console.log(
+      chalk.yellow(
+        'The contract ID may be incorrect, or the contract has not been deployed to this network.',
+      ),
+    );
     return;
   }
 
   if (report.contractLedgerState === 'archived') {
-    console.log(chalk.yellow(`\nWarning: ${report.error ?? 'Contract entry appears archived or expired.'}`));
+    console.log(
+      chalk.yellow(`\nWarning: ${report.error ?? 'Contract entry appears archived or expired.'}`),
+    );
   }
 
   if (report.contractLedgerState === 'error' && !report.instanceXdr) {

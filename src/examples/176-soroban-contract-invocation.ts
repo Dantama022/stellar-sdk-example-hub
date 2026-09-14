@@ -44,7 +44,10 @@ const DEMO_SOURCE = 'GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI';
  * values; everything else is inferred by the SDK's `nativeToScVal`.
  */
 export function toScVal(value: unknown): xdr.ScVal {
-  if (typeof value === 'string' && (StrKey.isValidEd25519PublicKey(value) || StrKey.isValidContract(value))) {
+  if (
+    typeof value === 'string' &&
+    (StrKey.isValidEd25519PublicKey(value) || StrKey.isValidContract(value))
+  ) {
     return Address.fromString(value).toScVal();
   }
   if (value instanceof Uint8Array) {
@@ -59,7 +62,9 @@ export function toScVal(value: unknown): xdr.ScVal {
 /**
  * Builds a Soroban contract invocation transaction without submitting it.
  */
-export function prepareInvocation(params: Required<Omit<InvocationParams, 'jsonOutput'>>): PreparedInvocation {
+export function prepareInvocation(
+  params: Required<Omit<InvocationParams, 'jsonOutput'>>,
+): PreparedInvocation {
   const { contractId, method, sourceAccount, args, sequence, fee, networkPassphrase } = params;
 
   if (!StrKey.isValidContract(contractId)) {

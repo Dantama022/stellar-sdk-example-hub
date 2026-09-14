@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { readFileSync } from 'fs';
 
 import { xdr } from '@stellar/stellar-sdk';
 
@@ -9,8 +10,8 @@ import {
   buildContractCodeKey,
   extractCodeHash,
   inspectContractCode,
-  ContractCodeReport,
 } from '../src/examples/192-soroban-contract-code-inspection';
+import { examples } from '../src/runner/catalog';
 
 // ---------------------------------------------------------------------------
 // hashWasm
@@ -119,7 +120,11 @@ describe('extractCodeHash', () => {
   it('returns null for a non-contract-data entry shape', () => {
     // Provide a minimal mock that will throw inside extractCodeHash
     const mockEntry = {
-      val: { data: () => { throw new Error('not contract data'); } },
+      val: {
+        data: () => {
+          throw new Error('not contract data');
+        },
+      },
     } as any;
     expect(extractCodeHash(mockEntry)).toBeNull();
   });
@@ -132,10 +137,12 @@ describe('inspectContractCode', () => {
   const CONTRACT_ID = 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA';
   const FAKE_HASH = 'ab'.repeat(32); // 64-char hex = 32 bytes
 
-  function makeServer(overrides: Partial<{
-    getLatestLedger: () => Promise<any>;
-    getLedgerEntries: (...args: any[]) => Promise<any>;
-  }> = {}): any {
+  function makeServer(
+    overrides: Partial<{
+      getLatestLedger: () => Promise<any>;
+      getLedgerEntries: (...args: any[]) => Promise<any>;
+    }> = {},
+  ): any {
     return {
       getLatestLedger: overrides.getLatestLedger ?? (async () => ({ sequence: 1000 })),
       getLedgerEntries: overrides.getLedgerEntries ?? (async () => ({ entries: [] })),
@@ -173,7 +180,9 @@ describe('inspectContractCode', () => {
 
   it('reports error when latest ledger fetch fails', async () => {
     const server = makeServer({
-      getLatestLedger: async () => { throw new Error('network error'); },
+      getLatestLedger: async () => {
+        throw new Error('network error');
+      },
     });
     const report = await inspectContractCode(server, CONTRACT_ID);
     expect(report.error).toMatch(/RPC failure fetching latest ledger/);
@@ -191,7 +200,9 @@ describe('inspectContractCode', () => {
 
   it('reports error when getLedgerEntries throws for instance', async () => {
     const server = makeServer({
-      getLedgerEntries: async () => { throw new Error('rpc down'); },
+      getLedgerEntries: async () => {
+        throw new Error('rpc down');
+      },
     });
     const report = await inspectContractCode(server, CONTRACT_ID);
     expect(report.error).toMatch(/RPC failure fetching contract instance/);
@@ -337,8 +348,6 @@ describe('inspectContractCode', () => {
 // ---------------------------------------------------------------------------
 describe('runner catalog registration', () => {
   it('registers 192-soroban-contract-code-inspection in the catalog', () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { examples } = require('../src/runner/catalog');
     expect(examples['192-soroban-contract-code-inspection']).toBeDefined();
     expect(typeof examples['192-soroban-contract-code-inspection'].run).toBe('function');
     expect(examples['192-soroban-contract-code-inspection'].description).toBeTruthy();
@@ -350,8 +359,7 @@ describe('runner catalog registration', () => {
 // ---------------------------------------------------------------------------
 describe('README catalog entry', () => {
   it('documents 192-soroban-contract-code-inspection in README.md', () => {
-    const fs = require('fs');
-    const readme = fs.readFileSync('README.md', 'utf8');
+    const readme = readFileSync('README.md', 'utf8');
     expect(readme).toContain('192-soroban-contract-code-inspection');
   });
 });

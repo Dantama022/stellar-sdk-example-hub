@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+
 import { Address, Contract, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 
 import {
@@ -32,10 +34,7 @@ function buildEvent(overrides: Partial<RawEventRecord> = {}): RawEventRecord {
     ledgerClosedAt: '2026-07-28T10:00:00Z',
     txHash: VALID_HASH,
     contractId: CONTRACT_ID,
-    topic: [
-      xdr.ScVal.scvSymbol('transfer'),
-      nativeToScVal(new Address(ACCOUNT_ID)),
-    ],
+    topic: [xdr.ScVal.scvSymbol('transfer'), nativeToScVal(new Address(ACCOUNT_ID))],
     value: nativeToScVal(999n, { type: 'i128' }),
     inSuccessfulContractCall: true,
     pagingToken: '0001234567890-0000000001',
@@ -313,18 +312,14 @@ describe('pollTransaction', () => {
   }
 
   it('returns SUCCESS on first successful response', async () => {
-    const server = makeServer([
-      () => ({ status: rpc.Api.GetTransactionStatus.SUCCESS }) as any,
-    ]);
+    const server = makeServer([() => ({ status: rpc.Api.GetTransactionStatus.SUCCESS }) as any]);
     const result = await pollTransaction(server, VALID_HASH, config);
     expect(result.kind).toBe('SUCCESS');
     expect(result.attempts).toBe(1);
   });
 
   it('returns FAILED on a failed transaction', async () => {
-    const server = makeServer([
-      () => ({ status: rpc.Api.GetTransactionStatus.FAILED }) as any,
-    ]);
+    const server = makeServer([() => ({ status: rpc.Api.GetTransactionStatus.FAILED }) as any]);
     const result = await pollTransaction(server, VALID_HASH, config);
     expect(result.kind).toBe('FAILED');
   });
@@ -345,9 +340,7 @@ describe('pollTransaction', () => {
 
   it('returns TIMEOUT when the deadline expires', async () => {
     const tightConfig: PollConfig = { intervalMs: 10, maxIntervalMs: 10, timeoutMs: 1 };
-    const server = makeServer([
-      () => ({ status: rpc.Api.GetTransactionStatus.NOT_FOUND }) as any,
-    ]);
+    const server = makeServer([() => ({ status: rpc.Api.GetTransactionStatus.NOT_FOUND }) as any]);
     const result = await pollTransaction(server, VALID_HASH, tightConfig);
     expect(result.kind).toBe('TIMEOUT');
   });
@@ -476,7 +469,7 @@ describe('runner registration', () => {
 
 describe('README documentation', () => {
   it('lists the example in the README catalog', () => {
-    const readme = require('fs').readFileSync('README.md', 'utf8');
+    const readme = readFileSync('README.md', 'utf8');
     expect(readme).toContain('190-soroban-transaction-event-monitor');
   });
 });

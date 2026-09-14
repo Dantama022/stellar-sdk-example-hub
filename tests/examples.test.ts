@@ -1086,7 +1086,10 @@ describe('ISSUE-193: Soroban Contract Interface Inspection Unit Tests', () => {
 
   it('formats interface summary report', () => {
     const spec = ex193.parseContractSpec(ex193.getSampleSpecEntries());
-    const report = ex193.formatInterfaceSummary(spec, 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+    const report = ex193.formatInterfaceSummary(
+      spec,
+      'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA',
+    );
     expect(report).toContain('Soroban Contract Interface Summary');
     expect(report).toContain('CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
   });
@@ -1099,7 +1102,10 @@ describe('ISSUE-193: Soroban Contract Interface Inspection Unit Tests', () => {
 describe('ISSUE-194: Soroban Contract Client Generation Unit Tests', () => {
   it('generates TypeScript client source code from parsed spec', () => {
     const spec = ex193.parseContractSpec(ex193.getSampleSpecEntries());
-    const code = ex194.generateClientCode(spec, 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+    const code = ex194.generateClientCode(
+      spec,
+      'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA',
+    );
 
     expect(code).toContain('export class ContractClient');
     expect(code).toContain('buildHelloOp');
@@ -1109,7 +1115,10 @@ describe('ISSUE-194: Soroban Contract Client Generation Unit Tests', () => {
 
   it('generates JSON metadata correctly', () => {
     const spec = ex193.parseContractSpec(ex193.getSampleSpecEntries());
-    const meta: any = ex194.generateJsonMetadata(spec, 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
+    const meta: any = ex194.generateJsonMetadata(
+      spec,
+      'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA',
+    );
 
     expect(meta.contractId).toBe('CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA');
     expect(meta.generatedMethodsCount).toBe(spec.functions.length);

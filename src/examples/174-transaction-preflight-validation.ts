@@ -102,9 +102,7 @@ export function validateEnvelope(
     checks.push(check('timeBounds', 'pass', 'Time bounds are valid'));
   }
 
-  checks.push(
-    check('memo', 'pass', `Memo type: ${tx.memo.type}`),
-  );
+  checks.push(check('memo', 'pass', `Memo type: ${tx.memo.type}`));
 
   return buildReport(checks);
 }
@@ -138,7 +136,9 @@ export async function run(params: PreflightParams = {}): Promise<void> {
   const networkPassphrase = params.networkPassphrase || Networks.TESTNET;
 
   if (!envelopeXdr) {
-    throw new Error('Provide a transaction envelope XDR via the envelopeXdr parameter or TRANSACTION_XDR');
+    throw new Error(
+      'Provide a transaction envelope XDR via the envelopeXdr parameter or TRANSACTION_XDR',
+    );
   }
 
   const report = validateEnvelope(envelopeXdr, networkPassphrase, params.expectedSequence);

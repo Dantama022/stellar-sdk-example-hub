@@ -2,8 +2,6 @@ import {
   parseContractSpec,
   ParsedContractSpec,
   SpecFunction,
-  SpecStruct,
-  SpecEnum,
 } from './193-soroban-contract-interface';
 
 export type CompatibilityLevel = 'compatible' | 'potentially-breaking' | 'breaking';
@@ -74,7 +72,7 @@ export function compareFunctions(
   const newMap = new Map(newFuncs.map((f) => [f.name, f]));
 
   // Check removed functions
-  prevMap.forEach((prevFn, name) => {
+  prevMap.forEach((_prevFn, name) => {
     if (!newMap.has(name)) {
       changes.push({
         category: 'function',

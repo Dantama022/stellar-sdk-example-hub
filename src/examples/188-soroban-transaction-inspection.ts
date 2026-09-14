@@ -64,10 +64,7 @@ export function isValidTransactionHash(hash: string): boolean {
   return /^[0-9a-fA-F]{64}$/.test((hash ?? '').trim());
 }
 
-function normalizePositiveInteger(
-  value: number | string | undefined,
-  fallback: number,
-): number {
+function normalizePositiveInteger(value: number | string | undefined, fallback: number): number {
   if (value === undefined || value === null || value === '') {
     return fallback;
   }
@@ -99,7 +96,10 @@ function safeJsonValue(value: unknown): unknown {
   }
 
   if (value instanceof Map) {
-    return Array.from(value.entries()).map(([key, item]) => [safeJsonValue(key), safeJsonValue(item)]);
+    return Array.from(value.entries()).map(([key, item]) => [
+      safeJsonValue(key),
+      safeJsonValue(item),
+    ]);
   }
 
   if (value !== null && typeof value === 'object') {
@@ -175,7 +175,10 @@ function extractResourceInfo(response: rpc.Api.GetTransactionResponse): Record<s
     // Best effort only.
   }
 
-  if (typeof (response as any).minResourceFee === 'string' || typeof (response as any).minResourceFee === 'number') {
+  if (
+    typeof (response as any).minResourceFee === 'string' ||
+    typeof (response as any).minResourceFee === 'number'
+  ) {
     output.minResourceFee = String((response as any).minResourceFee);
   }
 
@@ -183,14 +186,19 @@ function extractResourceInfo(response: rpc.Api.GetTransactionResponse): Record<s
     output.feeBump = (response as any).feeBump;
   }
 
-  if (typeof (response as any).feeCharged === 'string' || typeof (response as any).feeCharged === 'number') {
+  if (
+    typeof (response as any).feeCharged === 'string' ||
+    typeof (response as any).feeCharged === 'number'
+  ) {
     output.feeCharged = String((response as any).feeCharged);
   }
 
   return output;
 }
 
-function extractDiagnosticEvents(response: rpc.Api.GetTransactionResponse): Array<Record<string, unknown>> {
+function extractDiagnosticEvents(
+  response: rpc.Api.GetTransactionResponse,
+): Array<Record<string, unknown>> {
   const output: Array<Record<string, unknown>> = [];
 
   try {
@@ -385,9 +393,15 @@ function printReport(report: SorobanTransactionReport, jsonOutput: boolean): voi
   }
 
   console.log(chalk.bold('\n--- Raw XDR ---'));
-  console.log(`resultXdr: ${report.raw.resultXdr ? report.raw.resultXdr.slice(0, 80) + '…' : 'n/a'}`);
-  console.log(`envelopeXdr: ${report.raw.envelopeXdr ? report.raw.envelopeXdr.slice(0, 80) + '…' : 'n/a'}`);
-  console.log(`resultMetaXdr: ${report.raw.resultMetaXdr ? report.raw.resultMetaXdr.slice(0, 80) + '…' : 'n/a'}`);
+  console.log(
+    `resultXdr: ${report.raw.resultXdr ? report.raw.resultXdr.slice(0, 80) + '…' : 'n/a'}`,
+  );
+  console.log(
+    `envelopeXdr: ${report.raw.envelopeXdr ? report.raw.envelopeXdr.slice(0, 80) + '…' : 'n/a'}`,
+  );
+  console.log(
+    `resultMetaXdr: ${report.raw.resultMetaXdr ? report.raw.resultMetaXdr.slice(0, 80) + '…' : 'n/a'}`,
+  );
 }
 
 export async function run(params: SorobanTransactionInspectionParams = {}): Promise<void> {
@@ -395,7 +409,10 @@ export async function run(params: SorobanTransactionInspectionParams = {}): Prom
   const networkPassphrase =
     params.networkPassphrase?.trim() || process.env.NETWORK_PASSPHRASE?.trim() || Networks.TESTNET;
 
-  const suppliedHash = params.transactionHash?.trim() || process.env.TRANSACTION_HASH?.trim() || process.argv[3]?.trim();
+  const suppliedHash =
+    params.transactionHash?.trim() ||
+    process.env.TRANSACTION_HASH?.trim() ||
+    process.argv[3]?.trim();
 
   const pollIntervalMs = normalizePositiveInteger(
     params.pollIntervalMs ?? process.env.POLL_INTERVAL_MS,
@@ -407,11 +424,13 @@ export async function run(params: SorobanTransactionInspectionParams = {}): Prom
     DEFAULT_POLL_TIMEOUT_MS,
   );
 
-  const jsonOutput = params.json === true || process.env.JSON_OUTPUT === 'true' || process.argv.includes('--json');
+  const jsonOutput =
+    params.json === true || process.env.JSON_OUTPUT === 'true' || process.argv.includes('--json');
   const shouldPollUntilFinal = params.pollUntilFinal ?? true;
 
   if (!suppliedHash) {
-    const message = 'Missing transaction hash. Supply a 64-character Stellar Soroban transaction hash.';
+    const message =
+      'Missing transaction hash. Supply a 64-character Stellar Soroban transaction hash.';
     if (jsonOutput) {
       console.log(JSON.stringify({ error: message }));
     } else {
@@ -472,7 +491,8 @@ export async function run(params: SorobanTransactionInspectionParams = {}): Prom
   const report = buildTransactionReport(suppliedHash, response, networkPassphrase);
 
   if (response.status === rpc.Api.GetTransactionStatus.NOT_FOUND) {
-    report.error = 'Transaction is not currently available from this RPC node. It may still be pending or outside this node\'s retained ledger window.';
+    report.error =
+      "Transaction is not currently available from this RPC node. It may still be pending or outside this node's retained ledger window.";
   }
 
   printReport(report, jsonOutput);
@@ -485,7 +505,7 @@ async function pollForTerminalTransaction(
 ): Promise<rpc.Api.GetTransactionResponse> {
   const startedAt = Date.now();
 
-  while (true) {
+  for (;;) {
     const response = await server.getTransaction(hash);
 
     if (

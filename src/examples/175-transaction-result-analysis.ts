@@ -49,7 +49,9 @@ const REMEDIATION: Record<string, string> = {
 };
 
 function explainTransaction(code: string): string {
-  return TRANSACTION_CODES[code] || `Unrecognized transaction result code "${code}" — preserved as-is.`;
+  return (
+    TRANSACTION_CODES[code] || `Unrecognized transaction result code "${code}" — preserved as-is.`
+  );
 }
 
 function explainOperation(code: string): string {
@@ -82,7 +84,8 @@ export function analyzeResult(raw: unknown): AnalyzedResult {
 
   const extras = result.extras || {};
   const codes = extras.result_codes || result.result_codes || {};
-  const transactionCode: string = codes.transaction || (result.successful ? 'tx_success' : 'tx_failed');
+  const transactionCode: string =
+    codes.transaction || (result.successful ? 'tx_success' : 'tx_failed');
   const operationCodes: string[] = codes.operations || [];
   const diagnosticEvents: string[] = result.diagnosticEventsXdr || result.diagnostic_events || [];
 

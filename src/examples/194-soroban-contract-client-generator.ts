@@ -1,5 +1,9 @@
 import * as fs from 'fs';
-import { parseContractSpec, getSampleSpecEntries, ParsedContractSpec } from './193-soroban-contract-interface';
+import {
+  parseContractSpec,
+  getSampleSpecEntries,
+  ParsedContractSpec,
+} from './193-soroban-contract-interface';
 
 export interface ClientGeneratorParams {
   contractId?: string;
@@ -17,7 +21,8 @@ export function generateTsType(typeStr: string): string {
 
   if (t === 'bool') return 'boolean';
   if (t === 'u32' || t === 'i32') return 'number';
-  if (t === 'u64' || t === 'i64' || t === 'u128' || t === 'i128' || t === 'u256' || t === 'i256') return 'bigint';
+  if (t === 'u64' || t === 'i64' || t === 'u128' || t === 'i128' || t === 'u256' || t === 'i256')
+    return 'bigint';
   if (t === 'string' || t === 'symbol' || t === 'address') return 'string';
   if (t === 'bytes') return 'Buffer';
   if (t === 'void') return 'void';

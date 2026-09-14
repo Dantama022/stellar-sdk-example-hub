@@ -303,7 +303,9 @@ export function formatInterfaceSummary(spec: ParsedContractSpec, contractId?: st
     });
   }
 
-  lines.push(`\n2. User-Defined Types (Structs: ${spec.structs.length}, Enums: ${spec.enums.length}, Unions: ${spec.unions.length}):`);
+  lines.push(
+    `\n2. User-Defined Types (Structs: ${spec.structs.length}, Enums: ${spec.enums.length}, Unions: ${spec.unions.length}):`,
+  );
   if (spec.structs.length > 0) {
     lines.push('  Structs:');
     spec.structs.forEach((st) => {
@@ -327,7 +329,9 @@ export function formatInterfaceSummary(spec: ParsedContractSpec, contractId?: st
   }
 
   if (spec.unsupportedTypesCount > 0) {
-    lines.push(`\nNote: ${spec.unsupportedTypesCount} unsupported spec entries were ignored safely.`);
+    lines.push(
+      `\nNote: ${spec.unsupportedTypesCount} unsupported spec entries were ignored safely.`,
+    );
   }
 
   return lines.join('\n');
@@ -358,7 +362,9 @@ export async function run(params: ContractInterfaceParams = {}): Promise<void> {
         const decoded = xdr.ScSpecEntry.fromXDR(buffer);
         specEntries = [decoded];
       } catch {
-        console.log('Provided string specData could not be decoded as base64 XDR. Falling back to sample spec.');
+        console.log(
+          'Provided string specData could not be decoded as base64 XDR. Falling back to sample spec.',
+        );
         specEntries = getSampleSpecEntries();
       }
     }
@@ -371,11 +377,13 @@ export async function run(params: ContractInterfaceParams = {}): Promise<void> {
         contract.address(),
         xdr.ScVal.scvSymbol('ContractCode'),
       );
-      if (ledgerEntries && ledgerEntries.val) {
+      if (ledgerEntries?.val) {
         console.log('Successfully retrieved contract code from Soroban RPC.');
       }
     } catch {
-      console.log('RPC lookup unavailable or contract spec not published. Using sample spec entries for inspection.');
+      console.log(
+        'RPC lookup unavailable or contract spec not published. Using sample spec entries for inspection.',
+      );
     }
     specEntries = getSampleSpecEntries();
   }

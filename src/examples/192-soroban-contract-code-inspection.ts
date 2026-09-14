@@ -35,9 +35,7 @@ export function buildContractInstanceKey(contractId: string): xdr.LedgerKey {
 /** Build the LedgerKey for a ContractCode (WASM) entry given a hex code hash. */
 export function buildContractCodeKey(codeHashHex: string): xdr.LedgerKey {
   const hashBytes = Buffer.from(codeHashHex, 'hex');
-  return xdr.LedgerKey.contractCode(
-    new xdr.LedgerKeyContractCode({ hash: hashBytes }),
-  );
+  return xdr.LedgerKey.contractCode(new xdr.LedgerKeyContractCode({ hash: hashBytes }));
 }
 
 /**
@@ -189,12 +187,8 @@ function printReport(report: ContractCodeReport, jsonOutput: boolean): void {
   console.log(`${chalk.bold('Code Hash:')}           ${report.codeHash ?? chalk.gray('n/a')}`);
 
   console.log(chalk.bold('\n--- Instance Entry ---'));
-  console.log(
-    `Last Modified Ledger: ${report.instanceLastModifiedLedger ?? chalk.gray('n/a')}`,
-  );
-  console.log(
-    `Live Until Ledger:    ${report.instanceLiveUntilLedger ?? chalk.gray('n/a')}`,
-  );
+  console.log(`Last Modified Ledger: ${report.instanceLastModifiedLedger ?? chalk.gray('n/a')}`);
+  console.log(`Live Until Ledger:    ${report.instanceLiveUntilLedger ?? chalk.gray('n/a')}`);
   console.log(
     `Instance XDR:         ${report.instanceXdr ? chalk.gray(report.instanceXdr.slice(0, 60) + '…') : chalk.gray('n/a')}`,
   );

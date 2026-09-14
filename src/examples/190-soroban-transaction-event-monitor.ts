@@ -235,7 +235,7 @@ export async function pollTransaction(
     let response: rpc.Api.GetTransactionResponse;
     try {
       response = await server.getTransaction(txHash);
-    } catch (err: any) {
+    } catch {
       // Transient RPC failure — back off and retry
       interval = Math.min(interval * 2, config.maxIntervalMs);
       continue;
@@ -525,12 +525,13 @@ export async function run(params?: MonitorParams): Promise<void> {
   const rpcUrl = params?.rpcUrl ?? process.env.SOROBAN_RPC_URL ?? DEFAULT_RPC_URL;
   const jsonOutput = params?.json === true || process.env.JSON_OUTPUT === 'true';
 
-  const txHash =
-    (params?.txHash ?? process.env.TX_HASH ?? '').trim();
+  const txHash = (params?.txHash ?? process.env.TX_HASH ?? '').trim();
 
   const pollConfig: PollConfig = {
-    intervalMs: (params?.pollIntervalMs ?? Number(process.env.POLL_INTERVAL_MS)) || DEFAULT_POLL_INTERVAL_MS,
-    maxIntervalMs: (params?.maxIntervalMs ?? Number(process.env.MAX_INTERVAL_MS)) || DEFAULT_MAX_INTERVAL_MS,
+    intervalMs:
+      (params?.pollIntervalMs ?? Number(process.env.POLL_INTERVAL_MS)) || DEFAULT_POLL_INTERVAL_MS,
+    maxIntervalMs:
+      (params?.maxIntervalMs ?? Number(process.env.MAX_INTERVAL_MS)) || DEFAULT_MAX_INTERVAL_MS,
     timeoutMs: (params?.timeoutMs ?? Number(process.env.POLL_TIMEOUT_MS)) || DEFAULT_TIMEOUT_MS,
   };
 

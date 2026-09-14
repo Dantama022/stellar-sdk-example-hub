@@ -149,7 +149,12 @@ export const examples: Record<string, Example> = {
     description: 'Poll a Soroban transaction with backoff, retries, timeout, and cancellation',
     run: loadExample('../examples/189-soroban-transaction-polling'),
     params: [
-      { type: 'input', name: 'rpcUrl', message: 'Soroban RPC endpoint:', default: 'https://soroban-testnet.stellar.org' },
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC endpoint:',
+        default: 'https://soroban-testnet.stellar.org',
+      },
       { type: 'input', name: 'transactionHash', message: 'Transaction hash:' },
     ],
   },
@@ -682,12 +687,6 @@ export const examples: Record<string, Example> = {
         default: false,
       },
     ],
-  },
-  '192-soroban-contract-code-inspection': {
-    name: '192-soroban-contract-code-inspection',
-    description:
-      'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
-    run: loadExample('../examples/192-soroban-contract-code-inspection'),
   },
   '60-network-configuration': {
     name: '60-network-configuration',
@@ -1767,29 +1766,29 @@ export const examples: Record<string, Example> = {
   },
   '117-soroban-auth-tree': {
     name: '117-soroban-auth-tree',
-    description:
-      'Simulate Soroban authorization and visualize root and nested invocation trees',
+    description: 'Simulate Soroban authorization and visualize root and nested invocation trees',
     run: loadExample('../examples/117-soroban-auth-tree'),
   },
   '118-ledger-footprint-analysis': {
     name: '118-ledger-footprint-analysis',
-    description:
-      'Simulate, decode, summarize, and compare Soroban ledger footprints',
+    description: 'Simulate, decode, summarize, and compare Soroban ledger footprints',
     run: loadExample('../examples/118-ledger-footprint-analysis'),
   },
   '119-soroban-resource-fee-analysis': {
     name: '119-soroban-resource-fee-analysis',
-    description:
-      'Compare Soroban CPU, memory, ledger I/O, resource limits, and estimated fees',
+    description: 'Compare Soroban CPU, memory, ledger I/O, resource limits, and estimated fees',
     run: loadExample('../examples/119-soroban-resource-fee-analysis'),
+  },
   '177-soroban-event-decoding': {
     name: '177-soroban-event-decoding',
     description:
       'Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding',
     run: loadExample('../examples/177-soroban-event-decoding'),
+  },
   '193-soroban-contract-interface': {
     name: '193-soroban-contract-interface',
-    description: 'Inspect a deployed Soroban contract interface, exported functions, and user-defined types',
+    description:
+      'Inspect a deployed Soroban contract interface, exported functions, and user-defined types',
     run: loadExample('../examples/193-soroban-contract-interface'),
     params: [
       {
@@ -1868,7 +1867,6 @@ export const examples: Record<string, Example> = {
         type: 'input',
         name: 'transactionXdr',
         message: 'Optional base64 XDR (blank runs a demo simulation):',
-        message: 'Contract ID to inspect:',
       },
       {
         type: 'confirm',
@@ -1880,7 +1878,8 @@ export const examples: Record<string, Example> = {
   },
   '194-soroban-contract-client-generator': {
     name: '194-soroban-contract-client-generator',
-    description: 'Generate a strongly typed TypeScript contract-client wrapper from a Soroban contract specification',
+    description:
+      'Generate a strongly typed TypeScript contract-client wrapper from a Soroban contract specification',
     run: loadExample('../examples/194-soroban-contract-client-generator'),
     params: [
       {
@@ -1898,7 +1897,8 @@ export const examples: Record<string, Example> = {
   },
   '195-soroban-interface-compatibility': {
     name: '195-soroban-interface-compatibility',
-    description: 'Compare two Soroban contract specifications and report additions, removals, and breaking changes',
+    description:
+      'Compare two Soroban contract specifications and report additions, removals, and breaking changes',
     run: loadExample('../examples/195-soroban-interface-compatibility'),
     params: [
       {
@@ -1917,7 +1917,8 @@ export const examples: Record<string, Example> = {
   },
   '196-soroban-authorization-preparation': {
     name: '196-soroban-authorization-preparation',
-    description: 'Prepare, inspect, decode, and verify Soroban authorization entries and invocation trees without signing',
+    description:
+      'Prepare, inspect, decode, and verify Soroban authorization entries and invocation trees without signing',
     run: loadExample('../examples/196-soroban-authorization-preparation'),
     params: [
       {
@@ -1940,18 +1941,25 @@ export const examples: Record<string, Example> = {
   },
   '173-transaction-fee-estimation': {
     name: '173-transaction-fee-estimation',
-    description: 'Retrieve network fee information and compare transaction fee strategies, per-operation fees, and fee-bump fees',
+    description:
+      'Retrieve network fee information and compare transaction fee strategies, per-operation fees, and fee-bump fees',
     run: loadExample('../examples/173-transaction-fee-estimation'),
     params: [
       { type: 'input', name: 'operationCount', message: 'Operation count:', default: 3 },
       { type: 'input', name: 'maxFee', message: 'Maximum fee (stroops):', default: 100000 },
-      { type: 'confirm', name: 'offline', message: 'Calculate offline (skip Horizon)?', default: false },
+      {
+        type: 'confirm',
+        name: 'offline',
+        message: 'Calculate offline (skip Horizon)?',
+        default: false,
+      },
       { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
     ],
   },
   '174-transaction-preflight-validation': {
     name: '174-transaction-preflight-validation',
-    description: 'Validate a transaction envelope structure, fee, sequence, time bounds, and memo before signing or submitting',
+    description:
+      'Validate a transaction envelope structure, fee, sequence, time bounds, and memo before signing or submitting',
     run: loadExample('../examples/174-transaction-preflight-validation'),
     params: [
       { type: 'input', name: 'envelopeXdr', message: 'Transaction envelope XDR:' },
@@ -1961,15 +1969,15 @@ export const examples: Record<string, Example> = {
   },
   '175-transaction-result-analysis': {
     name: '175-transaction-result-analysis',
-    description: 'Decode transaction and operation result codes into a structured diagnostic report with remediation hints',
+    description:
+      'Decode transaction and operation result codes into a structured diagnostic report with remediation hints',
     run: loadExample('../examples/175-transaction-result-analysis'),
-    params: [
-      { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
-    ],
+    params: [{ type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false }],
   },
   '176-soroban-contract-invocation': {
     name: '176-soroban-contract-invocation',
-    description: 'Prepare and inspect a Soroban contract invocation transaction, including ScVal arguments, envelope XDR, and hash',
+    description:
+      'Prepare and inspect a Soroban contract invocation transaction, including ScVal arguments, envelope XDR, and hash',
     run: loadExample('../examples/176-soroban-contract-invocation'),
     params: [
       { type: 'input', name: 'contractId', message: 'Contract ID:' },

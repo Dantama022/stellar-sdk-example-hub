@@ -85,7 +85,7 @@ export function compareFootprintSets(
   labels?: string[],
 ): FootprintComparisonReport {
   const resolvedLabels =
-    labels && labels.length === footprints.length
+    labels?.length === footprints.length
       ? labels
       : footprints.map((_, index) => `Set ${index + 1}`);
 
@@ -234,7 +234,10 @@ function footprintFromLedgerFootprint(footprint: xdr.LedgerFootprint, label: str
   return normaliseFootprintSet({ label, readOnly, readWrite });
 }
 
-function footprintFromTransactionData(data: xdr.SorobanTransactionData, label: string): FootprintSet {
+function footprintFromTransactionData(
+  data: xdr.SorobanTransactionData,
+  label: string,
+): FootprintSet {
   return footprintFromLedgerFootprint(data.resources().footprint(), label);
 }
 
@@ -274,7 +277,9 @@ function stringsFromValue(value: unknown): string[] {
 }
 
 function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values.map((entry) => String(entry).trim()).filter((entry) => entry.length > 0))];
+  return [
+    ...new Set(values.map((entry) => String(entry).trim()).filter((entry) => entry.length > 0)),
+  ];
 }
 
 function intersection(...groups: string[][]): string[] {
@@ -450,9 +455,7 @@ function readEnvironmentInputs(): Array<{ label: string; value: unknown }> {
         }
       }
     } catch {
-      const split = direct
-        .split(/\s*,\s*(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/)
-        .filter(Boolean);
+      const split = direct.split(/\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)/).filter(Boolean);
       for (let index = 0; index < split.length; index += 1) {
         inputs.push({ label: `Set ${index + 1}`, value: split[index] });
       }

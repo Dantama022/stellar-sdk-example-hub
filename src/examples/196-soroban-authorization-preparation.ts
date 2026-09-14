@@ -1,4 +1,4 @@
-import { Address, Contract, xdr, Keypair } from '@stellar/stellar-sdk';
+import { Address, xdr, Keypair } from '@stellar/stellar-sdk';
 
 export interface AuthorizationPreparationParams {
   contractId?: string;
@@ -38,11 +38,9 @@ export function createMockAuthorizationEntry(
   args: xdr.ScVal[] = [],
   subInvocations: xdr.SorobanAuthorizedInvocation[] = [],
 ): xdr.SorobanAuthorizationEntry {
-  const contractAddr = new Contract(contractId).address().toScVal();
-
   const rootInvocation = new xdr.SorobanAuthorizedInvocation({
     function: xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
-      new xdr.SorobanAuthorizedContractFunction({
+      new xdr.InvokeContractArgs({
         contractAddress: Address.fromString(contractId).toScVal().address(),
         functionName: fnName,
         args,
@@ -109,13 +107,17 @@ export function formatAuthorizationTree(entriesDetails: PreparedAuthorizationDet
     lines.push(`  - Root Function:       ${detail.functionName}`);
     lines.push(`  - Arguments Count:     ${detail.argsCount}`);
     lines.push(`  - Sub-invocations:     ${detail.subInvocationsCount}`);
-    lines.push(`  - Authorization State: ${detail.isSigned ? 'SIGNED' : 'UNSIGNED (Ready for signing)'}`);
+    lines.push(
+      `  - Authorization State: ${detail.isSigned ? 'SIGNED' : 'UNSIGNED (Ready for signing)'}`,
+    );
     lines.push(`  - Raw XDR (base64):    ${detail.xdrBase64.slice(0, 32)}...`);
   });
 
   lines.push('\nSecurity & Protocol Guidance:');
   lines.push('  - Prepared entries represent unsigned authorization definitions.');
-  lines.push('  - Authorization data should be reviewed by the authorizing account before signing.');
+  lines.push(
+    '  - Authorization data should be reviewed by the authorizing account before signing.',
+  );
   lines.push('  - No private keys or secret seeds were used or requested in this flow.');
 
   return lines.join('\n');
@@ -143,13 +145,12 @@ export async function run(params: AuthorizationPreparationParams = {}): Promise<
   console.log(`Target Function:    ${functionName}`);
 
   if (!isValidStellarId(contractId)) {
-    console.log(`Warning: Contract ID '${contractId}' is not a standard 56-char address. Proceeding with mock demonstration.`);
+    console.log(
+      `Warning: Contract ID '${contractId}' is not a standard 56-char address. Proceeding with mock demonstration.`,
+    );
   }
 
-  const sampleArgs = [
-    Address.fromString(sourceAccount).toScVal(),
-    xdr.ScVal.scvU32(100),
-  ];
+  const sampleArgs = [Address.fromString(sourceAccount).toScVal(), xdr.ScVal.scvU32(100)];
 
   // Prepare primary authorization entry
   const entry = createMockAuthorizationEntry(contractId, sourceAccount, functionName, sampleArgs);
@@ -157,7 +158,9 @@ export async function run(params: AuthorizationPreparationParams = {}): Promise<
 
   // Verify round trip consistency
   const isConsistent = verifyRoundTripConsistency(entry);
-  console.log(`Round-trip XDR Encoding/Decoding Verification: ${isConsistent ? 'SUCCESS' : 'FAILED'}`);
+  console.log(
+    `Round-trip XDR Encoding/Decoding Verification: ${isConsistent ? 'SUCCESS' : 'FAILED'}`,
+  );
 
   const details: PreparedAuthorizationDetail[] = [
     {
