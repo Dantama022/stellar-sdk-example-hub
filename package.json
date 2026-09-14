@@ -35,7 +35,8 @@
   },
   "overrides": {
     "axios": "^1.7.9",
-    "follow-redirects": "^1.15.9"
+    "follow-redirects": "^1.15.9",
+    "toml": "^4.3.0"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^13.0.0",
