@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 
-import { Address, Contract, nativeToScVal, xdr } from '@stellar/stellar-sdk';
+import { Address, Contract, nativeToScVal, rpc, xdr } from '@stellar/stellar-sdk';
 
 import {
   isValidTxHash,
@@ -333,7 +333,7 @@ describe('pollTransaction', () => {
         return { status: rpc.Api.GetTransactionStatus.SUCCESS } as any;
       }),
     };
-    const result = await pollTransaction(server, VALID_HASH, config);
+    const result = await pollTransaction(server as any, VALID_HASH, config);
     expect(result.kind).toBe('SUCCESS');
     expect(result.attempts).toBeGreaterThanOrEqual(3);
   });
@@ -354,7 +354,7 @@ describe('pollTransaction', () => {
         return { status: rpc.Api.GetTransactionStatus.SUCCESS } as any;
       }),
     };
-    const result = await pollTransaction(server, VALID_HASH, config);
+    const result = await pollTransaction(server as any, VALID_HASH, config);
     expect(result.kind).toBe('SUCCESS');
   });
 });
@@ -410,7 +410,7 @@ describe('monitorTransaction', () => {
       })),
       getEvents: jest.fn(async () => ({ events: [] })),
     };
-    const report = await monitorTransaction(server, VALID_HASH, tightConfig);
+    const report = await monitorTransaction(server as any, VALID_HASH, tightConfig);
     expect(report.status).toBe('TIMEOUT');
     expect(report.error).toContain('Timed out');
   });

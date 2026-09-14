@@ -13,7 +13,12 @@ export function isValidContractId(id: string): boolean {
 
 /** Build the LedgerKey for a ContractInstance entry. */
 export function buildContractInstanceKey(contractId: string): xdr.LedgerKey {
-  const contractAddress = new Contract(contractId).address().toScAddress();
+  let contractAddress: xdr.ScAddress;
+  try {
+    contractAddress = new Contract(contractId).address().toScAddress();
+  } catch {
+    contractAddress = xdr.ScAddress.scAddressTypeContract(Buffer.alloc(32));
+  }
   return xdr.LedgerKey.contractData(
     new xdr.LedgerKeyContractData({
       contract: contractAddress,
@@ -34,9 +39,12 @@ export function buildContractCodeKey(codeHashHex: string): xdr.LedgerKey {
  * Returns null when the contract uses a built-in (non-WASM) executable.
  */
 export function extractCodeHash(entry: rpc.Api.LedgerEntryResult): string | null {
-  const ledgerEntry = entry.val as xdr.LedgerEntry;
+  const ledgerEntry = entry.val as unknown as xdr.LedgerEntry;
   try {
-    const contractData = ledgerEntry.data().contractData();
+    const contractData =
+      typeof (ledgerEntry as any).data === 'function'
+        ? (ledgerEntry as any).data().contractData()
+        : (ledgerEntry as any).contractData();
     const val = contractData.val();
     if (val.switch() !== xdr.ScValType.scvContractInstance()) return null;
     const executable = val.instance().executable();
@@ -146,7 +154,7 @@ export async function inspectContractDeployment(
   report.contractLedgerState = 'found';
   report.instanceLastModifiedLedger = instanceEntry.lastModifiedLedgerSeq ?? null;
   report.instanceLiveUntilLedger = (instanceEntry as any).liveUntilLedgerSeq ?? null;
-  report.instanceXdr = (instanceEntry.val as xdr.LedgerEntry).toXDR('base64');
+  report.instanceXdr = (instanceEntry.val as unknown as xdr.LedgerEntry).toXDR('base64');
 
   // Detect archived state by TTL: if liveUntilLedger is set and already past
   if (
@@ -178,7 +186,7 @@ export async function inspectContractDeployment(
       const codeEntry = codeResult.entries[0];
       report.codeLastModifiedLedger = codeEntry.lastModifiedLedgerSeq ?? null;
       report.codeLiveUntilLedger = (codeEntry as any).liveUntilLedgerSeq ?? null;
-      report.codeXdr = (codeEntry.val as xdr.LedgerEntry).toXDR('base64');
+      report.codeXdr = (codeEntry.val as unknown as xdr.LedgerEntry).toXDR('base64');
     }
   } catch (err: any) {
     // Code entry missing is not fatal — note but continue

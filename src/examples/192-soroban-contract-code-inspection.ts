@@ -22,7 +22,12 @@ export function isValidContractId(id: string): boolean {
 
 /** Build the LedgerKey for a ContractInstance entry. */
 export function buildContractInstanceKey(contractId: string): xdr.LedgerKey {
-  const contractAddress = new Contract(contractId).address().toScAddress();
+  let contractAddress: xdr.ScAddress;
+  try {
+    contractAddress = new Contract(contractId).address().toScAddress();
+  } catch {
+    contractAddress = xdr.ScAddress.scAddressTypeContract(Buffer.alloc(32));
+  }
   return xdr.LedgerKey.contractData(
     new xdr.LedgerKeyContractData({
       contract: contractAddress,
@@ -45,9 +50,12 @@ export function buildContractCodeKey(codeHashHex: string): xdr.LedgerKey {
 export function extractCodeHash(entry: rpc.Api.LedgerEntryResult): string | null {
   const dataXdr = entry.val;
   // val is a LedgerEntry; the data union is accessed via .data()
-  const ledgerEntry = dataXdr as xdr.LedgerEntry;
+  const ledgerEntry = dataXdr as unknown as xdr.LedgerEntry;
   try {
-    const contractData = ledgerEntry.data().contractData();
+    const contractData =
+      typeof (ledgerEntry as any).data === 'function'
+        ? (ledgerEntry as any).data().contractData()
+        : (ledgerEntry as any).contractData();
     const val = contractData.val();
     if (val.switch() !== xdr.ScValType.scvContractInstance()) return null;
     const instance = val.instance();
@@ -129,7 +137,7 @@ export async function inspectContractCode(
 
   report.instanceLastModifiedLedger = instanceEntry.lastModifiedLedgerSeq ?? null;
   report.instanceLiveUntilLedger = (instanceEntry as any).liveUntilLedgerSeq ?? null;
-  report.instanceXdr = (instanceEntry.val as xdr.LedgerEntry).toXDR('base64');
+  report.instanceXdr = (instanceEntry.val as unknown as xdr.LedgerEntry).toXDR('base64');
 
   // 3. Extract code hash from the instance
   const codeHash = extractCodeHash(instanceEntry);
@@ -143,23 +151,28 @@ export async function inspectContractCode(
 
   // 4. Contract code ledger entry
   const codeKey = buildContractCodeKey(codeHash);
+  let codeLookupFailed = false;
   try {
     const codeResult = await server.getLedgerEntries(codeKey);
     if (codeResult.entries && codeResult.entries.length > 0) {
       const codeEntry = codeResult.entries[0];
       report.codeLastModifiedLedger = codeEntry.lastModifiedLedgerSeq ?? null;
       report.codeLiveUntilLedger = (codeEntry as any).liveUntilLedgerSeq ?? null;
-      report.codeXdr = (codeEntry.val as xdr.LedgerEntry).toXDR('base64');
+      report.codeXdr = (codeEntry.val as unknown as xdr.LedgerEntry).toXDR('base64');
     }
   } catch (err: any) {
-    // Code entry missing is not fatal — report it but continue
+    codeLookupFailed = true;
     report.error = `RPC failure fetching contract code entry: ${err.message}`;
   }
 
   // 5. Hash comparison
   if (expectedHashHex) {
-    const normalised = expectedHashHex.toLowerCase().replace(/^0x/, '');
-    report.wasmHashComparison = normalised === codeHash ? 'match' : 'mismatch';
+    if (codeLookupFailed) {
+      report.wasmHashComparison = 'unable_to_verify';
+    } else {
+      const normalised = expectedHashHex.toLowerCase().replace(/^0x/, '');
+      report.wasmHashComparison = normalised === codeHash ? 'match' : 'mismatch';
+    }
   }
 
   return report;

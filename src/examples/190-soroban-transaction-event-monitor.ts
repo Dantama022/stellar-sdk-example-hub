@@ -149,7 +149,7 @@ export function extractContractId(raw: unknown): string {
 // ---------------------------------------------------------------------------
 
 /** Shape returned by server.getEvents */
-export type RawEventRecord = rpc.Api.EventRecord;
+export type RawEventRecord = rpc.Api.EventResponse;
 
 /** Parse a single RPC event record into a fully decoded structure. */
 export function parseEventRecord(ev: RawEventRecord): DecodedEvent {

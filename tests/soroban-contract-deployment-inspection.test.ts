@@ -27,7 +27,7 @@ function makeFakeInstanceEntry(codeHashHex: string, liveUntilLedgerSeq = 2000): 
   const instance = new xdr.ScContractInstance({ executable, storage: null });
   const scVal = xdr.ScVal.scvContractInstance(instance);
   const contractDataEntry = new xdr.ContractDataEntry({
-    ext: xdr.ExtensionPoint.v0(),
+    ext: new (xdr.ExtensionPoint as any)(0) as xdr.ExtensionPoint,
     contract: xdr.ScAddress.scAddressTypeContract(Buffer.alloc(32)),
     key: xdr.ScVal.scvLedgerKeyContractInstance(),
     durability: xdr.ContractDataDurability.persistent(),
@@ -36,7 +36,7 @@ function makeFakeInstanceEntry(codeHashHex: string, liveUntilLedgerSeq = 2000): 
   const ledgerEntry = new xdr.LedgerEntry({
     lastModifiedLedgerSeq: 900,
     data: xdr.LedgerEntryData.contractData(contractDataEntry),
-    ext: xdr.LedgerEntryExt.v0(),
+    ext: new (xdr.LedgerEntryExt as any)(0) as xdr.LedgerEntryExt,
   });
   return { val: ledgerEntry, lastModifiedLedgerSeq: 900, liveUntilLedgerSeq };
 }
@@ -276,12 +276,12 @@ describe('inspectContractDeployment', () => {
         lastModifiedLedgerSeq: 800,
         data: xdr.LedgerEntryData.contractCode(
           new xdr.ContractCodeEntry({
-            ext: xdr.ContractCodeEntryExt.v0(),
+            ext: new (xdr.ContractCodeEntryExt as any)(0) as xdr.ContractCodeEntryExt,
             hash: Buffer.from(FAKE_HASH, 'hex'),
             code: Buffer.from('wasm-bytecode'),
           }),
         ),
-        ext: xdr.LedgerEntryExt.v0(),
+        ext: new (xdr.LedgerEntryExt as any)(0) as xdr.LedgerEntryExt,
       }),
       lastModifiedLedgerSeq: 800,
       liveUntilLedgerSeq: 3000,
