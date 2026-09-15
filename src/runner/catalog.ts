@@ -1939,6 +1939,94 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '169-asset-holder-distribution': {
+    name: '169-asset-holder-distribution',
+    description:
+      'Analyse how an issued asset is distributed across its trustline holders, with ranking and concentration metrics',
+    run: loadExample('../examples/169-asset-holder-distribution'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code (blank uses a default Testnet asset):',
+      },
+      {
+        type: 'input',
+        name: 'assetIssuer',
+        message: 'Issuer account ID (blank uses a default Testnet issuer):',
+      },
+      {
+        type: 'input',
+        name: 'maxHolders',
+        message: 'Maximum holders to retrieve:',
+        default: '400',
+      },
+      {
+        type: 'input',
+        name: 'topN',
+        message: 'Number of top holders to display:',
+        default: '10',
+      },
+    ],
+  },
+  '170-account-balance-liability-analysis': {
+    name: '170-account-balance-liability-analysis',
+    description:
+      'Analyse account balances, trustline limits, buying and selling liabilities, and derived available amounts',
+    run: loadExample('../examples/170-account-balance-liability-analysis'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID (blank uses a well-known Testnet account):',
+      },
+    ],
+  },
+  '171-account-activity-profile': {
+    name: '171-account-activity-profile',
+    description:
+      'Build a read-only activity profile combining account metadata, transaction, operation, and payment history',
+    run: loadExample('../examples/171-account-activity-profile'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID (blank uses a well-known Testnet account):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Records to retrieve per resource (1-200):',
+        default: '50',
+      },
+    ],
+  },
+  '172-horizon-request-tracing': {
+    name: '172-horizon-request-tracing',
+    description:
+      'Trace Horizon requests with timing, retry, HTTP status, and latency diagnostics, with sanitized output',
+    run: loadExample('../examples/172-horizon-request-tracing'),
+    params: [
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Request timeout in milliseconds:',
+        default: '10000',
+      },
+      {
+        type: 'input',
+        name: 'slowRequestMs',
+        message: 'Slow-request threshold in milliseconds:',
+        default: '1000',
+      },
+      {
+        type: 'confirm',
+        name: 'verbose',
+        message: 'Log each request as it completes?',
+        default: false,
+      },
+    ],
+  },
   '173-transaction-fee-estimation': {
     name: '173-transaction-fee-estimation',
     description:

@@ -38,10 +38,24 @@ export function createMockAuthorizationEntry(
   args: xdr.ScVal[] = [],
   subInvocations: xdr.SorobanAuthorizedInvocation[] = [],
 ): xdr.SorobanAuthorizationEntry {
+  let contractAddress: xdr.ScAddress;
+  try {
+    contractAddress = Address.fromString(contractId).toScAddress();
+  } catch {
+    contractAddress = xdr.ScAddress.scAddressTypeContract(Buffer.alloc(32));
+  }
+
+  let addressSc: xdr.ScAddress;
+  try {
+    addressSc = Address.fromString(address).toScAddress();
+  } catch {
+    addressSc = xdr.ScAddress.scAddressTypeAccount(Keypair.random().xdrPublicKey());
+  }
+
   const rootInvocation = new xdr.SorobanAuthorizedInvocation({
     function: xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
       new xdr.InvokeContractArgs({
-        contractAddress: Address.fromString(contractId).toScVal().address(),
+        contractAddress,
         functionName: fnName,
         args,
       }),
@@ -50,7 +64,7 @@ export function createMockAuthorizationEntry(
   });
 
   const addressCredentials = new xdr.SorobanAddressCredentials({
-    address: Address.fromString(address).toScVal().address(),
+    address: addressSc,
     nonce: xdr.Int64.fromString('0'),
     signatureExpirationLedger: 100000,
     signature: xdr.ScVal.scvVoid(),
