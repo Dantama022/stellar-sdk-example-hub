@@ -43,6 +43,10 @@
       "reason": "Depends on live Testnet timing and transaction acceptance windows"
     },
     {
+      "match": "15-account-merge",
+      "reason": "Requires live Friendbot funding and Testnet account merge transaction submission"
+    },
+    {
       "match": "19-horizon-streaming",
       "reason": "Keeps a live Horizon SSE connection open until events arrive"
     },
@@ -64,6 +68,10 @@
     },
     {
       "match": "36-strict-receive-path-payment",
+      "reason": "Requires live Friendbot funding, SDEX liquidity, and Testnet path payments"
+    },
+    {
+      "match": "37-strict-send-path-payment",
       "reason": "Requires live Friendbot funding, SDEX liquidity, and Testnet path payments"
     },
     {
@@ -101,6 +109,10 @@
     {
       "match": "24-create-passive-sell-offer",
       "reason": "Requires live funded accounts and SDEX passive offer submission"
+    },
+    {
+      "match": "24-cross-contract-invoke",
+      "reason": "Requires live Friendbot funding and Soroban RPC"
     },
     {
       "match": "25-account-flags",
@@ -217,6 +229,10 @@
     {
       "match": "159-horizon-stream-filtering",
       "reason": "Keeps a live Horizon SSE connection open for client-side filtering"
+    },
+    {
+      "match": "92-account-payment-stream",
+      "reason": "Keeps a live Horizon SSE payment stream open until events arrive"
     },
     {
       "match": "193-soroban-contract-interface",
