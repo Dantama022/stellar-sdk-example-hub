@@ -522,6 +522,44 @@ export const examples: Record<string, Example> = {
     description:
       'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
     run: loadExample('../examples/192-soroban-contract-code-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID to inspect (blank uses default testnet contract):',
+      },
+      {
+        type: 'input',
+        name: 'expectedHash',
+        message: 'Optional expected code hash (hex) for verification:',
+      },
+      {
+        type: 'input',
+        name: 'wasmFile',
+        message: 'Optional path to WASM file to hash and compare:',
+      },
+    ],
+  },
+  '185-soroban-ledger-entry-retrieval': {
+    name: '185-soroban-ledger-entry-retrieval',
+    description:
+      'Retrieve and decode Soroban ledger entries via getLedgerEntries — ContractData, ContractCode, Account, Trustline, Offer, and more',
+    run: loadExample('../examples/185-soroban-ledger-entry-retrieval'),
+    params: [
+      {
+        type: 'input',
+        name: 'keys',
+        message:
+          'Ledger key specs (comma-separated: contract:<id>, account:<id>, xdr:<b64>, blank uses defaults):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output as JSON?',
+        default: false,
+      },
+    ],
+  },
   '66-ledger-effects': {
     name: '66-ledger-effects',
     description:
@@ -550,20 +588,6 @@ export const examples: Record<string, Example> = {
       {
         type: 'input',
         name: 'contractId',
-        message: 'Contract ID to inspect (blank uses default testnet contract):',
-      },
-      {
-        type: 'input',
-        name: 'expectedHash',
-        message: 'Optional expected code hash (hex) for verification:',
-      },
-      {
-        type: 'input',
-        name: 'wasmFile',
-        message: 'Optional path to WASM file to hash and compare:',
-      },
-    ],
-  },
         message: 'Contract ID (blank discovers a recently active contract):',
       },
       {

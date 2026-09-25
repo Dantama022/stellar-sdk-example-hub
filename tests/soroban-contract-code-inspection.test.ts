@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 
-import { xdr } from '@stellar/stellar-sdk';
+import { StrKey, xdr } from '@stellar/stellar-sdk';
 
 import {
   hashWasm,
@@ -9,7 +9,6 @@ import {
   buildContractCodeKey,
   extractCodeHash,
   inspectContractCode,
-  ContractCodeReport,
 } from '../src/examples/192-soroban-contract-code-inspection';
 
 // ---------------------------------------------------------------------------
@@ -42,7 +41,7 @@ describe('hashWasm', () => {
 // isValidContractId
 // ---------------------------------------------------------------------------
 describe('isValidContractId', () => {
-  const VALID_ID = 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA';
+  const VALID_ID = StrKey.encodeContract(Buffer.alloc(32));
 
   it('accepts a valid 56-char Stellar contract address', () => {
     expect(isValidContractId(VALID_ID)).toBe(true);
@@ -74,7 +73,7 @@ describe('isValidContractId', () => {
 // buildContractInstanceKey
 // ---------------------------------------------------------------------------
 describe('buildContractInstanceKey', () => {
-  const CONTRACT_ID = 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA';
+  const CONTRACT_ID = StrKey.encodeContract(Buffer.alloc(32));
 
   it('returns an xdr.LedgerKey of type contractData', () => {
     const key = buildContractInstanceKey(CONTRACT_ID);
@@ -129,7 +128,7 @@ describe('extractCodeHash', () => {
 // inspectContractCode — unit tests with mocked RPC server
 // ---------------------------------------------------------------------------
 describe('inspectContractCode', () => {
-  const CONTRACT_ID = 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA';
+  const CONTRACT_ID = StrKey.encodeContract(Buffer.alloc(32));
   const FAKE_HASH = 'ab'.repeat(32); // 64-char hex = 32 bytes
 
   function makeServer(overrides: Partial<{
@@ -152,7 +151,7 @@ describe('inspectContractCode', () => {
     });
     const scVal = xdr.ScVal.scvContractInstance(instance);
     const contractDataEntry = new xdr.ContractDataEntry({
-      ext: xdr.ExtensionPoint.v0(),
+      ext: new (xdr.ExtensionPoint as any)(0),
       contract: xdr.ScAddress.scAddressTypeContract(Buffer.alloc(32)),
       key: xdr.ScVal.scvLedgerKeyContractInstance(),
       durability: xdr.ContractDataDurability.persistent(),
@@ -162,7 +161,7 @@ describe('inspectContractCode', () => {
     const ledgerEntry = new xdr.LedgerEntry({
       lastModifiedLedgerSeq: 900,
       data: ledgerEntryData,
-      ext: xdr.LedgerEntryExt.v0(),
+      ext: new (xdr.LedgerEntryExt as any)(0),
     });
     return {
       val: ledgerEntry,
@@ -278,12 +277,12 @@ describe('inspectContractCode', () => {
         lastModifiedLedgerSeq: 800,
         data: xdr.LedgerEntryData.contractCode(
           new xdr.ContractCodeEntry({
-            ext: xdr.ContractCodeEntryExt.v0(),
+            ext: new (xdr.ContractCodeEntryExt as any)(0),
             hash: Buffer.from(FAKE_HASH, 'hex'),
             code: Buffer.from('wasm-bytecode'),
           }),
         ),
-        ext: xdr.LedgerEntryExt.v0(),
+        ext: new (xdr.LedgerEntryExt as any)(0),
       }),
       lastModifiedLedgerSeq: 800,
       liveUntilLedgerSeq: 3000,
