@@ -2,7 +2,10 @@ import {
   validateRpcUrl,
   calculateLedgerFreshness,
 } from '../src/examples/186-soroban-rpc-diagnostics';
-import { paginateSorobanRpc } from '../src/examples/187-soroban-rpc-pagination';
+import {
+  buildSorobanRpcEventRequest,
+  paginateSorobanRpc,
+} from '../src/examples/187-soroban-rpc-pagination';
 
 describe('ISSUE-186: Soroban RPC diagnostics helpers', () => {
   it('accepts a valid Soroban RPC URL and normalizes it', () => {
@@ -81,5 +84,30 @@ describe('ISSUE-187: Soroban RPC pagination helpers', () => {
         maxPages: 1,
       }),
     ).rejects.toThrow(/malformed|records/i);
+  });
+
+  it('omits the ledger range when resuming from an existing cursor', () => {
+    expect(
+      buildSorobanRpcEventRequest({
+        startLedger: 100,
+        cursor: 'abc123',
+        limit: 25,
+      }),
+    ).toEqual({
+      limit: 25,
+      cursor: 'abc123',
+      filters: [],
+    });
+
+    expect(
+      buildSorobanRpcEventRequest({
+        startLedger: 100,
+        limit: 25,
+      }),
+    ).toEqual({
+      startLedger: 100,
+      limit: 25,
+      filters: [],
+    });
   });
 });

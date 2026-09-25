@@ -34,6 +34,32 @@ export interface SorobanPaginationResult<T = Record<string, unknown>> {
   records: T[];
 }
 
+export function buildSorobanRpcEventRequest({
+  startLedger,
+  cursor,
+  limit,
+  filters = [],
+}: {
+  startLedger?: number;
+  cursor?: string;
+  limit: number;
+  filters?: Array<Record<string, unknown>>;
+}): Record<string, unknown> {
+  if (cursor) {
+    return {
+      limit,
+      cursor,
+      filters,
+    };
+  }
+
+  return {
+    startLedger,
+    limit,
+    filters,
+  };
+}
+
 function prefersJson(params?: SorobanPaginationParams): boolean {
   return (
     params?.json === true ||
@@ -236,13 +262,13 @@ export async function run(params: SorobanPaginationParams = {}): Promise<void> {
   const startLedger = Math.max(1, latestLedger.sequence - 1000);
 
   const fetchPage = async (cursor?: string): Promise<SorobanPage> => {
-    const request = {
-      startLedger,
-      limit: pageSize,
+    const request = buildSorobanRpcEventRequest({
+      startLedger: cursor ? undefined : startLedger,
       cursor,
+      limit: pageSize,
       filters: [],
-    };
-    const response = await server.getEvents(request);
+    });
+    const response = await server.getEvents(request as any);
 
     if (!response || typeof response !== 'object' || !Array.isArray((response as any).events)) {
       throw new Error('Malformed pagination response: expected an events array.');
