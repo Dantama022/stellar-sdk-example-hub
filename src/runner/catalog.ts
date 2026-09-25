@@ -2074,4 +2074,54 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
     ],
   },
+  '197-state-lifecycle': {
+    name: '197-state-lifecycle',
+    description:
+      'Offline Soroban contract-data entry lifecycle analysis: compare ordered state snapshots, detect added/modified/removed/reappearing entries, track TTL and durability changes',
+    run: loadExample('../examples/197-state-lifecycle'),
+    params: [
+      {
+        type: 'input',
+        name: 'snapshotFiles',
+        message: 'Space-separated paths to two or more JSON snapshot files:',
+      },
+      {
+        type: 'input',
+        name: 'contractIdFilter',
+        message: 'Contract ID filter (blank = all contracts):',
+      },
+      {
+        type: 'list',
+        name: 'durabilityFilter',
+        message: 'Durability filter:',
+        choices: [
+          { name: 'All', value: '' },
+          { name: 'Persistent only', value: 'persistent' },
+          { name: 'Temporary only', value: 'temporary' },
+        ],
+        default: '',
+      },
+      {
+        type: 'list',
+        name: 'transitionFilter',
+        message: 'Lifecycle transition filter:',
+        choices: [
+          { name: 'All', value: '' },
+          { name: 'First observed', value: 'first-observed' },
+          { name: 'Persisting', value: 'persisting' },
+          { name: 'Modified', value: 'modified' },
+          { name: 'Removed', value: 'removed' },
+          { name: 'Reappearing', value: 'reappearing' },
+        ],
+        default: '',
+      },
+      {
+        type: 'confirm',
+        name: 'validateOrder',
+        message: 'Validate snapshot ledger ordering?',
+        default: true,
+      },
+      { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
+    ],
+  },
 };

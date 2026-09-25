@@ -256,11 +256,59 @@ The repository currently includes the following runnable examples:
 89. **`174-transaction-preflight-validation`**: Validating transaction structure, fee, sequence number, time bounds, and memo before signing, without ever submitting.
 90. **`175-transaction-result-analysis`**: Decoding transaction and operation result codes into a structured diagnostic report with remediation hints.
 91. **`176-soroban-contract-invocation`**: Preparing a Soroban contract invocation transaction with encoded ScVal arguments, envelope XDR, and transaction hash.
+92. **`197-state-lifecycle`**: Offline Soroban contract-data entry lifecycle analysis: compare two or more ordered state snapshots, match entries by stable ledger-key identifiers, detect first-observed, persisting, modified, removed, and reappearing entries, track value, durability, lastModifiedLedgerSeq, and TTL changes, distinguish TTL increases and decreases, filter by contract ID, durability, or lifecycle transition type, and output JSON or human-readable reports.
 
 84. **`116-soroban-token-contract`**: Inspect Soroban token metadata, balances, allowances, and optional total supply; construct and simulate a token transfer; and decode returned `ScVal` values.
 85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
 86. **`118-ledger-footprint-analysis`**: Simulate and compare Soroban ledger footprints, distinguish read-only and read-write entries, decode ledger keys, identify storage types, and display raw XDR.
 87. **`119-soroban-resource-fee-analysis`**: Simulate and compare Soroban CPU, memory, ledger I/O, transaction resource limits, resource fees, inclusion fees, and total estimated transaction cost.
+
+Analyze Soroban contract-data entry lifecycle across two ordered snapshots:
+
+```bash
+npm run run-example -- 197-state-lifecycle snapshot-001.json snapshot-002.json
+```
+
+Analyze across three or more snapshots and emit JSON:
+
+```bash
+npm run run-example -- 197-state-lifecycle snapshot-001.json snapshot-002.json snapshot-003.json
+JSON_OUTPUT=true npm run run-example -- 197-state-lifecycle snapshot-001.json snapshot-002.json snapshot-003.json
+```
+
+Filter by contract ID, durability, or lifecycle transition type:
+
+```bash
+CONTRACT_ID_FILTER=CCONTRACTID... DURABILITY_FILTER=persistent TRANSITION_FILTER=modified \
+  npm run run-example -- 197-state-lifecycle snapshot-001.json snapshot-002.json
+```
+
+Enable snapshot ordering validation (requires `ledger` metadata in each snapshot file):
+
+```bash
+VALIDATE_SNAPSHOT_ORDER=true npm run run-example -- 197-state-lifecycle snapshot-001.json snapshot-002.json
+```
+
+Each snapshot file is a JSON array of entry objects, or an object with an optional `ledger` field and an `entries` array:
+
+```json
+{
+  "ledger": 12500,
+  "entries": [
+    {
+      "ledgerKey": "AAAAAA==",
+      "contractId": "CCONTRACT...",
+      "durability": "persistent",
+      "lastModifiedLedgerSeq": 12345,
+      "liveUntilLedgerSeq": 12999,
+      "valueXdr": "AAAAB...",
+      "valueDecoded": "counter=42"
+    }
+  ]
+}
+```
+
+The analysis is completely offline. It matches entries across snapshots using stable `ledgerKey` identifiers and reports first-observed, persisting, modified, removed, and reappearing entries together with TTL increases, decreases, and unchanged TTLs. Raw `valueXdr` is preserved for all value changes. Partially decoded entries do not terminate the analysis. Results are deterministic for identical input snapshots.
 
 ## Installation
 
