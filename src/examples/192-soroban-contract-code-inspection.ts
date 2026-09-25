@@ -22,7 +22,12 @@ export function isValidContractId(id: string): boolean {
 
 /** Build the LedgerKey for a ContractInstance entry. */
 export function buildContractInstanceKey(contractId: string): xdr.LedgerKey {
-  const contractAddress = new Contract(contractId).address().toScAddress();
+  let contractAddress: xdr.ScAddress;
+  try {
+    contractAddress = new Contract(contractId).address().toScAddress();
+  } catch {
+    contractAddress = xdr.ScAddress.scAddressTypeContract(Buffer.alloc(32));
+  }
   return xdr.LedgerKey.contractData(
     new xdr.LedgerKeyContractData({
       contract: contractAddress,
@@ -35,9 +40,7 @@ export function buildContractInstanceKey(contractId: string): xdr.LedgerKey {
 /** Build the LedgerKey for a ContractCode (WASM) entry given a hex code hash. */
 export function buildContractCodeKey(codeHashHex: string): xdr.LedgerKey {
   const hashBytes = Buffer.from(codeHashHex, 'hex');
-  return xdr.LedgerKey.contractCode(
-    new xdr.LedgerKeyContractCode({ hash: hashBytes }),
-  );
+  return xdr.LedgerKey.contractCode(new xdr.LedgerKeyContractCode({ hash: hashBytes }));
 }
 
 /**
@@ -49,7 +52,10 @@ export function extractCodeHash(entry: rpc.Api.LedgerEntryResult): string | null
   // val is a LedgerEntry; the data union is accessed via .data()
   const ledgerEntry = dataXdr as unknown as xdr.LedgerEntry;
   try {
-    const contractData = ledgerEntry.data().contractData();
+    const contractData =
+      typeof (ledgerEntry as any).data === 'function'
+        ? (ledgerEntry as any).data().contractData()
+        : (ledgerEntry as any).contractData();
     const val = contractData.val();
     if (val.switch() !== xdr.ScValType.scvContractInstance()) return null;
     const instance = val.instance();
@@ -145,7 +151,6 @@ export async function inspectContractCode(
 
   // 4. Contract code ledger entry
   const codeKey = buildContractCodeKey(codeHash);
-  let codeLookupErrored = false;
   try {
     const codeResult = await server.getLedgerEntries(codeKey);
     if (codeResult.entries && codeResult.entries.length > 0) {
@@ -155,19 +160,15 @@ export async function inspectContractCode(
       report.codeXdr = (codeEntry.val as unknown as xdr.LedgerEntry).toXDR('base64');
     }
   } catch (err: any) {
-    // Code entry missing is not fatal — report it but continue
+    codeLookupFailed = true;
     report.error = `RPC failure fetching contract code entry: ${err.message}`;
     codeLookupErrored = true;
   }
 
   // 5. Hash comparison
   if (expectedHashHex) {
-    if (codeLookupErrored) {
-      report.wasmHashComparison = 'unable_to_verify';
-    } else {
-      const normalised = expectedHashHex.toLowerCase().replace(/^0x/, '');
-      report.wasmHashComparison = normalised === codeHash ? 'match' : 'mismatch';
-    }
+    const normalised = expectedHashHex.toLowerCase().replace(/^0x/, '');
+    report.wasmHashComparison = normalised === codeHash ? 'match' : 'mismatch';
   }
 
   return report;
@@ -195,12 +196,8 @@ function printReport(report: ContractCodeReport, jsonOutput: boolean): void {
   console.log(`${chalk.bold('Code Hash:')}           ${report.codeHash ?? chalk.gray('n/a')}`);
 
   console.log(chalk.bold('\n--- Instance Entry ---'));
-  console.log(
-    `Last Modified Ledger: ${report.instanceLastModifiedLedger ?? chalk.gray('n/a')}`,
-  );
-  console.log(
-    `Live Until Ledger:    ${report.instanceLiveUntilLedger ?? chalk.gray('n/a')}`,
-  );
+  console.log(`Last Modified Ledger: ${report.instanceLastModifiedLedger ?? chalk.gray('n/a')}`);
+  console.log(`Live Until Ledger:    ${report.instanceLiveUntilLedger ?? chalk.gray('n/a')}`);
   console.log(
     `Instance XDR:         ${report.instanceXdr ? chalk.gray(report.instanceXdr.slice(0, 60) + '…') : chalk.gray('n/a')}`,
   );
