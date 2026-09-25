@@ -560,6 +560,67 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '186-soroban-rpc-diagnostics': {
+    name: '186-soroban-rpc-diagnostics',
+    description:
+      'Inspect a Soroban RPC endpoint for health, network metadata, protocol version, latest ledger state, and freshness diagnostics',
+    run: loadExample('../examples/186-soroban-rpc-diagnostics'),
+    params: [
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC URL (blank uses the default Testnet endpoint):',
+      },
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Timeout in milliseconds:',
+        default: '15000',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output as JSON?',
+        default: false,
+      },
+    ],
+  },
+  '187-soroban-rpc-pagination': {
+    name: '187-soroban-rpc-pagination',
+    description:
+      'Walk a paginated Soroban RPC response safely using cursor propagation, page limits, and repeat-cursor detection',
+    run: loadExample('../examples/187-soroban-rpc-pagination'),
+    params: [
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC URL (blank uses the default Testnet endpoint):',
+      },
+      {
+        type: 'input',
+        name: 'pageSize',
+        message: 'Records per page:',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'maxPages',
+        message: 'Maximum pages to read:',
+        default: '5',
+      },
+      {
+        type: 'input',
+        name: 'startCursor',
+        message: 'Optional starting cursor to resume from:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output as JSON?',
+        default: false,
+      },
+    ],
+  },
   '66-ledger-effects': {
     name: '66-ledger-effects',
     description:
