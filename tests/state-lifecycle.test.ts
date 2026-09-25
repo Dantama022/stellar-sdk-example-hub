@@ -35,10 +35,7 @@ import { examples } from '../src/runner/catalog';
 // Fixture helpers
 // ---------------------------------------------------------------------------
 
-function obs(
-  ledgerKey: string,
-  overrides: Partial<EntryObservation> = {},
-): EntryObservation {
+function obs(ledgerKey: string, overrides: Partial<EntryObservation> = {}): EntryObservation {
   return {
     ledgerKey,
     durability: 'persistent',
@@ -150,7 +147,12 @@ describe('parseSnapshot', () => {
 
   it('parses array form', () => {
     const raw = [
-      { ledgerKey: 'K1', durability: 'persistent', lastModifiedLedgerSeq: 100, liveUntilLedgerSeq: 200 },
+      {
+        ledgerKey: 'K1',
+        durability: 'persistent',
+        lastModifiedLedgerSeq: 100,
+        liveUntilLedgerSeq: 200,
+      },
     ];
     const snap = parseSnapshot(raw, 'test');
     expect(snap.ledger).toBeUndefined();
@@ -161,9 +163,7 @@ describe('parseSnapshot', () => {
   it('parses object form with ledger metadata', () => {
     const raw = {
       ledger: 500,
-      entries: [
-        { ledgerKey: 'K2', durability: 'temporary', liveUntilLedgerSeq: 600 },
-      ],
+      entries: [{ ledgerKey: 'K2', durability: 'temporary', liveUntilLedgerSeq: 600 }],
     };
     const snap = parseSnapshot(raw, 'test');
     expect(snap.ledger).toBe(500);
@@ -174,8 +174,8 @@ describe('parseSnapshot', () => {
   it('skips entries that cannot be normalised without aborting', () => {
     const raw = [
       { ledgerKey: 'GOOD' },
-      { noKey: true },          // invalid — no ledgerKey
-      { ledgerKey: '' },        // invalid — empty key
+      { noKey: true }, // invalid — no ledgerKey
+      { ledgerKey: '' }, // invalid — empty key
       { ledgerKey: 'ALSO-GOOD' },
     ];
     const snap = parseSnapshot(raw, 'test');
@@ -231,11 +231,7 @@ describe('loadSnapshot', () => {
 
 describe('validateSnapshotOrder', () => {
   it('returns no violations for strictly increasing ledgers', () => {
-    const snapshots = [
-      snap([], 100),
-      snap([], 200),
-      snap([], 300),
-    ];
+    const snapshots = [snap([], 100), snap([], 200), snap([], 300)];
     expect(validateSnapshotOrder(snapshots)).toHaveLength(0);
   });
 
@@ -269,10 +265,7 @@ describe('validateSnapshotOrder', () => {
 
 describe('indexSnapshot', () => {
   it('builds a map keyed by ledgerKey', () => {
-    const entries = [
-      obs('K1'),
-      obs('K2', { durability: 'temporary' }),
-    ];
+    const entries = [obs('K1'), obs('K2', { durability: 'temporary' })];
     const index = indexSnapshot(snap(entries));
     expect(index.size).toBe(2);
     expect(index.get('K1')!.durability).toBe('persistent');
@@ -280,10 +273,7 @@ describe('indexSnapshot', () => {
   });
 
   it('last entry wins for duplicate keys within one snapshot', () => {
-    const entries = [
-      obs('DUPE', { valueXdr: 'FIRST' }),
-      obs('DUPE', { valueXdr: 'SECOND' }),
-    ];
+    const entries = [obs('DUPE', { valueXdr: 'FIRST' }), obs('DUPE', { valueXdr: 'SECOND' })];
     const index = indexSnapshot(snap(entries));
     expect(index.get('DUPE')!.valueXdr).toBe('SECOND');
   });
@@ -299,7 +289,12 @@ describe('indexSnapshot', () => {
 
 describe('computeDelta', () => {
   it('reports no changes between identical observations', () => {
-    const a = obs('K', { valueXdr: 'AAAA', durability: 'persistent', lastModifiedLedgerSeq: 100, liveUntilLedgerSeq: 500 });
+    const a = obs('K', {
+      valueXdr: 'AAAA',
+      durability: 'persistent',
+      lastModifiedLedgerSeq: 100,
+      liveUntilLedgerSeq: 500,
+    });
     const delta = computeDelta(a, a);
     expect(delta.valueChanged).toBe(false);
     expect(delta.durabilityChanged).toBe(false);
@@ -368,29 +363,71 @@ describe('computeTtlTrend', () => {
   });
 
   it('returns "increasing" when last delta has positive ttlDelta', () => {
-    const d: EntryDelta = { valueChanged: false, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: true, ttlDelta: 100 };
+    const d: EntryDelta = {
+      valueChanged: false,
+      durabilityChanged: false,
+      lastModifiedChanged: false,
+      ttlChanged: true,
+      ttlDelta: 100,
+    };
     expect(computeTtlTrend([d])).toBe('increasing');
   });
 
   it('returns "decreasing" when last delta has negative ttlDelta', () => {
-    const d: EntryDelta = { valueChanged: false, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: true, ttlDelta: -50 };
+    const d: EntryDelta = {
+      valueChanged: false,
+      durabilityChanged: false,
+      lastModifiedChanged: false,
+      ttlChanged: true,
+      ttlDelta: -50,
+    };
     expect(computeTtlTrend([d])).toBe('decreasing');
   });
 
   it('returns "unchanged" when last delta has ttlDelta of zero', () => {
-    const d: EntryDelta = { valueChanged: false, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: false, ttlDelta: 0 };
+    const d: EntryDelta = {
+      valueChanged: false,
+      durabilityChanged: false,
+      lastModifiedChanged: false,
+      ttlChanged: false,
+      ttlDelta: 0,
+    };
     expect(computeTtlTrend([d])).toBe('unchanged');
   });
 
   it('uses the last delta with defined ttlDelta', () => {
-    const d1: EntryDelta = { valueChanged: false, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: true, ttlDelta: 200 };
-    const d2: EntryDelta = { valueChanged: false, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: true, ttlDelta: -30 };
+    const d1: EntryDelta = {
+      valueChanged: false,
+      durabilityChanged: false,
+      lastModifiedChanged: false,
+      ttlChanged: true,
+      ttlDelta: 200,
+    };
+    const d2: EntryDelta = {
+      valueChanged: false,
+      durabilityChanged: false,
+      lastModifiedChanged: false,
+      ttlChanged: true,
+      ttlDelta: -30,
+    };
     expect(computeTtlTrend([d1, d2])).toBe('decreasing');
   });
 
   it('skips deltas with undefined ttlDelta to find the last usable one', () => {
-    const dUndef: EntryDelta = { valueChanged: false, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: false, ttlDelta: undefined };
-    const dInc: EntryDelta = { valueChanged: false, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: true, ttlDelta: 10 };
+    const dUndef: EntryDelta = {
+      valueChanged: false,
+      durabilityChanged: false,
+      lastModifiedChanged: false,
+      ttlChanged: false,
+      ttlDelta: undefined,
+    };
+    const dInc: EntryDelta = {
+      valueChanged: false,
+      durabilityChanged: false,
+      lastModifiedChanged: false,
+      ttlChanged: true,
+      ttlDelta: 10,
+    };
     expect(computeTtlTrend([dInc, dUndef])).toBe('increasing');
   });
 });
@@ -400,8 +437,18 @@ describe('computeTtlTrend', () => {
 // ---------------------------------------------------------------------------
 
 describe('classifyTransition', () => {
-  const noDelta: EntryDelta = { valueChanged: false, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: false };
-  const modDelta: EntryDelta = { valueChanged: true, durabilityChanged: false, lastModifiedChanged: false, ttlChanged: false };
+  const noDelta: EntryDelta = {
+    valueChanged: false,
+    durabilityChanged: false,
+    lastModifiedChanged: false,
+    ttlChanged: false,
+  };
+  const modDelta: EntryDelta = {
+    valueChanged: true,
+    durabilityChanged: false,
+    lastModifiedChanged: false,
+    ttlChanged: false,
+  };
 
   it('classifies "first-observed" when entry appears only in first snapshot', () => {
     expect(classifyTransition([true, false, false], [])).toBe('removed');
@@ -615,13 +662,13 @@ describe('analyzeLifecycle summary counts', () => {
       obs('MODIFY', { valueXdr: 'V2' }),
       // REMOVE absent → removed
       // REAPP absent → gap
-      obs('FIRST-NEW'),  // new in s2 → first-observed
+      obs('FIRST-NEW'), // new in s2 → first-observed
     ]);
     const s3 = snap([
       obs('PERSIST'),
       obs('MODIFY', { valueXdr: 'V2' }),
       obs('FIRST-NEW'),
-      obs('REAPP'),      // back → reappearing
+      obs('REAPP'), // back → reappearing
     ]);
     const report = analyzeLifecycle([s1, s2, s3]);
     expect(report.summary.persistingCount).toBe(1);

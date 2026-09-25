@@ -246,9 +246,7 @@ export function parseSnapshot(raw: unknown, label: string): Snapshot {
   }
 
   if (typeof raw !== 'object') {
-    throw new Error(
-      `Snapshot "${label}": expected an object or array, got ${typeof raw}.`,
-    );
+    throw new Error(`Snapshot "${label}": expected an object or array, got ${typeof raw}.`);
   }
 
   const obj = raw as Record<string, unknown>;
@@ -265,15 +263,11 @@ export function parseSnapshot(raw: unknown, label: string): Snapshot {
   }
 
   if (!('entries' in obj)) {
-    throw new Error(
-      `Snapshot "${label}": object form requires an "entries" array.`,
-    );
+    throw new Error(`Snapshot "${label}": object form requires an "entries" array.`);
   }
 
   if (!Array.isArray(obj['entries'])) {
-    throw new Error(
-      `Snapshot "${label}": "entries" must be an array.`,
-    );
+    throw new Error(`Snapshot "${label}": "entries" must be an array.`);
   }
 
   const entries = parseEntryArray(obj['entries'] as unknown[], label);
@@ -381,8 +375,7 @@ export function computeDelta(prev: EntryObservation, curr: EntryObservation): En
   const prevTtl = prev.liveUntilLedgerSeq;
   const currTtl = curr.liveUntilLedgerSeq;
   const ttlChanged = prevTtl !== currTtl;
-  const ttlDelta =
-    prevTtl !== undefined && currTtl !== undefined ? currTtl - prevTtl : undefined;
+  const ttlDelta = prevTtl !== undefined && currTtl !== undefined ? currTtl - prevTtl : undefined;
 
   return {
     valueChanged,
@@ -561,7 +554,7 @@ export function analyzeLifecycle(
 
     // Compute observed lifetime range from lastModifiedLedgerSeq across present observations.
     const modifiedLedgers = observations
-      .filter((o): o is EntryObservation => o !== undefined && o.lastModifiedLedgerSeq !== undefined)
+      .filter((o): o is EntryObservation => o?.lastModifiedLedgerSeq !== undefined)
       .map((o) => o.lastModifiedLedgerSeq as number);
 
     const firstObservedModifiedLedger =
@@ -777,9 +770,7 @@ function resolveBooleanEnv(key: string): boolean {
  *   JSON_OUTPUT           — env var for JSON output ('true')
  */
 export async function run(params: StateLifecycleParams = {}): Promise<void> {
-  const jsonOutput =
-    params.jsonOutput ??
-    resolveBooleanEnv('JSON_OUTPUT');
+  const jsonOutput = params.jsonOutput ?? resolveBooleanEnv('JSON_OUTPUT');
 
   const contractIdFilter =
     params.contractIdFilter?.trim() || process.env['CONTRACT_ID_FILTER']?.trim() || undefined;
@@ -803,8 +794,7 @@ export async function run(params: StateLifecycleParams = {}): Promise<void> {
   const transitionFilter: LifecycleTransition | undefined =
     rawTransition && validTransitions.includes(rawTransition) ? rawTransition : undefined;
 
-  const validateOrder =
-    params.validateOrder ?? resolveBooleanEnv('VALIDATE_SNAPSHOT_ORDER');
+  const validateOrder = params.validateOrder ?? resolveBooleanEnv('VALIDATE_SNAPSHOT_ORDER');
 
   const snapshotFiles = resolveSnapshotFiles(params);
 
@@ -859,8 +849,7 @@ export async function run(params: StateLifecycleParams = {}): Promise<void> {
     const violations = validateSnapshotOrder(snapshots);
     if (violations.length > 0) {
       const msg =
-        'Snapshot ordering validation failed:\n' +
-        violations.map((v) => `  • ${v}`).join('\n');
+        'Snapshot ordering validation failed:\n' + violations.map((v) => `  • ${v}`).join('\n');
       if (jsonOutput) {
         console.log(JSON.stringify({ error: msg, violations }));
       } else {
