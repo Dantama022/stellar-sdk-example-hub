@@ -1,5 +1,12 @@
 import fs from 'fs';
 
+interface SnapshotEntry {
+  ledgerKey: string;
+  valueXdr: string;
+  liveUntilLedgerSeq: number;
+  [key: string]: any;
+}
+
 export async function run(params: { beforeFile?: string; afterFile?: string } = {}) {
   const beforePath = params.beforeFile || process.argv[3];
   const afterPath = params.afterFile || process.argv[4];
@@ -9,15 +16,20 @@ export async function run(params: { beforeFile?: string; afterFile?: string } = 
   const beforeData = JSON.parse(fs.readFileSync(beforePath, 'utf8'));
   const afterData = JSON.parse(fs.readFileSync(afterPath, 'utf8'));
 
-  const beforeMap = new Map(beforeData.entries.map((e: any) => [e.ledgerKey, e]));
-  const afterMap = new Map(afterData.entries.map((e: any) => [e.ledgerKey, e]));
+  const beforeMap = new Map<string, SnapshotEntry>(
+    beforeData.entries.map((e: SnapshotEntry) => [e.ledgerKey, e])
+  );
+  const afterMap = new Map<string, SnapshotEntry>(
+    afterData.entries.map((e: SnapshotEntry) => [e.ledgerKey, e])
+  );
 
   let added = 0, removed = 0, modified = 0, ttlOnly = 0, unchanged = 0;
 
   console.log(`=== Soroban State Snapshot Diff ===`);
   
-  afterMap.forEach((afterEntry, key) => {
+  afterMap.forEach((afterEntry: SnapshotEntry, key: string) => {
     const beforeEntry = beforeMap.get(key);
+    
     if (!beforeEntry) {
       added++;
     } else if (beforeEntry.valueXdr !== afterEntry.valueXdr) {
@@ -29,7 +41,7 @@ export async function run(params: { beforeFile?: string; afterFile?: string } = 
     }
   });
 
-  beforeMap.forEach((_, key) => {
+  beforeMap.forEach((_, key: string) => {
     if (!afterMap.has(key)) removed++;
   });
 
