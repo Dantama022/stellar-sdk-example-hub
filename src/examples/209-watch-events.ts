@@ -3,9 +3,10 @@ import { parseEventRecord } from './67-soroban-contract-events';
 
 export async function run(params: { contractId?: string; rpcUrl?: string } = {}) {
   const contractId = params.contractId || process.argv[3];
-  const rpcUrl = params.rpcUrl || process.env.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org';
-  
-  if (!contractId) throw new Error("Missing contract ID. Usage: watch-events <contractId>");
+  const rpcUrl =
+    params.rpcUrl || process.env.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org';
+
+  if (!contractId) throw new Error('Missing contract ID. Usage: watch-events <contractId>');
 
   const server = new rpc.Server(rpcUrl);
   let latestLedger = (await server.getLatestLedger()).sequence;
@@ -24,7 +25,7 @@ export async function run(params: { contractId?: string; rpcUrl?: string } = {})
   });
 
   const pollInterval = 3000;
-  
+
   while (isRunning) {
     try {
       // Cast the request parameters to 'any' to bypass strict property checks for the cursor argument
@@ -33,7 +34,7 @@ export async function run(params: { contractId?: string; rpcUrl?: string } = {})
         filters: [{ type: 'contract', contractIds: [contractId] }],
         limit: 50,
       };
-      
+
       if (cursor) {
         requestParams.cursor = cursor;
       }
@@ -44,12 +45,14 @@ export async function run(params: { contractId?: string; rpcUrl?: string } = {})
       if (records.length > 0) {
         records.forEach((raw) => {
           const parsed = parseEventRecord(raw as any);
-          console.log(`[Ledger ${parsed.ledger}] Event: ${parsed.eventName || 'unnamed'} | Tx: ${parsed.txHash}`);
+          console.log(
+            `[Ledger ${parsed.ledger}] Event: ${parsed.eventName || 'unnamed'} | Tx: ${parsed.txHash}`,
+          );
         });
-        
+
         cursor = response.cursor;
         // Advance the latest ledger safely
-        const maxLedger = Math.max(...records.map(e => parseInt(e.ledger as any, 10) || 0));
+        const maxLedger = Math.max(...records.map((e) => parseInt(e.ledger as any, 10) || 0));
         if (maxLedger > latestLedger) {
           latestLedger = maxLedger;
         }
@@ -60,6 +63,6 @@ export async function run(params: { contractId?: string; rpcUrl?: string } = {})
 
     if (isRunning) await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
-  
+
   console.log(`Monitor shut down. Last processed ledger: ${latestLedger}. Cursor: ${cursor}`);
 }

@@ -2132,7 +2132,8 @@ export const examples: Record<string, Example> = {
   },
   '210-replay-events': {
     name: '210-replay-events',
-    description: 'Retrieve, decode, and export a deterministic stream of Soroban events over a ledger range',
+    description:
+      'Retrieve, decode, and export a deterministic stream of Soroban events over a ledger range',
     run: loadExample('../examples/210-replay-events'),
     params: [
       { type: 'input', name: 'startLedger', message: 'Start ledger sequence:' },
@@ -2142,7 +2143,8 @@ export const examples: Record<string, Example> = {
   },
   '211-event-analytics': {
     name: '211-event-analytics',
-    description: 'Analyze historical Soroban events to produce aggregate usage statistics and distributions',
+    description:
+      'Analyze historical Soroban events to produce aggregate usage statistics and distributions',
     run: loadExample('../examples/211-event-analytics'),
     params: [
       { type: 'input', name: 'startLedger', message: 'Start ledger sequence:' },
@@ -2152,7 +2154,8 @@ export const examples: Record<string, Example> = {
   },
   '212-event-validate': {
     name: '212-event-validate',
-    description: 'Validate historical Soroban events and payload structures against an expected schema',
+    description:
+      'Validate historical Soroban events and payload structures against an expected schema',
     run: loadExample('../examples/212-event-validate'),
     params: [
       { type: 'input', name: 'eventFile', message: 'Path to target event JSON:' },
