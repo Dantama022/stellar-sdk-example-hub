@@ -2124,4 +2124,35 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
     ],
   },
+  '224-state-deps': {
+    name: '224-state-deps',
+    description: 'Scan a captured Soroban state snapshot to extract observable references and build a dependency graph',
+    run: loadExample('../examples/224-state-deps'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '201-scval': {
+    name: '201-scval',
+    description: 'Interactive ScVal encoding and decoding playground',
+    run: loadExample('../examples/201-scval'),
+    params: [
+      { type: 'list', name: 'action', message: 'Action:', choices: ['encode', 'decode'] },
+      { type: 'input', name: 'value', message: 'Value (JSON or base64 XDR):' },
+      { type: 'input', name: 'type', message: 'Type hint (optional):' },
+    ],
+  },
+  '202-scval-validate': {
+    name: '202-scval-validate',
+    description: 'Validate supplied JSON input against an expected Soroban ScVal type structure',
+    run: loadExample('../examples/202-scval-validate'),
+    params: [
+      { type: 'input', name: 'input', message: 'Input JSON value:' },
+      { type: 'input', name: 'expectedType', message: 'Expected type structure:' },
+    ],
+  },
+  '203-contract-args': {
+    name: '203-contract-args',
+    description: 'Inspect a Soroban contract specification and output a developer-friendly argument schema',
+    run: loadExample('../examples/203-contract-args'),
+    params: [{ type: 'input', name: 'contractId', message: 'Target contract ID:' }],
+  },
 };

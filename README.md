@@ -262,6 +262,10 @@ The repository currently includes the following runnable examples:
 85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
 86. **`118-ledger-footprint-analysis`**: Simulate and compare Soroban ledger footprints, distinguish read-only and read-write entries, decode ledger keys, identify storage types, and display raw XDR.
 87. **`119-soroban-resource-fee-analysis`**: Simulate and compare Soroban CPU, memory, ledger I/O, transaction resource limits, resource fees, inclusion fees, and total estimated transaction cost.
+110. **`224-state-deps`**: Offline state-dependency analysis tool that extracts observable references from a Soroban snapshot and builds an in-memory dependency graph.
+111. **`201-scval`**: Interactive `ScVal` playground for encoding JSON to ScVal XDR and decoding base64 XDR back to human-readable JSON formats.
+112. **`202-scval-validate`**: Validation checker verifying primitive and composite inputs structurally match an expected Soroban ScVal contract schema.
+113. **`203-contract-args`**: Contract argument schema inspector to list callable functions, types, and generate example payload JSONs without modifying ledger state.
 
 Analyze Soroban contract-data entry lifecycle across two ordered snapshots:
 
