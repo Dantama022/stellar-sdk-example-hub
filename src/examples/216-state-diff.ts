@@ -11,25 +11,29 @@ export async function run(params: { beforeFile?: string; afterFile?: string } = 
   const beforePath = params.beforeFile || process.argv[3];
   const afterPath = params.afterFile || process.argv[4];
 
-  if (!beforePath || !afterPath) throw new Error("Missing snapshot paths.");
+  if (!beforePath || !afterPath) throw new Error('Missing snapshot paths.');
 
   const beforeData = JSON.parse(fs.readFileSync(beforePath, 'utf8'));
   const afterData = JSON.parse(fs.readFileSync(afterPath, 'utf8'));
 
   const beforeMap = new Map<string, SnapshotEntry>(
-    beforeData.entries.map((e: SnapshotEntry) => [e.ledgerKey, e])
+    beforeData.entries.map((e: SnapshotEntry) => [e.ledgerKey, e]),
   );
   const afterMap = new Map<string, SnapshotEntry>(
-    afterData.entries.map((e: SnapshotEntry) => [e.ledgerKey, e])
+    afterData.entries.map((e: SnapshotEntry) => [e.ledgerKey, e]),
   );
 
-  let added = 0, removed = 0, modified = 0, ttlOnly = 0, unchanged = 0;
+  let added = 0;
+  let removed = 0;
+  let modified = 0;
+  let ttlOnly = 0;
+  let unchanged = 0;
 
   console.log(`=== Soroban State Snapshot Diff ===`);
-  
+
   afterMap.forEach((afterEntry: SnapshotEntry, key: string) => {
     const beforeEntry = beforeMap.get(key);
-    
+
     if (!beforeEntry) {
       added++;
     } else if (beforeEntry.valueXdr !== afterEntry.valueXdr) {

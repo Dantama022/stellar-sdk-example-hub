@@ -38,7 +38,9 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         const horizonUrl = resolveHorizonUrl(cmdArgs);
         console.log(`Inspecting Horizon endpoint: ${horizonUrl}`);
         const result = await inspectHorizonEndpoint(horizonUrl);
-        console.log(`Connectivity: OK\nLatency: ${result.latencyMs} ms\nNetwork Passphrase: ${result.metadata.networkPassphrase}`);
+        console.log(
+          `Connectivity: OK\nLatency: ${result.latencyMs} ms\nNetwork Passphrase: ${result.metadata.networkPassphrase}`,
+        );
         return 0;
       }
       case 'event-schema-diff':
@@ -68,8 +70,10 @@ export async function runInspectorCli(args: string[]): Promise<number> {
 }
 
 if (require.main === module) {
-  runInspectorCli(process.argv.slice(2)).then(process.exit).catch((e) => {
-    console.error(`Fatal Error: ${e instanceof Error ? e.message : String(e)}`);
-    process.exit(1);
-  });
+  runInspectorCli(process.argv.slice(2))
+    .then(process.exit)
+    .catch((e) => {
+      console.error(`Fatal Error: ${e instanceof Error ? e.message : String(e)}`);
+      process.exit(1);
+    });
 }
