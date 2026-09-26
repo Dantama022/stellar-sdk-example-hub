@@ -266,6 +266,10 @@ The repository currently includes the following runnable examples:
 107. **`210-replay-events`**: Retrieves, decodes, and exports a chronological stream of Soroban events over a specific ledger range with JSON export support.
 108. **`211-event-analytics`**: Analyzes historical Soroban event datasets to calculate aggregate usage statistics, top topics, and participating contract distributions.
 109. **`212-event-validate`**: Verifies historical Soroban event payloads and structures against a provided schema, detailing missing fields, unexpected fields, and type mismatches.
+102. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences.
+103. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
+104. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
+105. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
 
 Analyze Soroban contract-data entry lifecycle across two ordered snapshots:
 
