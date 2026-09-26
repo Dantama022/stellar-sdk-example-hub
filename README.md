@@ -262,6 +262,10 @@ The repository currently includes the following runnable examples:
 85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
 86. **`118-ledger-footprint-analysis`**: Simulate and compare Soroban ledger footprints, distinguish read-only and read-write entries, decode ledger keys, identify storage types, and display raw XDR.
 87. **`119-soroban-resource-fee-analysis`**: Simulate and compare Soroban CPU, memory, ledger I/O, transaction resource limits, resource fees, inclusion fees, and total estimated transaction cost.
+102. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences.
+103. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
+104. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
+105. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
 
 Analyze Soroban contract-data entry lifecycle across two ordered snapshots:
 
