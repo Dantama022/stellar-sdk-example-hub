@@ -274,6 +274,10 @@ The repository currently includes the following runnable examples:
 111. **`201-scval`**: Interactive `ScVal` playground for encoding JSON to ScVal XDR and decoding base64 XDR back to human-readable JSON formats.
 112. **`202-scval-validate`**: Validation checker verifying primitive and composite inputs structurally match an expected Soroban ScVal contract schema.
 113. **`203-contract-args`**: Contract argument schema inspector to list callable functions, types, and generate example payload JSONs without modifying ledger state.
+102. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences.
+103. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
+104. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
+105. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
 
 Analyze Soroban contract-data entry lifecycle across two ordered snapshots:
 
