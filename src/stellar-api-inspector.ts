@@ -5,6 +5,10 @@ import {
   InvalidHorizonUrlError,
   inspectHorizonEndpoint,
 } from './inspector/horizon';
+import { run as runWatchEvents } from './examples/209-watch-events';
+import { run as runReplayEvents } from './examples/210-replay-events';
+import { run as runEventAnalytics } from './examples/211-event-analytics';
+import { run as runEventValidate } from './examples/212-event-validate';
 import { run as runEventSchemaDiff } from './examples/213-event-schema-diff';
 import { run as runEventTypes } from './examples/214-event-types';
 import { run as runEventCompat } from './examples/215-event-compat';
@@ -16,6 +20,10 @@ function printUsage(): void {
   console.log('Usage: stellar-api-inspector <subcommand> [args]');
   console.log('Subcommands:');
   console.log('  horizon [--url <horizon-url>]');
+  console.log('  watch-events <contractId>');
+  console.log('  replay-events <startLedger> <endLedger> [contractId]');
+  console.log('  event-analytics <startLedger> <endLedger> [contractId]');
+  console.log('  event-validate <event.json> <schema.json>');
   console.log('  event-schema-diff <oldSchema.json> <newSchema.json>');
   console.log('  event-types <schema.json>');
   console.log('  event-compat <schema.json> <events.json>');
@@ -43,6 +51,26 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         );
         return 0;
       }
+      case 'watch-events':
+        await runWatchEvents({ contractId: cmdArgs[0] });
+        return 0;
+      case 'replay-events':
+        await runReplayEvents({
+          startLedger: cmdArgs[0],
+          endLedger: cmdArgs[1],
+          contractId: cmdArgs[2],
+        });
+        return 0;
+      case 'event-analytics':
+        await runEventAnalytics({
+          startLedger: cmdArgs[0],
+          endLedger: cmdArgs[1],
+          contractId: cmdArgs[2],
+        });
+        return 0;
+      case 'event-validate':
+        await runEventValidate({ eventFile: cmdArgs[0], schemaFile: cmdArgs[1] });
+        return 0;
       case 'event-schema-diff':
         await runEventSchemaDiff({ oldSchema: cmdArgs[0], newSchema: cmdArgs[1] });
         return 0;
