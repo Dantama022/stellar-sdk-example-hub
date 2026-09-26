@@ -262,6 +262,14 @@ The repository currently includes the following runnable examples:
 85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
 86. **`118-ledger-footprint-analysis`**: Simulate and compare Soroban ledger footprints, distinguish read-only and read-write entries, decode ledger keys, identify storage types, and display raw XDR.
 87. **`119-soroban-resource-fee-analysis`**: Simulate and compare Soroban CPU, memory, ledger I/O, transaction resource limits, resource fees, inclusion fees, and total estimated transaction cost.
+102. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences.
+103. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
+104. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
+105. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
+106. **`209-watch-events`**: Periodically monitors Soroban RPC for new contract events, decodes them in real-time, and avoids duplicate processing across polling cycles.
+107. **`210-replay-events`**: Retrieves, decodes, and exports a chronological stream of Soroban events over a specific ledger range with JSON export support.
+108. **`211-event-analytics`**: Analyzes historical Soroban event datasets to calculate aggregate usage statistics, top topics, and participating contract distributions.
+109. **`212-event-validate`**: Verifies historical Soroban event payloads and structures against a provided schema, detailing missing fields, unexpected fields, and type mismatches.
 110. **`224-state-deps`**: Offline state-dependency analysis tool that extracts observable references from a Soroban snapshot and builds an in-memory dependency graph.
 111. **`201-scval`**: Interactive `ScVal` playground for encoding JSON to ScVal XDR and decoding base64 XDR back to human-readable JSON formats.
 112. **`202-scval-validate`**: Validation checker verifying primitive and composite inputs structurally match an expected Soroban ScVal contract schema.

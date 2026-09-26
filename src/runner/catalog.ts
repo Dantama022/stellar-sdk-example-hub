@@ -2124,12 +2124,6 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
     ],
   },
-  '224-state-deps': {
-    name: '224-state-deps',
-    description: 'Scan a captured Soroban state snapshot to extract observable references and build a dependency graph',
-    run: loadExample('../examples/224-state-deps'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
   '201-scval': {
     name: '201-scval',
     description: 'Interactive ScVal encoding and decoding playground',
@@ -2151,8 +2145,88 @@ export const examples: Record<string, Example> = {
   },
   '203-contract-args': {
     name: '203-contract-args',
-    description: 'Inspect a Soroban contract specification and output a developer-friendly argument schema',
+    description:
+      'Inspect a Soroban contract specification and output a developer-friendly argument schema',
     run: loadExample('../examples/203-contract-args'),
     params: [{ type: 'input', name: 'contractId', message: 'Target contract ID:' }],
+  },
+  '209-watch-events': {
+    name: '209-watch-events',
+    description: 'Periodically monitor Soroban RPC for new contract events in real-time',
+    run: loadExample('../examples/209-watch-events'),
+    params: [{ type: 'input', name: 'contractId', message: 'Target contract ID:' }],
+  },
+  '210-replay-events': {
+    name: '210-replay-events',
+    description:
+      'Retrieve, decode, and export a deterministic stream of Soroban events over a ledger range',
+    run: loadExample('../examples/210-replay-events'),
+    params: [
+      { type: 'input', name: 'startLedger', message: 'Start ledger sequence:' },
+      { type: 'input', name: 'endLedger', message: 'End ledger sequence:' },
+      { type: 'input', name: 'contractId', message: 'Target contract ID (optional):' },
+    ],
+  },
+  '211-event-analytics': {
+    name: '211-event-analytics',
+    description:
+      'Analyze historical Soroban events to produce aggregate usage statistics and distributions',
+    run: loadExample('../examples/211-event-analytics'),
+    params: [
+      { type: 'input', name: 'startLedger', message: 'Start ledger sequence:' },
+      { type: 'input', name: 'endLedger', message: 'End ledger sequence:' },
+      { type: 'input', name: 'contractId', message: 'Target contract ID (optional):' },
+    ],
+  },
+  '212-event-validate': {
+    name: '212-event-validate',
+    description:
+      'Validate historical Soroban events and payload structures against an expected schema',
+    run: loadExample('../examples/212-event-validate'),
+    params: [
+      { type: 'input', name: 'eventFile', message: 'Path to target event JSON:' },
+      { type: 'input', name: 'schemaFile', message: 'Path to expected schema JSON:' },
+    ],
+  },
+  '213-event-schema-diff': {
+    name: '213-event-schema-diff',
+    description: 'Compare two Soroban event schema definitions and output structural differences',
+    run: loadExample('../examples/213-event-schema-diff'),
+    params: [
+      { type: 'input', name: 'oldSchema', message: 'Path to old schema JSON:' },
+      { type: 'input', name: 'newSchema', message: 'Path to new schema JSON:' },
+    ],
+  },
+  '214-event-types': {
+    name: '214-event-types',
+    description: 'Generate strongly-typed TypeScript interfaces from a Soroban event schema',
+    run: loadExample('../examples/214-event-types'),
+    params: [{ type: 'input', name: 'schemaFile', message: 'Path to schema JSON:' }],
+  },
+  '215-event-compat': {
+    name: '215-event-compat',
+    description: 'Verify if a collection of actual Soroban events can be decoded against a schema',
+    run: loadExample('../examples/215-event-compat'),
+    params: [
+      { type: 'input', name: 'schemaFile', message: 'Path to expected schema JSON:' },
+      { type: 'input', name: 'eventsFile', message: 'Path to events JSON:' },
+    ],
+  },
+  '216-state-diff': {
+    name: '216-state-diff',
+    description:
+      'Compare two Soroban contract state snapshots to find additions, modifications, and TTL changes',
+    run: loadExample('../examples/216-state-diff'),
+    params: [
+      { type: 'input', name: 'beforeFile', message: 'Path to initial state JSON:' },
+      { type: 'input', name: 'afterFile', message: 'Path to modified state JSON:' },
+    ],
+  },
+  '224-state-deps': {
+    name: '224-state-deps',
+    description:
+      'Scan a captured Soroban state snapshot to extract observable references and build a dependency graph',
+    run: loadExample('../examples/224-state-deps'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
   },
 };
