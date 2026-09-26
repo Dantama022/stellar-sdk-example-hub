@@ -21,6 +21,12 @@ import { run as runEventTypes } from './examples/214-event-types';
 import { run as runEventCompat } from './examples/215-event-compat';
 import { run as runStateDiff } from './examples/216-state-diff';
 import { run as runStateDeps } from './examples/224-state-deps';
+import {
+  runStateTransitions,
+  runWasmCompatibility,
+  runWasmDependencies,
+  runWasmFootprint,
+} from './examples/225-wasm-analysis';
 
 dotenv.config();
 
@@ -44,6 +50,10 @@ function printUsage(): void {
   console.log('  event-compat <schema.json> <events.json>');
   console.log('  state-diff <before.json> <after.json>');
   console.log('  state-deps <snapshot.json>');
+  console.log('  wasm-footprint <wasmFile> [compareWasmFile] [--json]');
+  console.log('  wasm-compat <old.wasm> <new.wasm> [--json]');
+  console.log('  wasm-deps <wasmFile> [compareWasmFile] [--json]');
+  console.log('  state-transitions <snapshot.json> <snapshot.json> [...] [--contract <id>] [--type <type>] [--min-frequency <count>] [--json]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -122,6 +132,18 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'state-deps':
         await runStateDeps({ snapshotFile: cmdArgs[0] });
+        return 0;
+      case 'wasm-footprint':
+        await runWasmFootprint(cmdArgs);
+        return 0;
+      case 'wasm-compat':
+        await runWasmCompatibility(cmdArgs);
+        return 0;
+      case 'wasm-deps':
+        await runWasmDependencies(cmdArgs);
+        return 0;
+      case 'state-transitions':
+        await runStateTransitions(cmdArgs);
         return 0;
       default:
         printUsage();

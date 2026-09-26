@@ -331,6 +331,30 @@ Each snapshot file is a JSON array of entry objects, or an object with an option
 
 The analysis is completely offline. It matches entries across snapshots using stable `ledgerKey` identifiers and reports first-observed, persisting, modified, removed, and reappearing entries together with TTL increases, decreases, and unchanged TTLs. Raw `valueXdr` is preserved for all value changes. Partially decoded entries do not terminate the analysis. Results are deterministic for identical input snapshots.
 
+## Offline WASM and State Analysis
+
+Inspect a contract WASM binary's section sizes, percentages, and resource aggregates; optionally compare section growth:
+
+```bash
+stellar-api-inspector wasm-footprint contract.wasm
+stellar-api-inspector wasm-footprint old.wasm new.wasm --json
+```
+
+Compare imported and exported interfaces, or list dependencies grouped by importing module. Both commands read the binaries offline and do not execute them:
+
+```bash
+stellar-api-inspector wasm-compat old.wasm new.wasm --json
+stellar-api-inspector wasm-deps contract.wasm
+stellar-api-inspector wasm-deps old.wasm new.wasm --json
+```
+
+Build an offline state transition matrix from two or more ordered snapshot files. Optional filters select a contract, transition type, or minimum frequency:
+
+```bash
+stellar-api-inspector state-transitions snapshot-001.json snapshot-002.json snapshot-003.json
+stellar-api-inspector state-transitions snapshot-001.json snapshot-002.json --contract CCONTRACT... --type reappeared --min-frequency 2 --json
+```
+
 ## Installation
 
 Ensure you have [Node.js](https://nodejs.org/) version 18.0.0 or later installed.
