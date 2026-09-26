@@ -2130,7 +2130,7 @@ export const examples: Record<string, Example> = {
     run: loadExample('../examples/213-event-schema-diff'),
     params: [
       { type: 'input', name: 'oldSchema', message: 'Path to old schema JSON:' },
-      { type: 'input', name: 'newSchema', message: 'Path to new schema JSON:' }
+      { type: 'input', name: 'newSchema', message: 'Path to new schema JSON:' },
     ],
   },
   '214-event-types': {
@@ -2145,16 +2145,17 @@ export const examples: Record<string, Example> = {
     run: loadExample('../examples/215-event-compat'),
     params: [
       { type: 'input', name: 'schemaFile', message: 'Path to expected schema JSON:' },
-      { type: 'input', name: 'eventsFile', message: 'Path to events JSON:' }
+      { type: 'input', name: 'eventsFile', message: 'Path to events JSON:' },
     ],
   },
   '216-state-diff': {
     name: '216-state-diff',
-    description: 'Compare two Soroban contract state snapshots to find additions, modifications, and TTL changes',
+    description:
+      'Compare two Soroban contract state snapshots to find additions, modifications, and TTL changes',
     run: loadExample('../examples/216-state-diff'),
     params: [
       { type: 'input', name: 'beforeFile', message: 'Path to initial state JSON:' },
-      { type: 'input', name: 'afterFile', message: 'Path to modified state JSON:' }
+      { type: 'input', name: 'afterFile', message: 'Path to modified state JSON:' },
     ],
   },
 };
