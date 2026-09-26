@@ -72,10 +72,18 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         await runWatchEvents({ contractId: cmdArgs[0] });
         return 0;
       case 'replay-events':
-        await runReplayEvents({ startLedger: cmdArgs[0], endLedger: cmdArgs[1], contractId: cmdArgs[2] });
+        await runReplayEvents({
+          startLedger: cmdArgs[0],
+          endLedger: cmdArgs[1],
+          contractId: cmdArgs[2],
+        });
         return 0;
       case 'event-analytics':
-        await runEventAnalytics({ startLedger: cmdArgs[0], endLedger: cmdArgs[1], contractId: cmdArgs[2] });
+        await runEventAnalytics({
+          startLedger: cmdArgs[0],
+          endLedger: cmdArgs[1],
+          contractId: cmdArgs[2],
+        });
         return 0;
       case 'event-validate':
         await runEventValidate({ eventFile: cmdArgs[0], schemaFile: cmdArgs[1] });

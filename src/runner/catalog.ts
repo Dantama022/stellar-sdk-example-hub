@@ -2160,6 +2160,8 @@ export const examples: Record<string, Example> = {
     params: [
       { type: 'input', name: 'eventFile', message: 'Path to target event JSON:' },
       { type: 'input', name: 'schemaFile', message: 'Path to expected schema JSON:' },
+    ],
+  },
   '213-event-schema-diff': {
     name: '213-event-schema-diff',
     description: 'Compare two Soroban event schema definitions and output structural differences',
