@@ -2229,4 +2229,37 @@ export const examples: Record<string, Example> = {
     run: loadExample('../examples/224-state-deps'),
     params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
   },
+  '204-contract-template': {
+    name: '204-contract-template',
+    description:
+      'Generate a reusable TypeScript/JSON invocation template for a specific contract function',
+    run: loadExample('../examples/204-contract-template'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Target contract ID:' },
+      { type: 'input', name: 'functionName', message: 'Function name:' },
+    ],
+  },
+  '205-build-args': {
+    name: '205-build-args',
+    description:
+      'Convert developer-provided JSON input into ScVal[] arguments for Soroban invocation',
+    run: loadExample('../examples/205-build-args'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Target contract ID:' },
+      { type: 'input', name: 'functionName', message: 'Function name:' },
+      { type: 'input', name: 'args', message: 'Arguments JSON string:' },
+    ],
+  },
+  '206-decode-return': {
+    name: '206-decode-return',
+    description: 'Decode a base64 ScVal return value from a transaction or simulation result',
+    run: loadExample('../examples/206-decode-return'),
+    params: [{ type: 'input', name: 'input', message: 'Base64 ScVal XDR:' }],
+  },
+  '207-decode-event': {
+    name: '207-decode-event',
+    description: 'Decode the topics and data payload of a Soroban event JSON record',
+    run: loadExample('../examples/207-decode-event'),
+    params: [{ type: 'input', name: 'eventInput', message: 'Event JSON string:' }],
+  },
 };

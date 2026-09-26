@@ -8,6 +8,10 @@ import {
 import { run as runScval } from './examples/201-scval';
 import { run as runScvalValidate } from './examples/202-scval-validate';
 import { run as runContractArgs } from './examples/203-contract-args';
+import { run as runContractTemplate } from './examples/204-contract-template';
+import { run as runBuildArgs } from './examples/205-build-args';
+import { run as runDecodeReturn } from './examples/206-decode-return';
+import { run as runDecodeEvent } from './examples/207-decode-event';
 import { run as runWatchEvents } from './examples/209-watch-events';
 import { run as runReplayEvents } from './examples/210-replay-events';
 import { run as runEventAnalytics } from './examples/211-event-analytics';
@@ -27,6 +31,10 @@ function printUsage(): void {
   console.log('  scval <encode|decode> <value> [type]');
   console.log('  scval-validate <input> <expectedType>');
   console.log('  contract-args <contractId>');
+  console.log('  contract-template <contractId> <function>');
+  console.log('  build-args <contractId> <function> <argsJson>');
+  console.log('  decode-return <base64ScVal>');
+  console.log('  decode-event <eventJson>');
   console.log('  watch-events <contractId>');
   console.log('  replay-events <startLedger> <endLedger> [contractId]');
   console.log('  event-analytics <startLedger> <endLedger> [contractId]');
@@ -67,6 +75,18 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'contract-args':
         await runContractArgs({ contractId: cmdArgs[0] });
+        return 0;
+      case 'contract-template':
+        await runContractTemplate({ contractId: cmdArgs[0], functionName: cmdArgs[1] });
+        return 0;
+      case 'build-args':
+        await runBuildArgs({ contractId: cmdArgs[0], functionName: cmdArgs[1], args: cmdArgs[2] });
+        return 0;
+      case 'decode-return':
+        await runDecodeReturn({ input: cmdArgs[0] });
+        return 0;
+      case 'decode-event':
+        await runDecodeEvent({ eventInput: cmdArgs[0] });
         return 0;
       case 'watch-events':
         await runWatchEvents({ contractId: cmdArgs[0] });
