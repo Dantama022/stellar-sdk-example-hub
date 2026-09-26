@@ -39,6 +39,10 @@
       "reason": "Requires live anchor and testnet network access for the live flow step"
     },
     {
+      "match": "13-soroban-deploy",
+      "reason": "Requires live Friendbot funding and Soroban Testnet network access"
+    },
+    {
       "match": "14-time-locked-escrow",
       "reason": "Depends on live Testnet timing and transaction acceptance windows"
     },
