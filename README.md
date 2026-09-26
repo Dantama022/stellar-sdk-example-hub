@@ -278,6 +278,11 @@ The repository currently includes the following runnable examples:
 103. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
 104. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
 105. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
+114. **`204-contract-template`**: Resolves a contract function's expected parameters and generates a reusable TypeScript invocation template and JSON argument placeholders.
+115. **`205-build-args`**: Validates supplied JSON arguments against an expected interface and encodes them into the `ScVal[]` array required for invocation.
+116. **`206-decode-return`**: Decodes a base64-encoded `ScVal` return value from a simulation or transaction result into human-readable JavaScript objects.
+117. **`207-decode-event`**: Parses raw Soroban event JSON, independently decoding its indexed topics and event data payload into readable formats.
+
 
 Analyze Soroban contract-data entry lifecycle across two ordered snapshots:
 
