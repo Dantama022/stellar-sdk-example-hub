@@ -31,12 +31,24 @@
       "reason": "Requires Soroban RPC responses from external services"
     },
     {
+      "match": "189-soroban-transaction-polling",
+      "reason": "Requires a supplied transaction hash and live Soroban RPC availability"
+    },
+    {
       "match": "20-sep10-authentication",
       "reason": "Requires live anchor and testnet network access for the live flow step"
     },
     {
+      "match": "13-soroban-deploy",
+      "reason": "Requires live Friendbot funding and Soroban Testnet network access"
+    },
+    {
       "match": "14-time-locked-escrow",
       "reason": "Depends on live Testnet timing and transaction acceptance windows"
+    },
+    {
+      "match": "15-account-merge",
+      "reason": "Requires live Friendbot funding and Testnet account merge transaction submission"
     },
     {
       "match": "19-horizon-streaming",
@@ -60,6 +72,10 @@
     },
     {
       "match": "36-strict-receive-path-payment",
+      "reason": "Requires live Friendbot funding, SDEX liquidity, and Testnet path payments"
+    },
+    {
+      "match": "37-strict-send-path-payment",
       "reason": "Requires live Friendbot funding, SDEX liquidity, and Testnet path payments"
     },
     {
@@ -99,6 +115,10 @@
       "reason": "Requires live funded accounts and SDEX passive offer submission"
     },
     {
+      "match": "24-cross-contract-invoke",
+      "reason": "Requires live Friendbot funding and Soroban RPC"
+    },
+    {
       "match": "25-account-flags",
       "reason": "Requires live issuer account flag transactions on Testnet"
     },
@@ -129,6 +149,8 @@
     {
       "match": "192-soroban-contract-code-inspection",
       "reason": "Requires Soroban RPC availability and a deployed contract instance"
+    },
+    {
       "match": "66-ledger-effects",
       "reason": "Requires live Horizon ledger and effect data"
     },
@@ -211,6 +233,26 @@
     {
       "match": "159-horizon-stream-filtering",
       "reason": "Keeps a live Horizon SSE connection open for client-side filtering"
+    },
+    {
+      "match": "92-account-payment-stream",
+      "reason": "Keeps a live Horizon SSE payment stream open until events arrive"
+    },
+    {
+      "match": "193-soroban-contract-interface",
+      "reason": "Requires Soroban RPC or sample spec entries"
+    },
+    {
+      "match": "194-soroban-contract-client-generator",
+      "reason": "Generates TypeScript source code from contract specification"
+    },
+    {
+      "match": "195-soroban-interface-compatibility",
+      "reason": "Compares contract specifications for compatibility"
+    },
+    {
+      "match": "196-soroban-authorization-preparation",
+      "reason": "Prepares and inspects Soroban authorization entries"
     }
   ]
 }

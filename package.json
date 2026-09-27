@@ -35,7 +35,8 @@
   },
   "overrides": {
     "axios": "^1.7.9",
-    "follow-redirects": "^1.15.9"
+    "follow-redirects": "^1.15.9",
+    "toml": "^4.3.0"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^13.0.0",
@@ -66,6 +67,20 @@
     "testEnvironment": "node",
     "testMatch": [
       "**/tests/**/*.test.ts"
+    ],
+    "transform": {
+      "^.+\\.[tj]sx?$": [
+        "ts-jest",
+        {
+          "useESM": true
+        }
+      ]
+    },
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(stellar-sdk-v16|@noble|uint8array-extras))"
     ],
     "collectCoverageFrom": [
       "src/**/*.ts",

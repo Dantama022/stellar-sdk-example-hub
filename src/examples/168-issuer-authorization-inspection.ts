@@ -29,7 +29,9 @@ export async function run(): Promise<void> {
   console.log(`Asset Code: ${assetCode}`);
   console.log(`Matching Assets: ${records.length}`);
   records.forEach((record, index) => {
-    console.log(`${index + 1}. ${record.asset_code ?? 'unknown'}:${record.asset_issuer ?? 'unknown'}`);
+    console.log(
+      `${index + 1}. ${record.asset_code ?? 'unknown'}:${record.asset_issuer ?? 'unknown'}`,
+    );
     console.log(`   auth_required=${record.flags?.auth_required ?? false}`);
     console.log(`   auth_revocable=${record.flags?.auth_revocable ?? false}`);
     console.log(`   auth_immutable=${record.flags?.auth_immutable ?? false}`);

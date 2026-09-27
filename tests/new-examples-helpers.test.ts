@@ -185,3 +185,17 @@ describe('Runner registration for Issues #57, #59, #60, and #61', () => {
     }
   });
 });
+
+describe('Issue #188: Soroban transaction inspection helpers', () => {
+  it('validates Soroban transaction hashes', async () => {
+    const mod = await import('../src/examples/188-soroban-transaction-inspection');
+    expect(mod.isValidTransactionHash('a'.repeat(64))).toBe(true);
+    expect(mod.isValidTransactionHash('A'.repeat(64))).toBe(true);
+    expect(mod.isValidTransactionHash('abc')).toBe(false);
+  });
+
+  it('registers the Soroban transaction inspection example', () => {
+    expect(examples['188-soroban-transaction-inspection']).toBeDefined();
+    expect(typeof examples['188-soroban-transaction-inspection'].run).toBe('function');
+  });
+});

@@ -95,17 +95,17 @@ function demonstratePrimitives(): void {
 /**
  * Vectors are ordered, homogeneous sequences wrapped in scvVec.
  *
- * nativeToScVal(array, { type: 'vec', element: { type } }) encodes every
- * element to the specified inner type.  scValToNative decodes a scvVec back
- * to a plain JS array.  Heterogeneous vecs (mixed element types) require
- * building each ScVal individually and calling xdr.ScVal.scvVec([...]).
+ * nativeToScVal(array, { type }) encodes every element to the specified
+ * type.  scValToNative decodes a scvVec back to a plain JS array.
+ * Heterogeneous vecs (mixed element types) require building each ScVal
+ * individually and calling xdr.ScVal.scvVec([...]).
  */
 function demonstrateVec(): void {
   console.log(chalk.bold('\n━━━ Vec<u32> — Ordered Sequence ━━━'));
 
   // Encode a JS number array as Vec<u32>
   const numbers = [10, 20, 30, 40, 50];
-  const vecVal = nativeToScVal(numbers, { type: 'vec', element: { type: 'u32' } });
+  const vecVal = nativeToScVal(numbers, { type: 'u32' });
 
   console.log(`  JS input:  [${numbers.join(', ')}]`);
   console.log(`  ScVal type: ${chalk.cyan(vecVal.switch().name)}`);
@@ -117,7 +117,7 @@ function demonstrateVec(): void {
 
   // Vec<string> — each element becomes scvString
   const words = ['stellar', 'soroban', 'sdk'];
-  const strVec = nativeToScVal(words, { type: 'vec', element: { type: 'string' } });
+  const strVec = nativeToScVal(words, { type: 'string' });
   const decodedWords = scValToNative(strVec) as string[];
   console.log(
     `\n  Vec<string> ["${words.join('", "')}"] decoded: ["${decodedWords.join('", "')}"]`,
@@ -135,7 +135,7 @@ function demonstrateVec(): void {
 
   console.log(
     chalk.gray(
-      '\n  SDK tip: nativeToScVal([...], { type: "vec", element }) handles uniform arrays.',
+      '\n  SDK tip: nativeToScVal([...], { type }) handles uniform arrays.',
     ),
   );
   console.log(
@@ -151,48 +151,49 @@ function demonstrateVec(): void {
  * Maps are key-value collections stored as scvMap — an ordered array of
  * ScMapEntry pairs.  Keys and values each have their own ScVal type.
  *
- * The SDK represents a Soroban map as an array of [key, value] tuples in JS,
- * not as a plain object, because Soroban maps allow non-string keys and
- * maintain insertion order.
+ * The SDK represents a Soroban map as an object in JS when using nativeToScVal,
+ * or as an array of ScMapEntry instances when building xdr.ScVal.scvMap directly.
  */
 function demonstrateMap(): void {
   console.log(chalk.bold('\n━━━ Map<symbol, u32> — Key-Value Collection ━━━'));
 
-  // Encode a JS array of [key, value] pairs as Map<symbol, u32>
-  const pairs: [string, number][] = [
-    ['alice', 100],
-    ['bob', 250],
-    ['carol', 75],
-  ];
+  // Encode a JS object as Map<symbol, u32>
+  const scores: Record<string, number> = {
+    alice: 100,
+    bob: 250,
+    carol: 75,
+  };
 
-  const mapVal = nativeToScVal(pairs, {
-    type: 'map',
-    key: { type: 'symbol' },
-    value: { type: 'u32' },
+  const mapVal = nativeToScVal(scores, {
+    type: {
+      alice: ['symbol', 'u32'],
+      bob: ['symbol', 'u32'],
+      carol: ['symbol', 'u32'],
+    },
   });
 
-  console.log(`  JS input:  [${pairs.map(([k, v]) => `["${k}", ${v}]`).join(', ')}]`);
+  console.log(`  JS input:  ${JSON.stringify(scores)}`);
   console.log(`  ScVal type: ${chalk.cyan(mapVal.switch().name)}`);
   console.log(`  Entries:   ${(mapVal.map() ?? []).length} ScMapEntry items`);
 
   // Decode back to JS
-  const decoded = scValToNative(mapVal) as [string, number][];
-  decoded.forEach(([k, v]) => console.log(`    "${k}" → ${v}`));
+  const decoded = scValToNative(mapVal) as Record<string, number>;
+  Object.entries(decoded).forEach(([k, v]) => console.log(`    "${k}" → ${v}`));
 
   // Map<address, i128> — the pattern used by token contract allowances
   const addr1 = Keypair.random().publicKey();
   const addr2 = Keypair.random().publicKey();
 
-  const allowancePairs: [string, bigint][] = [
-    [addr1, BigInt('1000000000000')],
-    [addr2, BigInt('500000000000')],
-  ];
-
-  const allowanceMap = nativeToScVal(allowancePairs, {
-    type: 'map',
-    key: { type: 'address' },
-    value: { type: 'i128' },
-  });
+  const allowanceMap = xdr.ScVal.scvMap([
+    new xdr.ScMapEntry({
+      key: Address.fromString(addr1).toScVal(),
+      val: nativeToScVal(BigInt('1000000000000'), { type: 'i128' }),
+    }),
+    new xdr.ScMapEntry({
+      key: Address.fromString(addr2).toScVal(),
+      val: nativeToScVal(BigInt('500000000000'), { type: 'i128' }),
+    }),
+  ]);
 
   console.log(`\n  Map<address, i128> — ${(allowanceMap.map() ?? []).length} entries encoded`);
   console.log(chalk.gray('  (Common pattern: token allowance or balance mappings)'));
@@ -213,17 +214,17 @@ function demonstrateMap(): void {
       `\n  Manual scvMap:  { version: 2, active: true } → scvMap([ScMapEntry, ScMapEntry])`,
     ),
   );
-  const manualDecoded = scValToNative(manualMap) as [string, unknown][];
-  manualDecoded.forEach(([k, v]) => console.log(`    "${k}" → ${v}`));
+  const manualDecoded = scValToNative(manualMap) as Record<string, unknown>;
+  Object.entries(manualDecoded).forEach(([k, v]) => console.log(`    "${k}" → ${v}`));
 
   console.log(
     chalk.gray(
-      '\n  SDK tip: nativeToScVal([...pairs], { type: "map", key, value }) encodes uniformly-typed maps.',
+      '\n  SDK tip: nativeToScVal(obj, { type: { key: [kType, vType] } }) encodes JS objects into maps.',
     ),
   );
   console.log(
     chalk.gray(
-      '  Use xdr.ScVal.scvMap([new xdr.ScMapEntry(...)]) for mixed or dynamic map construction.',
+      '  Use xdr.ScVal.scvMap([new xdr.ScMapEntry(...)]) for non-string keys or dynamic map construction.',
     ),
   );
 }
@@ -281,10 +282,8 @@ function demonstrateStruct(): void {
   console.log(`  ScVal type:   ${chalk.cyan(structVal.switch().name)}`);
   console.log(`  Fields:       ${(structVal.map() ?? []).length} ScMapEntry items`);
 
-  // Decode — scValToNative converts scvMap with symbol keys to a [string, value][] array.
-  // For structs you typically want a plain object; we reshape the array here.
-  const rawDecoded = scValToNative(structVal) as [string, unknown][];
-  const asObject: Record<string, unknown> = Object.fromEntries(rawDecoded);
+  // Decode — scValToNative converts scvMap directly to a plain JS object with decoded values.
+  const asObject = scValToNative(structVal) as Record<string, unknown>;
   console.log('  Decoded:     ', asObject);
 
   // When using contract.Spec, encoding is as simple as:
@@ -483,13 +482,12 @@ function demonstrateAddress(): void {
 function demonstrateInvalidArguments(): void {
   console.log(chalk.bold('\n━━━ Invalid Argument Handling ━━━'));
 
-  // Case 1: wrong type hint
+  // Case 1: wrong type hint for string
   try {
-    // A JS string cannot be encoded as u32
-    nativeToScVal('not-a-number' as unknown as number, { type: 'u32' });
+    nativeToScVal('hello', { type: 'boolean' as any });
     console.log(chalk.red('  [FAIL] Expected TypeError was not thrown'));
   } catch (err: any) {
-    console.log(chalk.green(`  ✓ Wrong type → ${err.constructor.name}: ${err.message}`));
+    console.log(chalk.green(`  ✓ Invalid string type hint → ${err.constructor.name}: ${err.message}`));
   }
 
   // Case 2: invalid Stellar address string
@@ -502,20 +500,20 @@ function demonstrateInvalidArguments(): void {
     );
   }
 
-  // Case 3: integer out of u32 range
+  // Case 3: invalid integer type hint
   try {
-    nativeToScVal(5_000_000_000, { type: 'u32' }); // > 2^32−1 = 4,294,967,295
-    console.log(chalk.red('  [FAIL] Expected RangeError was not thrown'));
-  } catch (err: any) {
-    console.log(chalk.green(`  ✓ Out-of-range u32 → ${err.constructor.name}: ${err.message}`));
-  }
-
-  // Case 4: null passed for a non-optional type
-  try {
-    nativeToScVal(null as unknown as number, { type: 'u32' });
+    nativeToScVal(42, { type: 'invalid_type' as any });
     console.log(chalk.red('  [FAIL] Expected TypeError was not thrown'));
   } catch (err: any) {
-    console.log(chalk.green(`  ✓ null for non-optional → ${err.constructor.name}: ${err.message}`));
+    console.log(chalk.green(`  ✓ Invalid integer type hint → ${err.constructor.name}: ${err.message}`));
+  }
+
+  // Case 4: non-numeric string for u64
+  try {
+    nativeToScVal('not-a-number', { type: 'u64' });
+    console.log(chalk.red('  [FAIL] Expected error was not thrown'));
+  } catch (err: any) {
+    console.log(chalk.green(`  ✓ Non-numeric string for u64 → ${err.constructor.name}: ${err.message}`));
   }
 
   console.log(
@@ -550,11 +548,16 @@ async function demonstrateLiveSimulation(server: rpc.Server): Promise<void> {
   // Create and fund a fresh account via Friendbot so it has a known XLM balance
   console.log(chalk.yellow('  Funding a fresh account via Friendbot...'));
   const keypair = Keypair.random();
-  const fundRes = await fetch(`https://friendbot.stellar.org/?addr=${keypair.publicKey()}`);
-  if (!fundRes.ok) {
-    console.warn(
-      chalk.red(`  Friendbot request failed (${fundRes.status}). Skipping live simulation.`),
-    );
+  try {
+    const fundRes = await fetch(`https://friendbot.stellar.org/?addr=${keypair.publicKey()}`);
+    if (!fundRes.ok) {
+      console.warn(
+        chalk.red(`  Friendbot request failed (${fundRes.status}). Skipping live simulation.`),
+      );
+      return;
+    }
+  } catch (err: any) {
+    console.warn(chalk.red(`  Friendbot unreachable: ${err.message}. Skipping live simulation.`));
     return;
   }
   console.log(chalk.green(`  Funded: ${keypair.publicKey()}`));
@@ -692,8 +695,8 @@ export async function run(): Promise<void> {
         '  String      → nativeToScVal(str, { type: "string" })  → scvString\n' +
         '  Symbol      → nativeToScVal(str, { type: "symbol" })  → scvSymbol\n' +
         '  Bytes       → nativeToScVal(Buffer, { type: "bytes" }) → scvBytes\n' +
-        '  Vec<T>      → nativeToScVal(array, { type: "vec", element: { type } })\n' +
-        '  Map<K,V>    → nativeToScVal([[k,v],...], { type: "map", key, value })\n' +
+        '  Vec<T>      → nativeToScVal(array, { type: "u32" })\n' +
+        '  Map<K,V>    → nativeToScVal(obj, { type: { key: [kType, vType] } }) or xdr.ScVal.scvMap(...)\n' +
         '  Struct      → xdr.ScVal.scvMap([new xdr.ScMapEntry(...)]) (symbol keys)\n' +
         '  Int enum    → xdr.ScVal.scvU32(discriminant)\n' +
         '  Tagged union→ xdr.ScVal.scvVec([scvSymbol(tag), ...payload])\n' +

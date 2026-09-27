@@ -25,8 +25,8 @@ export async function run(): Promise<void> {
 
   // In a real scenario, you'd deploy Contract A and Contract B,
   // or use existing deployed instances. We'll use mock contract IDs to demonstrate the workflow.
-  const contractAId = 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA';
-  const contractBId = 'CBW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA';
+  const contractAId = 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4';
+  const contractBId = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
   console.log(chalk.yellow('\nStep 2: Preparing Cross-Contract Invocation...'));
   console.log(`Contract A: ${contractAId}`);
