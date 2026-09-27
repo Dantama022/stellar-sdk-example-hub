@@ -21,6 +21,11 @@ import { run as runEventTypes } from './examples/214-event-types';
 import { run as runEventCompat } from './examples/215-event-compat';
 import { run as runStateDiff } from './examples/216-state-diff';
 import { run as runStateDeps } from './examples/224-state-deps';
+import { run as runWasmMemory } from './examples/244-wasm-memory';
+import { run as runWasmCustomSections } from './examples/245-wasm-custom-sections';
+import { run as runWasmGlobals } from './examples/246-wasm-globals';
+import { run as runWasmInstructions } from './examples/247-wasm-instructions';
+import { WasmValidationError } from './utils/wasm-static-analysis';
 
 dotenv.config();
 
@@ -44,6 +49,10 @@ function printUsage(): void {
   console.log('  event-compat <schema.json> <events.json>');
   console.log('  state-diff <before.json> <after.json>');
   console.log('  state-deps <snapshot.json>');
+  console.log('  wasm-memory <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-custom-sections <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-globals <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-instructions <wasmFile> [compareFile] [--json]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -51,6 +60,12 @@ function resolveHorizonUrl(args: string[]): string {
   const urlFlagIndex = args.findIndex((arg) => arg === '--url' || arg === '-u');
   if (urlFlagIndex === -1) return defaultUrl;
   return args[urlFlagIndex + 1] || defaultUrl;
+}
+
+function parseWasmArgs(args: string[]): { wasmFile?: string; compareFile?: string; json: boolean } {
+  const json = args.includes('--json') || args.includes('--json=true');
+  const files = args.filter((arg) => arg !== '--json' && arg !== '--json=true');
+  return { wasmFile: files[0], compareFile: files[1], json };
 }
 
 export async function runInspectorCli(args: string[]): Promise<number> {
@@ -123,6 +138,18 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'state-deps':
         await runStateDeps({ snapshotFile: cmdArgs[0] });
         return 0;
+      case 'wasm-memory':
+        await runWasmMemory(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-custom-sections':
+        await runWasmCustomSections(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-globals':
+        await runWasmGlobals(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-instructions':
+        await runWasmInstructions(parseWasmArgs(cmdArgs));
+        return 0;
       default:
         printUsage();
         return 1;
@@ -130,6 +157,8 @@ export async function runInspectorCli(args: string[]): Promise<number> {
   } catch (error: unknown) {
     if (error instanceof InvalidHorizonUrlError || error instanceof HorizonOfflineError) {
       console.error(`Error: ${error.message}`);
+    } else if (error instanceof WasmValidationError) {
+      console.error(`WASM Validation Error: ${error.message}`);
     } else {
       console.error(`Unexpected Error: ${error instanceof Error ? error.message : String(error)}`);
     }
