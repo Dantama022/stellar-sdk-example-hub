@@ -47,6 +47,36 @@ export interface WasmCustomSectionInfo {
   payloadHash: string;
 }
 
+export type WasmElementMode = 'active' | 'passive' | 'declarative';
+
+export interface WasmElementSegmentInfo {
+  index: number;
+  mode: WasmElementMode;
+  elementType: string;
+  tableIndex: number | null;
+  offsetExpression: string | null;
+  elementCount: number;
+  elements: number[];
+  elementContentHash: string;
+}
+
+export interface WasmElementReport {
+  file: string;
+  valid: true;
+  segments: WasmElementSegmentInfo[];
+  statistics: {
+    totalSegmentCount: number;
+    activeSegmentCount: number;
+    passiveSegmentCount: number;
+    declarativeSegmentCount: number;
+    totalElementCount: number;
+    averageSegmentSize: number;
+    largestSegment: { index: number; elementCount: number } | null;
+    segmentsByMode: Record<WasmElementMode, number>;
+    segmentsByElementType: Record<string, number>;
+  };
+}
+
 export interface WasmInstructionFunctionInfo {
   functionIndex: number;
   bodySize: number;
@@ -354,6 +384,72 @@ function parseCustomSections(sections: Section[]): WasmCustomSectionInfo[] {
       };
     })
     .sort((a, b) => a.order - b.order);
+}
+
+function parseElementSection(section: Section | undefined): WasmElementSegmentInfo[] {
+  if (!section) return [];
+  const reader = new Reader(section.payload);
+  const count = reader.varuint32();
+  const segments: WasmElementSegmentInfo[] = [];
+  for (let i = 0; i < count; i += 1) {
+    const flags = reader.varuint32();
+    const hasElemType = (flags & 0x01) !== 0;
+    const hasTable = (flags & 0x02) !== 0;
+    const isDeclarative = (flags & 0x04) !== 0;
+
+    let elementType = 'funcref';
+    if (hasElemType) {
+      elementType = typeName(reader.byte());
+    }
+
+    let mode: WasmElementMode;
+    let tableIndex: number | null = null;
+    let offsetExpression: string | null = null;
+
+    if (!hasTable) {
+      mode = 'passive';
+    } else if (isDeclarative) {
+      mode = 'declarative';
+    } else {
+      mode = 'active';
+    }
+
+    if (hasTable) {
+      tableIndex = reader.varuint32();
+      offsetExpression = initExpression(reader);
+    }
+
+    const elementCount = reader.varuint32();
+    const elements: number[] = [];
+    for (let j = 0; j < elementCount; j += 1) {
+      elements.push(reader.varuint32());
+    }
+
+    const elementBuffer = Buffer.from(elements.flatMap((idx) => {
+      const bytes: number[] = [];
+      let current = idx >>> 0;
+      do {
+        let byte = current & 0x7f;
+        current >>>= 7;
+        if (current !== 0) byte |= 0x80;
+        bytes.push(byte);
+      } while (current !== 0);
+      return bytes;
+    }));
+    const elementContentHash = createHash('sha256').update(elementBuffer).digest('hex');
+
+    segments.push({
+      index: i,
+      mode,
+      elementType,
+      tableIndex,
+      offsetExpression,
+      elementCount,
+      elements,
+      elementContentHash,
+    });
+  }
+  return segments;
 }
 
 const opcodeNames: Record<number, string> = {
@@ -664,6 +760,49 @@ export function analyzeInstructions(file: string): WasmInstructionReport {
   };
 }
 
+export function analyzeElements(file: string): WasmElementReport {
+  const sections = loadSections(file);
+  const segments = parseElementSection(sections.find((section) => section.id === 9));
+
+  const modeCounts: Record<WasmElementMode, number> = {
+    active: 0,
+    passive: 0,
+    declarative: 0,
+  };
+  const typeCounts: Record<string, number> = {};
+
+  segments.forEach((segment) => {
+    modeCounts[segment.mode] = (modeCounts[segment.mode] ?? 0) + 1;
+    typeCounts[segment.elementType] = (typeCounts[segment.elementType] ?? 0) + 1;
+  });
+
+  const totalElementCount = segments.reduce((sum, segment) => sum + segment.elementCount, 0);
+  const averageSegmentSize = segments.length === 0 ? 0 : totalElementCount / segments.length;
+
+  const largestSegment = segments.length === 0
+    ? null
+    : segments.reduce((max, segment) =>
+        segment.elementCount > max.elementCount ? segment : max,
+      { index: -1, elementCount: -1 });
+
+  return {
+    file,
+    valid: true,
+    segments,
+    statistics: {
+      totalSegmentCount: segments.length,
+      activeSegmentCount: modeCounts.active,
+      passiveSegmentCount: modeCounts.passive,
+      declarativeSegmentCount: modeCounts.declarative,
+      totalElementCount,
+      averageSegmentSize,
+      largestSegment: largestSegment ? { index: largestSegment.index, elementCount: largestSegment.elementCount } : null,
+      segmentsByMode: modeCounts,
+      segmentsByElementType: sortedRecord(typeCounts),
+    },
+  };
+}
+
 export interface ComparisonResult<T> {
   added: T[];
   removed: T[];
@@ -692,4 +831,39 @@ export function compareBySignature<T>(
     } else if (oldItem) result.unchanged.push(oldItem);
   });
   return result;
+}
+
+export function compareElementReports(beforeFile: string, afterFile: string) {
+  const before = analyzeElements(beforeFile);
+  const after = analyzeElements(afterFile);
+  return {
+    before,
+    after,
+    comparison: compareBySignature(
+      before.segments,
+      after.segments,
+      (item) => String(item.index),
+      (item) =>
+        JSON.stringify([
+          item.mode,
+          item.elementType,
+          item.tableIndex,
+          item.offsetExpression,
+          item.elementCount,
+          item.elementContentHash,
+        ]),
+      (a, b) => elementChanges(a, b),
+    ),
+  };
+}
+
+function elementChanges(before: WasmElementSegmentInfo, after: WasmElementSegmentInfo): string[] {
+  const changes: string[] = [];
+  if (before.mode !== after.mode) changes.push('mode');
+  if (before.elementType !== after.elementType) changes.push('element_type');
+  if (before.tableIndex !== after.tableIndex) changes.push('table_index');
+  if (before.offsetExpression !== after.offsetExpression) changes.push('offset_expression');
+  if (before.elementCount !== after.elementCount) changes.push('element_count');
+  if (before.elementContentHash !== after.elementContentHash) changes.push('element_content');
+  return changes;
 }
