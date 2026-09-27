@@ -2074,6 +2074,53 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
     ],
   },
+  '197-soroban-authorization-signature-inspection': {
+    name: '197-soroban-authorization-signature-inspection',
+    description:
+      'Inspect Soroban authorization-entry signatures and invocation trees without signing',
+    run: loadExample('../examples/197-soroban-authorization-signature-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'entries',
+        message: 'Space-separated authorization-entry XDR values:',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '198-soroban-ttl': {
+    name: '198-soroban-ttl',
+    description: 'Read-only Soroban contract-state TTL and expiration analysis',
+    run: loadExample('../examples/198-soroban-ttl'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Contract ID:' },
+      { type: 'input', name: 'keys', message: 'Optional comma-separated storage keys:' },
+      { type: 'input', name: 'warningLedgers', message: 'Warning threshold:', default: 1000 },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '199-soroban-state-report': {
+    name: '199-soroban-state-report',
+    description: 'Consolidated read-only Soroban state footprint and TTL-risk report',
+    run: loadExample('../examples/199-soroban-state-report'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Contract ID:' },
+      { type: 'input', name: 'keys', message: 'Optional comma-separated storage keys:' },
+      { type: 'input', name: 'warningLedgers', message: 'Warning threshold:', default: 1000 },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '200-decode-ledger-key': {
+    name: '200-decode-ledger-key',
+    description:
+      'Decode base64 Soroban ledger-key XDR with contract, durability, and ScVal details',
+    run: loadExample('../examples/200-decode-ledger-key'),
+    params: [
+      { type: 'input', name: 'inputs', message: 'Space-separated ledger-key XDR values:' },
+      { type: 'confirm', name: 'compact', message: 'Compact output?', default: false },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
   '197-state-lifecycle': {
     name: '197-state-lifecycle',
     description:
