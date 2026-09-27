@@ -2222,6 +2222,62 @@ export const examples: Record<string, Example> = {
       { type: 'input', name: 'afterFile', message: 'Path to modified state JSON:' },
     ],
   },
+  '227-state-normalize': {
+    name: '227-state-normalize',
+    description:
+      'Normalize Soroban state snapshots into a deterministic canonical offline representation',
+    run: loadExample('../examples/227-state-normalize'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '228-state-validate': {
+    name: '228-state-validate',
+    description:
+      'Validate Soroban state snapshots and report errors, warnings, and informational diagnostics',
+    run: loadExample('../examples/228-state-validate'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '229-state-stats': {
+    name: '229-state-stats',
+    description:
+      'Calculate deterministic aggregate statistics for an offline Soroban state snapshot',
+    run: loadExample('../examples/229-state-stats'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '230-state-hotspots': {
+    name: '230-state-hotspots',
+    description:
+      'Rank Soroban contract-state storage hotspots by size, collection complexity, depth, or TTL proximity',
+    run: loadExample('../examples/230-state-hotspots'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '227-state-normalize': {
+    name: '227-state-normalize',
+    description:
+      'Normalize Soroban state snapshots into a deterministic canonical offline representation',
+    run: loadExample('../examples/227-state-normalize'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '228-state-validate': {
+    name: '228-state-validate',
+    description:
+      'Validate Soroban state snapshots and report errors, warnings, and informational diagnostics',
+    run: loadExample('../examples/228-state-validate'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '229-state-stats': {
+    name: '229-state-stats',
+    description:
+      'Calculate deterministic aggregate statistics for an offline Soroban state snapshot',
+    run: loadExample('../examples/229-state-stats'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '230-state-hotspots': {
+    name: '230-state-hotspots',
+    description:
+      'Rank Soroban contract-state storage hotspots by size, collection complexity, depth, or TTL proximity',
+    run: loadExample('../examples/230-state-hotspots'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
   '224-state-deps': {
     name: '224-state-deps',
     description:

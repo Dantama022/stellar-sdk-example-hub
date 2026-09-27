@@ -270,22 +270,42 @@ The repository currently includes the following runnable examples:
 256. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
 257. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
 258. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
-259. **`209-watch-events`**: Periodically monitors Soroban RPC for new contract events, decodes them in real-time, and avoids duplicate processing across polling cycles.
-260. **`210-replay-events`**: Retrieves, decodes, and exports a chronological stream of Soroban events over a specific ledger range with JSON export support.
-261. **`211-event-analytics`**: Analyzes historical Soroban event datasets to calculate aggregate usage statistics, top topics, and participating contract distributions.
-262. **`212-event-validate`**: Verifies historical Soroban event payloads and structures against a provided schema, detailing missing fields, unexpected fields, and type mismatches.
-263. **`224-state-deps`**: Offline state-dependency analysis tool that extracts observable references from a Soroban snapshot and builds an in-memory dependency graph.
-264. **`201-scval`**: Interactive `ScVal` playground for encoding JSON to ScVal XDR and decoding base64 XDR back to human-readable JSON formats.
-265. **`202-scval-validate`**: Validation checker verifying primitive and composite inputs structurally match an expected Soroban ScVal contract schema.
-266. **`203-contract-args`**: Contract argument schema inspector to list callable functions, types, and generate example payload JSONs without modifying ledger state.
-267. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences.
-268. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
-269. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
-270. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
-271. **`204-contract-template`**: Resolves a contract function's expected parameters and generates a reusable TypeScript invocation template and JSON argument placeholders.
-272. **`205-build-args`**: Validates supplied JSON arguments against an expected interface and encodes them into the `ScVal[]` array required for invocation.
-273. **`206-decode-return`**: Decodes a base64-encoded `ScVal` return value from a simulation or transaction result into human-readable JavaScript objects.
-274. **`207-decode-event`**: Parses raw Soroban event JSON, independently decoding its indexed topics and event data payload into readable formats.
+
+- **`227-state-normalize`**: Normalize supported Soroban state snapshots into a canonical, deterministic offline representation. Supports `-o/--output`, `--check`, and `--json`.
+- **`228-state-validate`**: Validate canonical snapshot structure, keys, values, contract IDs, ledger/TTL relationships, duplicates, versions, and conflicting representations. Supports `--strict` and `--json`.
+- **`229-state-stats`**: Calculate entry, durability, contract, ScVal, encoded-size, decoded-size, TTL, and top-N statistics offline. Supports contract/durability filters and `--json`.
+- **`230-state-hotspots`**: Rank storage hotspots by encoded size, value size, decoded collection size, nesting depth, or TTL proximity. Supports thresholds, top-N, filters, and `--json`.
+
+Examples:
+
+```bash
+stellar-api-inspector state-normalize snapshot.json -o normalized.json
+stellar-api-inspector state-normalize snapshot.json --check
+stellar-api-inspector state-validate snapshot.json --strict
+stellar-api-inspector state-stats snapshot.json --top 10 --reference-ledger 123456
+stellar-api-inspector state-hotspots snapshot.json --by size --top 10
+stellar-api-inspector state-hotspots snapshot.json --by ttl --reference-ledger 123456 --top 10
+```
+
+Canonical snapshots use `{ "version": 1, "ledger": "<decimal string>", "entries": [...] }`. Ledger sequence fields are emitted as decimal strings to avoid JavaScript precision loss. Entries are deterministically ordered by normalized ledger key. The tools operate entirely offline and never modify input snapshots.
+
+- **`227-state-normalize`**: Normalize supported Soroban state snapshots into a canonical, deterministic offline representation. Supports `-o/--output`, `--check`, and `--json`.
+- **`228-state-validate`**: Validate canonical snapshot structure, keys, values, contract IDs, ledger/TTL relationships, duplicates, versions, and conflicting representations. Supports `--strict` and `--json`.
+- **`229-state-stats`**: Calculate entry, durability, contract, ScVal, encoded-size, decoded-size, TTL, and top-N statistics offline. Supports contract/durability filters and `--json`.
+- **`230-state-hotspots`**: Rank storage hotspots by encoded size, value size, decoded collection size, nesting depth, or TTL proximity. Supports thresholds, top-N, filters, and `--json`.
+
+Examples:
+
+```bash
+stellar-api-inspector state-normalize snapshot.json -o normalized.json
+stellar-api-inspector state-normalize snapshot.json --check
+stellar-api-inspector state-validate snapshot.json --strict
+stellar-api-inspector state-stats snapshot.json --top 10 --reference-ledger 123456
+stellar-api-inspector state-hotspots snapshot.json --by size --top 10
+stellar-api-inspector state-hotspots snapshot.json --by ttl --reference-ledger 123456 --top 10
+```
+
+Canonical snapshots use `{ "version": 1, "ledger": "<decimal string>", "entries": [...] }`. Ledger sequence fields are emitted as decimal strings to avoid JavaScript precision loss. Entries are deterministically ordered by normalized ledger key. The tools operate entirely offline and never modify input snapshots. 259. **`209-watch-events`**: Periodically monitors Soroban RPC for new contract events, decodes them in real-time, and avoids duplicate processing across polling cycles. 260. **`210-replay-events`**: Retrieves, decodes, and exports a chronological stream of Soroban events over a specific ledger range with JSON export support. 261. **`211-event-analytics`**: Analyzes historical Soroban event datasets to calculate aggregate usage statistics, top topics, and participating contract distributions. 262. **`212-event-validate`**: Verifies historical Soroban event payloads and structures against a provided schema, detailing missing fields, unexpected fields, and type mismatches. 263. **`224-state-deps`**: Offline state-dependency analysis tool that extracts observable references from a Soroban snapshot and builds an in-memory dependency graph. 264. **`201-scval`**: Interactive `ScVal` playground for encoding JSON to ScVal XDR and decoding base64 XDR back to human-readable JSON formats. 265. **`202-scval-validate`**: Validation checker verifying primitive and composite inputs structurally match an expected Soroban ScVal contract schema. 266. **`203-contract-args`**: Contract argument schema inspector to list callable functions, types, and generate example payload JSONs without modifying ledger state. 267. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences. 268. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema. 269. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema. 270. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline. 271. **`204-contract-template`**: Resolves a contract function's expected parameters and generates a reusable TypeScript invocation template and JSON argument placeholders. 272. **`205-build-args`**: Validates supplied JSON arguments against an expected interface and encodes them into the `ScVal[]` array required for invocation. 273. **`206-decode-return`**: Decodes a base64-encoded `ScVal` return value from a simulation or transaction result into human-readable JavaScript objects. 274. **`207-decode-event`**: Parses raw Soroban event JSON, independently decoding its indexed topics and event data payload into readable formats.
 
 Analyze Soroban contract-data entry lifecycle across two ordered snapshots:
 

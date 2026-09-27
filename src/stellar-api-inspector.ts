@@ -20,6 +20,14 @@ import { run as runEventSchemaDiff } from './examples/213-event-schema-diff';
 import { run as runEventTypes } from './examples/214-event-types';
 import { run as runEventCompat } from './examples/215-event-compat';
 import { run as runStateDiff } from './examples/216-state-diff';
+import { parseStateNormalizeArgs, run as runStateNormalize } from './examples/227-state-normalize';
+import { parseStateValidateArgs, run as runStateValidate } from './examples/228-state-validate';
+import { parseStateStatsArgs, run as runStateStats } from './examples/229-state-stats';
+import { parseStateHotspotsArgs, run as runStateHotspots } from './examples/230-state-hotspots';
+import { parseStateNormalizeArgs, run as runStateNormalize } from './examples/227-state-normalize';
+import { parseStateValidateArgs, run as runStateValidate } from './examples/228-state-validate';
+import { parseStateStatsArgs, run as runStateStats } from './examples/229-state-stats';
+import { parseStateHotspotsArgs, run as runStateHotspots } from './examples/230-state-hotspots';
 import { run as runStateDeps } from './examples/224-state-deps';
 import { run as runWasmMemory } from './examples/244-wasm-memory';
 import { run as runWasmCustomSections } from './examples/245-wasm-custom-sections';
@@ -49,6 +57,14 @@ function printUsage(): void {
   console.log('  event-types <schema.json>');
   console.log('  event-compat <schema.json> <events.json>');
   console.log('  state-diff <before.json> <after.json>');
+  console.log('  state-normalize <snapshot.json> [-o file] [--check] [--json]');
+  console.log('  state-validate <snapshot.json> [--strict] [--json]');
+  console.log('  state-stats <snapshot.json> [options] [--json]');
+  console.log('  state-hotspots <snapshot.json> --by <criterion> --top <n> [--json]');
+  console.log('  state-normalize <snapshot.json> [-o file] [--check] [--json]');
+  console.log('  state-validate <snapshot.json> [--strict] [--json]');
+  console.log('  state-stats <snapshot.json> [options] [--json]');
+  console.log('  state-hotspots <snapshot.json> --by <criterion> --top <n> [--json]');
   console.log('  state-deps <snapshot.json>');
   console.log('  wasm-memory <wasmFile> [compareFile] [--json]');
   console.log('  wasm-custom-sections <wasmFile> [compareFile] [--json]');
@@ -136,6 +152,26 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'state-diff':
         await runStateDiff({ beforeFile: cmdArgs[0], afterFile: cmdArgs[1] });
+        return 0;
+      case 'state-normalize':
+        return await runStateNormalize(parseStateNormalizeArgs(cmdArgs));
+      case 'state-validate':
+        return await runStateValidate(parseStateValidateArgs(cmdArgs));
+      case 'state-stats':
+        await runStateStats(parseStateStatsArgs(cmdArgs));
+        return 0;
+      case 'state-hotspots':
+        await runStateHotspots(parseStateHotspotsArgs(cmdArgs));
+        return 0;
+      case 'state-normalize':
+        return await runStateNormalize(parseStateNormalizeArgs(cmdArgs));
+      case 'state-validate':
+        return await runStateValidate(parseStateValidateArgs(cmdArgs));
+      case 'state-stats':
+        await runStateStats(parseStateStatsArgs(cmdArgs));
+        return 0;
+      case 'state-hotspots':
+        await runStateHotspots(parseStateHotspotsArgs(cmdArgs));
         return 0;
       case 'state-deps':
         await runStateDeps({ snapshotFile: cmdArgs[0] });
