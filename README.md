@@ -270,6 +270,12 @@ The repository currently includes the following runnable examples:
 256. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
 257. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
 258. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
+
+- **`217-state-summary`**: Summarize captured Soroban contract state offline, including entry types, durability, ScVal types, TTL statistics, ledger ranges, and decode warnings.
+- **`218-state-key`**: Query captured Soroban contract state by encoded or decoded key and inspect decoded value, durability, TTL, and optional raw XDR.
+- **`219-state-search`**: Search decoded Soroban state values recursively across strings, symbols, addresses, integers, booleans, bytes, vectors, and maps.
+- **`220-state-types`**: Analyze top-level and nested Soroban ScVal type usage, percentages, maximum nesting depth, and undecodable values.
+
 259. **`209-watch-events`**: Periodically monitors Soroban RPC for new contract events, decodes them in real-time, and avoids duplicate processing across polling cycles.
 260. **`210-replay-events`**: Retrieves, decodes, and exports a chronological stream of Soroban events over a specific ledger range with JSON export support.
 261. **`211-event-analytics`**: Analyzes historical Soroban event datasets to calculate aggregate usage statistics, top topics, and participating contract distributions.

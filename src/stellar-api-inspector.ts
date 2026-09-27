@@ -20,6 +20,10 @@ import { run as runEventSchemaDiff } from './examples/213-event-schema-diff';
 import { run as runEventTypes } from './examples/214-event-types';
 import { run as runEventCompat } from './examples/215-event-compat';
 import { run as runStateDiff } from './examples/216-state-diff';
+import { parseStateSummaryArgs, run as runStateSummary } from './examples/217-state-summary';
+import { parseStateKeyArgs, run as runStateKey } from './examples/218-state-key';
+import { parseStateSearchArgs, run as runStateSearch } from './examples/219-state-search';
+import { parseStateTypesArgs, run as runStateTypes } from './examples/220-state-types';
 import { run as runStateDeps } from './examples/224-state-deps';
 import { run as runWasmMemory } from './examples/244-wasm-memory';
 import { run as runWasmCustomSections } from './examples/245-wasm-custom-sections';
@@ -49,6 +53,10 @@ function printUsage(): void {
   console.log('  event-types <schema.json>');
   console.log('  event-compat <schema.json> <events.json>');
   console.log('  state-diff <before.json> <after.json>');
+  console.log('  state-summary <snapshot.json> [options]');
+  console.log('  state-key <snapshot.json> <key> [options]');
+  console.log('  state-search <snapshot.json> <value> [options]');
+  console.log('  state-types <snapshot.json> [options]');
   console.log('  state-deps <snapshot.json>');
   console.log('  wasm-memory <wasmFile> [compareFile] [--json]');
   console.log('  wasm-custom-sections <wasmFile> [compareFile] [--json]');
@@ -137,6 +145,18 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'state-diff':
         await runStateDiff({ beforeFile: cmdArgs[0], afterFile: cmdArgs[1] });
         return 0;
+      case 'state-summary':
+        await runStateSummary(parseStateSummaryArgs(cmdArgs));
+        return 0;
+      case 'state-key':
+        await runStateKey(parseStateKeyArgs(cmdArgs));
+        return 0;
+      case 'state-search':
+        await runStateSearch(parseStateSearchArgs(cmdArgs));
+        return 0;
+      case 'state-types':
+        await runStateTypes(parseStateTypesArgs(cmdArgs));
+        return 0;
       case 'state-deps':
         await runStateDeps({ snapshotFile: cmdArgs[0] });
         return 0;
@@ -151,6 +171,9 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'wasm-instructions':
         await runWasmInstructions(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-elements':
+        await runWasmElements(parseWasmArgs(cmdArgs));
         return 0;
       default:
         printUsage();
