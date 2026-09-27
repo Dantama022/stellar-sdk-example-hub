@@ -2222,6 +2222,34 @@ export const examples: Record<string, Example> = {
       { type: 'input', name: 'afterFile', message: 'Path to modified state JSON:' },
     ],
   },
+  '221-state-structure': {
+    name: '221-state-structure',
+    description:
+      'Analyze nested Soroban contract-state structures, collection sizes, depth, and recurring patterns offline',
+    run: loadExample('../examples/221-state-structure'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '222-state-schema': {
+    name: '222-state-schema',
+    description:
+      'Infer a descriptive schema from observed Soroban contract-state values and nested structures offline',
+    run: loadExample('../examples/222-state-schema'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '223-state-check': {
+    name: '223-state-check',
+    description:
+      'Check Soroban state for structural, representation, TTL, and decoding inconsistencies offline',
+    run: loadExample('../examples/223-state-check'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
+  '226-state-merge': {
+    name: '226-state-merge',
+    description:
+      'Merge Soroban state snapshots with deterministic deduplication and explicit conflict handling',
+    run: loadExample('../examples/226-state-merge'),
+    params: [{ type: 'input', name: 'snapshotFiles', message: 'Space-separated snapshot files:' }],
+  },
   '224-state-deps': {
     name: '224-state-deps',
     description:

@@ -270,22 +270,21 @@ The repository currently includes the following runnable examples:
 256. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
 257. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
 258. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
-259. **`209-watch-events`**: Periodically monitors Soroban RPC for new contract events, decodes them in real-time, and avoids duplicate processing across polling cycles.
-260. **`210-replay-events`**: Retrieves, decodes, and exports a chronological stream of Soroban events over a specific ledger range with JSON export support.
-261. **`211-event-analytics`**: Analyzes historical Soroban event datasets to calculate aggregate usage statistics, top topics, and participating contract distributions.
-262. **`212-event-validate`**: Verifies historical Soroban event payloads and structures against a provided schema, detailing missing fields, unexpected fields, and type mismatches.
-263. **`224-state-deps`**: Offline state-dependency analysis tool that extracts observable references from a Soroban snapshot and builds an in-memory dependency graph.
-264. **`201-scval`**: Interactive `ScVal` playground for encoding JSON to ScVal XDR and decoding base64 XDR back to human-readable JSON formats.
-265. **`202-scval-validate`**: Validation checker verifying primitive and composite inputs structurally match an expected Soroban ScVal contract schema.
-266. **`203-contract-args`**: Contract argument schema inspector to list callable functions, types, and generate example payload JSONs without modifying ledger state.
-267. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences.
-268. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
-269. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
-270. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
-271. **`204-contract-template`**: Resolves a contract function's expected parameters and generates a reusable TypeScript invocation template and JSON argument placeholders.
-272. **`205-build-args`**: Validates supplied JSON arguments against an expected interface and encodes them into the `ScVal[]` array required for invocation.
-273. **`206-decode-return`**: Decodes a base64-encoded `ScVal` return value from a simulation or transaction result into human-readable JavaScript objects.
-274. **`207-decode-event`**: Parses raw Soroban event JSON, independently decoding its indexed topics and event data payload into readable formats.
+
+- **`221-state-structure`**: Analyze decoded Soroban state recursively, including vector/map sizes, empty collections, nesting depth, thresholds, map key/value type combinations, and recurring structural patterns.
+- **`222-state-schema`**: Infer a descriptive, non-authoritative schema from observed state values, nested structures, optional fields, and conflicting type observations.
+- **`223-state-check`**: Check snapshots for duplicate keys, conflicting representations, undecodable values, and TTL/ledger-sequence inconsistencies.
+- **`226-state-merge`**: Merge two or more snapshots offline with identical-entry deduplication, conflict detection, `error`/`first`/`latest` strategies, filtering, deterministic ordering, and optional output files.
+
+```bash
+stellar-api-inspector state-structure snapshot.json --depth-threshold 5 --collection-threshold 20
+stellar-api-inspector state-schema snapshot.json --max-depth 8 --json
+stellar-api-inspector state-check snapshot.json --strictness strict
+stellar-api-inspector state-merge before.json after.json -o merged.json
+stellar-api-inspector state-merge a.json b.json c.json --conflict latest -o merged.json --json
+```
+
+These commands operate entirely offline and never mutate supplied snapshots. Schema output is inferred from observed data and is not authoritative contract metadata. 259. **`209-watch-events`**: Periodically monitors Soroban RPC for new contract events, decodes them in real-time, and avoids duplicate processing across polling cycles. 260. **`210-replay-events`**: Retrieves, decodes, and exports a chronological stream of Soroban events over a specific ledger range with JSON export support. 261. **`211-event-analytics`**: Analyzes historical Soroban event datasets to calculate aggregate usage statistics, top topics, and participating contract distributions. 262. **`212-event-validate`**: Verifies historical Soroban event payloads and structures against a provided schema, detailing missing fields, unexpected fields, and type mismatches. 263. **`224-state-deps`**: Offline state-dependency analysis tool that extracts observable references from a Soroban snapshot and builds an in-memory dependency graph. 264. **`201-scval`**: Interactive `ScVal` playground for encoding JSON to ScVal XDR and decoding base64 XDR back to human-readable JSON formats. 265. **`202-scval-validate`**: Validation checker verifying primitive and composite inputs structurally match an expected Soroban ScVal contract schema. 266. **`203-contract-args`**: Contract argument schema inspector to list callable functions, types, and generate example payload JSONs without modifying ledger state. 267. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences. 268. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema. 269. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema. 270. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline. 271. **`204-contract-template`**: Resolves a contract function's expected parameters and generates a reusable TypeScript invocation template and JSON argument placeholders. 272. **`205-build-args`**: Validates supplied JSON arguments against an expected interface and encodes them into the `ScVal[]` array required for invocation. 273. **`206-decode-return`**: Decodes a base64-encoded `ScVal` return value from a simulation or transaction result into human-readable JavaScript objects. 274. **`207-decode-event`**: Parses raw Soroban event JSON, independently decoding its indexed topics and event data payload into readable formats.
 
 Analyze Soroban contract-data entry lifecycle across two ordered snapshots:
 
