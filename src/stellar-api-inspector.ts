@@ -24,6 +24,19 @@ import { parseStateStructureArgs, run as runStateStructure } from './examples/22
 import { parseStateSchemaArgs, run as runStateSchema } from './examples/222-state-schema';
 import { parseStateCheckArgs, run as runStateCheck } from './examples/223-state-check';
 import { parseStateMergeArgs, run as runStateMerge } from './examples/226-state-merge';
+import {
+  parseAuthorizationArgs,
+  run as runAuthorizationSignatureInspection,
+} from './examples/197-soroban-authorization-signature-inspection';
+import { parseTtlArgs, run as runSorobanTtl } from './examples/198-soroban-ttl';
+import {
+  parseStateReportArgs,
+  run as runSorobanStateReport,
+} from './examples/199-soroban-state-report';
+import {
+  parseDecodeLedgerKeyArgs,
+  run as runDecodeLedgerKey,
+} from './examples/200-decode-ledger-key';
 import { run as runStateDeps } from './examples/224-state-deps';
 import { run as runWasmMemory } from './examples/244-wasm-memory';
 import { run as runWasmCustomSections } from './examples/245-wasm-custom-sections';
@@ -57,6 +70,10 @@ function printUsage(): void {
   console.log('  state-schema <snapshot.json> [options]');
   console.log('  state-check <snapshot.json> [options]');
   console.log('  state-merge <before.json> <after.json> [...files] -o <merged.json> [options]');
+  console.log('  auth-signature <authorizationEntryXdr> [...xdr] [--json]');
+  console.log('  soroban-ttl <contractId> [--key <key>] [--warning-ledgers <n>] [--json]');
+  console.log('  soroban-state-report <contractId> [--key <key>] [--warning-ledgers <n>] [--json]');
+  console.log('  decode-ledger-key <xdr> [...xdr] [--compact] [--json]');
   console.log('  state-deps <snapshot.json>');
   console.log('  wasm-memory <wasmFile> [compareFile] [--json]');
   console.log('  wasm-custom-sections <wasmFile> [compareFile] [--json]');
@@ -156,6 +173,17 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'state-merge':
         await runStateMerge(parseStateMergeArgs(cmdArgs));
+      case 'auth-signature':
+        await runAuthorizationSignatureInspection(parseAuthorizationArgs(cmdArgs));
+        return 0;
+      case 'soroban-ttl':
+        await runSorobanTtl(parseTtlArgs(cmdArgs));
+        return 0;
+      case 'soroban-state-report':
+        await runSorobanStateReport(parseStateReportArgs(cmdArgs));
+        return 0;
+      case 'decode-ledger-key':
+        await runDecodeLedgerKey(parseDecodeLedgerKeyArgs(cmdArgs));
         return 0;
       case 'state-deps':
         await runStateDeps({ snapshotFile: cmdArgs[0] });
