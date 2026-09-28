@@ -26,7 +26,9 @@ import { run as runWasmCustomSections } from './examples/245-wasm-custom-section
 import { run as runWasmGlobals } from './examples/246-wasm-globals';
 import { run as runWasmInstructions } from './examples/247-wasm-instructions';
 import { run as runWasmElements } from './examples/248-wasm-elements';
+import { run as runWasmComplexity } from './examples/249-wasm-complexity';
 import { WasmValidationError } from './utils/wasm-static-analysis';
+import { ComplexityThresholds } from './utils/wasm-complexity';
 
 dotenv.config();
 
@@ -55,6 +57,7 @@ function printUsage(): void {
   console.log('  wasm-globals <wasmFile> [compareFile] [--json]');
   console.log('  wasm-instructions <wasmFile> [compareFile] [--json]');
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-complexity <wasmFile> [compareFile] [--json] [--threshold <score>]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -68,6 +71,62 @@ function parseWasmArgs(args: string[]): { wasmFile?: string; compareFile?: strin
   const json = args.includes('--json') || args.includes('--json=true');
   const files = args.filter((arg) => arg !== '--json' && arg !== '--json=true');
   return { wasmFile: files[0], compareFile: files[1], json };
+}
+
+function parseComplexityArgs(args: string[]): {
+  wasmFile?: string;
+  compareFile?: string;
+  json: boolean;
+  thresholds: ComplexityThresholds;
+} {
+  const aliases: Record<string, keyof ComplexityThresholds> = {
+    '--threshold': 'score',
+    '--score-threshold': 'score',
+    '--instruction-threshold': 'instructionCount',
+    '--body-size-threshold': 'bodySize',
+    '--control-flow-threshold': 'controlFlowCount',
+    '--branch-threshold': 'branchCount',
+    '--call-threshold': 'callCount',
+    '--memory-threshold': 'memoryOperationCount',
+    '--local-access-threshold': 'localAccessCount',
+  };
+  const files: string[] = [];
+  const thresholds: ComplexityThresholds = {};
+  let json = false;
+  let compareFile: string | undefined;
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (arg === '--json' || arg === '--json=true') json = true;
+    else if (arg === '--compare' || arg.startsWith('--compare=')) {
+      const inlineValue = arg.startsWith('--compare=') ? arg.slice('--compare='.length) : undefined;
+      const value = inlineValue ?? args[++i];
+      if (!value || value.startsWith('-')) throw new Error('--compare requires a WASM file');
+      if (compareFile !== undefined) throw new Error('--compare may only be specified once');
+      compareFile = value;
+    } else {
+      const [flag, inlineValue] = arg.split('=', 2);
+      const threshold = aliases[flag];
+      if (threshold) {
+        const rawValue = inlineValue ?? args[++i];
+        const value = Number(rawValue);
+        if (
+          rawValue === undefined ||
+          rawValue.trim() === '' ||
+          !Number.isFinite(value) ||
+          value < 0
+        ) {
+          throw new Error(`${flag} requires a non-negative number`);
+        }
+        thresholds[threshold] = value;
+      } else if (arg.startsWith('-')) throw new Error(`Unknown wasm-complexity option: ${arg}`);
+      else files.push(arg);
+    }
+  }
+  const maximumPositionalFiles = compareFile === undefined ? 2 : 1;
+  if (files.length > maximumPositionalFiles) {
+    throw new Error('wasm-complexity accepts one input file and one comparison file');
+  }
+  return { wasmFile: files[0], compareFile: compareFile ?? files[1], json, thresholds };
 }
 
 export async function runInspectorCli(args: string[]): Promise<number> {
@@ -151,6 +210,12 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'wasm-instructions':
         await runWasmInstructions(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-elements':
+        await runWasmElements(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-complexity':
+        await runWasmComplexity(parseComplexityArgs(cmdArgs));
         return 0;
       default:
         printUsage();
