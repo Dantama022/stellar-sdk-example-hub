@@ -2259,6 +2259,49 @@ export const examples: Record<string, Example> = {
       { type: 'input', name: 'eventsFile', message: 'Path to events JSON:' },
     ],
   },
+  '218-wasm-dominators': {
+    name: '218-wasm-dominators',
+    description:
+      'Construct control-flow graphs and compute dominator trees for every function in a Soroban contract WASM artifact',
+    run: loadExample('../examples/218-wasm-dominators'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file (blank uses bundled sample):' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'dot', message: 'Output DOT graph?', default: false },
+      { type: 'input', name: 'dotOutput', message: 'Optional path to write DOT file (blank skips write):' },
+    ],
+  },
+  '217-wasm-roundtrip': {
+    name: '217-wasm-roundtrip',
+    description:
+      'Parse a Soroban contract WASM artifact, re-encode it, and verify structural integrity across the round trip',
+    run: loadExample('../examples/217-wasm-roundtrip'),
+    params: [
+      {
+        type: 'input',
+        name: 'wasmFile',
+        message: 'Path to WASM file (blank uses bundled sample):',
+      },
+      {
+        type: 'input',
+        name: 'output',
+        message: 'Optional output path for the re-encoded artifact (blank skips write):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'forceOverwrite',
+        message: 'Allow overwriting the source artifact if paths match?',
+        default: false,
+      },
+    ],
+  },
   '216-state-diff': {
     name: '216-state-diff',
     description:
