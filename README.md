@@ -78,6 +78,8 @@ The repository currently includes the following runnable examples:
 65. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
 66. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
 67. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+68. **`217-wasm-roundtrip`**: Parse a Soroban contract WASM artifact, re-encode it, and verify structural integrity across the round trip — distinguishing byte-identical, structurally-equivalent, structurally-changed, and failed outcomes.
+69. **`218-wasm-dominators`**: Construct per-function control-flow graphs and compute dominator trees for a Soroban contract WASM artifact — reporting immediate dominators, dominator depth, subtree sizes, loop-header dominators, unreachable blocks, DOT graph export, and two-artifact comparison mode.
 68. **`44-resilient-horizon-stream`**: Consuming a Horizon payment stream with cursor resume, controlled reconnection backoff, and graceful shutdown.
 69. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
 70. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
