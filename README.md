@@ -262,6 +262,21 @@ The repository currently includes the following runnable examples:
 249. **`176-soroban-contract-invocation`**: Preparing a Soroban contract invocation transaction with encoded ScVal arguments, envelope XDR, and transaction hash.
 250. **`197-state-lifecycle`**: Offline Soroban contract-data entry lifecycle analysis: compare two or more ordered state snapshots, match entries by stable ledger-key identifiers, detect first-observed, persisting, modified, removed, and reappearing entries, track value, durability, lastModifiedLedgerSeq, and TTL changes, distinguish TTL increases and decreases, filter by contract ID, durability, or lifecycle transition type, and output JSON or human-readable reports.
 
+- **`197-soroban-authorization-signature-inspection`**: Decode authorization-entry XDR, credentials, invocation trees, and signature structure without private keys, signing, or submission.
+- **`198-soroban-ttl`**: Read-only TTL analysis for the contract instance plus optional supplied storage keys.
+- **`199-soroban-state-report`**: Consolidated state footprint and TTL-risk report with grouping, filters, limits, raw-value preservation, and JSON output.
+- **`200-decode-ledger-key`**: Offline base64 ledger-key XDR decoder supporting Soroban contract-data, contract-code, and TTL keys.
+
+```bash
+npm run run-example 197-soroban-authorization-signature-inspection
+stellar-api-inspector auth-signature <authorizationEntryXdr> --json
+stellar-api-inspector soroban-ttl <contractId> --key symbol:counter --warning-ledgers 500
+stellar-api-inspector soroban-state-report <contractId> --key symbol:counter --warning-ledgers 1000 --json
+stellar-api-inspector decode-ledger-key <ledgerKeyXdr> --compact
+```
+
+The TTL/report commands always inspect the contract instance and additionally inspect supplied persistent/temporary storage keys. They are descriptive and read-only.
+
 251. **`116-soroban-token-contract`**: Inspect Soroban token metadata, balances, allowances, and optional total supply; construct and simulate a token transfer; and decode returned `ScVal` values.
 252. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
 253. **`118-ledger-footprint-analysis`**: Simulate and compare Soroban ledger footprints, distinguish read-only and read-write entries, decode ledger keys, identify storage types, and display raw XDR.
