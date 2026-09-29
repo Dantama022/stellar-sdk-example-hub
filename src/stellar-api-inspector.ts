@@ -39,6 +39,7 @@ import { run as runWasmCustomSections } from './examples/245-wasm-custom-section
 import { run as runWasmGlobals } from './examples/246-wasm-globals';
 import { run as runWasmInstructions } from './examples/247-wasm-instructions';
 import { run as runWasmElements } from './examples/248-wasm-elements';
+import { run as runWasmRecursion } from './examples/219-wasm-recursion';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 
 dotenv.config();
@@ -72,6 +73,7 @@ function printUsage(): void {
   console.log('  wasm-globals <wasmFile> [compareFile] [--json]');
   console.log('  wasm-instructions <wasmFile> [compareFile] [--json]');
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-recursion <wasmFile> [compareFile] [--json] [--dot] [--max-cycles <n>]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -181,6 +183,21 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'wasm-instructions':
         await runWasmInstructions(parseWasmArgs(cmdArgs));
         return 0;
+      case 'wasm-recursion': {
+        const json = cmdArgs.includes('--json') || cmdArgs.includes('--json=true');
+        const dot = cmdArgs.includes('--dot');
+        const maxCyclesIdx = cmdArgs.findIndex((a) => a === '--max-cycles');
+        const maxCycles = maxCyclesIdx !== -1 ? Number(cmdArgs[maxCyclesIdx + 1] ?? '0') : 0;
+        const skipValues = new Set<string>();
+        if (maxCyclesIdx !== -1 && cmdArgs[maxCyclesIdx + 1]) {
+          skipValues.add(cmdArgs[maxCyclesIdx + 1]);
+        }
+        const files = cmdArgs.filter(
+          (a) => !a.startsWith('--') && !skipValues.has(a),
+        );
+        await runWasmRecursion({ wasmFile: files[0], compareFile: files[1], json, dot, maxCycles });
+        return 0;
+      }
       default:
         printUsage();
         return 1;

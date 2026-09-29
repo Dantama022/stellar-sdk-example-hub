@@ -174,7 +174,8 @@ The repository currently includes the following runnable examples:
 159. **`245-wasm-custom-sections` / `wasm-custom-sections`**: Offline custom-section inspection with deterministic payload hashes, grouped metadata, total custom-section size, largest-section reporting, and artifact comparisons.
 160. **`246-wasm-globals` / `wasm-globals`**: Offline global definition analysis covering imported and locally defined globals, value types, mutability, initialization expressions, aggregate statistics, and artifact comparisons.
 161. **`247-wasm-instructions` / `wasm-instructions`**: Offline code-section instruction statistics covering function body sizes, instruction frequencies, category summaries, largest functions, and artifact comparisons.
-162. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
+162. **`219-wasm-recursion` / `wasm-recursion`**: Offline WASM call-graph recursion and cycle analysis — detecting direct self-recursion, mutual recursion, and multi-function strongly connected components; reporting shortest cycle lengths, most-connected recursive functions, conservative indirect-call resolution, DOT graph export, and two-artifact comparison mode.
+163. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
 163. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
 164. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
 165. **`50-asset-issuer-discovery`**: Querying Horizon for an issued asset by code and issuer, displaying trustline/holder counts and authorization flags.
@@ -1169,9 +1170,23 @@ stellar-api-inspector wasm-memory src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-custom-sections src/contracts/sample/hello.wasm --json
 stellar-api-inspector wasm-globals src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm
 stellar-api-inspector wasm-instructions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-recursion src/contracts/sample/hello.wasm
+stellar-api-inspector wasm-recursion src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-recursion src/contracts/sample/hello.wasm --dot
+stellar-api-inspector wasm-recursion src/contracts/sample/hello.wasm --max-cycles 10
 ```
 
-`wasm-memory` reports imported and locally defined memories and tables, their indexes, element types, limits, and aggregate totals. `wasm-custom-sections` reports custom-section names, order, payload sizes, deterministic SHA-256 hashes, grouped sections, and largest sections. `wasm-globals` reports imported and locally defined globals, value types, mutability, and safely representable initialization expressions. `wasm-instructions` reports code-section function counts, instruction totals, instruction frequencies, category summaries, body sizes, and largest functions. Supplying a second WASM artifact enables deterministic comparison output for additions, removals, and structural changes.
+`wasm-memory` reports imported and locally defined memories and tables, their indexes, element types, limits, and aggregate totals. `wasm-custom-sections` reports custom-section names, order, payload sizes, deterministic SHA-256 hashes, grouped sections, and largest sections. `wasm-globals` reports imported and locally defined globals, value types, mutability, and safely representable initialization expressions. `wasm-instructions` reports code-section function counts, instruction totals, instruction frequencies, category summaries, body sizes, and largest functions. `wasm-recursion` builds a normalised function call graph from statically resolvable call sites, runs Tarjan's SCC algorithm to identify strongly connected components, classifies each SCC as direct self-recursion, mutual recursion (two functions), multi-function cycle, or non-recursive, reports shortest cycle lengths and most-connected recursive functions, resolves `call_indirect` candidates conservatively from element sections (unresolved sites are never treated as definite recursion), optionally generates DOT output for recursive components, and supports two-artifact comparison mode that detects newly introduced recursion, removed recursion, and changed component membership. Supplying a second WASM artifact enables deterministic comparison output for additions, removals, and structural changes.
+
+### Cycle-detection model and static-analysis limitations
+
+The `wasm-recursion` analysis constructs the call graph from statically resolvable `call` and `call_indirect` instructions only. No WASM code is executed.
+
+- **Direct calls** (`call <funcIdx>`) are resolved exactly: a directed edge is added from the calling function to the called function.
+- **Indirect calls** (`call_indirect`) are resolved *conservatively* using the first active element segment that initialises the referenced table. All function indices found in that segment are treated as candidate callees. Sites with no element-section candidates are recorded as unresolved and are **not** treated as definite recursion.
+- **Strongly connected components** are computed with Tarjan's algorithm on the direct-call adjacency graph. An SCC containing two or more nodes, or a single node with a self-edge, is classified as recursive.
+- **Cycle enumeration** (controlled by `--max-cycles`) uses a bounded variant of Johnson's algorithm. The limit prevents unbounded resource consumption on dense graphs; set `--max-cycles 0` to skip enumeration entirely.
+- Imported functions have no bodies in the code section; only outgoing calls *to* them are recorded.
 
 ## License
 
