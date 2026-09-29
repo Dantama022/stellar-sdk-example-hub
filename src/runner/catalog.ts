@@ -2222,6 +2222,109 @@ export const examples: Record<string, Example> = {
       { type: 'input', name: 'afterFile', message: 'Path to modified state JSON:' },
     ],
   },
+  '217-state-summary': {
+    name: '217-state-summary',
+    description:
+      'Summarize an offline Soroban contract-state snapshot including entry counts, durability, ScVal types, ledger ranges, and TTL statistics',
+    run: loadExample('../examples/217-state-summary'),
+    params: [
+      { type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' },
+      { type: 'input', name: 'contractId', message: 'Contract ID filter (optional):' },
+      {
+        type: 'list',
+        name: 'durability',
+        message: 'Durability filter:',
+        choices: [
+          { name: 'All', value: '' },
+          { name: 'Persistent', value: 'persistent' },
+          { name: 'Temporary', value: 'temporary' },
+        ],
+        default: '',
+      },
+      {
+        type: 'input',
+        name: 'ttlWarningThreshold',
+        message: 'TTL warning threshold in ledgers (blank uses default):',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '218-state-key': {
+    name: '218-state-key',
+    description:
+      'Locate a Soroban contract-state entry by encoded or decoded key and inspect its decoded value, durability, and TTL',
+    run: loadExample('../examples/218-state-key'),
+    params: [
+      { type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' },
+      { type: 'input', name: 'key', message: 'Encoded or decoded key:' },
+      { type: 'input', name: 'contractId', message: 'Contract ID filter (optional):' },
+      {
+        type: 'list',
+        name: 'durability',
+        message: 'Durability filter:',
+        choices: [
+          { name: 'All', value: '' },
+          { name: 'Persistent', value: 'persistent' },
+          { name: 'Temporary', value: 'temporary' },
+        ],
+        default: '',
+      },
+      { type: 'confirm', name: 'raw', message: 'Include raw encoded data?', default: false },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '219-state-search': {
+    name: '219-state-search',
+    description:
+      'Search decoded Soroban contract-state values recursively, including nested vectors and maps',
+    run: loadExample('../examples/219-state-search'),
+    params: [
+      { type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' },
+      { type: 'input', name: 'query', message: 'Value to search for:' },
+      { type: 'input', name: 'contractId', message: 'Contract ID filter (optional):' },
+      {
+        type: 'list',
+        name: 'durability',
+        message: 'Durability filter:',
+        choices: [
+          { name: 'All', value: '' },
+          { name: 'Persistent', value: 'persistent' },
+          { name: 'Temporary', value: 'temporary' },
+        ],
+        default: '',
+      },
+      { type: 'input', name: 'scValType', message: 'ScVal type filter (optional):' },
+      {
+        type: 'confirm',
+        name: 'ignoreCase',
+        message: 'Use case-insensitive string matching?',
+        default: false,
+      },
+      { type: 'confirm', name: 'raw', message: 'Include raw encoded values?', default: false },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '220-state-types': {
+    name: '220-state-types',
+    description:
+      'Analyze top-level and nested ScVal type usage across an offline Soroban contract-state snapshot',
+    run: loadExample('../examples/220-state-types'),
+    params: [
+      { type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' },
+      { type: 'input', name: 'contractId', message: 'Contract ID filter (optional):' },
+      {
+        type: 'list',
+        name: 'durability',
+        message: 'Durability filter:',
+        choices: [
+          { name: 'All', value: '' },
+          { name: 'Persistent', value: 'persistent' },
+          { name: 'Temporary', value: 'temporary' },
+        ],
+        default: '',
+      },
+      { type: 'input', name: 'maxDepth', message: 'Maximum recursion depth (optional):' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
   '227-state-normalize': {
     name: '227-state-normalize',
     description:
