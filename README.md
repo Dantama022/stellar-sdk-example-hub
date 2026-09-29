@@ -3984,6 +3984,24 @@ reductions rather than argument-list expansion, and comparison grouping uses map
 with append-only arrays, so large modules and duplicate-heavy function sets do not incur
 argument-stack failures or quadratic array-copy growth.
 
+### WASM trap condition analysis (wasm-traps)
+
+Analyze WASM instructions for potential runtime trap conditions completely offline:
+
+```bash
+stellar-sdk-example-hub wasm-traps <wasmFile> [--output json|csv] [--compare <wasmFile>]
+```
+
+Supported trap categories and conservative classifications:
+- **Integer division by zero** (`i32.div_s`, `i32.div_u`, `i64.div_s`, `i64.div_u`): Statically proven zero divisors are classified as `proven-trap`; non-zero divisors are `proven-safe`; dynamic divisors are `possibly-trapping`.
+- **Signed integer division overflow** (`INT_MIN / -1`): Detects statically known overflow states as `proven-trap`.
+- **Integer remainder by zero** (`i32.rem_s`, `i32.rem_u`, `i64.rem_s`, `i64.rem_u`): Identifies proven and potential remainder-by-zero traps.
+- **Floating-point to integer truncation** (`trunc` family): Classifies runtime-dependent float-to-int truncations as `possibly-trapping` due to possible NaN or out-of-range integer traps.
+- **Memory out-of-bounds access** (loads and stores): Detects statically provable out-of-bounds offsets exceeding initial declared memory bounds (`proven-trap`), provably safe fixed addresses (`proven-safe`), and dynamic offsets (`possibly-trapping`).
+- **Indirect calls** (`call_indirect`): Tracks call sites and potential invalid function types or table bounds.
+- **Explicit unreachable traps** (`unreachable`): Classified as unconditional `proven-trap`.
+- **Two-artifact comparison mode** (`--compare <wasmFile>`): Computes trap site deltas, new trap sites, removed sites, and classification transitions across contract builds.
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
