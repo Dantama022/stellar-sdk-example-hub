@@ -36,6 +36,7 @@ import { run as runWasmCustomSections } from './examples/245-wasm-custom-section
 import { run as runWasmGlobals } from './examples/246-wasm-globals';
 import { run as runWasmInstructions } from './examples/247-wasm-instructions';
 import { run as runWasmElements } from './examples/248-wasm-elements';
+import { parseWasmFingerprintArgs, run as runWasmFingerprint } from './examples/251-wasm-fingerprint';
 import { run as runWasmProvenance } from './examples/250-wasm-provenance';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 
@@ -74,6 +75,7 @@ function printUsage(): void {
   console.log('  wasm-globals <wasmFile> [compareFile] [--json]');
   console.log('  wasm-instructions <wasmFile> [compareFile] [--json]');
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-fingerprint <wasmFile> [compareFile] [--json]');
   console.log('  wasm-provenance <wasmFile> [compareFile] [--json]');
 }
 
@@ -197,6 +199,9 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'wasm-elements':
         await runWasmElements(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-fingerprint':
+        runWasmFingerprint(parseWasmFingerprintArgs(cmdArgs));
         return 0;
       case 'wasm-provenance':
         await runWasmProvenance(parseWasmArgs(cmdArgs));

@@ -22,6 +22,54 @@ Dominance relationships reveal which basic blocks must be executed before reachi
 - Does not handle dynamic control flow (e.g., indirect calls)
 - Assumes static analysis of compiled WASM
 - May produce false positives for complex control flow patterns
+
+## WASM Semantic Fingerprints
+
+The offline `wasm-fingerprint` command reports SHA-256 fingerprints for a
+Soroban WASM artifact without instantiating or executing it:
+
+```sh
+npx ts-node src/wasm-fingerprint.ts contract.wasm
+npx ts-node src/wasm-fingerprint.ts old.wasm new.wasm --json
+```
+
+The raw binary fingerprint hashes every input byte. The semantic module
+fingerprint hashes the normalized WebAssembly module structure. The component
+fingerprints separately cover:
+
+- Types: function parameter and result types, in type-index order.
+- Imports/exports: import names, kinds and descriptors in import order; exports
+  and the start function.
+- Code: defined function type references, locals and decoded instructions,
+  including their immediates.
+- Memory/table: imported and defined resource types, limits and element types.
+- Globals: value type, mutability and initializer expressions.
+- Data/element: segment mode, target, offset expression, element references and
+  data bytes.
+- Semantic custom sections: unknown custom sections are retained as opaque
+  name-and-payload records. They are reported as `customSections` when changed.
+
+Custom sections named `name`, `producers`, `sourceMappingURL`,
+`external_debug_info`, `build_id`, or beginning with `.debug_` are classified as
+non-semantic metadata and omitted from the semantic module fingerprint. Their
+changes are tracked separately. Other custom sections are conservatively
+treated as semantic because a toolchain or loader may interpret them.
+
+Comparison reports `identical` for equal binaries, `metadata-only` when only
+classified non-semantic custom metadata differs, `binary-only` when normalized
+semantics match despite another byte-level encoding difference, and `semantic`
+when one or more component fingerprints change. For semantic changes, the
+report names the changed components. JSON mode returns all fingerprints and
+the comparison report in a machine-readable object.
+
+Normalization uses `@webassemblyjs/wasm-parser`: source locations, parser
+metadata and textual numeric spellings are excluded, while decoded numeric
+values normalize equivalent LEB128 encodings. Function/type/import/resource
+index order and data/element segment order are retained where indices or
+instantiation order can affect behavior. This is a structural fingerprint, not
+a proof of behavioral equivalence: instruction sequences are not optimized or
+proven equivalent, floating-point NaN payloads may be canonicalized by the
+parser, and unsupported WebAssembly proposals or instructions are rejected.
 The repository currently includes the following runnable examples:
 
 1. **`01-create-account`**: Keypair generation and Testnet funding through Friendbot.
