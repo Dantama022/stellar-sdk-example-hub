@@ -1,0 +1,7 @@
+(module
+  (func $main
+    i32.const 42
+    i32.store offset=0
+    return
+  )
+)
