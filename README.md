@@ -1173,6 +1173,17 @@ stellar-api-inspector wasm-instructions src/contracts/sample-v1/upgradeable_v1.w
 
 `wasm-memory` reports imported and locally defined memories and tables, their indexes, element types, limits, and aggregate totals. `wasm-custom-sections` reports custom-section names, order, payload sizes, deterministic SHA-256 hashes, grouped sections, and largest sections. `wasm-globals` reports imported and locally defined globals, value types, mutability, and safely representable initialization expressions. `wasm-instructions` reports code-section function counts, instruction totals, instruction frequencies, category summaries, body sizes, and largest functions. Supplying a second WASM artifact enables deterministic comparison output for additions, removals, and structural changes.
 
+- **`249-wasm-return-provenance` / `wasm-return-provenance`**: Offline return-value provenance analysis for Soroban contract WASM artifacts — traces every return value of every function backward through supported instructions and control-flow paths without executing any code, classifying results as parameter-derived, constant-derived, state-derived (mutable globals), memory-derived, call-derived, or unknown; supports JSON output, DOT provenance-graph export, and two-artifact comparison mode.
+
+```bash
+stellar-api-inspector wasm-return-provenance src/contracts/sample/hello.wasm
+stellar-api-inspector wasm-return-provenance src/contracts/sample/hello.wasm --json
+stellar-api-inspector wasm-return-provenance src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm
+stellar-api-inspector wasm-return-provenance src/contracts/sample/hello.wasm --dot=provenance.dot
+```
+
+`wasm-return-provenance` reports imported and defined function counts, total return sites, single/multi-source breakdowns, per-category result counts (parameter, constant, global, memory, call, unknown), deepest provenance chain, and per-function return-site details with instruction offsets. Supplying a second WASM artifact enables deterministic comparison output identifying newly state-derived or parameter-derived return values, call-dependency changes, and added or removed functions.
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.

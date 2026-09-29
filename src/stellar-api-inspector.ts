@@ -41,6 +41,7 @@ import { run as runWasmInstructions } from './examples/247-wasm-instructions';
 import { run as runWasmElements } from './examples/248-wasm-elements';
 import { run as runWasmLocals } from './examples/249-wasm-locals';
 import { WasmValidationError } from './utils/wasm-static-analysis';
+import { WasmProvenanceError } from './examples/249-wasm-return-provenance/provenance-engine';
 
 dotenv.config();
 
@@ -195,6 +196,8 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       console.error(`Error: ${error.message}`);
     } else if (error instanceof WasmValidationError) {
       console.error(`WASM Validation Error: ${error.message}`);
+    } else if (error instanceof WasmProvenanceError) {
+      console.error(`WASM Provenance Error: ${error.message}`);
     } else {
       console.error(`Unexpected Error: ${error instanceof Error ? error.message : String(error)}`);
     }
