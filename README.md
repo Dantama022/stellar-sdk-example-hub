@@ -1170,6 +1170,10 @@ stellar-api-inspector wasm-memory src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-custom-sections src/contracts/sample/hello.wasm --json
 stellar-api-inspector wasm-globals src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm
 stellar-api-inspector wasm-instructions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm
+stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm --json
+stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm --csv
+stellar-api-inspector wasm-float-ops src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
 stellar-api-inspector wasm-recursion src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-recursion src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
 stellar-api-inspector wasm-recursion src/contracts/sample/hello.wasm --dot
@@ -1198,6 +1202,25 @@ stellar-api-inspector wasm-return-provenance src/contracts/sample/hello.wasm --d
 ```
 
 `wasm-return-provenance` reports imported and defined function counts, total return sites, single/multi-source breakdowns, per-category result counts (parameter, constant, global, memory, call, unknown), deepest provenance chain, and per-function return-site details with instruction offsets. Supplying a second WASM artifact enables deterministic comparison output identifying newly state-derived or parameter-derived return values, call-dependency changes, and added or removed functions.
+
+`wasm-float-ops` inventories every floating-point instruction in the code section without executing any WASM code. It classifies each instruction into one of the following categories:
+
+| Category | Examples |
+|---|---|
+| **arithmetic** | `f32.add`, `f32.sub`, `f32.mul`, `f32.div`, `f32.sqrt`, `f64.add`, … |
+| **comparison** | `f32.eq`, `f32.lt`, `f32.ge`, `f64.eq`, `f64.lt`, `f64.ge`, … |
+| **conversion** | `f32.convert_i32_s`, `i32.trunc_f32_s`, `f64.promote_f32`, `f32.demote_f64`, … |
+| **rounding** | `f32.ceil`, `f32.floor`, `f32.trunc`, `f32.nearest`, `f64.ceil`, … |
+| **minmax** | `f32.min`, `f32.max`, `f64.min`, `f64.max` |
+| **absolute_sign** | `f32.abs`, `f32.neg`, `f32.copysign`, `f64.abs`, `f64.neg`, `f64.copysign` |
+| **reinterpretation** | `i32.reinterpret_f32`, `f32.reinterpret_i32`, `i64.reinterpret_f64`, `f64.reinterpret_i64` |
+| **constant** | `f32.const`, `f64.const` |
+
+Every finding includes the function index, basic-block index, and instruction index, allowing precise location of each float operation within the artifact. Per-function statistics distinguish f32 from f64 usage, detect mixed-precision functions, identify functions that round-trip between integers and floating-point values, and compute float density (fraction of instructions that are floating-point). Module-level statistics report totals per category and per precision, identify the function with the highest float density, and flag when float usage is concentrated in a small subset of functions.
+
+Optional `--csv` output emits one row per floating-point instruction with columns: `functionIndex,blockIndex,instructionIndex,opcode,valueType,category`. Optional `--json` output includes the full normalized instruction inventory alongside all statistics. Supplying a second WASM artifact switches to comparison mode, which reports added and removed opcodes, new f32 or f64 usage, functions that newly use or lost floating-point instructions, and per-precision and total instruction deltas.
+
+Unknown or unsupported opcodes are silently treated as non-float instructions and do not abort the analysis. No WASM instructions are ever executed.
 
 ## License
 

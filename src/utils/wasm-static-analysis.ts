@@ -803,6 +803,474 @@ export function analyzeElements(file: string): WasmElementReport {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Floating-point operation analysis
+// ---------------------------------------------------------------------------
+
+/** Broad classification of a floating-point instruction. */
+export type FloatOpCategory =
+  | 'arithmetic'
+  | 'comparison'
+  | 'conversion'
+  | 'rounding'
+  | 'minmax'
+  | 'absolute_sign'
+  | 'reinterpretation'
+  | 'constant';
+
+/** The precision of a floating-point instruction. */
+export type FloatPrecision = 'f32' | 'f64';
+
+/** One normalized floating-point instruction record. */
+export interface FloatOpRecord {
+  /** Index of the function (including imported functions). */
+  functionIndex: number;
+  /** Sequential index of the basic block within the function (0-based). */
+  blockIndex: number;
+  /** Sequential position of this instruction within the function body (0-based). */
+  instructionIndex: number;
+  /** WebAssembly opcode name, e.g. "f32.add". */
+  opcode: string;
+  /** Operand / result value type. */
+  valueType: FloatPrecision;
+  /** Broad operation category. */
+  category: FloatOpCategory;
+}
+
+/** Per-function floating-point usage summary. */
+export interface FloatFunctionSummary {
+  functionIndex: number;
+  totalFloatOps: number;
+  f32Count: number;
+  f64Count: number;
+  categoryCounts: Record<FloatOpCategory, number>;
+  hasArithmetic: boolean;
+  hasComparison: boolean;
+  hasConversion: boolean;
+  hasReinterpretation: boolean;
+  hasMixedPrecision: boolean;
+  /** True when this function both converts ints→float AND float→ints. */
+  hasIntFloatIntRoundtrip: boolean;
+  /** Density = totalFloatOps / totalInstructions, or 0 for empty bodies. */
+  floatDensity: number;
+}
+
+/** A common two-instruction sequence detected in a function body. */
+export interface FloatSequence {
+  functionIndex: number;
+  instructionIndex: number;
+  opcodes: [string, string];
+}
+
+/** Module-level floating-point analysis report. */
+export interface WasmFloatOpsReport {
+  file: string;
+  valid: true;
+  records: FloatOpRecord[];
+  functions: FloatFunctionSummary[];
+  sequences: FloatSequence[];
+  statistics: {
+    totalFloatInstructions: number;
+    totalF32Instructions: number;
+    totalF64Instructions: number;
+    arithmeticCount: number;
+    comparisonCount: number;
+    conversionCount: number;
+    roundingCount: number;
+    reinterpretationCount: number;
+    minmaxCount: number;
+    absoluteSignCount: number;
+    constantCount: number;
+    functionsUsingFloat: number;
+    highestDensityFunction: { functionIndex: number; floatDensity: number } | null;
+    floatConcentrated: boolean;
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Complete floating-point opcode table (WebAssembly MVP + bulk-memory is not
+// needed here; only f32/f64 instructions).
+// ---------------------------------------------------------------------------
+
+interface FloatOpcodeInfo {
+  opcode: string;
+  valueType: FloatPrecision;
+  category: FloatOpCategory;
+}
+
+const FLOAT_OPCODES: Record<number, FloatOpcodeInfo> = {
+  // f32 load / store are not float ops, skip
+  // --- f32 constants ---
+  0x43: { opcode: 'f32.const', valueType: 'f32', category: 'constant' },
+  // --- f64 constants ---
+  0x44: { opcode: 'f64.const', valueType: 'f64', category: 'constant' },
+  // --- f32 comparisons ---
+  0x5b: { opcode: 'f32.eq', valueType: 'f32', category: 'comparison' },
+  0x5c: { opcode: 'f32.ne', valueType: 'f32', category: 'comparison' },
+  0x5d: { opcode: 'f32.lt', valueType: 'f32', category: 'comparison' },
+  0x5e: { opcode: 'f32.gt', valueType: 'f32', category: 'comparison' },
+  0x5f: { opcode: 'f32.le', valueType: 'f32', category: 'comparison' },
+  0x60: { opcode: 'f32.ge', valueType: 'f32', category: 'comparison' },
+  // --- f64 comparisons ---
+  0x61: { opcode: 'f64.eq', valueType: 'f64', category: 'comparison' },
+  0x62: { opcode: 'f64.ne', valueType: 'f64', category: 'comparison' },
+  0x63: { opcode: 'f64.lt', valueType: 'f64', category: 'comparison' },
+  0x64: { opcode: 'f64.gt', valueType: 'f64', category: 'comparison' },
+  0x65: { opcode: 'f64.le', valueType: 'f64', category: 'comparison' },
+  0x66: { opcode: 'f64.ge', valueType: 'f64', category: 'comparison' },
+  // --- f32 arithmetic ---
+  0x92: { opcode: 'f32.add', valueType: 'f32', category: 'arithmetic' },
+  0x93: { opcode: 'f32.sub', valueType: 'f32', category: 'arithmetic' },
+  0x94: { opcode: 'f32.mul', valueType: 'f32', category: 'arithmetic' },
+  0x95: { opcode: 'f32.div', valueType: 'f32', category: 'arithmetic' },
+  // --- f32 min/max ---
+  0x96: { opcode: 'f32.min', valueType: 'f32', category: 'minmax' },
+  0x97: { opcode: 'f32.max', valueType: 'f32', category: 'minmax' },
+  // --- f32 absolute / sign ---
+  0x8b: { opcode: 'f32.abs', valueType: 'f32', category: 'absolute_sign' },
+  0x8c: { opcode: 'f32.neg', valueType: 'f32', category: 'absolute_sign' },
+  0x98: { opcode: 'f32.copysign', valueType: 'f32', category: 'absolute_sign' },
+  // --- f32 rounding ---
+  0x8d: { opcode: 'f32.ceil', valueType: 'f32', category: 'rounding' },
+  0x8e: { opcode: 'f32.floor', valueType: 'f32', category: 'rounding' },
+  0x8f: { opcode: 'f32.trunc', valueType: 'f32', category: 'rounding' },
+  0x90: { opcode: 'f32.nearest', valueType: 'f32', category: 'rounding' },
+  // --- f32 sqrt (arithmetic) ---
+  0x91: { opcode: 'f32.sqrt', valueType: 'f32', category: 'arithmetic' },
+  // --- f64 arithmetic ---
+  0xa0: { opcode: 'f64.add', valueType: 'f64', category: 'arithmetic' },
+  0xa1: { opcode: 'f64.sub', valueType: 'f64', category: 'arithmetic' },
+  0xa2: { opcode: 'f64.mul', valueType: 'f64', category: 'arithmetic' },
+  0xa3: { opcode: 'f64.div', valueType: 'f64', category: 'arithmetic' },
+  // --- f64 min/max ---
+  0xa4: { opcode: 'f64.min', valueType: 'f64', category: 'minmax' },
+  0xa5: { opcode: 'f64.max', valueType: 'f64', category: 'minmax' },
+  // --- f64 absolute / sign ---
+  0x99: { opcode: 'f64.abs', valueType: 'f64', category: 'absolute_sign' },
+  0x9a: { opcode: 'f64.neg', valueType: 'f64', category: 'absolute_sign' },
+  0xa6: { opcode: 'f64.copysign', valueType: 'f64', category: 'absolute_sign' },
+  // --- f64 rounding ---
+  0x9b: { opcode: 'f64.ceil', valueType: 'f64', category: 'rounding' },
+  0x9c: { opcode: 'f64.floor', valueType: 'f64', category: 'rounding' },
+  0x9d: { opcode: 'f64.trunc', valueType: 'f64', category: 'rounding' },
+  0x9e: { opcode: 'f64.nearest', valueType: 'f64', category: 'rounding' },
+  // --- f64 sqrt (arithmetic) ---
+  0x9f: { opcode: 'f64.sqrt', valueType: 'f64', category: 'arithmetic' },
+  // --- int→float conversions ---
+  0xb2: { opcode: 'f32.convert_i32_s', valueType: 'f32', category: 'conversion' },
+  0xb3: { opcode: 'f32.convert_i32_u', valueType: 'f32', category: 'conversion' },
+  0xb4: { opcode: 'f32.convert_i64_s', valueType: 'f32', category: 'conversion' },
+  0xb5: { opcode: 'f32.convert_i64_u', valueType: 'f32', category: 'conversion' },
+  0xb7: { opcode: 'f64.convert_i32_s', valueType: 'f64', category: 'conversion' },
+  0xb8: { opcode: 'f64.convert_i32_u', valueType: 'f64', category: 'conversion' },
+  0xb9: { opcode: 'f64.convert_i64_s', valueType: 'f64', category: 'conversion' },
+  0xba: { opcode: 'f64.convert_i64_u', valueType: 'f64', category: 'conversion' },
+  // --- float→int conversions (truncation) ---
+  0xa8: { opcode: 'i32.trunc_f32_s', valueType: 'f32', category: 'conversion' },
+  0xa9: { opcode: 'i32.trunc_f32_u', valueType: 'f32', category: 'conversion' },
+  0xaa: { opcode: 'i32.trunc_f64_s', valueType: 'f64', category: 'conversion' },
+  0xab: { opcode: 'i32.trunc_f64_u', valueType: 'f64', category: 'conversion' },
+  0xae: { opcode: 'i64.trunc_f32_s', valueType: 'f32', category: 'conversion' },
+  0xaf: { opcode: 'i64.trunc_f32_u', valueType: 'f32', category: 'conversion' },
+  0xb0: { opcode: 'i64.trunc_f64_s', valueType: 'f64', category: 'conversion' },
+  0xb1: { opcode: 'i64.trunc_f64_u', valueType: 'f64', category: 'conversion' },
+  // --- f32↔f64 promotion / demotion ---
+  0xb6: { opcode: 'f32.demote_f64', valueType: 'f32', category: 'conversion' },
+  0xbb: { opcode: 'f64.promote_f32', valueType: 'f64', category: 'conversion' },
+  // --- bit reinterpretation ---
+  0xbc: { opcode: 'i32.reinterpret_f32', valueType: 'f32', category: 'reinterpretation' },
+  0xbd: { opcode: 'i64.reinterpret_f64', valueType: 'f64', category: 'reinterpretation' },
+  0xbe: { opcode: 'f32.reinterpret_i32', valueType: 'f32', category: 'reinterpretation' },
+  0xbf: { opcode: 'f64.reinterpret_i64', valueType: 'f64', category: 'reinterpretation' },
+};
+
+/** Opcodes that produce or consume float values (used for int-to-float conversion detection). */
+const INT_TO_FLOAT_OPCODES = new Set([
+  0xb2, 0xb3, 0xb4, 0xb5, 0xb7, 0xb8, 0xb9, 0xba,
+]);
+
+/** Opcodes that produce or consume float values for float-to-int conversion detection. */
+const FLOAT_TO_INT_OPCODES = new Set([
+  0xa8, 0xa9, 0xaa, 0xab, 0xae, 0xaf, 0xb0, 0xb1,
+]);
+
+function zeroCategoryCounts(): Record<FloatOpCategory, number> {
+  return {
+    arithmetic: 0,
+    comparison: 0,
+    conversion: 0,
+    rounding: 0,
+    minmax: 0,
+    absolute_sign: 0,
+    reinterpretation: 0,
+    constant: 0,
+  };
+}
+
+function addFloatCategoryCount(
+  target: Record<FloatOpCategory, number>,
+  category: FloatOpCategory,
+): void {
+  target[category] = (target[category] ?? 0) + 1;
+}
+
+function parseFloatOpsFromCode(
+  section: Section | undefined,
+  importedFunctions: number,
+): {
+  records: FloatOpRecord[];
+  functionSummaries: FloatFunctionSummary[];
+  sequences: FloatSequence[];
+} {
+  const records: FloatOpRecord[] = [];
+  const functionSummaries: FloatFunctionSummary[] = [];
+  const sequences: FloatSequence[] = [];
+
+  if (!section) return { records, functionSummaries, sequences };
+
+  const reader = new Reader(section.payload);
+  const count = reader.varuint32();
+
+  for (let fi = 0; fi < count; fi += 1) {
+    const bodySize = reader.varuint32();
+    const body = new Reader(reader.bytes(bodySize));
+
+    // Skip local declarations
+    const localGroupCount = body.varuint32();
+    for (let j = 0; j < localGroupCount; j += 1) {
+      body.varuint32();
+      body.byte();
+    }
+
+    const functionIndex = importedFunctions + fi;
+    const funcRecords: FloatOpRecord[] = [];
+    const categoryCounts = zeroCategoryCounts();
+    let instructionIndex = 0;
+    let blockIndex = 0;
+    let f32Count = 0;
+    let f64Count = 0;
+    let hasIntToFloat = false;
+    let hasFloatToInt = false;
+    let prevOpcode: number | null = null;
+    let totalInstructions = 0;
+
+    while (!body.done) {
+      const opcode = body.byte();
+      totalInstructions += 1;
+
+      // Track block depth changes
+      if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {
+        blockIndex += 1;
+      } else if (opcode === 0x0b || opcode === 0x05) {
+        // end / else — keep block index stable (we don't track exact nesting)
+      }
+
+      const floatInfo = FLOAT_OPCODES[opcode];
+      if (floatInfo) {
+        const record: FloatOpRecord = {
+          functionIndex,
+          blockIndex,
+          instructionIndex,
+          opcode: floatInfo.opcode,
+          valueType: floatInfo.valueType,
+          category: floatInfo.category,
+        };
+        funcRecords.push(record);
+        addFloatCategoryCount(categoryCounts, floatInfo.category);
+        if (floatInfo.valueType === 'f32') f32Count += 1;
+        else f64Count += 1;
+
+        if (INT_TO_FLOAT_OPCODES.has(opcode)) hasIntToFloat = true;
+        if (FLOAT_TO_INT_OPCODES.has(opcode)) hasFloatToInt = true;
+
+        // Detect common two-instruction sequences
+        if (prevOpcode !== null && FLOAT_OPCODES[prevOpcode]) {
+          sequences.push({
+            functionIndex,
+            instructionIndex: instructionIndex - 1,
+            opcodes: [FLOAT_OPCODES[prevOpcode].opcode, floatInfo.opcode],
+          });
+        }
+      }
+
+      prevOpcode = opcode;
+      instructionIndex += 1;
+
+      // Skip immediates (reuse existing logic)
+      skipInstructionImmediate(opcode, body);
+    }
+
+    records.push(...funcRecords);
+
+    const totalFloatOps = funcRecords.length;
+    const floatDensity = totalInstructions === 0 ? 0 : totalFloatOps / totalInstructions;
+
+    functionSummaries.push({
+      functionIndex,
+      totalFloatOps,
+      f32Count,
+      f64Count,
+      categoryCounts,
+      hasArithmetic: categoryCounts.arithmetic > 0,
+      hasComparison: categoryCounts.comparison > 0,
+      hasConversion: categoryCounts.conversion > 0,
+      hasReinterpretation: categoryCounts.reinterpretation > 0,
+      hasMixedPrecision: f32Count > 0 && f64Count > 0,
+      hasIntFloatIntRoundtrip: hasIntToFloat && hasFloatToInt,
+      floatDensity,
+    });
+  }
+
+  return { records, functionSummaries, sequences };
+}
+
+export function analyzeFloatOps(file: string): WasmFloatOpsReport {
+  const sections = loadSections(file);
+  const importSection = sections.find((s) => s.id === 2);
+  const codeSection = sections.find((s) => s.id === 10);
+  const importedCount = importedFunctionCount(importSection);
+
+  const { records, functionSummaries, sequences } = parseFloatOpsFromCode(
+    codeSection,
+    importedCount,
+  );
+
+  // Module-level aggregates
+  let totalF32 = 0;
+  let totalF64 = 0;
+  const categorySums = zeroCategoryCounts();
+  records.forEach((r) => {
+    if (r.valueType === 'f32') totalF32 += 1;
+    else totalF64 += 1;
+    addFloatCategoryCount(categorySums, r.category);
+  });
+
+  const floatFunctions = functionSummaries.filter((f) => f.totalFloatOps > 0);
+  const highestDensity =
+    floatFunctions.length === 0
+      ? null
+      : floatFunctions.reduce((a, b) => (b.floatDensity > a.floatDensity ? b : a));
+
+  // Concentration: float usage is "concentrated" when >= 80% of all float
+  // ops come from <= 20% of functions (or a single function when only 1 has
+  // float ops and the module has > 1 function).
+  let floatConcentrated = false;
+  if (floatFunctions.length > 0 && functionSummaries.length > 0) {
+    const totalOps = records.length;
+    const threshold = Math.max(1, Math.ceil(floatFunctions.length * 0.2));
+    const topFns = [...floatFunctions]
+      .sort((a, b) => b.totalFloatOps - a.totalFloatOps)
+      .slice(0, threshold);
+    const topOps = topFns.reduce((sum, f) => sum + f.totalFloatOps, 0);
+    floatConcentrated = totalOps > 0 && topOps / totalOps >= 0.8;
+  }
+
+  return {
+    file,
+    valid: true,
+    records,
+    functions: functionSummaries,
+    sequences,
+    statistics: {
+      totalFloatInstructions: records.length,
+      totalF32Instructions: totalF32,
+      totalF64Instructions: totalF64,
+      arithmeticCount: categorySums.arithmetic,
+      comparisonCount: categorySums.comparison,
+      conversionCount: categorySums.conversion,
+      roundingCount: categorySums.rounding,
+      reinterpretationCount: categorySums.reinterpretation,
+      minmaxCount: categorySums.minmax,
+      absoluteSignCount: categorySums.absolute_sign,
+      constantCount: categorySums.constant,
+      functionsUsingFloat: floatFunctions.length,
+      highestDensityFunction: highestDensity
+        ? {
+            functionIndex: highestDensity.functionIndex,
+            floatDensity: highestDensity.floatDensity,
+          }
+        : null,
+      floatConcentrated,
+    },
+  };
+}
+
+export function compareFloatOpsReports(
+  beforeFile: string,
+  afterFile: string,
+): {
+  before: WasmFloatOpsReport;
+  after: WasmFloatOpsReport;
+  comparison: {
+    addedOpcodes: string[];
+    removedOpcodes: string[];
+    changedCategories: Array<{ opcode: string; before: FloatOpCategory; after: FloatOpCategory }>;
+    newF32Usage: boolean;
+    newF64Usage: boolean;
+    newlyFloatFunctions: number[];
+    removedFloatFunctions: number[];
+    totalFloatDelta: number;
+    f32Delta: number;
+    f64Delta: number;
+  };
+} {
+  const before = analyzeFloatOps(beforeFile);
+  const after = analyzeFloatOps(afterFile);
+
+  const beforeOpcodeSet = new Set(before.records.map((r) => r.opcode));
+  const afterOpcodeSet = new Set(after.records.map((r) => r.opcode));
+
+  const addedOpcodes = [...afterOpcodeSet].filter((o) => !beforeOpcodeSet.has(o)).sort();
+  const removedOpcodes = [...beforeOpcodeSet].filter((o) => !afterOpcodeSet.has(o)).sort();
+
+  // Detect category changes for opcodes that appear in both
+  const changedCategories: Array<{
+    opcode: string;
+    before: FloatOpCategory;
+    after: FloatOpCategory;
+  }> = [];
+  const beforeCatMap = new Map(before.records.map((r) => [r.opcode, r.category]));
+  const afterCatMap = new Map(after.records.map((r) => [r.opcode, r.category]));
+  afterCatMap.forEach((cat, opcode) => {
+    const bCat = beforeCatMap.get(opcode);
+    if (bCat && bCat !== cat) {
+      changedCategories.push({ opcode, before: bCat, after: cat });
+    }
+  });
+
+  const beforeFloatFnSet = new Set(
+    before.functions.filter((f) => f.totalFloatOps > 0).map((f) => f.functionIndex),
+  );
+  const afterFloatFnSet = new Set(
+    after.functions.filter((f) => f.totalFloatOps > 0).map((f) => f.functionIndex),
+  );
+
+  const newlyFloatFunctions = [...afterFloatFnSet]
+    .filter((idx) => !beforeFloatFnSet.has(idx))
+    .sort((a, b) => a - b);
+  const removedFloatFunctions = [...beforeFloatFnSet]
+    .filter((idx) => !afterFloatFnSet.has(idx))
+    .sort((a, b) => a - b);
+
+  return {
+    before,
+    after,
+    comparison: {
+      addedOpcodes,
+      removedOpcodes,
+      changedCategories,
+      newF32Usage: before.statistics.totalF32Instructions === 0 && after.statistics.totalF32Instructions > 0,
+      newF64Usage: before.statistics.totalF64Instructions === 0 && after.statistics.totalF64Instructions > 0,
+      newlyFloatFunctions,
+      removedFloatFunctions,
+      totalFloatDelta:
+        after.statistics.totalFloatInstructions - before.statistics.totalFloatInstructions,
+      f32Delta: after.statistics.totalF32Instructions - before.statistics.totalF32Instructions,
+      f64Delta: after.statistics.totalF64Instructions - before.statistics.totalF64Instructions,
+    },
+  };
+}
+
 export interface ComparisonResult<T> {
   added: T[];
   removed: T[];
