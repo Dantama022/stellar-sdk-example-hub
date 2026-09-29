@@ -1,0 +1,22 @@
+{
+  "name": "wasm-slicing-example",
+  "version": "1.0.0",
+  "description": "WASM program slicing analysis example for Soroban contracts",
+  "main": "wasm-slice.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "wasm",
+    "soroban",
+    "slicing",
+    "analysis"
+  ],
+  "author": "Mistral AI",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.0.0",
+    "shell-quote": "^1.7.3",
+    "wasmparser": "^0.100.0"
+  }
+}
