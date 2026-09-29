@@ -2496,6 +2496,263 @@ The repository currently includes the following runnable examples:
 16. **`17-offline-signing`**: Building unsigned transaction XDR, signing it offline, and verifying it.
 17. **`18-soroban-errors`**: Intentionally triggering and parsing Soroban RPC and simulation errors.
 18. **`189-soroban-transaction-polling`**: Polling Soroban transaction status with bounded exponential backoff, retries, timeout, and cancellation.
+18. **`19-horizon-streaming`**: Subscribing to live Horizon Testnet payment events through Server-Sent Events.
+19. **`20-sep10-authentication`**: SEP-10 challenge generation, signing, verification, and JWT issuance.
+20. **`21-sep24-deposit-withdrawal`**: Running SEP-24 interactive deposit and withdrawal against a Testnet anchor.
+21. **`22-advanced-multisig`**: Managing weighted signers, threshold tiers, signer rotation, and insufficient-signature failures.
+22. **`22-manage-buy-offer`**: Creating, modifying, and deleting buy offers on the Stellar SDEX with `manageBuyOffer`.
+23. **`23-soroban-upgrade`**: Deploying a Soroban contract, uploading upgraded WASM, executing an upgrade, and verifying persisted state.
+24. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
+25. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provision.
+26. **`24-cross-contract-invoke`**: Demonstrating cross-contract invocation, authorization, and returned values.
+27. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, and `AUTH_IMMUTABLE`).
+28. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
+29. **`27-manage-sell-offer`**: Creating, updating, and removing sell offers directly on the SDEX.
+30. **`28-trustline-authorization`**: Authorizing, deauthorizing, and reauthorizing an asset trustline.
+31. **`29-account-home-domain`**: Setting, inspecting, updating, and removing an account home domain.
+32. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
+33. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
+34. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+35. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
+36. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provision.
+37. **`24-cross-contract-invoke`**: Demonstrating cross-contract invocation, authorization, and returned values.
+38. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, and `AUTH_IMMUTABLE`).
+39. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
+40. **`27-manage-sell-offer`**: Creating, updating, and removing sell offers directly on the SDEX.
+41. **`28-trustline-authorization`**: Authorizing, deauthorizing, and reauthorizing an asset trustline.
+42. **`29-account-home-domain`**: Setting, inspecting, updating, and removing an account home domain.
+43. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
+44. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
+45. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+46. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
+47. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
+48. **`96-fee-bump-recovery-workflow`**: Recover a low-fee transaction by submitting a higher-fee fee-bump replacement.
+49. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
+50. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
+51. **`35-revoke-sponsorship`**: Revoking sponsorship from a sponsored data entry and observing reserve responsibility shift back to the owner.
+52. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+53. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+54. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
+55. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+56. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+57. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+58. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
+59. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
+60. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
+61. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
+62. **`35-revoke-sponsorship`**: Revoking sponsorship from a sponsored data entry and observing reserve responsibility shift back to the owner.
+63. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+64. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+65. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
+66. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+67. **`44-resilient-horizon-stream`**: Consuming a Horizon payment stream with cursor resume, controlled reconnection backoff, and graceful shutdown.
+68. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
+69. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
+70. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
+71. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
+72. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
+73. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+74. **`148-result-code-decoder`**: Retrieving a transaction from Horizon and decoding transaction and operation result codes into categorized diagnostics, explanations, and troubleshooting suggestions.
+74. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+75. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+76. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+77. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
+78. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+79. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+80. **`50-asset-issuer-discovery`**: Querying Horizon for an issued asset by code and issuer, displaying trustline/holder counts and authorization flags.
+81. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+82. **`52-account-balance-history`**: Reconstructing a simple native XLM balance history from recent Horizon effects with transaction and ledger references.
+83. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
+84. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+85. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+86. **`60-network-configuration`**: Selecting Testnet vs Mainnet Horizon / Soroban RPC endpoints, binding `TransactionBuilder` to the correct network passphrase, detecting mismatched configuration, and explaining why a transaction signed for one network cannot be submitted to another.
+87. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
+88. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+89. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+90. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
+91. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
+92. **`62-payment-history`**: Retrieving recent account payment records, identifying incoming and outgoing transfers, and displaying amounts, assets, counterparties, ledgers, timestamps, and transaction hashes.
+93. **`63-asset-discovery`**: Browsing Horizon asset records, filtering by asset code, distinguishing issuers, and displaying holder, balance, claimable-balance, liquidity-pool, and contract statistics.
+94. **`64-liquidity-pool-inspection`**: Browsing available liquidity pools or inspecting a pool ID, including reserve assets, balances, pool shares, fees, and participating accounts.
+95. **`65-offer-book-inspection`**: Inspecting active Stellar offers with selling and buying asset filters, seller details, prices, amounts, ledger references, and market summary statistics.
+96. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
+97. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
+98. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
+99. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signer hints, and XDR serialization round-trips.
+100. **`150-mixed-operation-transaction`**: Building and inspecting one atomic transaction containing payment, Manage Data, and bump-sequence operations with operation-specific sources.
+101. **`151-fee-bump-wrapping`**: Wrapping a base64 transaction envelope in a fee-bump, validating preserved inner fields and signatures, and inspecting the outer envelope.
+96. **`68-soroban-contract-simulation`**: Simulating a Soroban contract invocation, inspecting resource estimates and returned values, and assembling the footprint-bearing transaction without broadcasting.
+97. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
+98. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
+99. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+100. **`100-authorization-entry-inspection`**: Decoding a `SorobanAuthorizationEntry` — distinguishing source-account from address credentials, walking the invocation tree including sub-invocations, decoding arguments, and reading the nonce and signature expiration ledger.
+101. **`101-simulation-result-analysis`**: Interpreting every part of a `simulateTransaction` response — classifying success, error and restore-required outcomes, reading the resource budget and ledger footprint, decoding the return value, and decoding diagnostic events.
+181. **`181-soroban-footprint-comparison`**: Comparing Soroban ledger footprints across multiple invocation variants, distinguishing read-only from read-write entries, spotting shared and divergent keys, flagging access-mode changes, and identifying the invocation with the smaller footprint.
+185. **`185-soroban-ledger-entry-retrieval`**: Querying Soroban ledger entries via `getLedgerEntries`, validating and decoding raw `LedgerKey` XDR, supporting multiple common key types, and reporting entry metadata, TTL, missing/archived cases, and structured JSON output without mutating state.
+**`186-soroban-rpc-diagnostics`**: Checking a Soroban RPC endpoint for health, network metadata, protocol version, latest ledger state, and stale-ledger diagnostics with configurable timeouts and JSON output.
+**`187-soroban-rpc-pagination`**: Walking paginated Soroban RPC results with cursor propagation, page limits, empty-page handling, repeated-cursor detection, and resumable pagination metadata.
+102. **`102-contract-storage-inspection`**: Probing contract storage keys across persistent and temporary durability, displaying raw `ScVal` XDR alongside decoded values, and handling missing keys and decoding failures without aborting the sweep.
+103. **`103-storage-ttl-management`**: Reading a storage entry's `liveUntilLedgerSeq`, classifying how much life it has left, and building, simulating and submitting an `ExtendFootprintTTL` transaction — plus when to restore an archived entry instead.
+23. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
+24. **`24-create-passive-sell-offer`**: Creating a passive sell offer on the SDEX for resting liquidity provision.
+25. **`24-cross-contract-invoke`**: Demonstrating cross-contract invocation, authorization, and returned values.
+26. **`25-account-flags`**: Viewing and modifying issuer account authorization flags (`AUTH_REQUIRED`, `AUTH_REVOCABLE`, and `AUTH_IMMUTABLE`).
+27. **`26-sponsored-claimable-balance`**: Creating a sponsored claimable balance and claiming it from the recipient account.
+28. **`27-manage-sell-offer`**: Creating, updating, and removing sell offers directly on the SDEX.
+29. **`28-trustline-authorization`**: Authorizing, deauthorizing, and reauthorizing an asset trustline.
+30. **`29-account-home-domain`**: Setting, inspecting, updating, and removing an account home domain.
+31. **`29-inflation-destination`**: Setting, inspecting, and removing an account inflation destination.
+32. **`30-end-sponsoring-reserves`**: Completing the lifecycle of sponsored reserves and inspecting the resulting account state.
+33. **`30-horizon-pagination`**: Retrieving and traversing paginated Horizon records safely across multiple pages.
+34. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
+35. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
+36. **`96-fee-bump-recovery-workflow`**: Recover a low-fee transaction by submitting a higher-fee fee-bump replacement.
+37. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
+35. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
+35. **`35-revoke-sponsorship`**: Revoking sponsorship from a sponsored data entry and observing reserve responsibility shift back to the owner.
+36. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+37. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+38. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
+39. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+35. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+36. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+35. **`32-ledger-bounds`**: Building transactions with ledger bounds, querying the current ledger sequence, and demonstrating out-of-range rejections.
+36. **`33-fee-bump-replacement`**: Wrapping a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account.
+37. **`37-strict-send-path-payment`**: Executing a strict-send path payment and observing the amount received.
+38. **`36-strict-receive-path-payment`**: Executing a strict-receive path payment with a fixed destination amount and a maximum source spend.
+39. **`35-revoke-sponsorship`**: Revoking sponsorship from a sponsored data entry and observing reserve responsibility shift back to the owner.
+40. **`38-account-signer-management`**: Managing account signers and weights for multi-party authorization.
+41. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
+42. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
+43. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+44. **`44-resilient-horizon-stream`**: Consuming a Horizon payment stream with cursor resume, controlled reconnection backoff, and graceful shutdown.
+45. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
+46. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
+47. **`47-account-data-entries`**: Creating, reading, updating, and removing account data entries while explaining reserve implications.
+48. **`48-asset-authorization-flags`**: Configuring issuer authorization flags and observing trustline authorization and revocation behavior.
+49. **`49-claimable-balance-inspection`**: Inspecting claimable balances, claimants, and predicates with claimant-based Horizon filtering.
+50. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+51. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+52. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+53. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+54. **`190-soroban-transaction-event-monitor`**: Monitoring a submitted Soroban transaction by polling for its terminal state, extracting and decoding emitted contract events and diagnostic events, grouping them by contract and event type, and preserving raw XDR alongside decoded values.
+54. **`191-soroban-contract-deployment-inspection`**: Inspecting a deployed Soroban contract by verifying its existence on the network, retrieving instance and code ledger entries, extracting TTL, last-modified ledger, and code hash, classifying the contract as active, expiring soon, or expired, and producing a read-only deployment verification report.
+54. **`192-soroban-contract-code-inspection`**: Inspecting Soroban contract code metadata, extracting the deployed code identifier, retrieving TTL and ledger information, and optionally comparing a supplied WASM hash against the on-chain code identifier.
+54. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
+55. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+54. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
+50. **`50-asset-issuer-discovery`**: Querying Horizon for an issued asset by code and issuer, displaying trustline/holder counts and authorization flags.
+51. **`51-failed-transaction-analysis`**: Inspecting failed transaction result codes and operation errors with human-readable diagnostics.
+52. **`52-account-balance-history`**: Reconstructing a simple native XLM balance history from recent Horizon effects with transaction and ledger references.
+53. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
+54. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+55. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+56. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
+57. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+59. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
+60. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
+61. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
+52. **`52-account-balance-history`**: Reconstructing a simple native XLM balance history from recent Horizon effects with transaction and ledger references.
+53. **`53-ledger-inspection`**: Retrieving and inspecting a Horizon ledger's sequence, close time, transaction/operation counts, protocol version, and base fee.
+54. **`54-fee-stats`**: Inspecting network fee statistics, fee percentiles, capacity usage, and recommended fee values.
+55. **`55-trade-history`**: Retrieving completed SDEX trades for an asset pair, displaying prices, amounts, and transaction references, and calculating traded volume and average price.
+56. **`60-network-configuration`**: Selecting Testnet vs Mainnet Horizon / Soroban RPC endpoints, binding `TransactionBuilder` to the correct network passphrase, detecting mismatched configuration, and explaining why a transaction signed for one network cannot be submitted to another.
+56. **`56-account-flags-inspection`**: Inspecting Horizon account flags (`auth_required`, `auth_revocable`, `auth_immutable`, `auth_clawback_enabled`), master key state, and restrictive configurations during an account audit.
+57. **`57-account-reserve-calculator`**: Calculating account minimum reserve requirements and available XLM balance from ledger entry breakdowns.
+58. **`58-account-relationship-discovery`**: Discovering and grouping account relationships including signers, asset issuers, sponsorships, and counterparties.
+59. **`59-account-offer-inspection`**: Inspecting an account's active SDEX offers, selling/buying assets, prices, amounts, and approximate fill volumes.
+60. **`61-horizon-resource-filtering`**: Building filtered Horizon queries across transactions, operations, payments, and effects with cursor-based pagination.
+61. **`140-account-reserve-analysis`**: Inspecting an account's total XLM balance, reserve requirements, subentries, liabilities, sponsorship relationships, and estimated spendable XLM.
+62. **`141-sequence-number-management`**: Retrieving on-ledger sequence numbers, allocating sequences locally for multiple pending transactions, detecting stale sequences, and refreshing from Horizon.
+63. **`142-batch-transaction-construction`**: Constructing, inspecting, and optionally submitting a batch of independent transactions from one account with correctly ordered sequential sequence numbers.
+64. **`143-transaction-time-bounds`**: Constructing transactions with time bounds, evaluating validity status (not-yet-valid, valid, expired), observing txTOO_EARLY and txTOO_LATE rejections, and detecting invalid ranges.
+61. **`84-muxed-account-handling`**: Creating, parsing, and validating muxed accounts and extracting base account IDs and muxed identifiers.
+62. **`85-transaction-fee-estimation`**: Estimating transaction fees from network fee statistics across low, recommended, and high priority levels.
+63. **`86-transaction-memo-handling`**: Building and decoding MEMO_TEXT, MEMO_ID, MEMO_HASH, and MEMO_RETURN memos with size and privacy guidance.
+64. **`87-transaction-envelope-inspection`**: Inspecting transaction envelopes, signatures, signer hints, and XDR serialization round-trips.
+61. **`68-soroban-contract-simulation`**: Simulating a Soroban contract invocation, inspecting resource estimates and returned values, and assembling the footprint-bearing transaction without broadcasting.
+62. **`69-soroban-contract-storage`**: Retrieving and inspecting Soroban contract storage entries via `getLedgerEntries`, decoding keys and values, and explaining instance, persistent, and temporary storage durability.
+63. **`70-soroban-authorization`**: Invoking an authorized Soroban contract method, obtaining and signing authorization entries from simulation, and explaining how authorization differs from transaction signatures.
+64. **`71-soroban-storage-update`**: Demonstrating the complete lifecycle of a Soroban storage update — reading initial state, simulating and submitting the modifying transaction, polling for confirmation, and verifying the updated value.
+65. **`82-transaction-time-bounds`**: Building, simulating, signing, and submitting a Soroban contract invocation with custom time bounds, demonstrating expired and invalid time-bounds handling, and explaining best practices for choosing validity windows.
+65. **`80-offline-transaction-workflow`**: Building an unsigned transaction, serializing it to XDR, signing it in a simulated offline (air-gapped) environment, gracefully handling corrupted XDR, and reconstructing and submitting the signed transaction.
+65. **`104-contract-restoration`**: Detecting archived Soroban contract ledger entries, building and simulating a `RestoreFootprint` transaction, submitting restoration when required, and verifying the contract becomes accessible again — with guidance on TTL extension versus restoration.
+65. **`106-scval-serialization`**: Converting JavaScript values to Soroban ScVal objects and back with reusable helpers, displaying raw XDR, and explaining common serialization pitfalls.
+65. **`105-contract-event-decoding`**: Retrieving Soroban contract events and decoding indexed topics and data payloads into human-readable values, with raw base64 XDR shown alongside decoded output.
+65. **`107-contract-spec-introspection`**: Retrieving on-chain WASM, parsing Soroban ScSpec metadata, and displaying functions, arguments, return types, user-defined types, and documentation with dynamic function selection.
+66. **`108-dynamic-contract-invocation`**: Discovering contract methods from runtime ScSpec metadata, encoding JavaScript arguments into the required `ScVal` types, simulating a dynamically constructed invocation, and decoding its return value.
+67. **`109-soroban-transaction-preparation`**: Building and simulating a Soroban invocation, extracting resource limits, fees, footprint and authorization data, applying the simulation result, and inspecting the prepared unsigned transaction XDR.
+68. **`110-soroban-transaction-submission`**: Preparing, signing and submitting a Soroban transaction, polling pending status until a terminal result, and displaying the hash, ledger, return value, resource allocation, fees and events.
+69. **`111-soroban-transaction-error-diagnosis`**: Retrieving failed Soroban transactions, decoding transaction and diagnostic XDR, identifying failed invocations, classifying failure categories, and displaying actionable troubleshooting guidance.
+70. **`188-soroban-transaction-inspection`**: Querying a Soroban transaction by hash, classifying its status, decoding the result/return value and diagnostics, and producing a structured read-only inspection report with polling and JSON output support.
+65. **`81-transaction-preflight`**: Running the full Soroban preflight workflow — simulating an invocation, extracting the footprint/authorization/resource-fee data, assembling, signing, submitting, and confirming the final transaction.
+65. **`83-multi-contract-transaction`**: Composing a single orchestrator contract invocation that touches multiple downstream contracts, simulating and submitting it, and explaining atomicity and execution order across contracts within one Soroban host invocation.
+66. **`93-trustline-management`**: Creating, inspecting, updating, and removing asset trustlines — demonstrating changeTrust operations, trust limit configuration, authorization status inspection, and the 0.5 XLM reserve cost of each subentry.
+67. **`92-account-payment-stream`**: Subscribing to a Horizon account payment stream, displaying incoming and outgoing payments in real time, handling stream errors with automatic reconnection, and explaining when streaming should be preferred over polling.
+68. **`126-claimable-balance-management`**: Discovering, inspecting, filtering, and claiming eligible Stellar claimable balances end-to-end.
+69. **`128-account-authorization-flags`**: Inspecting and managing issuer authorization flags, with both allowTrust and setTrustLineFlags authorization workflows.
+70. **`130-sponsored-reserve-management`**: Sponsoring a trustline and a data entry, inspecting reserve responsibility, and revoking one entry's sponsorship.
+71. **`131-path-payment-route-inspection`**: Discovering and ranking strict-receive path payment routes without submitting a payment.
+68. **`139-account-offer-inspection`**: Inspect an account's open SDEX offers, grouped by trading pair with summary statistics.
+69. **`138-account-merge-preflight`**: Inspect a Stellar account to determine merge readiness and identify blocking ledger states.
+70. **`132-fee-bump-inspection`**: Decode and inspect fee-bump and normal transaction envelopes offline.
+71.  **`136-transaction-fee-estimation`**: Estimate minimum transaction fees using Horizon network fee statistics across operation sizes.
+72. **`120-transaction-lifecycle-monitor`**: Monitor a Horizon transaction until confirmation, failure, timeout, or temporary rate limiting, with ledger, fee, operation-count, and result information.
+73. **`121-account-history-pagination`**: Traverse an account's Horizon operation history page by page with configurable page size, record limits, operation filtering, cursor-safe traversal, and duplicate prevention.
+74. **`122-order-book-inspection`**: Inspect a Stellar trading pair's bids, asks, best prices, spread, midpoint, configurable depth, and summarized liquidity.
+75. **`123-trade-history-analysis`**: Retrieve historical trades for a Stellar pair, filter by time, and calculate high, low, average price, traded volume, and trade count.
+72. **`124-liquidity-pool-inspection`**: Retrieve and analyze an existing Stellar liquidity pool, its reserves, shares, and fees.
+73. **`125-liquidity-pool-simulation`**: Simulate deposit and withdrawal operations on a liquidity pool to estimate share and asset changes.
+74. **`127-trustline-management`**: Inspect, create, update, and remove asset trustlines for a Stellar account.
+75. **`129-asset-clawback`**: Verify clawback configurations and simulate/execute asset recovery operations.
+76. **`133-transaction-signature-verification`**: Decode a Stellar transaction envelope, extract signer hints, and cryptographically verify signatures against candidate public keys offline.
+77. **`134-multisignature-threshold-inspection`**: Inspect an account's multisignature configuration (signers, weights, thresholds) and determine if a given transaction holds sufficient authorization.
+78. **`135-transaction-preflight-validation`**: Run local and network-dependent preflight validation checks (sequence, fees, time bounds, signatures) on a transaction envelope prior to submission.
+79. **`137-dynamic-fee-selection`**: Query Horizon fee statistics and dynamically calculate a transaction fee based on strategies like median, high priority, or custom multipliers, with safety caps.
+80. **`157-horizon-pagination`**: Reusable pagination across Horizon transactions, operations, and payments with duplicate prevention, early termination, timeouts, and metrics.
+81. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
+82. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
+83. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
+84. **`177-soroban-event-decoding`**: Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding, supporting configurable ledger ranges and event-type filtering.
+85. **`178-soroban-contract-storage`**: Inspect Soroban contract storage entries across instance, persistent, and temporary durability tiers with decoded keys, values, and TTL information.
+86. **`179-soroban-footprint-inspection`**: Extract and analyze the Soroban ledger footprint from a transaction simulation or envelope, distinguishing read-only from read-write entries and detecting duplicates.
+87. **`180-soroban-resource-analysis`**: Analyze Soroban resource usage from simulation results with CPU instructions, memory, ledger read/write metrics, utilization percentages, and near-limit detection.
+84. **`193-soroban-contract-interface`**: Inspecting deployed Soroban contract interfaces, exported functions, argument/return types, user-defined structs/enums/unions, and generating example call signatures.
+85. **`194-soroban-contract-client-generator`**: Generating strongly typed TypeScript contract client wrappers, type definitions, method signatures, and ScVal conversion helpers from a Soroban contract specification.
+86. **`195-soroban-interface-compatibility`**: Comparing two Soroban contract specifications to detect additions, removals, parameter/type changes, and classify breaking vs compatible modifications.
+87. **`196-soroban-authorization-preparation`**: Preparing, inspecting, decoding, and round-trip verifying Soroban authorization entries and invocation trees without requesting secret keys or signing.
+88. **`173-transaction-fee-estimation`**: Retrieving network fee information and comparing economy, standard, and priority fee strategies including fee-bump fees.
+89. **`174-transaction-preflight-validation`**: Validating transaction structure, fee, sequence number, time bounds, and memo before signing, without ever submitting.
+90. **`175-transaction-result-analysis`**: Decoding transaction and operation result codes into a structured diagnostic report with remediation hints.
+91. **`176-soroban-contract-invocation`**: Preparing a Soroban contract invocation transaction with encoded ScVal arguments, envelope XDR, and transaction hash.
+92. **`197-state-lifecycle`**: Offline Soroban contract-data entry lifecycle analysis: compare two or more ordered state snapshots, match entries by stable ledger-key identifiers, detect first-observed, persisting, modified, removed, and reappearing entries, track value, durability, lastModifiedLedgerSeq, and TTL changes, distinguish TTL increases and decreases, filter by contract ID, durability, or lifecycle transition type, and output JSON or human-readable reports.
+
+84. **`116-soroban-token-contract`**: Inspect Soroban token metadata, balances, allowances, and optional total supply; construct and simulate a token transfer; and decode returned `ScVal` values.
+85. **`117-soroban-auth-tree`**: Simulate Soroban authorization requirements and display readable root and nested invocation trees with signer, contract, function, argument, and signature information.
+86. **`118-ledger-footprint-analysis`**: Simulate and compare Soroban ledger footprints, distinguish read-only and read-write entries, decode ledger keys, identify storage types, and display raw XDR.
+87. **`119-soroban-resource-fee-analysis`**: Simulate and compare Soroban CPU, memory, ledger I/O, transaction resource limits, resource fees, inclusion fees, and total estimated transaction cost.
+102. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences.
+103. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
+104. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
+105. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
+106. **`209-watch-events`**: Periodically monitors Soroban RPC for new contract events, decodes them in real-time, and avoids duplicate processing across polling cycles.
+107. **`210-replay-events`**: Retrieves, decodes, and exports a chronological stream of Soroban events over a specific ledger range with JSON export support.
+108. **`211-event-analytics`**: Analyzes historical Soroban event datasets to calculate aggregate usage statistics, top topics, and participating contract distributions.
+109. **`212-event-validate`**: Verifies historical Soroban event payloads and structures against a provided schema, detailing missing fields, unexpected fields, and type mismatches.
+110. **`224-state-deps`**: Offline state-dependency analysis tool that extracts observable references from a Soroban snapshot and builds an in-memory dependency graph.
+111. **`201-scval`**: Interactive `ScVal` playground for encoding JSON to ScVal XDR and decoding base64 XDR back to human-readable JSON formats.
+112. **`202-scval-validate`**: Validation checker verifying primitive and composite inputs structurally match an expected Soroban ScVal contract schema.
+113. **`203-contract-args`**: Contract argument schema inspector to list callable functions, types, and generate example payload JSONs without modifying ledger state.
+102. **`213-event-schema-diff`**: Compare two Soroban event schema definitions and output structural differences.
+103. **`214-event-types`**: Generate strongly typed TypeScript interfaces and ScVal decoding helpers from a Soroban event schema.
+104. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
+105. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
+114. **`204-contract-template`**: Resolves a contract function's expected parameters and generates a reusable TypeScript invocation template and JSON argument placeholders.
+115. **`205-build-args`**: Validates supplied JSON arguments against an expected interface and encodes them into the `ScVal[]` array required for invocation.
+116. **`206-decode-return`**: Decodes a base64-encoded `ScVal` return value from a simulation or transaction result into human-readable JavaScript objects.
+117. **`207-decode-event`**: Parses raw Soroban event JSON, independently decoding its indexed topics and event data payload into readable formats.
+
 19. **`19-horizon-streaming`**: Subscribing to live Horizon Testnet payment events through Server-Sent Events.
 20. **`20-sep10-authentication`**: SEP-10 challenge generation, signing, verification, and JWT issuance.
 21. **`21-sep24-deposit-withdrawal`**: Running SEP-24 interactive deposit and withdrawal against a Testnet anchor.
