@@ -20,6 +20,10 @@ import { run as runEventSchemaDiff } from './examples/213-event-schema-diff';
 import { run as runEventTypes } from './examples/214-event-types';
 import { run as runEventCompat } from './examples/215-event-compat';
 import { run as runStateDiff } from './examples/216-state-diff';
+import { parseStateStructureArgs, run as runStateStructure } from './examples/221-state-structure';
+import { parseStateSchemaArgs, run as runStateSchema } from './examples/222-state-schema';
+import { parseStateCheckArgs, run as runStateCheck } from './examples/223-state-check';
+import { parseStateMergeArgs, run as runStateMerge } from './examples/226-state-merge';
 import {
   parseAuthorizationArgs,
   run as runAuthorizationSignatureInspection,
@@ -68,6 +72,10 @@ function printUsage(): void {
   console.log('  event-types <schema.json>');
   console.log('  event-compat <schema.json> <events.json>');
   console.log('  state-diff <before.json> <after.json>');
+  console.log('  state-structure <snapshot.json> [options]');
+  console.log('  state-schema <snapshot.json> [options]');
+  console.log('  state-check <snapshot.json> [options]');
+  console.log('  state-merge <before.json> <after.json> [...files] -o <merged.json> [options]');
   console.log('  auth-signature <authorizationEntryXdr> [...xdr] [--json]');
   console.log('  soroban-ttl <contractId> [--key <key>] [--warning-ledgers <n>] [--json]');
   console.log('  soroban-state-report <contractId> [--key <key>] [--warning-ledgers <n>] [--json]');
@@ -219,6 +227,17 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'state-diff':
         await runStateDiff({ beforeFile: cmdArgs[0], afterFile: cmdArgs[1] });
         return 0;
+      case 'state-structure':
+        await runStateStructure(parseStateStructureArgs(cmdArgs));
+        return 0;
+      case 'state-schema':
+        await runStateSchema(parseStateSchemaArgs(cmdArgs));
+        return 0;
+      case 'state-check':
+        await runStateCheck(parseStateCheckArgs(cmdArgs));
+        return 0;
+      case 'state-merge':
+        await runStateMerge(parseStateMergeArgs(cmdArgs));
       case 'auth-signature':
         await runAuthorizationSignatureInspection(parseAuthorizationArgs(cmdArgs));
         return 0;
