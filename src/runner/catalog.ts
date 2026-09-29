@@ -13170,6 +13170,17 @@ export const examples: Record<string, Example> = {
       { type: 'input', name: 'dotOutput', message: 'Optional path to write DOT file (blank skips write):' },
     ],
   },
+  '252-wasm-features': {
+    name: '252-wasm-features',
+    description:
+      'Scan WASM sections, types, imports, and instructions for a normalized offline feature-usage profile and optional artifact comparison',
+    run: loadExample('../examples/252-wasm-features'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
   '219-wasm-recursion': {
     name: '219-wasm-recursion',
     description:

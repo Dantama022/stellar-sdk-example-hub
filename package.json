@@ -5,7 +5,8 @@
   "main": "dist/runner.js",
   "bin": {
     "stellar-api-inspector": "dist/src/stellar-api-inspector.js",
-    "wasm-fingerprint": "dist/src/wasm-fingerprint.js"
+    "wasm-fingerprint": "dist/src/wasm-fingerprint.js",
+    "wasm-features": "dist/src/wasm-features.js"
   },
   "scripts": {
     "build": "tsc",

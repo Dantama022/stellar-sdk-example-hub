@@ -38,6 +38,7 @@ import { run as runWasmInstructions } from './examples/247-wasm-instructions';
 import { run as runWasmElements } from './examples/248-wasm-elements';
 import { parseWasmFingerprintArgs, run as runWasmFingerprint } from './examples/251-wasm-fingerprint';
 import { run as runWasmProvenance } from './examples/250-wasm-provenance';
+import { parseWasmFeatureArgs, run as runWasmFeatures } from './examples/252-wasm-features';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 
 dotenv.config();
@@ -77,6 +78,7 @@ function printUsage(): void {
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
   console.log('  wasm-fingerprint <wasmFile> [compareFile] [--json]');
   console.log('  wasm-provenance <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-features <wasmFile> [compareFile] [--json]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -205,6 +207,9 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'wasm-provenance':
         await runWasmProvenance(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-features':
+        runWasmFeatures(parseWasmFeatureArgs(cmdArgs));
         return 0;
       default:
         printUsage();

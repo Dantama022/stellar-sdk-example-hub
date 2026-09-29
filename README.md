@@ -429,6 +429,16 @@ The normalized report preserves producer order and records each producer field, 
 
 Producer metadata is optional and producer-reported; it may be absent, malformed, or omit build steps. Category inference is heuristic, and a missing language or compiler record is not inferred from other fields. A matching fingerprint means the parsed producer records match in order, not that the complete build environments or generated modules are identical. The report also includes the WASM version, function/import/export counts, code-section byte size, and custom-section names.
 
+The `wasm-features` command scans module sections, types, imports, resource declarations, data and element segments, and decoded instructions to report bulk memory, reference types, table instructions and multiplicity, memory64, shared and multiple memories, SIMD, atomics, exception constructs, typed function references, indirect calls, tail calls, memory initialization, and element initialization. It records section/function locations, occurrence counts, and the number and indices of distinct functions using each feature. Comparison mode reports introduced and removed features, changed occurrence counts, and functions newly or no longer using each feature. Use `--json` for the normalized profile and comparison data:
+
+```bash
+stellar-api-inspector wasm-features contract.wasm
+stellar-api-inspector wasm-features old.wasm new.wasm --json
+# Alternatively: npx ts-node src/wasm-features.ts contract.wasm --json
+```
+
+Analysis is offline and never instantiates or executes WASM. A detected feature is not a statement about runtime support. Features with no observed evidence are `not-detected` only when relevant metadata was decoded; unknown sections or undecodable instructions can make the affected result `could-not-be-determined`. Unknown instruction encodings stop scanning only the remainder of their function, and make otherwise-unobserved instruction-derived features indeterminate. Custom sections are listed but treated as opaque. This profile is limited to recognized section layouts and instruction immediate encodings; it is not a validator or a complete implementation of every WebAssembly proposal.
+
 Build an offline state transition matrix from two or more ordered snapshot files. Optional filters select a contract, transition type, or minimum frequency:
 
 ```bash
