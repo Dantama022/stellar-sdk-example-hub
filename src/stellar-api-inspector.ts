@@ -25,6 +25,12 @@ import { parseStateKeyArgs, run as runStateKey } from './examples/218-state-key'
 import { parseStateSearchArgs, run as runStateSearch } from './examples/219-state-search';
 import { parseStateTypesArgs, run as runStateTypes } from './examples/220-state-types';
 import { run as runStateDeps } from './examples/224-state-deps';
+import {
+  runStateTransitions,
+  runWasmCompatibility,
+  runWasmDependencies,
+  runWasmFootprint,
+} from './examples/225-wasm-analysis';
 import { run as runWasmMemory } from './examples/244-wasm-memory';
 import { run as runWasmCustomSections } from './examples/245-wasm-custom-sections';
 import { run as runWasmGlobals } from './examples/246-wasm-globals';
@@ -58,6 +64,10 @@ function printUsage(): void {
   console.log('  state-search <snapshot.json> <value> [options]');
   console.log('  state-types <snapshot.json> [options]');
   console.log('  state-deps <snapshot.json>');
+  console.log('  wasm-footprint <wasmFile> [compareWasmFile] [--json]');
+  console.log('  wasm-compat <old.wasm> <new.wasm> [--json]');
+  console.log('  wasm-deps <wasmFile> [compareWasmFile] [--json]');
+  console.log('  state-transitions <snapshot.json> <snapshot.json> [...] [--contract <id>] [--type <type>] [--min-frequency <count>] [--json]');
   console.log('  wasm-memory <wasmFile> [compareFile] [--json]');
   console.log('  wasm-custom-sections <wasmFile> [compareFile] [--json]');
   console.log('  wasm-globals <wasmFile> [compareFile] [--json]');
@@ -160,6 +170,17 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'state-deps':
         await runStateDeps({ snapshotFile: cmdArgs[0] });
         return 0;
+      case 'wasm-footprint':
+        await runWasmFootprint(cmdArgs);
+        return 0;
+      case 'wasm-compat':
+        await runWasmCompatibility(cmdArgs);
+        return 0;
+      case 'wasm-deps':
+        await runWasmDependencies(cmdArgs);
+        return 0;
+      case 'state-transitions':
+        await runStateTransitions(cmdArgs);
       case 'wasm-memory':
         await runWasmMemory(parseWasmArgs(cmdArgs));
         return 0;
