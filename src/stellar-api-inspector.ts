@@ -20,6 +20,19 @@ import { run as runEventSchemaDiff } from './examples/213-event-schema-diff';
 import { run as runEventTypes } from './examples/214-event-types';
 import { run as runEventCompat } from './examples/215-event-compat';
 import { run as runStateDiff } from './examples/216-state-diff';
+import {
+  parseAuthorizationArgs,
+  run as runAuthorizationSignatureInspection,
+} from './examples/197-soroban-authorization-signature-inspection';
+import { parseTtlArgs, run as runSorobanTtl } from './examples/198-soroban-ttl';
+import {
+  parseStateReportArgs,
+  run as runSorobanStateReport,
+} from './examples/199-soroban-state-report';
+import {
+  parseDecodeLedgerKeyArgs,
+  run as runDecodeLedgerKey,
+} from './examples/200-decode-ledger-key';
 import { run as runStateDeps } from './examples/224-state-deps';
 import { run as runWasmMemory } from './examples/244-wasm-memory';
 import { run as runWasmCustomSections } from './examples/245-wasm-custom-sections';
@@ -29,6 +42,10 @@ import { run as runWasmElements } from './examples/248-wasm-elements';
 import { run as runWasmComplexity } from './examples/249-wasm-complexity';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 import { ComplexityThresholds } from './utils/wasm-complexity';
+import { run as runWasmFloatOps } from './examples/248-wasm-float-ops';
+import { run as runWasmLocals } from './examples/249-wasm-locals';
+import { WasmValidationError } from './utils/wasm-static-analysis';
+import { WasmProvenanceError } from './examples/249-wasm-return-provenance/provenance-engine';
 
 dotenv.config();
 
@@ -51,6 +68,10 @@ function printUsage(): void {
   console.log('  event-types <schema.json>');
   console.log('  event-compat <schema.json> <events.json>');
   console.log('  state-diff <before.json> <after.json>');
+  console.log('  auth-signature <authorizationEntryXdr> [...xdr] [--json]');
+  console.log('  soroban-ttl <contractId> [--key <key>] [--warning-ledgers <n>] [--json]');
+  console.log('  soroban-state-report <contractId> [--key <key>] [--warning-ledgers <n>] [--json]');
+  console.log('  decode-ledger-key <xdr> [...xdr] [--compact] [--json]');
   console.log('  state-deps <snapshot.json>');
   console.log('  wasm-memory <wasmFile> [compareFile] [--json]');
   console.log('  wasm-custom-sections <wasmFile> [compareFile] [--json]');
@@ -58,6 +79,8 @@ function printUsage(): void {
   console.log('  wasm-instructions <wasmFile> [compareFile] [--json]');
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
   console.log('  wasm-complexity <wasmFile> [compareFile] [--json] [--threshold <score>]');
+  console.log('  wasm-float-ops <wasmFile> [compareFile] [--json] [--csv]');
+  console.log('  wasm-locals <wasmFile> [compareFile] [--json]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -196,6 +219,18 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'state-diff':
         await runStateDiff({ beforeFile: cmdArgs[0], afterFile: cmdArgs[1] });
         return 0;
+      case 'auth-signature':
+        await runAuthorizationSignatureInspection(parseAuthorizationArgs(cmdArgs));
+        return 0;
+      case 'soroban-ttl':
+        await runSorobanTtl(parseTtlArgs(cmdArgs));
+        return 0;
+      case 'soroban-state-report':
+        await runSorobanStateReport(parseStateReportArgs(cmdArgs));
+        return 0;
+      case 'decode-ledger-key':
+        await runDecodeLedgerKey(parseDecodeLedgerKeyArgs(cmdArgs));
+        return 0;
       case 'state-deps':
         await runStateDeps({ snapshotFile: cmdArgs[0] });
         return 0;
@@ -216,6 +251,14 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'wasm-complexity':
         await runWasmComplexity(parseComplexityArgs(cmdArgs));
+      case 'wasm-float-ops': {
+        const wasmFloatArgs = parseWasmArgs(cmdArgs);
+        const csv = cmdArgs.includes('--csv') || cmdArgs.includes('--csv=true');
+        await runWasmFloatOps({ ...wasmFloatArgs, csv });
+        return 0;
+      }
+      case 'wasm-locals':
+        await runWasmLocals(parseWasmArgs(cmdArgs));
         return 0;
       default:
         printUsage();
@@ -226,6 +269,8 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       console.error(`Error: ${error.message}`);
     } else if (error instanceof WasmValidationError) {
       console.error(`WASM Validation Error: ${error.message}`);
+    } else if (error instanceof WasmProvenanceError) {
+      console.error(`WASM Provenance Error: ${error.message}`);
     } else {
       console.error(`Unexpected Error: ${error instanceof Error ? error.message : String(error)}`);
     }
