@@ -1170,6 +1170,8 @@ stellar-api-inspector wasm-memory src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-custom-sections src/contracts/sample/hello.wasm --json
 stellar-api-inspector wasm-globals src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm
 stellar-api-inspector wasm-instructions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-complexity src/contracts/sample/hello.wasm --threshold 100
+stellar-api-inspector wasm-complexity old.wasm new.wasm --branch-threshold 10 --json
 stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm --json
 stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm --csv
@@ -1221,6 +1223,43 @@ Every finding includes the function index, basic-block index, and instruction in
 Optional `--csv` output emits one row per floating-point instruction with columns: `functionIndex,blockIndex,instructionIndex,opcode,valueType,category`. Optional `--json` output includes the full normalized instruction inventory alongside all statistics. Supplying a second WASM artifact switches to comparison mode, which reports added and removed opcodes, new f32 or f64 usage, functions that newly use or lost floating-point instructions, and per-precision and total instruction deltas.
 
 Unknown or unsupported opcodes are silently treated as non-float instructions and do not abort the analysis. No WASM instructions are ever executed.
+
+### WASM function complexity scoring
+
+`wasm-complexity` reads and validates the binary structure and code section; it never
+instantiates or executes the module and does not use the network. Defined functions are
+reported in ascending function-index order. The deterministic structural score is:
+
+```text
+instruction count
++ 2 × control-flow instructions (block, loop, if, else, end)
++ 3 × branch instructions (br, br_if, br_table, return, br_on_null, br_on_non_null)
++ 2 × call instructions (direct, indirect, reference, and tail calls)
++ 2 × linear-memory operations (loads, stores, size/grow, memory.init, memory.copy, and memory.fill)
++ 1 × local accesses (local.get, local.set, local.tee)
+```
+
+The score describes static instruction composition, not runtime cost. Code-body byte size
+includes the local declarations and instruction expression. Configure highlighting with
+`--threshold` (or `--score-threshold`), `--instruction-threshold`,
+`--body-size-threshold`, `--control-flow-threshold`, `--branch-threshold`,
+`--call-threshold`, `--memory-threshold`, and `--local-access-threshold`. A function is
+highlighted when a metric is greater than or equal to its threshold. Supply a second file
+positionally, or with `--compare`, to obtain per-function and aggregate deltas. Functions
+whose score is unchanged but whose component metrics changed are reported separately.
+Comparison identity is deliberately separate from body content: functions are matched
+first by a unique export name, then by an unchanged body fingerprint combined with the
+function type, then by function type only when exactly one unmatched function exists on
+each side for that type. This keeps insertions, removals, and reordering from being
+reported as false modifications when unchanged bodies can be identified, while still
+tracking an unambiguous changed unexported function. Ambiguous changed unexported groups
+are conservatively reported as added/removed rather than guessed as modified. `--json`
+contains the same deterministic ordering, reports, highlights, scoring weights, and
+comparison data as console output. Unsupported instruction proposals produce a
+validation error instead of being misinterpreted. Aggregate statistics use iterative
+reductions rather than argument-list expansion, and comparison grouping uses map buckets
+with append-only arrays, so large modules and duplicate-heavy function sets do not incur
+argument-stack failures or quadratic array-copy growth.
 
 ## License
 
