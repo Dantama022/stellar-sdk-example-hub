@@ -145,6 +145,40 @@ export interface WasmCustomSectionReport {
   };
 }
 
+export type WasmProducerCategory = 'language' | 'compiler' | 'linker' | 'binary-tool' | 'other';
+
+export interface WasmProducerInfo {
+  order: number;
+  field: string;
+  category: WasmProducerCategory;
+  name: string;
+  version: string;
+  values: { name: string; version: string };
+}
+
+export interface WasmProvenanceReport {
+  file: string;
+  valid: true;
+  provenanceStatus: 'available' | 'partial' | 'absent' | 'malformed';
+  producers: WasmProducerInfo[];
+  rawProducerMetadata: Array<{
+    sectionOrder: number;
+    payloadBase64: string;
+    fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }> | null;
+    error?: string;
+  }>;
+  warnings: string[];
+  module: {
+    wasmVersion: number;
+    functionCount: number;
+    importCount: number;
+    exportCount: number;
+    codeSize: number;
+    customSections: { present: boolean; count: number; names: string[] };
+  };
+  fingerprint: string;
+}
+
 interface Section {
   id: number;
   order: number;
@@ -611,6 +645,177 @@ function importedFunctionCount(importSection: Section | undefined): number {
     }
   }
   return functions;
+}
+
+function producerCategory(field: string, name: string): WasmProducerCategory {
+  if (field.toLowerCase() === 'language') return 'language';
+  const value = `${field} ${name}`.toLowerCase();
+  if (/linker|wasm-ld|rust-lld|\blld\b/.test(value)) return 'linker';
+  if (/objcopy|objdump|strip|wasm-tools|binaryen|wasm-opt/.test(value)) return 'binary-tool';
+  if (/compiler|rustc|clang|\bgcc\b|swiftc|emscripten|tinygo|\bzig\b/.test(value)) {
+    return 'compiler';
+  }
+  return 'other';
+}
+
+function parseProducerSection(section: Section): {
+  fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }>;
+  producers: WasmProducerInfo[];
+} {
+  const reader = new Reader(section.payload);
+  if (reader.string() !== 'producers') throw new WasmValidationError('Not a producers section');
+  const fieldCount = reader.varuint32();
+  const fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }> = [];
+  const producers: WasmProducerInfo[] = [];
+  for (let fieldIndex = 0; fieldIndex < fieldCount; fieldIndex += 1) {
+    const field = reader.string();
+    const producerCount = reader.varuint32();
+    const fieldProducers: Array<{ name: string; version: string }> = [];
+    for (let producerIndex = 0; producerIndex < producerCount; producerIndex += 1) {
+      const name = reader.string();
+      const version = reader.string();
+      fieldProducers.push({ name, version });
+      producers.push({
+        order: producers.length,
+        field,
+        category: producerCategory(field, name),
+        name,
+        version,
+        values: { name, version },
+      });
+    }
+    fields.push({ name: field, producers: fieldProducers });
+  }
+  if (!reader.done) throw new WasmValidationError('Trailing bytes in producers section');
+  return { fields, producers };
+}
+
+export function analyzeWasmProvenance(file: string): WasmProvenanceReport {
+  const sections = loadSections(file);
+  const customSections = sections.filter((section) => section.id === 0);
+  const warnings: string[] = [];
+  const rawProducerMetadata: WasmProvenanceReport['rawProducerMetadata'] = [];
+  const producers: WasmProducerInfo[] = [];
+  let malformedCount = 0;
+  let incompleteRecordCount = 0;
+  let malformedCustomSectionCount = 0;
+  let foundProducerSection = false;
+  const customSectionNames: string[] = [];
+
+  customSections.forEach((section) => {
+    const reader = new Reader(section.payload);
+    let name: string;
+    try {
+      name = reader.string();
+      customSectionNames.push(name);
+    } catch (error) {
+      malformedCustomSectionCount += 1;
+      warnings.push(
+        `Custom section ${section.order} has an invalid name: ${(error as Error).message}`,
+      );
+      return;
+    }
+    if (name !== 'producers') return;
+    foundProducerSection = true;
+    const raw = {
+      sectionOrder: section.order,
+      payloadBase64: section.payload.toString('base64'),
+      fields: null as WasmProvenanceReport['rawProducerMetadata'][number]['fields'],
+    };
+    try {
+      const parsed = parseProducerSection(section);
+      raw.fields = parsed.fields;
+      incompleteRecordCount += parsed.producers.filter(
+        (producer) => !producer.name || !producer.version,
+      ).length;
+      producers.push(
+        ...parsed.producers.map((producer) => ({
+          ...producer,
+          order: producers.length + producer.order,
+        })),
+      );
+      if (parsed.producers.length === 0) {
+        warnings.push(`Producer section ${section.order} contains no producer records`);
+      }
+      if (parsed.producers.some((producer) => !producer.name || !producer.version)) {
+        warnings.push(
+          `Producer section ${section.order} contains records with an empty name or version`,
+        );
+      }
+      rawProducerMetadata.push(raw);
+    } catch (error) {
+      malformedCount += 1;
+      rawProducerMetadata.push({
+        ...raw,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      warnings.push(
+        `Producer section ${section.order} is malformed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  });
+
+  const importSection = sections.find((section) => section.id === 2);
+  const functionSection = sections.find((section) => section.id === 3);
+  const exportSection = sections.find((section) => section.id === 7);
+  const codeSection = sections.find((section) => section.id === 10);
+  const importReader = importSection ? new Reader(importSection.payload) : null;
+  const exportReader = exportSection ? new Reader(exportSection.payload) : null;
+  const functionReader = functionSection ? new Reader(functionSection.payload) : null;
+  const validProducerSections = rawProducerMetadata.filter((metadata) => metadata.fields !== null);
+  const status: WasmProvenanceReport['provenanceStatus'] = !foundProducerSection
+    ? malformedCustomSectionCount > 0
+      ? 'partial'
+      : 'absent'
+    : malformedCount > 0
+      ? validProducerSections.length > 0
+        ? 'partial'
+        : 'malformed'
+      : producers.length === 0 || incompleteRecordCount > 0
+        ? 'partial'
+        : 'available';
+  if (!foundProducerSection) warnings.push('No standard producers custom section was found');
+  if (malformedCustomSectionCount > 0) {
+    warnings.push('One or more custom section names could not be decoded');
+  }
+  if (malformedCount > 0 && validProducerSections.length > 0) {
+    warnings.push('Some producer metadata was parsed, but one or more producer sections were malformed');
+  }
+
+  const normalized = producers.map(({ field, category, name, version }) => ({
+    field,
+    category,
+    name,
+    version,
+  }));
+  const normalizedSections = rawProducerMetadata.flatMap((metadata) =>
+    metadata.fields === null
+      ? []
+      : [{ sectionOrder: metadata.sectionOrder, fields: metadata.fields }],
+  );
+  return {
+    file,
+    valid: true,
+    provenanceStatus: status,
+    producers,
+    rawProducerMetadata,
+    warnings,
+    module: {
+      wasmVersion: 1,
+      functionCount: importedFunctionCount(importSection) + (functionReader?.varuint32() ?? 0),
+      importCount: importReader?.varuint32() ?? 0,
+      exportCount: exportReader?.varuint32() ?? 0,
+      codeSize: codeSection?.payload.length ?? 0,
+      customSections: {
+        present: customSections.length > 0,
+        count: customSections.length,
+        names: customSectionNames,
+      },
+    },
+    fingerprint: createHash('sha256')
+      .update(JSON.stringify({ producers: normalized, sections: normalizedSections }))
+      .digest('hex'),
+  };
 }
 
 export function analyzeMemoryTables(file: string): WasmMemoryTableReport {

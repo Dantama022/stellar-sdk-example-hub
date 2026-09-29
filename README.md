@@ -370,6 +370,17 @@ stellar-api-inspector wasm-deps contract.wasm
 stellar-api-inspector wasm-deps old.wasm new.wasm --json
 ```
 
+Inspect standard WASM `producers` custom-section metadata and correlate it with basic module structure. The command runs fully offline, reads bytes and section metadata only, and never executes contract instructions:
+
+```bash
+stellar-api-inspector wasm-provenance contract.wasm
+stellar-api-inspector wasm-provenance old.wasm new.wasm --json
+```
+
+The normalized report preserves producer order and records each producer field, name, version, and inferred category (language, compiler, linker, binary tool, or other). JSON output also includes the raw producer-section payload as base64. Comparison reports additions, removals, version/category changes, unchanged fingerprints, and whether the available metadata supports calling the producer chains materially different.
+
+Producer metadata is optional and producer-reported; it may be absent, malformed, or omit build steps. Category inference is heuristic, and a missing language or compiler record is not inferred from other fields. A matching fingerprint means the parsed producer records match in order, not that the complete build environments or generated modules are identical. The report also includes the WASM version, function/import/export counts, code-section byte size, and custom-section names.
+
 Build an offline state transition matrix from two or more ordered snapshot files. Optional filters select a contract, transition type, or minimum frequency:
 
 ```bash
