@@ -1,3 +1,4 @@
+# Soroban WASM Unreachable Path Analyzer
 # Soroban WASM Dominator Tree Analysis
 
 ## Overview
@@ -2467,11 +2468,16 @@ npm run run-example 123-trade-history-analysis
 Use `SELLING_ASSET`, `BUYING_ASSET`, `TRADE_HISTORY_LIMIT`, `TRADE_FROM_TIME`, `TRADE_TO_TIME`, and `JSON_OUTPUT=true`. Time filters accept ISO-8601 values or Unix timestamps in seconds. Empty markets are reported as a valid zero-trade result.
 # 🎓 Stellar SDK Example Hub
 
-[![CI Status](https://github.com/your-org/stellar-sdk-example-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/stellar-sdk-example-hub/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Static analysis tool for detecting unreachable code in Soroban WASM artifacts.
 
-A curated repository of runnable TypeScript examples demonstrating key features of the Stellar and Soroban JavaScript/TypeScript SDK (`@stellar/stellar-sdk`).
+## Features
+- Identifies unreachable basic blocks and instructions
+- Classifies termination reasons (returns, branches, traps)
+- Supports JSON and CSV output
+- Comparison mode for artifact diffing
+- No WASM execution required
 
+## Installation
 Designed to help developers build, sign, submit, inspect, and troubleshoot operations on the Stellar network.
 
 ## Examples Roadmap & Catalog
@@ -3827,46 +3833,46 @@ npm run validate:examples
 Run all discovered examples, including excluded examples:
 
 ```bash
-npm run validate:examples:all
+npm install -g soroban-wasm-unreachable
 ```
 
-Target specific examples:
+## Usage
 
+### Basic Analysis
 ```bash
-npm run validate:examples -- --only 01-create-account,02-payment
+wasm-unreachable -f path/to/contract.wasm
 ```
 
-Target the four account and transaction examples:
-
+### Comparison Mode
 ```bash
-npm run validate:examples -- --only 39-account-thresholds,41-sponsored-reserve-inspection,42-account-sequence-numbers,46-transaction-detail-inspection
+wasm-unreachable -f current.wasm -c previous.wasm
 ```
 
-Use a custom configuration file:
-
+### Output Formats
 ```bash
-npm run validate:examples -- --config path/to/validation.config.json
+wasm-unreachable -f contract.wasm -o json
+wasm-unreachable -f contract.wasm -o csv
 ```
 
-### Exclusion Mechanism
+## Output
 
-Examples that require external credentials, user interaction, or unavailable services can be excluded through the validation configuration:
-
+### JSON Format
 ```json
 {
-  "exclusions": [
-    {
-      "match": "05-soroban-invoke",
-      "reason": "Requires Soroban RPC availability and deployed contracts"
-    },
-    {
-      "match": "18-*",
-      "reason": "Requires external service behavior that is not deterministic in CI"
-    }
-  ]
+  "functions": [...],
+  "metrics": {
+    "totalBlocks": 42,
+    "reachableBlocks": 38,
+    "unreachableBlocks": 4,
+    "unreachablePercentage": 9.52
+  }
 }
 ```
 
+### CSV Format
+```csv
+Function Index,Function Name,Block Index,Reachable,Reason,Start Instruction,End Instruction
+0,main,3,false,unconditional_return,0,5
 The `match` property supports `*` wildcard patterns and is evaluated against the example name without the `.ts` extension.
 
 ### CI Integration
@@ -4012,6 +4018,16 @@ Inspect current order-book depth:
 # Run tests
 npm test
 
+## Metrics
+
+- Total reachable/unreachable blocks
+- Total reachable/unreachable instructions
+- Unreachable code percentage
+- Functions containing unreachable regions
+- Largest unreachable region
+
+## License
+MIT
 # Build project
 npm run build
 
