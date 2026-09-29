@@ -2259,6 +2259,62 @@ export const examples: Record<string, Example> = {
       { type: 'input', name: 'eventsFile', message: 'Path to events JSON:' },
     ],
   },
+  '218-wasm-dominators': {
+    name: '218-wasm-dominators',
+    description:
+      'Construct control-flow graphs and compute dominator trees for every function in a Soroban contract WASM artifact',
+    run: loadExample('../examples/218-wasm-dominators'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file (blank uses bundled sample):' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'dot', message: 'Output DOT graph?', default: false },
+      { type: 'input', name: 'dotOutput', message: 'Optional path to write DOT file (blank skips write):' },
+    ],
+  },
+  '219-wasm-recursion': {
+    name: '219-wasm-recursion',
+    description:
+      'Analyse recursive call patterns in a Soroban contract WASM artifact — detecting self-recursion, mutual recursion, multi-function cycles, and indirect-call candidates offline without executing contract code',
+    run: loadExample('../examples/219-wasm-recursion'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file (blank uses bundled sample):' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'dot', message: 'Output DOT graph for recursive components?', default: false },
+      { type: 'input', name: 'maxCycles', message: 'Max cycles to enumerate (0 = skip enumeration):', default: 0 },
+    ],
+  },
+  '217-wasm-roundtrip': {
+    name: '217-wasm-roundtrip',
+    description:
+      'Parse a Soroban contract WASM artifact, re-encode it, and verify structural integrity across the round trip',
+    run: loadExample('../examples/217-wasm-roundtrip'),
+    params: [
+      {
+        type: 'input',
+        name: 'wasmFile',
+        message: 'Path to WASM file (blank uses bundled sample):',
+      },
+      {
+        type: 'input',
+        name: 'output',
+        message: 'Optional output path for the re-encoded artifact (blank skips write):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'forceOverwrite',
+        message: 'Allow overwriting the source artifact if paths match?',
+        default: false,
+      },
+    ],
+  },
   '216-state-diff': {
     name: '216-state-diff',
     description:
@@ -2308,5 +2364,30 @@ export const examples: Record<string, Example> = {
     description: 'Decode the topics and data payload of a Soroban event JSON record',
     run: loadExample('../examples/207-decode-event'),
     params: [{ type: 'input', name: 'eventInput', message: 'Event JSON string:' }],
+  },
+  '249-wasm-return-provenance': {
+    name: '249-wasm-return-provenance',
+    description:
+      'Offline return-value provenance analysis for Soroban contract WASM artifacts — traces every return value backward through supported instructions and control-flow paths, classifying sources as parameters, constants, globals, memory, or call results',
+    run: loadExample('../examples/249-wasm-return-provenance/index'),
+    params: [
+      {
+        type: 'input',
+        name: 'wasmFile',
+        message: 'Path to WASM file (blank uses bundled sample):',
+      },
+      {
+        type: 'input',
+        name: 'compareFile',
+        message: 'Optional second WASM file for comparison mode:',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'dot', message: 'Output DOT provenance graph?', default: false },
+      {
+        type: 'input',
+        name: 'dotOutput',
+        message: 'Optional path to write DOT file (blank skips write):',
+      },
+    ],
   },
 };
