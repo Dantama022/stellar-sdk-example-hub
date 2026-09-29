@@ -78,6 +78,8 @@ The repository currently includes the following runnable examples:
 65. **`39-account-thresholds`**: Configuring and verifying low, medium, and high account thresholds while restoring the original account configuration.
 66. **`41-sponsored-reserve-inspection`**: Inspecting sponsored and sponsoring ledger entries, identifying sponsorship relationships, and calculating reserve impact.
 67. **`42-account-sequence-numbers`**: Retrieving, consuming, and correctly managing account sequence numbers across ordered transactions.
+68. **`217-wasm-roundtrip`**: Parse a Soroban contract WASM artifact, re-encode it, and verify structural integrity across the round trip — distinguishing byte-identical, structurally-equivalent, structurally-changed, and failed outcomes.
+69. **`218-wasm-dominators`**: Construct per-function control-flow graphs and compute dominator trees for a Soroban contract WASM artifact — reporting immediate dominators, dominator depth, subtree sizes, loop-header dominators, unreachable blocks, DOT graph export, and two-artifact comparison mode.
 68. **`44-resilient-horizon-stream`**: Consuming a Horizon payment stream with cursor resume, controlled reconnection backoff, and graceful shutdown.
 69. **`45-horizon-effects`**: Querying Horizon transaction effects, interpreting common effect types, and comparing operation intent to ledger state changes.
 70. **`46-transaction-detail-inspection`**: Retrieving a Horizon transaction by hash and inspecting its metadata, result status, memo, envelope, and XDR information.
@@ -172,7 +174,8 @@ The repository currently includes the following runnable examples:
 159. **`245-wasm-custom-sections` / `wasm-custom-sections`**: Offline custom-section inspection with deterministic payload hashes, grouped metadata, total custom-section size, largest-section reporting, and artifact comparisons.
 160. **`246-wasm-globals` / `wasm-globals`**: Offline global definition analysis covering imported and locally defined globals, value types, mutability, initialization expressions, aggregate statistics, and artifact comparisons.
 161. **`247-wasm-instructions` / `wasm-instructions`**: Offline code-section instruction statistics covering function body sizes, instruction frequencies, category summaries, largest functions, and artifact comparisons.
-162. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
+162. **`219-wasm-recursion` / `wasm-recursion`**: Offline WASM call-graph recursion and cycle analysis — detecting direct self-recursion, mutual recursion, and multi-function strongly connected components; reporting shortest cycle lengths, most-connected recursive functions, conservative indirect-call resolution, DOT graph export, and two-artifact comparison mode.
+163. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
 163. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
 164. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
 165. **`50-asset-issuer-discovery`**: Querying Horizon for an issued asset by code and issuer, displaying trustline/holder counts and authorization flags.
@@ -1166,9 +1169,96 @@ stellar-api-inspector wasm-memory src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-custom-sections src/contracts/sample/hello.wasm --json
 stellar-api-inspector wasm-globals src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm
 stellar-api-inspector wasm-instructions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-complexity src/contracts/sample/hello.wasm --threshold 100
+stellar-api-inspector wasm-complexity old.wasm new.wasm --branch-threshold 10 --json
+stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm
+stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm --json
+stellar-api-inspector wasm-float-ops src/contracts/sample/hello.wasm --csv
+stellar-api-inspector wasm-float-ops src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-recursion src/contracts/sample/hello.wasm
+stellar-api-inspector wasm-recursion src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-recursion src/contracts/sample/hello.wasm --dot
+stellar-api-inspector wasm-recursion src/contracts/sample/hello.wasm --max-cycles 10
 ```
 
-`wasm-memory` reports imported and locally defined memories and tables, their indexes, element types, limits, and aggregate totals. `wasm-custom-sections` reports custom-section names, order, payload sizes, deterministic SHA-256 hashes, grouped sections, and largest sections. `wasm-globals` reports imported and locally defined globals, value types, mutability, and safely representable initialization expressions. `wasm-instructions` reports code-section function counts, instruction totals, instruction frequencies, category summaries, body sizes, and largest functions. Supplying a second WASM artifact enables deterministic comparison output for additions, removals, and structural changes.
+`wasm-memory` reports imported and locally defined memories and tables, their indexes, element types, limits, and aggregate totals. `wasm-custom-sections` reports custom-section names, order, payload sizes, deterministic SHA-256 hashes, grouped sections, and largest sections. `wasm-globals` reports imported and locally defined globals, value types, mutability, and safely representable initialization expressions. `wasm-instructions` reports code-section function counts, instruction totals, instruction frequencies, category summaries, body sizes, and largest functions. `wasm-recursion` builds a normalised function call graph from statically resolvable call sites, runs Tarjan's SCC algorithm to identify strongly connected components, classifies each SCC as direct self-recursion, mutual recursion (two functions), multi-function cycle, or non-recursive, reports shortest cycle lengths and most-connected recursive functions, resolves `call_indirect` candidates conservatively from element sections (unresolved sites are never treated as definite recursion), optionally generates DOT output for recursive components, and supports two-artifact comparison mode that detects newly introduced recursion, removed recursion, and changed component membership. Supplying a second WASM artifact enables deterministic comparison output for additions, removals, and structural changes.
+
+### Cycle-detection model and static-analysis limitations
+
+The `wasm-recursion` analysis constructs the call graph from statically resolvable `call` and `call_indirect` instructions only. No WASM code is executed.
+
+- **Direct calls** (`call <funcIdx>`) are resolved exactly: a directed edge is added from the calling function to the called function.
+- **Indirect calls** (`call_indirect`) are resolved *conservatively* using the first active element segment that initialises the referenced table. All function indices found in that segment are treated as candidate callees. Sites with no element-section candidates are recorded as unresolved and are **not** treated as definite recursion.
+- **Strongly connected components** are computed with Tarjan's algorithm on the direct-call adjacency graph. An SCC containing two or more nodes, or a single node with a self-edge, is classified as recursive.
+- **Cycle enumeration** (controlled by `--max-cycles`) uses a bounded variant of Johnson's algorithm. The limit prevents unbounded resource consumption on dense graphs; set `--max-cycles 0` to skip enumeration entirely.
+- Imported functions have no bodies in the code section; only outgoing calls *to* them are recorded.
+
+- **`249-wasm-return-provenance` / `wasm-return-provenance`**: Offline return-value provenance analysis for Soroban contract WASM artifacts — traces every return value of every function backward through supported instructions and control-flow paths without executing any code, classifying results as parameter-derived, constant-derived, state-derived (mutable globals), memory-derived, call-derived, or unknown; supports JSON output, DOT provenance-graph export, and two-artifact comparison mode.
+
+```bash
+stellar-api-inspector wasm-return-provenance src/contracts/sample/hello.wasm
+stellar-api-inspector wasm-return-provenance src/contracts/sample/hello.wasm --json
+stellar-api-inspector wasm-return-provenance src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm
+stellar-api-inspector wasm-return-provenance src/contracts/sample/hello.wasm --dot=provenance.dot
+```
+
+`wasm-return-provenance` reports imported and defined function counts, total return sites, single/multi-source breakdowns, per-category result counts (parameter, constant, global, memory, call, unknown), deepest provenance chain, and per-function return-site details with instruction offsets. Supplying a second WASM artifact enables deterministic comparison output identifying newly state-derived or parameter-derived return values, call-dependency changes, and added or removed functions.
+
+`wasm-float-ops` inventories every floating-point instruction in the code section without executing any WASM code. It classifies each instruction into one of the following categories:
+
+| Category | Examples |
+|---|---|
+| **arithmetic** | `f32.add`, `f32.sub`, `f32.mul`, `f32.div`, `f32.sqrt`, `f64.add`, … |
+| **comparison** | `f32.eq`, `f32.lt`, `f32.ge`, `f64.eq`, `f64.lt`, `f64.ge`, … |
+| **conversion** | `f32.convert_i32_s`, `i32.trunc_f32_s`, `f64.promote_f32`, `f32.demote_f64`, … |
+| **rounding** | `f32.ceil`, `f32.floor`, `f32.trunc`, `f32.nearest`, `f64.ceil`, … |
+| **minmax** | `f32.min`, `f32.max`, `f64.min`, `f64.max` |
+| **absolute_sign** | `f32.abs`, `f32.neg`, `f32.copysign`, `f64.abs`, `f64.neg`, `f64.copysign` |
+| **reinterpretation** | `i32.reinterpret_f32`, `f32.reinterpret_i32`, `i64.reinterpret_f64`, `f64.reinterpret_i64` |
+| **constant** | `f32.const`, `f64.const` |
+
+Every finding includes the function index, basic-block index, and instruction index, allowing precise location of each float operation within the artifact. Per-function statistics distinguish f32 from f64 usage, detect mixed-precision functions, identify functions that round-trip between integers and floating-point values, and compute float density (fraction of instructions that are floating-point). Module-level statistics report totals per category and per precision, identify the function with the highest float density, and flag when float usage is concentrated in a small subset of functions.
+
+Optional `--csv` output emits one row per floating-point instruction with columns: `functionIndex,blockIndex,instructionIndex,opcode,valueType,category`. Optional `--json` output includes the full normalized instruction inventory alongside all statistics. Supplying a second WASM artifact switches to comparison mode, which reports added and removed opcodes, new f32 or f64 usage, functions that newly use or lost floating-point instructions, and per-precision and total instruction deltas.
+
+Unknown or unsupported opcodes are silently treated as non-float instructions and do not abort the analysis. No WASM instructions are ever executed.
+
+### WASM function complexity scoring
+
+`wasm-complexity` reads and validates the binary structure and code section; it never
+instantiates or executes the module and does not use the network. Defined functions are
+reported in ascending function-index order. The deterministic structural score is:
+
+```text
+instruction count
++ 2 × control-flow instructions (block, loop, if, else, end)
++ 3 × branch instructions (br, br_if, br_table, return, br_on_null, br_on_non_null)
++ 2 × call instructions (direct, indirect, reference, and tail calls)
++ 2 × linear-memory operations (loads, stores, size/grow, memory.init, memory.copy, and memory.fill)
++ 1 × local accesses (local.get, local.set, local.tee)
+```
+
+The score describes static instruction composition, not runtime cost. Code-body byte size
+includes the local declarations and instruction expression. Configure highlighting with
+`--threshold` (or `--score-threshold`), `--instruction-threshold`,
+`--body-size-threshold`, `--control-flow-threshold`, `--branch-threshold`,
+`--call-threshold`, `--memory-threshold`, and `--local-access-threshold`. A function is
+highlighted when a metric is greater than or equal to its threshold. Supply a second file
+positionally, or with `--compare`, to obtain per-function and aggregate deltas. Functions
+whose score is unchanged but whose component metrics changed are reported separately.
+Comparison identity is deliberately separate from body content: functions are matched
+first by a unique export name, then by an unchanged body fingerprint combined with the
+function type, then by function type only when exactly one unmatched function exists on
+each side for that type. This keeps insertions, removals, and reordering from being
+reported as false modifications when unchanged bodies can be identified, while still
+tracking an unambiguous changed unexported function. Ambiguous changed unexported groups
+are conservatively reported as added/removed rather than guessed as modified. `--json`
+contains the same deterministic ordering, reports, highlights, scoring weights, and
+comparison data as console output. Unsupported instruction proposals produce a
+validation error instead of being misinterpreted. Aggregate statistics use iterative
+reductions rather than argument-list expansion, and comparison grouping uses map buckets
+with append-only arrays, so large modules and duplicate-heavy function sets do not incur
+argument-stack failures or quadratic array-copy growth.
 
 ## License
 
