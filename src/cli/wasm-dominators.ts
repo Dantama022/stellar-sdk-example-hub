@@ -1,7 +1,6 @@
 import { Command } from 'commander';
-import { readFileSync } from 'fs';
-import { WASMAnalyzer } from '../analyzer/wasm-analyzer';
-import { formatJsonOutput, formatDotOutput } from '../utils/output-formatters';
+import { analyzeWasmDominators, compareReports, reportToDot } from '../examples/218-wasm-dominators';
+import { formatJsonOutput } from '../utils/output-formatters';
 
 export function setupWasmDominatorsCommand() {
   const program = new Command('wasm-dominators')
@@ -11,23 +10,21 @@ export function setupWasmDominatorsCommand() {
     .option('-c, --compare <wasmFile>', 'Compare with another WASM file')
     .action(async (wasmFile: string, options: any) => {
       try {
-        const wasmBuffer = readFileSync(wasmFile);
-        const analyzer = new WASMAnalyzer(wasmBuffer);
-
         if (options.compare) {
-          const compareBuffer = readFileSync(options.compare);
-          const comparison = analyzer.compareWith(compareBuffer);
+          const repA = analyzeWasmDominators(wasmFile);
+          const repB = analyzeWasmDominators(options.compare);
+          const comparison = compareReports(repA, repB);
           console.log(formatJsonOutput(comparison));
         } else {
-          const analysis = analyzer.analyze();
+          const analysis = analyzeWasmDominators(wasmFile);
           if (options.output === 'dot') {
-            console.log(formatDotOutput(analysis));
+            console.log(reportToDot(analysis));
           } else {
             console.log(formatJsonOutput(analysis));
           }
         }
-      } catch (error) {
-        console.error('Analysis failed:', error);
+      } catch (error: any) {
+        console.error('Analysis failed:', error?.message || error);
         process.exit(1);
       }
     });
