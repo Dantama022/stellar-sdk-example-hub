@@ -2352,4 +2352,40 @@ export const examples: Record<string, Example> = {
     run: loadExample('../examples/207-decode-event'),
     params: [{ type: 'input', name: 'eventInput', message: 'Event JSON string:' }],
   },
+  '280-wasm-side-effects': {
+    name: '280-wasm-side-effects',
+    description:
+      'Offline WASM function side-effect analysis: classify functions as pure, read-only, state-mutating, externally-dependent, effectful, or unknown with transitive propagation and artifact comparison',
+    run: loadExample('../examples/280-wasm-side-effects'),
+    params: [
+      {
+        type: 'input',
+        name: 'wasmFile',
+        message: 'Path to WASM file:',
+      },
+      {
+        type: 'input',
+        name: 'compareFile',
+        message: 'Path to second WASM file for comparison (optional):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'csv',
+        message: 'Output results as CSV?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'dot',
+        message: 'Output side-effect graph in DOT format?',
+        default: false,
+      },
+    ],
+  },
 };

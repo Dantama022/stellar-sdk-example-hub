@@ -867,3 +867,686 @@ function elementChanges(before: WasmElementSegmentInfo, after: WasmElementSegmen
   if (before.elementContentHash !== after.elementContentHash) changes.push('element_content');
   return changes;
 }
+
+// ============================================================
+// WASM Function Side-Effect Analysis (ISSUE-280)
+// ============================================================
+
+/**
+ * Classification categories for WASM functions.
+ *
+ * Rules:
+ *   pure          – No reads/writes of mutable state; no imports; no trapping
+ *                   ops; only local variables, immutable globals, arithmetic.
+ *   read_only     – Reads mutable globals or linear memory (loads) but never
+ *                   writes them; no imported calls.
+ *   state_mutating– Directly writes linear memory (stores) or writes a mutable
+ *                   global; OR transitively calls a state_mutating function.
+ *   externally_dependent – Directly calls an imported function; OR transitively
+ *                   calls an externally_dependent function.
+ *   effectful     – Both state_mutating AND externally_dependent (or has both
+ *                   sets of evidence).
+ *   unknown       – Contains call_indirect (unresolved indirect call) that
+ *                   could resolve to any classification; falls back here if
+ *                   conservatism demands it.
+ *
+ * Conservative rules:
+ *   - unreachable instruction is a potential trap; flagged in evidence but does
+ *     NOT by itself upgrade classification (it is listed under trapping_ops).
+ *   - call_indirect always produces unknown unless the function is otherwise
+ *     classified as something stronger through direct evidence.
+ *   - Recursive calls are resolved via fixed-point iteration; initially assume
+ *     the function is pure and upgrade as evidence accumulates.
+ *   - A function classified unknown remains unknown; it does not become pure.
+ */
+export type SideEffectClassification =
+  | 'pure'
+  | 'read_only'
+  | 'state_mutating'
+  | 'externally_dependent'
+  | 'effectful'
+  | 'unknown';
+
+export interface SideEffectEvidence {
+  /** Indices of memory-store instructions found in the function body. */
+  memoryStores: string[];
+  /** Indices of global.set instructions found in the function body. */
+  globalWrites: number[];
+  /** Indices of mutable globals read by global.get. */
+  mutableGlobalReads: number[];
+  /** Indices of immutable globals read by global.get. */
+  immutableGlobalReads: number[];
+  /** Indices of memory-load instructions found in the function body. */
+  memoryLoads: string[];
+  /** Indices of imported functions that are directly called. */
+  importedCalls: number[];
+  /** Indices of defined functions that are directly called. */
+  directCalls: number[];
+  /** Whether the function body contains call_indirect. */
+  hasIndirectCall: boolean;
+  /** Whether the function body contains the unreachable (0x00) instruction. */
+  hasUnreachable: boolean;
+  /** Indices of table.set / table.fill / table.copy instructions (if present). */
+  tableMutations: string[];
+  /** Callees that transitively introduce state mutation. */
+  transitiveMutatingCallees: number[];
+  /** Callees that transitively introduce external dependencies. */
+  transitiveExternalCallees: number[];
+}
+
+export interface FunctionSideEffectInfo {
+  /** Absolute function index (imports + defined offset). */
+  functionIndex: number;
+  /** 'imported' | 'defined'. */
+  source: 'imported' | 'defined';
+  /** Optional export name if exported. */
+  exportName: string | null;
+  /** The assigned classification. */
+  classification: SideEffectClassification;
+  /** Evidence that led to this classification. */
+  evidence: SideEffectEvidence;
+  /** Whether any side effects are transitive (i.e. via callees). */
+  hasTransitiveEffects: boolean;
+}
+
+export interface WasmSideEffectReport {
+  file: string;
+  valid: true;
+  functions: FunctionSideEffectInfo[];
+  statistics: {
+    totalAnalyzedFunctions: number;
+    pureFunctions: number;
+    readOnlyFunctions: number;
+    stateMutatingFunctions: number;
+    externallyDependentFunctions: number;
+    effectfulFunctions: number;
+    unknownFunctions: number;
+    functionsWithTransitiveEffects: number;
+    importedFunctionCount: number;
+    definedFunctionCount: number;
+  };
+  /** Normalized call-dependency graph: functionIndex → set of callee indices. */
+  callGraph: Record<number, number[]>;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers for side-effect analysis
+// ---------------------------------------------------------------------------
+
+interface ImportedFuncInfo {
+  index: number;
+  module: string;
+  name: string;
+}
+
+/** Parse the import section to collect all imported function entries. */
+function parseImportedFunctions(section: Section | undefined): ImportedFuncInfo[] {
+  const fns: ImportedFuncInfo[] = [];
+  if (!section) return fns;
+  const reader = new Reader(section.payload);
+  const count = reader.varuint32();
+  let fnIdx = 0;
+  for (let i = 0; i < count; i++) {
+    const module = reader.string();
+    const name = reader.string();
+    const kind = reader.byte();
+    if (kind === 0x00) {
+      reader.varuint32(); // type index
+      fns.push({ index: fnIdx++, module, name });
+    } else if (kind === 0x01) {
+      reader.byte(); // elem type
+      parseLimits(reader);
+    } else if (kind === 0x02) {
+      parseLimits(reader);
+    } else if (kind === 0x03) {
+      reader.byte();
+      reader.byte();
+    }
+  }
+  return fns;
+}
+
+/** Parse export section and return functionIndex → exportName map. */
+function parseExportedFunctions(section: Section | undefined): Map<number, string> {
+  const map = new Map<number, string>();
+  if (!section) return map;
+  const reader = new Reader(section.payload);
+  const count = reader.varuint32();
+  for (let i = 0; i < count; i++) {
+    const name = reader.string();
+    const kind = reader.byte();
+    const idx = reader.varuint32();
+    if (kind === 0x00) map.set(idx, name);
+  }
+  return map;
+}
+
+/** True if globalIndex refers to a mutable global. */
+function isMutableGlobal(globalIndex: number, globals: WasmGlobalInfo[]): boolean {
+  const g = globals.find((g) => g.index === globalIndex);
+  return g?.mutable ?? false;
+}
+
+/**
+ * Scan a single function body and collect direct side-effect evidence.
+ * Returns the raw evidence object (transitive fields are populated later).
+ */
+function scanFunctionBody(
+  bodyBuf: Buffer,
+  _functionIndex: number,
+  importedFunctionCount: number,
+  globals: WasmGlobalInfo[],
+): Omit<SideEffectEvidence, 'transitiveMutatingCallees' | 'transitiveExternalCallees'> {
+  const reader = new Reader(bodyBuf);
+  // Skip local declarations
+  const localGroupCount = reader.varuint32();
+  for (let i = 0; i < localGroupCount; i++) {
+    reader.varuint32();
+    reader.byte();
+  }
+
+  const memoryStores: string[] = [];
+  const globalWrites: number[] = [];
+  const mutableGlobalReads: number[] = [];
+  const immutableGlobalReads: number[] = [];
+  const memoryLoads: string[] = [];
+  const importedCalls: number[] = [];
+  const directCalls: number[] = [];
+  let hasIndirectCall = false;
+  let hasUnreachable = false;
+  const tableMutations: string[] = [];
+
+  // Track reachability: after unreachable or br/return we consider code unreachable
+  // until we see the matching end opcode. We use a depth counter approach.
+  // For conservatism: we track ALL instructions (reachable or not), but mark
+  // unreachable ones separately so callers can exclude them from "reachable" stats.
+  // Per the spec: we record evidence only for reachable instructions.
+  let unreachableDepth = 0; // >0 means we're in dead code
+
+  const memStoreNames: Record<number, string> = {
+    0x36: 'i32.store', 0x37: 'i64.store', 0x38: 'f32.store', 0x39: 'f64.store',
+    0x3a: 'i32.store8', 0x3b: 'i32.store16', 0x3c: 'i64.store8', 0x3d: 'i64.store16',
+    0x3e: 'i64.store32',
+  };
+  const memLoadNames: Record<number, string> = {
+    0x28: 'i32.load', 0x29: 'i64.load', 0x2a: 'f32.load', 0x2b: 'f64.load',
+    0x2c: 'i32.load8_s', 0x2d: 'i32.load8_u', 0x2e: 'i32.load16_s', 0x2f: 'i32.load16_u',
+    0x30: 'i64.load8_s', 0x31: 'i64.load8_u', 0x32: 'i64.load16_s', 0x33: 'i64.load16_u',
+    0x34: 'i64.load32_s', 0x35: 'i64.load32_u',
+  };
+
+  while (!reader.done) {
+    const opcode = reader.byte();
+
+    // Handle structured control flow depth for dead-code tracking
+    if (unreachableDepth > 0) {
+      // Within dead code: track block/loop/if nesting to find the matching end
+      if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {
+        unreachableDepth++;
+        reader.byte(); // block type
+      } else if (opcode === 0x05) {
+        // else: at depth 1 this resumes reachability
+        if (unreachableDepth === 1) unreachableDepth = 0;
+      } else if (opcode === 0x0b) {
+        unreachableDepth--;
+      } else {
+        // skip immediates for dead-code instructions
+        skipInstructionImmediate(opcode, reader);
+      }
+      continue;
+    }
+
+    // Reachable instruction processing
+    if (opcode === 0x00) {
+      // unreachable trap
+      hasUnreachable = true;
+      // After unreachable, code is dead until matching end
+      unreachableDepth = 1;
+    } else if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {
+      reader.byte(); // block type
+    } else if (opcode === 0x05) {
+      // else — continues in if block, reachable from else branch
+    } else if (opcode === 0x0b) {
+      // end — no-op for our analysis
+    } else if (opcode === 0x0c || opcode === 0x0d) {
+      reader.varuint32(); // br / br_if label
+    } else if (opcode === 0x0e) {
+      // br_table
+      const count = reader.varuint32();
+      for (let i = 0; i <= count; i++) reader.varuint32();
+    } else if (opcode === 0x0f) {
+      // return — after return, code is dead
+      unreachableDepth = 1;
+    } else if (opcode === 0x10) {
+      // call
+      const callee = reader.varuint32();
+      if (callee < importedFunctionCount) {
+        if (!importedCalls.includes(callee)) importedCalls.push(callee);
+      } else {
+        if (!directCalls.includes(callee)) directCalls.push(callee);
+      }
+    } else if (opcode === 0x11) {
+      // call_indirect
+      hasIndirectCall = true;
+      reader.varuint32(); // type index
+      reader.byte();      // table index
+    } else if (opcode === 0x20 || opcode === 0x21 || opcode === 0x22) {
+      reader.varuint32(); // local.get/set/tee
+    } else if (opcode === 0x23) {
+      // global.get
+      const gidx = reader.varuint32();
+      if (isMutableGlobal(gidx, globals)) {
+        if (!mutableGlobalReads.includes(gidx)) mutableGlobalReads.push(gidx);
+      } else {
+        if (!immutableGlobalReads.includes(gidx)) immutableGlobalReads.push(gidx);
+      }
+    } else if (opcode === 0x24) {
+      // global.set
+      const gidx = reader.varuint32();
+      if (!globalWrites.includes(gidx)) globalWrites.push(gidx);
+    } else if (opcode in memLoadNames) {
+      reader.varuint32(); reader.varuint32(); // alignment, offset
+      memoryLoads.push(memLoadNames[opcode]);
+    } else if (opcode in memStoreNames) {
+      reader.varuint32(); reader.varuint32(); // alignment, offset
+      memoryStores.push(memStoreNames[opcode]);
+    } else if (opcode === 0x3f || opcode === 0x40) {
+      reader.byte(); // memory.size / memory.grow
+    } else if (opcode === 0x26) {
+      // table.set
+      reader.varuint32();
+      tableMutations.push('table.set');
+    } else if (opcode === 0xfc) {
+      // multi-byte opcodes
+      const subop = reader.varuint32();
+      if (subop === 0x0e) {
+        // table.copy
+        reader.varuint32(); reader.varuint32();
+        tableMutations.push('table.copy');
+      } else if (subop === 0x11) {
+        // table.fill
+        reader.varuint32();
+        tableMutations.push('table.fill');
+      } else if (subop === 0x08 || subop === 0x09) {
+        // memory.init / memory.drop
+        reader.varuint32();
+        if (subop === 0x08) reader.byte();
+        memoryStores.push(subop === 0x08 ? 'memory.init' : 'data.drop');
+      } else if (subop === 0x0a || subop === 0x0b) {
+        // memory.copy / memory.fill
+        if (subop === 0x0a) { reader.byte(); reader.byte(); }
+        else reader.byte();
+        memoryStores.push(subop === 0x0a ? 'memory.copy' : 'memory.fill');
+      } else if (subop === 0x0c || subop === 0x0d) {
+        // table.init / elem.drop
+        reader.varuint32();
+        if (subop === 0x0c) reader.varuint32();
+        tableMutations.push(subop === 0x0c ? 'table.init' : 'elem.drop');
+      } else if (subop === 0x0f || subop === 0x10) {
+        // table.grow / table.size
+        reader.varuint32();
+      } else {
+        // unknown FC subop — skip 0 immediates conservatively (best effort)
+      }
+    } else if (opcode === 0x41) {
+      reader.varint32();
+    } else if (opcode === 0x42) {
+      // i64.const — use varint32 twice (high/low) as approximation or skip 10 bytes LEB
+      // Actually read as varint64 via varint32 iteration
+      let shift = 0;
+      let b: number;
+      do { b = reader.byte(); shift += 7; } while ((b & 0x80) !== 0 && shift < 70);
+    } else if (opcode === 0x43) {
+      reader.bytes(4);
+    } else if (opcode === 0x44) {
+      reader.bytes(8);
+    } else if (opcode === 0x25) {
+      reader.varuint32(); // table.get
+    } else if (opcode === 0x1a || opcode === 0x1b) {
+      // drop, select — no immediates
+    } else if (opcode === 0x27) {
+      reader.varuint32(); // table index for table.grow? Actually 0x27 is not used standard
+      // 0x27 is not a standard opcode; skip varuint32 conservatively
+    } else {
+      // All other opcodes: skip immediates using the existing helper
+      skipInstructionImmediate(opcode, reader);
+    }
+  }
+
+  return {
+    memoryStores,
+    globalWrites,
+    mutableGlobalReads,
+    immutableGlobalReads,
+    memoryLoads,
+    importedCalls,
+    directCalls,
+    hasIndirectCall,
+    hasUnreachable,
+    tableMutations,
+  };
+}
+
+/**
+ * Classify a function based only on its own (direct) evidence,
+ * ignoring transitive callees.
+ */
+function classifyDirect(
+  ev: Omit<SideEffectEvidence, 'transitiveMutatingCallees' | 'transitiveExternalCallees'>,
+): SideEffectClassification {
+  const mutates =
+    ev.memoryStores.length > 0 || ev.globalWrites.length > 0 || ev.tableMutations.length > 0;
+  const readsExternal = ev.importedCalls.length > 0;
+
+  if (ev.hasIndirectCall) return 'unknown';
+  if (mutates && readsExternal) return 'effectful';
+  if (mutates) return 'state_mutating';
+  if (readsExternal) return 'externally_dependent';
+  if (ev.mutableGlobalReads.length > 0 || ev.memoryLoads.length > 0) return 'read_only';
+  return 'pure';
+}
+
+/**
+ * Merge two classifications conservatively: return the "worse" of the two.
+ * Order (from least to most effectful):
+ *   pure < read_only < state_mutating < externally_dependent < effectful < unknown
+ */
+function mergeClassification(
+  a: SideEffectClassification,
+  b: SideEffectClassification,
+): SideEffectClassification {
+  const order: Record<SideEffectClassification, number> = {
+    pure: 0,
+    read_only: 1,
+    state_mutating: 2,
+    externally_dependent: 3,
+    effectful: 4,
+    unknown: 5,
+  };
+  // Special merge rules:
+  // state_mutating + externally_dependent = effectful
+  if (
+    (a === 'state_mutating' && b === 'externally_dependent') ||
+    (a === 'externally_dependent' && b === 'state_mutating')
+  ) return 'effectful';
+  return order[a] >= order[b] ? a : b;
+}
+
+/**
+ * Main analysis function: parse WASM, scan all function bodies,
+ * propagate side effects through the call graph.
+ */
+export function analyzeSideEffects(file: string): WasmSideEffectReport {
+  const sections = loadSections(file);
+  const importSection = sections.find((s) => s.id === 2);
+  const codeSection = sections.find((s) => s.id === 10);
+  const exportSection = sections.find((s) => s.id === 7);
+  const globalSection = sections.find((s) => s.id === 6);
+
+  // Collect globals (imported + defined) for mutability checks
+  const importedInfo = parseImportSection(importSection);
+  const definedGlobals = parseGlobalSection(globalSection, importedInfo.globals.length);
+  const allGlobals = [...importedInfo.globals, ...definedGlobals];
+
+  // Collect imported functions
+  const importedFuncs = parseImportedFunctions(importSection);
+  const numImported = importedFuncs.length;
+
+  // Export names
+  const exportNames = parseExportedFunctions(exportSection);
+
+  // Build placeholder entries for imported functions
+  // Imported functions are conservatively marked externally_dependent
+  const results: FunctionSideEffectInfo[] = importedFuncs.map((fn) => ({
+    functionIndex: fn.index,
+    source: 'imported' as const,
+    exportName: exportNames.get(fn.index) ?? null,
+    classification: 'externally_dependent' as SideEffectClassification,
+    evidence: {
+      memoryStores: [],
+      globalWrites: [],
+      mutableGlobalReads: [],
+      immutableGlobalReads: [],
+      memoryLoads: [],
+      importedCalls: [],
+      directCalls: [],
+      hasIndirectCall: false,
+      hasUnreachable: false,
+      tableMutations: [],
+      transitiveMutatingCallees: [],
+      transitiveExternalCallees: [],
+    },
+    hasTransitiveEffects: false,
+  }));
+
+  // Parse code section for defined functions
+  const callGraph: Record<number, number[]> = {};
+  const directEvidences: Map<number, ReturnType<typeof scanFunctionBody>> = new Map();
+
+  if (codeSection) {
+    const reader = new Reader(codeSection.payload);
+    const count = reader.varuint32();
+    for (let i = 0; i < count; i++) {
+      const bodySize = reader.varuint32();
+      const bodyBuf = reader.bytes(bodySize);
+      const fnIdx = numImported + i;
+      const ev = scanFunctionBody(bodyBuf, fnIdx, numImported, allGlobals);
+      directEvidences.set(fnIdx, ev);
+      callGraph[fnIdx] = [...ev.directCalls];
+      const directClass = classifyDirect(ev);
+      results.push({
+        functionIndex: fnIdx,
+        source: 'defined',
+        exportName: exportNames.get(fnIdx) ?? null,
+        classification: directClass,
+        evidence: {
+          ...ev,
+          transitiveMutatingCallees: [],
+          transitiveExternalCallees: [],
+        },
+        hasTransitiveEffects: false,
+      });
+    }
+  }
+
+  // Also add imported functions to call graph (no outgoing calls)
+  importedFuncs.forEach((fn) => {
+    callGraph[fn.index] = [];
+  });
+
+  // Fixed-point propagation of side effects through call graph
+  // Iterate until classifications stabilize
+  let changed = true;
+  const maxIterations = results.length * 2 + 10;
+  let iterations = 0;
+  while (changed && iterations < maxIterations) {
+    changed = false;
+    iterations++;
+    for (const fn of results) {
+      if (fn.source === 'imported') continue;
+      const ev = directEvidences.get(fn.functionIndex)!;
+      let cls = classifyDirect(ev);
+      const newTransitiveMutating: number[] = [];
+      const newTransitiveExternal: number[] = [];
+
+      for (const calleeIdx of ev.directCalls) {
+        const calleeFn = results.find((r) => r.functionIndex === calleeIdx);
+        if (!calleeFn) continue;
+        const calleeCls = calleeFn.classification;
+        if (
+          calleeCls === 'state_mutating' ||
+          calleeCls === 'effectful'
+        ) {
+          if (!newTransitiveMutating.includes(calleeIdx))
+            newTransitiveMutating.push(calleeIdx);
+        }
+        if (
+          calleeCls === 'externally_dependent' ||
+          calleeCls === 'effectful'
+        ) {
+          if (!newTransitiveExternal.includes(calleeIdx))
+            newTransitiveExternal.push(calleeIdx);
+        }
+        cls = mergeClassification(cls, calleeCls);
+      }
+
+      const hasTransitive =
+        newTransitiveMutating.length > 0 || newTransitiveExternal.length > 0;
+
+      if (
+        fn.classification !== cls ||
+        JSON.stringify(fn.evidence.transitiveMutatingCallees.sort()) !==
+          JSON.stringify(newTransitiveMutating.sort()) ||
+        JSON.stringify(fn.evidence.transitiveExternalCallees.sort()) !==
+          JSON.stringify(newTransitiveExternal.sort())
+      ) {
+        fn.classification = cls;
+        fn.evidence.transitiveMutatingCallees = newTransitiveMutating.sort((a, b) => a - b);
+        fn.evidence.transitiveExternalCallees = newTransitiveExternal.sort((a, b) => a - b);
+        fn.hasTransitiveEffects = hasTransitive;
+        changed = true;
+      }
+    }
+  }
+
+  // Build statistics
+  const stats = {
+    totalAnalyzedFunctions: results.length,
+    pureFunctions: results.filter((f) => f.classification === 'pure').length,
+    readOnlyFunctions: results.filter((f) => f.classification === 'read_only').length,
+    stateMutatingFunctions: results.filter((f) => f.classification === 'state_mutating').length,
+    externallyDependentFunctions: results.filter(
+      (f) => f.classification === 'externally_dependent',
+    ).length,
+    effectfulFunctions: results.filter((f) => f.classification === 'effectful').length,
+    unknownFunctions: results.filter((f) => f.classification === 'unknown').length,
+    functionsWithTransitiveEffects: results.filter((f) => f.hasTransitiveEffects).length,
+    importedFunctionCount: numImported,
+    definedFunctionCount: results.filter((f) => f.source === 'defined').length,
+  };
+
+  // Normalize call graph: sort callee lists
+  const normalizedCallGraph: Record<number, number[]> = {};
+  Object.entries(callGraph).forEach(([k, v]) => {
+    normalizedCallGraph[Number(k)] = [...v].sort((a, b) => a - b);
+  });
+
+  return {
+    file,
+    valid: true,
+    functions: results,
+    statistics: stats,
+    callGraph: normalizedCallGraph,
+  };
+}
+
+/** Compare two side-effect reports for two-artifact comparison mode. */
+export function compareSideEffectReports(
+  beforeFile: string,
+  afterFile: string,
+): {
+  before: WasmSideEffectReport;
+  after: WasmSideEffectReport;
+  comparison: {
+    becameEffectful: number[];
+    becameSideEffectFree: number[];
+    newMemoryWrites: number[];
+    newGlobalWrites: number[];
+    newImportedDependencies: number[];
+    changedTransitiveEffects: number[];
+    classificationChanges: Array<{
+      functionIndex: number;
+      before: SideEffectClassification;
+      after: SideEffectClassification;
+    }>;
+  };
+} {
+  const before = analyzeSideEffects(beforeFile);
+  const after = analyzeSideEffects(afterFile);
+
+  const sideEffectFreeClasses: SideEffectClassification[] = ['pure', 'read_only'];
+  const effectfulClasses: SideEffectClassification[] = [
+    'state_mutating', 'externally_dependent', 'effectful', 'unknown',
+  ];
+
+  const beforeMap = new Map(before.functions.map((f) => [f.functionIndex, f]));
+  const afterMap = new Map(after.functions.map((f) => [f.functionIndex, f]));
+  const allIndices = [
+    ...new Set([...beforeMap.keys(), ...afterMap.keys()]),
+  ].sort((a, b) => a - b);
+
+  const becameEffectful: number[] = [];
+  const becameSideEffectFree: number[] = [];
+  const newMemoryWrites: number[] = [];
+  const newGlobalWrites: number[] = [];
+  const newImportedDependencies: number[] = [];
+  const changedTransitiveEffects: number[] = [];
+  const classificationChanges: Array<{
+    functionIndex: number;
+    before: SideEffectClassification;
+    after: SideEffectClassification;
+  }> = [];
+
+  for (const idx of allIndices) {
+    const bfn = beforeMap.get(idx);
+    const afn = afterMap.get(idx);
+    if (!bfn || !afn) continue;
+    if (bfn.classification !== afn.classification) {
+      classificationChanges.push({
+        functionIndex: idx,
+        before: bfn.classification,
+        after: afn.classification,
+      });
+      if (
+        sideEffectFreeClasses.includes(bfn.classification) &&
+        effectfulClasses.includes(afn.classification)
+      ) {
+        becameEffectful.push(idx);
+      }
+      if (
+        effectfulClasses.includes(bfn.classification) &&
+        sideEffectFreeClasses.includes(afn.classification)
+      ) {
+        becameSideEffectFree.push(idx);
+      }
+    }
+    // New memory writes
+    const bStores = new Set(bfn.evidence.memoryStores);
+    const newStores = afn.evidence.memoryStores.filter((s) => !bStores.has(s));
+    if (newStores.length > 0 && !newMemoryWrites.includes(idx)) newMemoryWrites.push(idx);
+    // New global writes
+    const bGlobals = new Set(bfn.evidence.globalWrites);
+    const newGlobals = afn.evidence.globalWrites.filter((g) => !bGlobals.has(g));
+    if (newGlobals.length > 0 && !newGlobalWrites.includes(idx)) newGlobalWrites.push(idx);
+    // New imported dependencies
+    const bImports = new Set(bfn.evidence.importedCalls);
+    const newImports = afn.evidence.importedCalls.filter((c) => !bImports.has(c));
+    if (newImports.length > 0 && !newImportedDependencies.includes(idx))
+      newImportedDependencies.push(idx);
+    // Changed transitive effects
+    const bTransitive = JSON.stringify([
+      ...bfn.evidence.transitiveMutatingCallees,
+      ...bfn.evidence.transitiveExternalCallees,
+    ].sort());
+    const aTransitive = JSON.stringify([
+      ...afn.evidence.transitiveMutatingCallees,
+      ...afn.evidence.transitiveExternalCallees,
+    ].sort());
+    if (bTransitive !== aTransitive && !changedTransitiveEffects.includes(idx))
+      changedTransitiveEffects.push(idx);
+  }
+
+  return {
+    before,
+    after,
+    comparison: {
+      becameEffectful,
+      becameSideEffectFree,
+      newMemoryWrites,
+      newGlobalWrites,
+      newImportedDependencies,
+      changedTransitiveEffects,
+      classificationChanges,
+    },
+  };
+}

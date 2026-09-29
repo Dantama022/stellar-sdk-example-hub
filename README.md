@@ -174,6 +174,7 @@ The repository currently includes the following runnable examples:
 159. **`245-wasm-custom-sections` / `wasm-custom-sections`**: Offline custom-section inspection with deterministic payload hashes, grouped metadata, total custom-section size, largest-section reporting, and artifact comparisons.
 160. **`246-wasm-globals` / `wasm-globals`**: Offline global definition analysis covering imported and locally defined globals, value types, mutability, initialization expressions, aggregate statistics, and artifact comparisons.
 161. **`247-wasm-instructions` / `wasm-instructions`**: Offline code-section instruction statistics covering function body sizes, instruction frequencies, category summaries, largest functions, and artifact comparisons.
+162. **`280-wasm-side-effects` / `wasm-side-effects`**: Offline WASM function side-effect analysis classifying every function as `pure`, `read-only`, `state-mutating`, `externally-dependent`, `effectful`, or `unknown` using conservative static rules, with transitive propagation through the call graph, per-function evidence, JSON/CSV/DOT output, and two-artifact comparison mode.
 162. **`66-ledger-effects`**: Retrieving every effect produced by one closed ledger, grouping them by effect type and category, and summarizing the state changes a ledger introduced.
 163. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
 164. **`67-soroban-contract-events`**: Querying Soroban contract events over a ledger range, decoding event topics and data payloads, and reporting the ledger and transaction that produced each event.
@@ -1169,6 +1170,10 @@ stellar-api-inspector wasm-memory src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-custom-sections src/contracts/sample/hello.wasm --json
 stellar-api-inspector wasm-globals src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm
 stellar-api-inspector wasm-instructions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-side-effects src/contracts/sample/hello.wasm
+stellar-api-inspector wasm-side-effects src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+stellar-api-inspector wasm-side-effects src/contracts/sample/hello.wasm --csv
+stellar-api-inspector wasm-side-effects src/contracts/sample/hello.wasm --dot
 ```
 
 `wasm-memory` reports imported and locally defined memories and tables, their indexes, element types, limits, and aggregate totals. `wasm-custom-sections` reports custom-section names, order, payload sizes, deterministic SHA-256 hashes, grouped sections, and largest sections. `wasm-globals` reports imported and locally defined globals, value types, mutability, and safely representable initialization expressions. `wasm-instructions` reports code-section function counts, instruction totals, instruction frequencies, category summaries, body sizes, and largest functions. Supplying a second WASM artifact enables deterministic comparison output for additions, removals, and structural changes.
