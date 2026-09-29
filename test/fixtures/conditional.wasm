@@ -1,0 +1,14 @@
+(module
+  (func $main
+    i32.const 0
+    i32.const 10
+    if (result)
+      i32.const 1
+      i32.store offset=0
+    else
+      i32.const 2
+      i32.store offset=0
+    end
+    return
+  )
+)

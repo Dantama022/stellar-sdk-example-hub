@@ -1,14 +1,27 @@
-# 🎓 Stellar SDK Example Hub
+# Soroban WASM Dominator Tree Analysis
 
-[![CI Status](https://github.com/your-org/stellar-sdk-example-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/stellar-sdk-example-hub/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## Overview
+This tool analyzes the control-flow structure of Soroban WASM contracts by constructing control-flow graphs and calculating dominator relationships without executing the contract.
 
-A curated repository of runnable TypeScript examples demonstrating key features of the Stellar and Soroban JavaScript/TypeScript SDK (`@stellar/stellar-sdk`).
+## Dominance Model
+Dominance relationships reveal which basic blocks must be executed before reaching another block. The analysis identifies:
 
-Designed to help developers build, sign, submit, inspect, and troubleshoot operations on the Stellar network.
+- **Immediate dominators**: The single block that dominates another without being dominated by any other block
+- **Dominator depth**: Hierarchical distance from entry block
+- **Loop headers**: Blocks that dominate loop bodies
+- **Unreachable code**: Blocks with no control-flow paths
 
-## Examples Roadmap & Catalog
+## Analysis Features
+- **Control-flow graph construction**: Identifies basic blocks and control-flow edges
+- **Dominator calculation**: Uses Lengauer-Tarjan algorithm for efficient computation
+- **Metrics collection**: Tracks depth, coverage, and structural properties
+- **Comparison mode**: Detects changes between WASM artifacts
+- **Output formats**: JSON for programmatic use, DOT for visualization
 
+## Limitations
+- Does not handle dynamic control flow (e.g., indirect calls)
+- Assumes static analysis of compiled WASM
+- May produce false positives for complex control flow patterns
 The repository currently includes the following runnable examples:
 
 1. **`01-create-account`**: Keypair generation and Testnet funding through Friendbot.
@@ -2336,41 +2349,55 @@ npm run validate:examples:all
 
 Target specific examples:
 
+## Usage
 ```bash
-npm run validate:examples -- --only 01-create-account,02-payment
+# Basic analysis
+stellar-sdk-example-hub wasm-dominators contract.wasm
+
+# JSON output
+stellar-sdk-example-hub wasm-dominators contract.wasm --output json
+
+# DOT graph output
+stellar-sdk-example-hub wasm-dominators contract.wasm --output dot
+
+# Comparison mode
+stellar-sdk-example-hub wasm-dominators contract1.wasm --compare contract2.wasm
 ```
 
-Target the four account and transaction examples:
-
-```bash
-npm run validate:examples -- --only 39-account-thresholds,41-sponsored-reserve-inspection,42-account-sequence-numbers,46-transaction-detail-inspection
-```
-
-Use a custom configuration file:
-
-```bash
-npm run validate:examples -- --config path/to/validation.config.json
-```
-
-### Exclusion Mechanism
-
-Examples that require external credentials, user interaction, or unavailable services can be excluded through the validation configuration:
-
+## Example Output
 ```json
 {
-  "exclusions": [
+  "functions": [
     {
-      "match": "05-soroban-invoke",
-      "reason": "Requires Soroban RPC availability and deployed contracts"
-    },
-    {
-      "match": "18-*",
-      "reason": "Requires external service behavior that is not deterministic in CI"
+      "index": 0,
+      "name": "main",
+      "cfg": {
+        "blocks": [
+          {
+            "index": 0,
+            "instructions": ["i32.const 42", "i32.store"],
+            "dominators": [0],
+            "immediateDominator": null,
+            "depth": 0,
+            "dominatedBlocks": 3
+          }
+        ],
+        "edges": [
+          {"from": 0, "to": 1, "type": "sequential"}
+        ]
+      },
+      "metrics": {
+        "maxDepth": 2,
+        "entryCoverage": 1,
+        "loopHeaders": [],
+        "unreachableBlocks": []
+      }
     }
   ]
 }
 ```
 
+## Development
 The `match` property supports `*` wildcard patterns and is evaluated against the example name without the `.ts` extension.
 
 ### CI Integration
@@ -3725,15 +3752,12 @@ Use `ACCOUNT_ID`, `PAGE_SIZE`, `MAX_RECORDS`, `OPERATION_TYPE`, and `JSON_OUTPUT
 Inspect current order-book depth:
 
 ```bash
-npm run run-example 122-order-book-inspection
+# Run tests
+npm test
+
+# Build project
+npm run build
+
+# Add test fixtures
+cp test/fixtures/template.wasm test/fixtures/new-test.wasm
 ```
-
-Use `SELLING_ASSET`, `BUYING_ASSET`, `ORDER_BOOK_DEPTH`, and `JSON_OUTPUT=true`. Assets use `native`/`XLM` or `CODE:ISSUER`. Without an explicit pair, the example derives a recently traded pair from Horizon.
-
-Analyze historical trades:
-
-```bash
-npm run run-example 123-trade-history-analysis
-```
-
-Use `SELLING_ASSET`, `BUYING_ASSET`, `TRADE_HISTORY_LIMIT`, `TRADE_FROM_TIME`, `TRADE_TO_TIME`, and `JSON_OUTPUT=true`. Time filters accept ISO-8601 values or Unix timestamps in seconds. Empty markets are reported as a valid zero-trade result.
