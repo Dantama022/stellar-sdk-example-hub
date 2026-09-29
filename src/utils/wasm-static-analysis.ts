@@ -867,3 +867,702 @@ function elementChanges(before: WasmElementSegmentInfo, after: WasmElementSegmen
   if (before.elementContentHash !== after.elementContentHash) changes.push('element_content');
   return changes;
 }
+
+// =============================================================================
+// WASM Recursion & Call-Cycle Analysis
+// =============================================================================
+
+/** A single statically-resolved call relationship. */
+export interface WasmCallEdge {
+  /** Index of the calling function. */
+  callerIndex: number;
+  /** Index of the called function. */
+  calleeIndex: number;
+  /** Byte offset of the call instruction inside the function body. */
+  instructionOffset: number;
+  /** 'direct' for `call`, 'indirect' for `call_indirect`. */
+  callType: 'direct' | 'indirect';
+}
+
+/** A conservatively resolved indirect call: one candidate edge per table slot. */
+export interface WasmIndirectCallCandidate {
+  callerIndex: number;
+  /** Table index used by the call_indirect instruction. */
+  tableIndex: number;
+  /** Type index specified by call_indirect. */
+  typeIndex: number;
+  instructionOffset: number;
+  /** Resolved callee candidates from the element section (may be empty). */
+  candidateCallees: number[];
+}
+
+/** Classification of a strongly connected component. */
+export type WasmSccKind =
+  | 'direct_self_recursion'       // single node with self-edge
+  | 'mutual_recursion_two'        // exactly 2 nodes forming a cycle
+  | 'multi_function_cycle'        // 3+ nodes
+  | 'non_recursive';              // SCC of size 1 with no self-edge
+
+export interface WasmScc {
+  /** Stable numeric ID, assigned in reverse topological order (SCC 0 = sink-most). */
+  id: number;
+  kind: WasmSccKind;
+  members: number[];
+  /** Intra-SCC direct call edges only. */
+  internalEdges: WasmCallEdge[];
+  /** Shortest cycle length (in number of edges) within this SCC; 1 = self-loop. */
+  shortestCycleLength: number | null;
+  /** Whether this SCC participates in any indirect-call candidate cycle. */
+  hasIndirectCycle: boolean;
+  /**
+   * Simple cycles enumerated by Johnson's algorithm up to the configured maximum.
+   * Only populated when maxCycles > 0.
+   */
+  enumeratedCycles: number[][];
+}
+
+export interface WasmRecursionStatistics {
+  totalFunctions: number;
+  totalCallEdges: number;
+  totalDirectCallEdges: number;
+  totalIndirectCallSites: number;
+  totalUnresolvedIndirectCalls: number;
+  recursiveFunctionCount: number;
+  recursiveComponentCount: number;
+  largestRecursiveComponentSize: number;
+  directSelfRecursiveFunctionCount: number;
+  mutualRecursionComponentCount: number;
+  maxCycleSize: number;
+  averageRecursiveComponentSize: number;
+  /** Minimum shortestCycleLength across all recursive SCCs. */
+  minimumCycleLength: number | null;
+}
+
+export interface WasmRecursionReport {
+  file: string;
+  valid: true;
+  /** All direct call edges (excluding indirect). */
+  callEdges: WasmCallEdge[];
+  /** All indirect call sites with conservative candidate resolution. */
+  indirectCallCandidates: WasmIndirectCallCandidate[];
+  /** All SCCs, including non-recursive ones. */
+  sccs: WasmScc[];
+  /** Only the recursive SCCs. */
+  recursiveSccs: WasmScc[];
+  /** Functions that appear in at least one recursive SCC. */
+  recursiveFunctions: number[];
+  /** Functions sorted by the count of recursive edges they participate in (descending). */
+  mostConnectedRecursiveFunctions: Array<{ functionIndex: number; edgeCount: number }>;
+  statistics: WasmRecursionStatistics;
+}
+
+// ---------------------------------------------------------------------------
+// Internal binary helpers (self-contained re-implementations to avoid
+// coupling to the internal Reader class above).
+// ---------------------------------------------------------------------------
+
+class RecReader {
+  pos = 0;
+  constructor(private readonly buf: Buffer) {}
+  get done(): boolean { return this.pos >= this.buf.length; }
+  byte(): number {
+    if (this.pos >= this.buf.length) throw new WasmValidationError('Unexpected end of data');
+    return this.buf[this.pos++];
+  }
+  bytes(n: number): Buffer {
+    if (this.pos + n > this.buf.length) throw new WasmValidationError('Section length exceeds data');
+    const out = this.buf.subarray(this.pos, this.pos + n);
+    this.pos += n;
+    return out;
+  }
+  u32(): number {
+    let result = 0; let shift = 0;
+    for (let i = 0; i < 5; i++) {
+      const b = this.byte();
+      result |= (b & 0x7f) << shift;
+      if ((b & 0x80) === 0) return result >>> 0;
+      shift += 7;
+    }
+    throw new WasmValidationError('Malformed LEB128');
+  }
+  i32(): number {
+    let result = 0; let shift = 0; let b = 0;
+    do { b = this.byte(); result |= (b & 0x7f) << shift; shift += 7; }
+    while ((b & 0x80) !== 0 && shift < 35);
+    if (shift < 32 && (b & 0x40) !== 0) result |= ~0 << shift;
+    return result;
+  }
+  i64Bytes(): void { let b: number; do { b = this.byte(); } while ((b & 0x80) !== 0); }
+  str(): string { return this.bytes(this.u32()).toString('utf8'); }
+}
+
+interface RecSection { id: number; payload: Buffer }
+
+function recParseSections(wasm: Buffer): RecSection[] {
+  if (wasm.length < 8) throw new WasmValidationError('WASM binary too short');
+  if (wasm[0] !== 0x00 || wasm[1] !== 0x61 || wasm[2] !== 0x73 || wasm[3] !== 0x6d)
+    throw new WasmValidationError('Missing WASM magic header');
+  if (wasm.readUInt32LE(4) !== 1) throw new WasmValidationError('Unsupported WASM version');
+  const sections: RecSection[] = [];
+  const r = new RecReader(wasm.subarray(8));
+  while (!r.done) {
+    const id = r.byte();
+    const size = r.u32();
+    sections.push({ id, payload: r.bytes(size) });
+  }
+  return sections;
+}
+
+function recCountImportedFunctions(sec: RecSection | undefined): number {
+  if (!sec) return 0;
+  const r = new RecReader(sec.payload);
+  const count = r.u32();
+  let fns = 0;
+  for (let i = 0; i < count; i++) {
+    r.str(); r.str();
+    const kind = r.byte();
+    if (kind === 0x00) { fns++; r.u32(); }
+    else if (kind === 0x01) { r.byte(); r.u32(); if (sec.payload[r.pos - 4] & 1) r.u32(); }
+    else if (kind === 0x02) { r.u32(); if (sec.payload[r.pos - 1] & 1) r.u32(); }
+    else if (kind === 0x03) { r.byte(); r.byte(); }
+  }
+  return fns;
+}
+
+/**
+ * Parse element sections to build a table of function-index candidates per
+ * table slot.  Returns a flat array indexed by slot number → function index
+ * (only the first/active segment that writes each slot is used).
+ */
+function recParseElementTable(sec: RecSection | undefined): Map<number, number> {
+  const tableMap = new Map<number, number>();
+  if (!sec) return tableMap;
+  try {
+    const r = new RecReader(sec.payload);
+    const count = r.u32();
+    for (let i = 0; i < count; i++) {
+      const flags = r.u32();
+      const hasElemType = (flags & 0x01) !== 0;
+      const hasTable = (flags & 0x02) !== 0;
+      const isDeclarative = (flags & 0x04) !== 0;
+      if (hasElemType) r.byte(); // element type
+      let offset = 0;
+      if (hasTable && !isDeclarative) {
+        r.u32(); // table index
+        // read offset init expr
+        let op = r.byte();
+        if (op === 0x41) { offset = r.i32(); r.byte(); /* end */ }
+        else if (op === 0x42) { r.i64Bytes(); r.byte(); }
+        else if (op === 0x23) { r.u32(); r.byte(); }
+        else { r.byte(); /* end */ }
+      } else if (!hasTable && !isDeclarative) {
+        // passive — skip
+      }
+      const elemCount = r.u32();
+      for (let j = 0; j < elemCount; j++) {
+        const funcIdx = r.u32();
+        const slot = offset + j;
+        if (!tableMap.has(slot)) tableMap.set(slot, funcIdx);
+      }
+    }
+  } catch {
+    // element section parse failures are non-fatal; return what we have
+  }
+  return tableMap;
+}
+
+/** Skip an instruction's immediates without executing. */
+function recSkipImmediate(op: number, r: RecReader): void {
+  if ([0x02, 0x03, 0x04].includes(op)) r.byte();
+  else if ([0x0c, 0x0d, 0x10, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26].includes(op)) r.u32();
+  else if (op === 0x0e) { const n = r.u32(); for (let i = 0; i <= n; i++) r.u32(); }
+  else if (op === 0x11) { r.u32(); r.byte(); }
+  else if (op >= 0x28 && op <= 0x3e) { r.u32(); r.u32(); }
+  else if (op === 0x3f || op === 0x40) r.byte();
+  else if (op === 0x41) r.i32();
+  else if (op === 0x42) r.i64Bytes();
+  else if (op === 0x43) r.bytes(4);
+  else if (op === 0x44) r.bytes(8);
+  else if (op === 0xfc) { r.u32(); /* bulk memory subop */ }
+}
+
+interface ParsedFunctionCalls {
+  directEdges: Array<{ calleeIndex: number; offset: number }>;
+  indirectSites: Array<{ typeIndex: number; tableIndex: number; offset: number }>;
+}
+
+function recParseFunctionBody(body: Buffer): ParsedFunctionCalls {
+  const directEdges: Array<{ calleeIndex: number; offset: number }> = [];
+  const indirectSites: Array<{ typeIndex: number; tableIndex: number; offset: number }> = [];
+  try {
+    const r = new RecReader(body);
+    const localCount = r.u32();
+    for (let i = 0; i < localCount; i++) { r.u32(); r.byte(); }
+    while (!r.done) {
+      const instrOffset = r.pos;
+      const op = r.byte();
+      if (op === 0x10) {
+        const calleeIndex = r.u32();
+        directEdges.push({ calleeIndex, offset: instrOffset });
+      } else if (op === 0x11) {
+        const typeIndex = r.u32();
+        const tableIndex = r.byte();
+        indirectSites.push({ typeIndex, tableIndex, offset: instrOffset });
+      } else {
+        recSkipImmediate(op, r);
+      }
+    }
+  } catch {
+    // truncated body — return what was parsed
+  }
+  return { directEdges, indirectSites };
+}
+
+// ---------------------------------------------------------------------------
+// Tarjan's SCC algorithm
+// ---------------------------------------------------------------------------
+
+function tarjanScc(adjacency: Map<number, Set<number>>, nodes: number[]): number[][] {
+  const index = new Map<number, number>();
+  const lowlink = new Map<number, number>();
+  const onStack = new Map<number, boolean>();
+  const stack: number[] = [];
+  const sccs: number[][] = [];
+  let counter = 0;
+
+  function strongConnect(v: number): void {
+    index.set(v, counter);
+    lowlink.set(v, counter);
+    counter++;
+    stack.push(v);
+    onStack.set(v, true);
+
+    for (const w of (adjacency.get(v) ?? new Set())) {
+      if (!index.has(w)) {
+        strongConnect(w);
+        lowlink.set(v, Math.min(lowlink.get(v)!, lowlink.get(w)!));
+      } else if (onStack.get(w)) {
+        lowlink.set(v, Math.min(lowlink.get(v)!, index.get(w)!));
+      }
+    }
+
+    if (lowlink.get(v) === index.get(v)) {
+      const scc: number[] = [];
+      let w: number;
+      do {
+        w = stack.pop()!;
+        onStack.set(w, false);
+        scc.push(w);
+      } while (w !== v);
+      sccs.push(scc);
+    }
+  }
+
+  for (const node of nodes) {
+    if (!index.has(node)) strongConnect(node);
+  }
+  return sccs;
+}
+
+/**
+ * Enumerate simple cycles within a single SCC using DFS (Johnson's algorithm,
+ * limited to maxCycles to avoid unbounded work on dense graphs).
+ */
+function enumerateCyclesInScc(
+  members: number[],
+  intraEdges: Map<number, Set<number>>,
+  maxCycles: number,
+): number[][] {
+  const cycles: number[][] = [];
+  if (members.length === 0) return cycles;
+
+  const memberSet = new Set(members);
+  const blocked = new Map<number, boolean>();
+  const blockMap = new Map<number, Set<number>>();
+  members.forEach((m) => { blocked.set(m, false); blockMap.set(m, new Set()); });
+
+  const stack: number[] = [];
+  let startNode = members[0];
+
+  function unblock(u: number): void {
+    blocked.set(u, false);
+    for (const w of (blockMap.get(u) ?? new Set())) {
+      blockMap.get(u)!.delete(w);
+      if (blocked.get(w)) unblock(w);
+    }
+  }
+
+  function circuit(v: number, start: number): boolean {
+    if (cycles.length >= maxCycles) return false;
+    let found = false;
+    stack.push(v);
+    blocked.set(v, true);
+
+    for (const w of (intraEdges.get(v) ?? new Set())) {
+      if (!memberSet.has(w)) continue;
+      if (w === start) {
+        cycles.push([...stack]);
+        found = true;
+        if (cycles.length >= maxCycles) { stack.pop(); return found; }
+      } else if (!blocked.get(w)) {
+        if (circuit(w, start)) found = true;
+      }
+    }
+
+    if (found) {
+      unblock(v);
+    } else {
+      for (const w of (intraEdges.get(v) ?? new Set())) {
+        if (!memberSet.has(w)) continue;
+        blockMap.get(w)!.add(v);
+      }
+    }
+    stack.pop();
+    return found;
+  }
+
+  for (let i = 0; i < members.length && cycles.length < maxCycles; i++) {
+    startNode = members[i];
+    // Reset blocked for members from startNode onward
+    for (let j = i; j < members.length; j++) {
+      blocked.set(members[j], false);
+      blockMap.get(members[j])!.clear();
+    }
+    circuit(startNode, startNode);
+  }
+
+  return cycles;
+}
+
+/** Find the shortest cycle length within an SCC using BFS from each member. */
+function shortestCycleInScc(
+  members: number[],
+  intraEdges: Map<number, Set<number>>,
+): number | null {
+  if (members.length === 0) return null;
+  let shortest: number | null = null;
+
+  for (const start of members) {
+    // BFS
+    const dist = new Map<number, number>();
+    dist.set(start, 0);
+    const queue = [start];
+    while (queue.length > 0) {
+      const u = queue.shift()!;
+      for (const v of (intraEdges.get(u) ?? new Set())) {
+        if (!new Set(members).has(v)) continue;
+        if (v === start) {
+          const len = dist.get(u)! + 1;
+          if (shortest === null || len < shortest) shortest = len;
+          // don't return — keep searching for even shorter
+        } else if (!dist.has(v)) {
+          dist.set(v, dist.get(u)! + 1);
+          if (shortest === null || dist.get(v)! < shortest) queue.push(v);
+        }
+      }
+    }
+  }
+  return shortest;
+}
+
+function classifyScc(
+  members: number[],
+  intraEdges: Map<number, Set<number>>,
+): WasmSccKind {
+  if (members.length === 1) {
+    return (intraEdges.get(members[0])?.has(members[0]) ?? false)
+      ? 'direct_self_recursion'
+      : 'non_recursive';
+  }
+  if (members.length === 2) return 'mutual_recursion_two';
+  return 'multi_function_cycle';
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * Analyse call-graph recursion in a WASM binary without executing any code.
+ *
+ * The analysis:
+ *  1. Parses the code section to extract direct `call` and `call_indirect`
+ *     instruction sites for every locally-defined function.
+ *  2. Resolves `call_indirect` candidates conservatively using the first
+ *     active element segment; unresolved sites are recorded separately.
+ *  3. Runs Tarjan's SCC algorithm on the direct-call adjacency graph.
+ *  4. Classifies each SCC and calculates the shortest cycle length.
+ *  5. Optionally enumerates simple cycles up to `maxCycles`.
+ *
+ * No WASM code is executed at any point.
+ */
+export function analyzeRecursion(
+  file: string,
+  options: { maxCycles?: number } = {},
+): WasmRecursionReport {
+  const maxCycles = options.maxCycles ?? 0; // 0 = no enumeration
+  const wasm = (() => {
+    try { return fs.readFileSync(file); }
+    catch (e) { throw new WasmValidationError(`Unable to read WASM file "${file}": ${(e as Error).message}`); }
+  })();
+
+  const sections = recParseSections(wasm);
+  const importedFnCount = recCountImportedFunctions(sections.find((s) => s.id === 2));
+  const elementTable = recParseElementTable(sections.find((s) => s.id === 9));
+
+  // Extract code bodies
+  const codeSection = sections.find((s) => s.id === 10);
+  const bodies: Buffer[] = [];
+  if (codeSection) {
+    const r = new RecReader(codeSection.payload);
+    const count = r.u32();
+    for (let i = 0; i < count; i++) {
+      const size = r.u32();
+      bodies.push(r.bytes(size));
+    }
+  }
+
+  const totalFunctions = importedFnCount + bodies.length;
+  const callEdges: WasmCallEdge[] = [];
+  const indirectCallCandidates: WasmIndirectCallCandidate[] = [];
+
+  // Build call graph
+  for (let bodyIdx = 0; bodyIdx < bodies.length; bodyIdx++) {
+    const callerIndex = importedFnCount + bodyIdx;
+    const parsed = recParseFunctionBody(bodies[bodyIdx]);
+
+    for (const edge of parsed.directEdges) {
+      callEdges.push({
+        callerIndex,
+        calleeIndex: edge.calleeIndex,
+        instructionOffset: edge.offset,
+        callType: 'direct',
+      });
+    }
+
+    for (const site of parsed.indirectSites) {
+      const candidates: number[] = [];
+      // Conservative resolution: collect all function indices from element table
+      for (const [, fnIdx] of elementTable) {
+        if (!candidates.includes(fnIdx)) candidates.push(fnIdx);
+      }
+      candidates.sort((a, b) => a - b);
+      indirectCallCandidates.push({
+        callerIndex,
+        tableIndex: site.tableIndex,
+        typeIndex: site.typeIndex,
+        instructionOffset: site.offset,
+        candidateCallees: candidates,
+      });
+    }
+  }
+
+  // Build adjacency map for direct calls only
+  const directAdj = new Map<number, Set<number>>();
+  for (let i = 0; i < totalFunctions; i++) directAdj.set(i, new Set());
+  for (const edge of callEdges) {
+    if (edge.callType === 'direct' && edge.calleeIndex < totalFunctions) {
+      directAdj.get(edge.callerIndex)?.add(edge.calleeIndex);
+    }
+  }
+
+  // All function indices (include imported for completeness; they have no body)
+  const allNodes = Array.from({ length: totalFunctions }, (_, i) => i);
+  const rawSccs = tarjanScc(directAdj, allNodes);
+
+  // Build edge lookup for intra-SCC edges
+  const edgesByFunction = new Map<number, WasmCallEdge[]>();
+  for (const e of callEdges) {
+    const list = edgesByFunction.get(e.callerIndex) ?? [];
+    list.push(e);
+    edgesByFunction.set(e.callerIndex, list);
+  }
+
+  // Build indirect adjacency for cycle checking
+  const indirectAdj = new Map<number, Set<number>>();
+  for (let i = 0; i < totalFunctions; i++) indirectAdj.set(i, new Set());
+  for (const site of indirectCallCandidates) {
+    for (const callee of site.candidateCallees) {
+      if (callee < totalFunctions) indirectAdj.get(site.callerIndex)?.add(callee);
+    }
+  }
+
+  const sccs: WasmScc[] = [];
+  let sccId = 0;
+
+  for (const rawScc of rawSccs) {
+    const members = [...rawScc].sort((a, b) => a - b);
+    const memberSet = new Set(members);
+
+    // Collect intra-SCC direct edges
+    const intraEdges: WasmCallEdge[] = [];
+    for (const m of members) {
+      for (const e of (edgesByFunction.get(m) ?? [])) {
+        if (e.callType === 'direct' && memberSet.has(e.calleeIndex)) intraEdges.push(e);
+      }
+    }
+
+    // Intra-SCC adjacency map
+    const intraAdj = new Map<number, Set<number>>();
+    for (const m of members) intraAdj.set(m, new Set());
+    for (const e of intraEdges) intraAdj.get(e.callerIndex)?.add(e.calleeIndex);
+
+    const kind = classifyScc(members, intraAdj);
+    const isRecursive = kind !== 'non_recursive';
+    const shortestCycleLength = isRecursive ? shortestCycleInScc(members, intraAdj) : null;
+
+    // Enumerate simple cycles if requested and this SCC is recursive
+    const enumeratedCycles: number[][] =
+      isRecursive && maxCycles > 0
+        ? enumerateCyclesInScc(members, intraAdj, maxCycles)
+        : [];
+
+    // Check if any indirect candidate creates a cycle within members
+    let hasIndirectCycle = false;
+    if (!isRecursive) {
+      for (const site of indirectCallCandidates) {
+        if (!memberSet.has(site.callerIndex)) continue;
+        for (const callee of site.candidateCallees) {
+          if (memberSet.has(callee)) { hasIndirectCycle = true; break; }
+        }
+        if (hasIndirectCycle) break;
+      }
+    }
+
+    sccs.push({
+      id: sccId++,
+      kind,
+      members,
+      internalEdges: intraEdges,
+      shortestCycleLength,
+      hasIndirectCycle,
+      enumeratedCycles,
+    });
+  }
+
+  // Recursive SCCs
+  const recursiveSccs = sccs.filter((s) => s.kind !== 'non_recursive');
+  const recursiveFunctionSet = new Set<number>();
+  for (const s of recursiveSccs) s.members.forEach((m) => recursiveFunctionSet.add(m));
+  const recursiveFunctions = [...recursiveFunctionSet].sort((a, b) => a - b);
+
+  // Most connected recursive functions
+  const edgeCountMap = new Map<number, number>();
+  for (const s of recursiveSccs) {
+    for (const e of s.internalEdges) {
+      edgeCountMap.set(e.callerIndex, (edgeCountMap.get(e.callerIndex) ?? 0) + 1);
+      edgeCountMap.set(e.calleeIndex, (edgeCountMap.get(e.calleeIndex) ?? 0) + 1);
+    }
+  }
+  const mostConnectedRecursiveFunctions = [...edgeCountMap.entries()]
+    .map(([functionIndex, edgeCount]) => ({ functionIndex, edgeCount }))
+    .sort((a, b) => b.edgeCount - a.edgeCount || a.functionIndex - b.functionIndex);
+
+  // Statistics
+  const recursiveSizes = recursiveSccs.map((s) => s.members.length);
+  const totalUnresolvedIndirect = indirectCallCandidates.filter(
+    (c) => c.candidateCallees.length === 0,
+  ).length;
+  const cycleLengths = recursiveSccs
+    .map((s) => s.shortestCycleLength)
+    .filter((l): l is number => l !== null);
+
+  const statistics: WasmRecursionStatistics = {
+    totalFunctions,
+    totalCallEdges: callEdges.length,
+    totalDirectCallEdges: callEdges.filter((e) => e.callType === 'direct').length,
+    totalIndirectCallSites: indirectCallCandidates.length,
+    totalUnresolvedIndirectCalls: totalUnresolvedIndirect,
+    recursiveFunctionCount: recursiveFunctions.length,
+    recursiveComponentCount: recursiveSccs.length,
+    largestRecursiveComponentSize: recursiveSizes.length > 0 ? Math.max(...recursiveSizes) : 0,
+    directSelfRecursiveFunctionCount: sccs.filter(
+      (s) => s.kind === 'direct_self_recursion',
+    ).length,
+    mutualRecursionComponentCount: sccs.filter(
+      (s) => s.kind === 'mutual_recursion_two' || s.kind === 'multi_function_cycle',
+    ).length,
+    maxCycleSize: recursiveSizes.length > 0 ? Math.max(...recursiveSizes) : 0,
+    averageRecursiveComponentSize:
+      recursiveSizes.length > 0
+        ? recursiveSizes.reduce((a, b) => a + b, 0) / recursiveSizes.length
+        : 0,
+    minimumCycleLength: cycleLengths.length > 0 ? Math.min(...cycleLengths) : null,
+  };
+
+  return {
+    file,
+    valid: true,
+    callEdges,
+    indirectCallCandidates,
+    sccs,
+    recursiveSccs,
+    recursiveFunctions,
+    mostConnectedRecursiveFunctions,
+    statistics,
+  };
+}
+
+export function compareRecursionReports(
+  beforeFile: string,
+  afterFile: string,
+  options: { maxCycles?: number } = {},
+) {
+  const before = analyzeRecursion(beforeFile, options);
+  const after = analyzeRecursion(afterFile, options);
+
+  const beforeRecursiveFns = new Set(before.recursiveFunctions);
+  const afterRecursiveFns = new Set(after.recursiveFunctions);
+
+  const newlyRecursiveFunctions = after.recursiveFunctions.filter(
+    (f) => !beforeRecursiveFns.has(f),
+  );
+  const removedRecursiveFunctions = before.recursiveFunctions.filter(
+    (f) => !afterRecursiveFns.has(f),
+  );
+
+  // Compare SCCs by canonical member signature
+  const beforeSccMap = new Map(
+    before.recursiveSccs.map((s) => [s.members.join(','), s]),
+  );
+  const afterSccMap = new Map(
+    after.recursiveSccs.map((s) => [s.members.join(','), s]),
+  );
+
+  const introducedSccs = after.recursiveSccs.filter((s) => !beforeSccMap.has(s.members.join(',')));
+  const removedSccs = before.recursiveSccs.filter((s) => !afterSccMap.has(s.members.join(',')));
+  const changedSccs: Array<{
+    before: WasmScc;
+    after: WasmScc;
+    changes: string[];
+  }> = [];
+
+  for (const [key, beforeScc] of beforeSccMap) {
+    const afterScc = afterSccMap.get(key);
+    if (!afterScc) continue;
+    const changes: string[] = [];
+    if (beforeScc.kind !== afterScc.kind) changes.push('kind');
+    if (beforeScc.shortestCycleLength !== afterScc.shortestCycleLength) {
+      const delta = (afterScc.shortestCycleLength ?? 0) - (beforeScc.shortestCycleLength ?? 0);
+      changes.push(delta > 0 ? 'cycle_size_increased' : 'cycle_size_decreased');
+    }
+    if (beforeScc.internalEdges.length !== afterScc.internalEdges.length) changes.push('edge_count');
+    if (changes.length > 0) changedSccs.push({ before: beforeScc, after: afterScc, changes });
+  }
+
+  return {
+    before,
+    after,
+    comparison: {
+      newlyRecursiveFunctions,
+      removedRecursiveFunctions,
+      introducedSccs,
+      removedSccs,
+      changedSccs,
+      recursiveComponentCountDelta:
+        after.statistics.recursiveComponentCount - before.statistics.recursiveComponentCount,
+      recursiveFunctionCountDelta:
+        after.statistics.recursiveFunctionCount - before.statistics.recursiveFunctionCount,
+    },
+  };
+}
