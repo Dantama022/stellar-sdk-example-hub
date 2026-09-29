@@ -39,6 +39,7 @@ import { run as runWasmCustomSections } from './examples/245-wasm-custom-section
 import { run as runWasmGlobals } from './examples/246-wasm-globals';
 import { run as runWasmInstructions } from './examples/247-wasm-instructions';
 import { run as runWasmElements } from './examples/248-wasm-elements';
+import { run as runWasmLocals } from './examples/249-wasm-locals';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 
 dotenv.config();
@@ -72,6 +73,7 @@ function printUsage(): void {
   console.log('  wasm-globals <wasmFile> [compareFile] [--json]');
   console.log('  wasm-instructions <wasmFile> [compareFile] [--json]');
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-locals <wasmFile> [compareFile] [--json]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -180,6 +182,9 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'wasm-instructions':
         await runWasmInstructions(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-locals':
+        await runWasmLocals(parseWasmArgs(cmdArgs));
         return 0;
       default:
         printUsage();
