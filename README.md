@@ -1264,9 +1264,13 @@ stellar-api-inspector wasm-memory src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-custom-sections src/contracts/sample/hello.wasm --json
 stellar-api-inspector wasm-globals src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm
 stellar-api-inspector wasm-instructions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+npx ts-node src/wasm-names.ts src/contracts/sample/hello.wasm
+npx ts-node src/wasm-names.ts old.wasm new.wasm --json
 ```
 
 `wasm-memory` reports imported and locally defined memories and tables, their indexes, element types, limits, and aggregate totals. `wasm-custom-sections` reports custom-section names, order, payload sizes, deterministic SHA-256 hashes, grouped sections, and largest sections. `wasm-globals` reports imported and locally defined globals, value types, mutability, and safely representable initialization expressions. `wasm-instructions` reports code-section function counts, instruction totals, instruction frequencies, category summaries, body sizes, and largest functions. Supplying a second WASM artifact enables deterministic comparison output for additions, removals, and structural changes.
+
+`wasm-names` reads the standard `name` custom section offline and reports function and local name mappings alongside their numeric indexes, including absent or explicitly empty mappings, partial local-name coverage, and the functions with the most named locals. Supply two artifacts to compare added, removed, renamed, and changed function/local names. It parses module bytes only and never executes contract code; use `--json` for deterministic machine-readable output.
 
 ## License
 

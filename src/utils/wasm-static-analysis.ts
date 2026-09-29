@@ -145,6 +145,48 @@ export interface WasmCustomSectionReport {
   };
 }
 
+export interface WasmNameEntry {
+  index: number;
+  name: string | null;
+  status: 'named' | 'explicitly-unnamed' | 'unmapped';
+}
+
+export interface WasmFunctionNameInfo extends WasmNameEntry {
+  functionIndex: number;
+  defined: boolean;
+  locals: WasmNameEntry[];
+  unnamedLocalRanges: Array<{ startIndex: number; endIndex: number }>;
+  localNameMetadataPresent: boolean;
+  expectedLocalCount: number | null;
+  namedLocalCount: number;
+  unnamedLocalCount: number | null;
+}
+
+export interface WasmNameReport {
+  file: string;
+  valid: true;
+  nameSection: {
+    present: boolean;
+    count: number;
+    subsections: Array<{ id: number; name: string }>;
+  };
+  functions: WasmFunctionNameInfo[];
+  functionsWithIncompleteLocalNames: number[];
+  statistics: {
+    totalFunctionCount: number;
+    totalNamedFunctions: number;
+    totalUnnamedFunctions: number;
+    totalFunctionsWithLocalNameMetadata: number;
+    totalNamedLocals: number;
+    functionsWithMostNamedLocals: Array<{
+      functionIndex: number;
+      name: string | null;
+      count: number;
+    }>;
+  };
+  warnings: string[];
+}
+
 export type WasmProducerCategory = 'language' | 'compiler' | 'linker' | 'binary-tool' | 'other';
 
 export interface WasmProducerInfo {
@@ -911,6 +953,275 @@ export function analyzeCustomSections(file: string): WasmCustomSectionReport {
         .sort((a, b) => b.payloadSize - a.payloadSize || a.order - b.order)
         .slice(0, 5),
     },
+  };
+}
+
+const nameSubsectionNames: Record<number, string> = {
+  0: 'module',
+  1: 'function',
+  2: 'local',
+  3: 'label',
+  4: 'type',
+  5: 'table',
+  6: 'memory',
+  7: 'global',
+  8: 'element',
+  9: 'data',
+  10: 'field',
+  11: 'tag',
+};
+
+function readNameMap(reader: Reader): Map<number, string> {
+  const names = new Map<number, string>();
+  const count = reader.varuint32();
+  for (let i = 0; i < count; i += 1) names.set(reader.varuint32(), reader.string());
+  return names;
+}
+
+function parseNameSection(
+  section: Section,
+  functionNames: Map<number, string>,
+  localNames: Map<number, Map<number, string>>,
+  subsections: Array<{ id: number; name: string }>,
+  warnings: string[],
+): void {
+  try {
+    const reader = new Reader(section.payload);
+    if (reader.string() !== 'name') return;
+    while (!reader.done) {
+      const id = reader.byte();
+      const subsection = new Reader(reader.bytes(reader.varuint32()));
+      subsections.push({ id, name: nameSubsectionNames[id] ?? 'unknown' });
+      try {
+        if (id === 1) {
+          readNameMap(subsection).forEach((name, index) => functionNames.set(index, name));
+        } else if (id === 2) {
+          const functionCount = subsection.varuint32();
+          for (let i = 0; i < functionCount; i += 1) {
+            const functionIndex = subsection.varuint32();
+            const names = readNameMap(subsection);
+            const current = localNames.get(functionIndex) ?? new Map<number, string>();
+            names.forEach((name, index) => current.set(index, name));
+            localNames.set(functionIndex, current);
+          }
+        }
+        if ((id === 1 || id === 2) && !subsection.done) {
+          warnings.push(`Name subsection ${id} contains trailing bytes`);
+        }
+      } catch (error) {
+        warnings.push(
+          `Unable to parse name subsection ${id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  } catch (error) {
+    warnings.push(
+      `Unable to parse name custom section: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function functionLayout(sections: Section[]): {
+  importedFunctionCount: number;
+  definedTypeIndexes: number[];
+  parameterCounts: number[] | null;
+  declaredLocalCounts: number[] | null;
+} {
+  const importSection = sections.find((section) => section.id === 2);
+  const importedTypeIndexes: number[] = [];
+  if (importSection) {
+    const reader = new Reader(importSection.payload);
+    const count = reader.varuint32();
+    for (let i = 0; i < count; i += 1) {
+      reader.string();
+      reader.string();
+      const kind = reader.byte();
+      if (kind === 0) importedTypeIndexes.push(reader.varuint32());
+      else if (kind === 1) {
+        reader.byte();
+        parseLimits(reader);
+      } else if (kind === 2) parseLimits(reader);
+      else if (kind === 3) {
+        reader.byte();
+        reader.byte();
+      } else if (kind === 4) {
+        reader.byte();
+        reader.varuint32();
+      } else throw new WasmValidationError(`Unsupported import kind: ${kind}`);
+    }
+  }
+
+  const functionSection = sections.find((section) => section.id === 3);
+  const definedTypeIndexes: number[] = [];
+  if (functionSection) {
+    const reader = new Reader(functionSection.payload);
+    const count = reader.varuint32();
+    for (let i = 0; i < count; i += 1) definedTypeIndexes.push(reader.varuint32());
+  }
+
+  let parameterCounts: number[] | null = null;
+  const typeSection = sections.find((section) => section.id === 1);
+  if (typeSection) {
+    const reader = new Reader(typeSection.payload);
+    const count = reader.varuint32();
+    parameterCounts = [];
+    for (let i = 0; i < count; i += 1) {
+      if (reader.byte() !== 0x60) throw new WasmValidationError('Unsupported function type form');
+      const parameterCount = reader.varuint32();
+      reader.bytes(parameterCount);
+      const resultCount = reader.varuint32();
+      reader.bytes(resultCount);
+      parameterCounts.push(parameterCount);
+    }
+  }
+
+  let declaredLocalCounts: number[] | null = null;
+  const codeSection = sections.find((section) => section.id === 10);
+  if (codeSection) {
+    const reader = new Reader(codeSection.payload);
+    const count = reader.varuint32();
+    declaredLocalCounts = [];
+    for (let i = 0; i < count; i += 1) {
+      const body = new Reader(reader.bytes(reader.varuint32()));
+      const groupCount = body.varuint32();
+      let localCount = 0;
+      for (let group = 0; group < groupCount; group += 1) {
+        localCount += body.varuint32();
+        body.byte();
+      }
+      declaredLocalCounts.push(localCount);
+    }
+  }
+
+  return {
+    importedFunctionCount: importedTypeIndexes.length,
+    definedTypeIndexes,
+    parameterCounts,
+    declaredLocalCounts,
+  };
+}
+
+function nameEntry(index: number, name: string | undefined): WasmNameEntry {
+  return {
+    index,
+    name: name ?? null,
+    status: name === undefined ? 'unmapped' : name.length === 0 ? 'explicitly-unnamed' : 'named',
+  };
+}
+
+export function analyzeWasmNames(file: string): WasmNameReport {
+  const sections = loadSections(file);
+  const nameSections = sections.filter(
+    (section) =>
+      section.id === 0 &&
+      (() => {
+        try {
+          return new Reader(section.payload).string() === 'name';
+        } catch {
+          return false;
+        }
+      })(),
+  );
+  const functionNames = new Map<number, string>();
+  const localNames = new Map<number, Map<number, string>>();
+  const subsections: Array<{ id: number; name: string }> = [];
+  const warnings: string[] = [];
+  nameSections.forEach((section) =>
+    parseNameSection(section, functionNames, localNames, subsections, warnings),
+  );
+
+  const layout = functionLayout(sections);
+  const functionCount = layout.importedFunctionCount + layout.definedTypeIndexes.length;
+  const functions = Array.from({ length: functionCount }, (_, functionIndex) => {
+    const defined = functionIndex >= layout.importedFunctionCount;
+    const definitionIndex = functionIndex - layout.importedFunctionCount;
+    const typeIndex = layout.definedTypeIndexes[definitionIndex];
+    const parameterCount =
+      typeIndex === undefined ? undefined : layout.parameterCounts?.[typeIndex];
+    const declaredLocalCount = layout.declaredLocalCounts?.[definitionIndex];
+    const expectedLocalCount =
+      defined && parameterCount !== undefined && declaredLocalCount !== undefined
+        ? parameterCount + declaredLocalCount
+        : null;
+    const mappedLocals = localNames.get(functionIndex) ?? new Map<number, string>();
+    const locals = [...mappedLocals.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([index, name]) => nameEntry(index, name));
+    const name = functionNames.get(functionIndex);
+    const mappedLocalIndexes = [...mappedLocals.keys()]
+      .filter((index) => expectedLocalCount !== null && index < expectedLocalCount)
+      .sort((a, b) => a - b);
+    const unnamedLocalRanges: Array<{ startIndex: number; endIndex: number }> = [];
+    if (expectedLocalCount !== null) {
+      let nextIndex = 0;
+      for (const index of mappedLocalIndexes) {
+        if (index > nextIndex) {
+          unnamedLocalRanges.push({ startIndex: nextIndex, endIndex: index - 1 });
+        }
+        nextIndex = index + 1;
+      }
+      if (nextIndex < expectedLocalCount) {
+        unnamedLocalRanges.push({ startIndex: nextIndex, endIndex: expectedLocalCount - 1 });
+      }
+    }
+    const namedLocalCount = [...mappedLocals.values()].filter(
+      (localName) => localName.length > 0,
+    ).length;
+    return {
+      ...nameEntry(functionIndex, name),
+      functionIndex,
+      defined,
+      locals,
+      unnamedLocalRanges,
+      localNameMetadataPresent: localNames.has(functionIndex),
+      expectedLocalCount,
+      namedLocalCount,
+      unnamedLocalCount:
+        expectedLocalCount === null ? null : Math.max(0, expectedLocalCount - namedLocalCount),
+    };
+  });
+
+  const namedFunctions = functions.filter((fn) => fn.status === 'named');
+  const localMetadataFunctions = functions.filter((fn) => fn.localNameMetadataPresent);
+  const localNameCounts = functions
+    .filter((fn) => fn.namedLocalCount > 0)
+    .sort((a, b) => b.namedLocalCount - a.namedLocalCount || a.functionIndex - b.functionIndex)
+    .slice(0, 5)
+    .map(({ functionIndex, name, namedLocalCount }) => ({
+      functionIndex,
+      name,
+      count: namedLocalCount,
+    }));
+  const functionsWithIncompleteLocalNames = functions
+    .filter(
+      (fn) =>
+        nameSections.length > 0 &&
+        fn.defined &&
+        fn.status === 'named' &&
+        fn.expectedLocalCount !== null &&
+        fn.namedLocalCount < fn.expectedLocalCount,
+    )
+    .map((fn) => fn.functionIndex);
+
+  return {
+    file,
+    valid: true,
+    nameSection: {
+      present: nameSections.length > 0,
+      count: nameSections.length,
+      subsections,
+    },
+    functions,
+    functionsWithIncompleteLocalNames,
+    statistics: {
+      totalFunctionCount: functionCount,
+      totalNamedFunctions: namedFunctions.length,
+      totalUnnamedFunctions: functionCount - namedFunctions.length,
+      totalFunctionsWithLocalNameMetadata: localMetadataFunctions.length,
+      totalNamedLocals: functions.reduce((sum, fn) => sum + fn.namedLocalCount, 0),
+      functionsWithMostNamedLocals: localNameCounts,
+    },
+    warnings,
   };
 }
 
