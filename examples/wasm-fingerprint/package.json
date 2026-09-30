@@ -1,0 +1,18 @@
+{
+  "name": "wasm-fingerprint-example",
+  "version": "1.0.0",
+  "description": "Example of WASM semantic fingerprinting for Soroban contracts",
+  "main": "index.js",
+  "scripts": {
+    "example": "node index.js"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^11.0.0",
+    "js-sha256": "^0.10.0",
+    "wasmparser": "^0.100.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
