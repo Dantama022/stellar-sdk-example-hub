@@ -13288,4 +13288,52 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '250-wasm-strings': {
+    name: '250-wasm-strings',
+    description:
+      'Offline WASM embedded-string analysis — extracts strings from data segments and custom sections, classifies them, groups repeated occurrences, and reports aggregate statistics',
+    run: loadExample('../examples/250-wasm-strings'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
+    ],
+  },
+  '251-wasm-stack-types': {
+    name: '251-wasm-stack-types',
+    description:
+      'Offline WASM operand-stack type analysis — reconstructs statically expected stack type states, identifies underflows, and reports type-flow statistics',
+    run: loadExample('../examples/251-wasm-stack-types'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
+    ],
+  },
+  '252-wasm-globals-usage': {
+    name: '252-wasm-globals-usage',
+    description:
+      'Offline WASM global mutation analysis — tracks global.get and global.set usage, classifies globals as read-only/write-only/read-write/unused, and reports per-function data-flow statistics',
+    run: loadExample('../examples/252-wasm-globals-usage'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
+    ],
+  },
+  '253-wasm-literals': {
+    name: '253-wasm-literals',
+    description:
+      'Offline WASM literal and magic-number analysis — extracts numeric constants, classifies structural patterns (zero, power-of-two, bit-mask, etc.), and reports occurrence statistics',
+    run: loadExample('../examples/253-wasm-literals'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
+    ],
+  },
 };
