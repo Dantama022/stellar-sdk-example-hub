@@ -1,0 +1,14 @@
+{
+  "name": "wasm-provenance-example",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "example": "node index.js"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^11.0.0",
+    "commander": "^12.0.0",
+    "js-sha256": "^0.11.0"
+  }
+}
