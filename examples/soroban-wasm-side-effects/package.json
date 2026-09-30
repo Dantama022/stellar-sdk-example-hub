@@ -1,0 +1,33 @@
+{
+  "name": "soroban-wasm-side-effects",
+  "version": "1.0.0",
+  "description": "WASM function side-effect analysis for Soroban contracts",
+  "main": "dist/index.js",
+  "bin": {
+    "wasm-side-effects": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "soroban",
+    "wasm",
+    "side-effects",
+    "static-analysis"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@wasm-tool/wasm-parser": "^1.0.0",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/yargs": "^17.0.24",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  }
+}
