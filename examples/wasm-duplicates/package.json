@@ -1,0 +1,17 @@
+{
+  "name": "wasm-duplicates",
+  "version": "1.0.0",
+  "description": "WASM duplicate function detection for Soroban contracts",
+  "main": "index.js",
+  "bin": {
+    "wasm-duplicates": "./cli.js"
+  },
+  "dependencies": {
+    "commander": "^11.0.0",
+    "csv-stringify": "^6.4.0",
+    "fast-wasi": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

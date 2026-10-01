@@ -22,6 +22,54 @@ Dominance relationships reveal which basic blocks must be executed before reachi
 - Does not handle dynamic control flow (e.g., indirect calls)
 - Assumes static analysis of compiled WASM
 - May produce false positives for complex control flow patterns
+
+## WASM Semantic Fingerprints
+
+The offline `wasm-fingerprint` command reports SHA-256 fingerprints for a
+Soroban WASM artifact without instantiating or executing it:
+
+```sh
+npx ts-node src/wasm-fingerprint.ts contract.wasm
+npx ts-node src/wasm-fingerprint.ts old.wasm new.wasm --json
+```
+
+The raw binary fingerprint hashes every input byte. The semantic module
+fingerprint hashes the normalized WebAssembly module structure. The component
+fingerprints separately cover:
+
+- Types: function parameter and result types, in type-index order.
+- Imports/exports: import names, kinds and descriptors in import order; exports
+  and the start function.
+- Code: defined function type references, locals and decoded instructions,
+  including their immediates.
+- Memory/table: imported and defined resource types, limits and element types.
+- Globals: value type, mutability and initializer expressions.
+- Data/element: segment mode, target, offset expression, element references and
+  data bytes.
+- Semantic custom sections: unknown custom sections are retained as opaque
+  name-and-payload records. They are reported as `customSections` when changed.
+
+Custom sections named `name`, `producers`, `sourceMappingURL`,
+`external_debug_info`, `build_id`, or beginning with `.debug_` are classified as
+non-semantic metadata and omitted from the semantic module fingerprint. Their
+changes are tracked separately. Other custom sections are conservatively
+treated as semantic because a toolchain or loader may interpret them.
+
+Comparison reports `identical` for equal binaries, `metadata-only` when only
+classified non-semantic custom metadata differs, `binary-only` when normalized
+semantics match despite another byte-level encoding difference, and `semantic`
+when one or more component fingerprints change. For semantic changes, the
+report names the changed components. JSON mode returns all fingerprints and
+the comparison report in a machine-readable object.
+
+Normalization uses `@webassemblyjs/wasm-parser`: source locations, parser
+metadata and textual numeric spellings are excluded, while decoded numeric
+values normalize equivalent LEB128 encodings. Function/type/import/resource
+index order and data/element segment order are retained where indices or
+instantiation order can affect behavior. This is a structural fingerprint, not
+a proof of behavioral equivalence: instruction sequences are not optimized or
+proven equivalent, floating-point NaN payloads may be canonicalized by the
+parser, and unsupported WebAssembly proposals or instructions are rejected.
 The repository currently includes the following runnable examples:
 
 1. **`01-create-account`**: Keypair generation and Testnet funding through Friendbot.
@@ -370,6 +418,27 @@ stellar-api-inspector wasm-compat old.wasm new.wasm --json
 stellar-api-inspector wasm-deps contract.wasm
 stellar-api-inspector wasm-deps old.wasm new.wasm --json
 ```
+
+Inspect standard WASM `producers` custom-section metadata and correlate it with basic module structure. The command runs fully offline, reads bytes and section metadata only, and never executes contract instructions:
+
+```bash
+stellar-api-inspector wasm-provenance contract.wasm
+stellar-api-inspector wasm-provenance old.wasm new.wasm --json
+```
+
+The normalized report preserves producer order and records each producer field, name, version, and inferred category (language, compiler, linker, binary tool, or other). JSON output also includes the raw producer-section payload as base64. Comparison reports additions, removals, version/category changes, unchanged fingerprints, and whether the available metadata supports calling the producer chains materially different.
+
+Producer metadata is optional and producer-reported; it may be absent, malformed, or omit build steps. Category inference is heuristic, and a missing language or compiler record is not inferred from other fields. A matching fingerprint means the parsed producer records match in order, not that the complete build environments or generated modules are identical. The report also includes the WASM version, function/import/export counts, code-section byte size, and custom-section names.
+
+The `wasm-features` command scans module sections, types, imports, resource declarations, data and element segments, and decoded instructions to report bulk memory, reference types, table instructions and multiplicity, memory64, shared and multiple memories, SIMD, atomics, exception constructs, typed function references, indirect calls, tail calls, memory initialization, and element initialization. It records section/function locations, occurrence counts, and the number and indices of distinct functions using each feature. Comparison mode reports introduced and removed features, changed occurrence counts, and functions newly or no longer using each feature. Use `--json` for the normalized profile and comparison data:
+
+```bash
+stellar-api-inspector wasm-features contract.wasm
+stellar-api-inspector wasm-features old.wasm new.wasm --json
+# Alternatively: npx ts-node src/wasm-features.ts contract.wasm --json
+```
+
+Analysis is offline and never instantiates or executes WASM. A detected feature is not a statement about runtime support. Features with no observed evidence are `not-detected` only when relevant metadata was decoded; unknown sections or undecodable instructions can make the affected result `could-not-be-determined`. Unknown instruction encodings stop scanning only the remainder of their function, and make otherwise-unobserved instruction-derived features indeterminate. Custom sections are listed but treated as opaque. This profile is limited to recognized section layouts and instruction immediate encodings; it is not a validator or a complete implementation of every WebAssembly proposal.
 
 Build an offline state transition matrix from two or more ordered snapshot files. Optional filters select a contract, transition type, or minimum frequency:
 
@@ -1200,9 +1269,13 @@ stellar-api-inspector wasm-side-effects src/contracts/sample/hello.wasm
 stellar-api-inspector wasm-side-effects src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
 stellar-api-inspector wasm-side-effects src/contracts/sample/hello.wasm --csv
 stellar-api-inspector wasm-side-effects src/contracts/sample/hello.wasm --dot
+npx ts-node src/wasm-names.ts src/contracts/sample/hello.wasm
+npx ts-node src/wasm-names.ts old.wasm new.wasm --json
 ```
 
 `wasm-memory` reports imported and locally defined memories and tables, their indexes, element types, limits, and aggregate totals. `wasm-custom-sections` reports custom-section names, order, payload sizes, deterministic SHA-256 hashes, grouped sections, and largest sections. `wasm-globals` reports imported and locally defined globals, value types, mutability, and safely representable initialization expressions. `wasm-instructions` reports code-section function counts, instruction totals, instruction frequencies, category summaries, body sizes, and largest functions. Supplying a second WASM artifact enables deterministic comparison output for additions, removals, and structural changes.
+
+`wasm-names` reads the standard `name` custom section offline and reports function and local name mappings alongside their numeric indexes, including absent or explicitly empty mappings, partial local-name coverage, and the functions with the most named locals. Supply two artifacts to compare added, removed, renamed, and changed function/local names. It parses module bytes only and never executes contract code; use `--json` for deterministic machine-readable output.
 
 ## License
 

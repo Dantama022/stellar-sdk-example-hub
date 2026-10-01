@@ -145,6 +145,82 @@ export interface WasmCustomSectionReport {
   };
 }
 
+export interface WasmNameEntry {
+  index: number;
+  name: string | null;
+  status: 'named' | 'explicitly-unnamed' | 'unmapped';
+}
+
+export interface WasmFunctionNameInfo extends WasmNameEntry {
+  functionIndex: number;
+  defined: boolean;
+  locals: WasmNameEntry[];
+  unnamedLocalRanges: Array<{ startIndex: number; endIndex: number }>;
+  localNameMetadataPresent: boolean;
+  expectedLocalCount: number | null;
+  namedLocalCount: number;
+  unnamedLocalCount: number | null;
+}
+
+export interface WasmNameReport {
+  file: string;
+  valid: true;
+  nameSection: {
+    present: boolean;
+    count: number;
+    subsections: Array<{ id: number; name: string }>;
+  };
+  functions: WasmFunctionNameInfo[];
+  functionsWithIncompleteLocalNames: number[];
+  statistics: {
+    totalFunctionCount: number;
+    totalNamedFunctions: number;
+    totalUnnamedFunctions: number;
+    totalFunctionsWithLocalNameMetadata: number;
+    totalNamedLocals: number;
+    functionsWithMostNamedLocals: Array<{
+      functionIndex: number;
+      name: string | null;
+      count: number;
+    }>;
+  };
+  warnings: string[];
+}
+
+export type WasmProducerCategory = 'language' | 'compiler' | 'linker' | 'binary-tool' | 'other';
+
+export interface WasmProducerInfo {
+  order: number;
+  field: string;
+  category: WasmProducerCategory;
+  name: string;
+  version: string;
+  values: { name: string; version: string };
+}
+
+export interface WasmProvenanceReport {
+  file: string;
+  valid: true;
+  provenanceStatus: 'available' | 'partial' | 'absent' | 'malformed';
+  producers: WasmProducerInfo[];
+  rawProducerMetadata: Array<{
+    sectionOrder: number;
+    payloadBase64: string;
+    fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }> | null;
+    error?: string;
+  }>;
+  warnings: string[];
+  module: {
+    wasmVersion: number;
+    functionCount: number;
+    importCount: number;
+    exportCount: number;
+    codeSize: number;
+    customSections: { present: boolean; count: number; names: string[] };
+  };
+  fingerprint: string;
+}
+
 interface Section {
   id: number;
   order: number;
@@ -613,6 +689,177 @@ function importedFunctionCount(importSection: Section | undefined): number {
   return functions;
 }
 
+function producerCategory(field: string, name: string): WasmProducerCategory {
+  if (field.toLowerCase() === 'language') return 'language';
+  const value = `${field} ${name}`.toLowerCase();
+  if (/linker|wasm-ld|rust-lld|\blld\b/.test(value)) return 'linker';
+  if (/objcopy|objdump|strip|wasm-tools|binaryen|wasm-opt/.test(value)) return 'binary-tool';
+  if (/compiler|rustc|clang|\bgcc\b|swiftc|emscripten|tinygo|\bzig\b/.test(value)) {
+    return 'compiler';
+  }
+  return 'other';
+}
+
+function parseProducerSection(section: Section): {
+  fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }>;
+  producers: WasmProducerInfo[];
+} {
+  const reader = new Reader(section.payload);
+  if (reader.string() !== 'producers') throw new WasmValidationError('Not a producers section');
+  const fieldCount = reader.varuint32();
+  const fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }> = [];
+  const producers: WasmProducerInfo[] = [];
+  for (let fieldIndex = 0; fieldIndex < fieldCount; fieldIndex += 1) {
+    const field = reader.string();
+    const producerCount = reader.varuint32();
+    const fieldProducers: Array<{ name: string; version: string }> = [];
+    for (let producerIndex = 0; producerIndex < producerCount; producerIndex += 1) {
+      const name = reader.string();
+      const version = reader.string();
+      fieldProducers.push({ name, version });
+      producers.push({
+        order: producers.length,
+        field,
+        category: producerCategory(field, name),
+        name,
+        version,
+        values: { name, version },
+      });
+    }
+    fields.push({ name: field, producers: fieldProducers });
+  }
+  if (!reader.done) throw new WasmValidationError('Trailing bytes in producers section');
+  return { fields, producers };
+}
+
+export function analyzeWasmProvenance(file: string): WasmProvenanceReport {
+  const sections = loadSections(file);
+  const customSections = sections.filter((section) => section.id === 0);
+  const warnings: string[] = [];
+  const rawProducerMetadata: WasmProvenanceReport['rawProducerMetadata'] = [];
+  const producers: WasmProducerInfo[] = [];
+  let malformedCount = 0;
+  let incompleteRecordCount = 0;
+  let malformedCustomSectionCount = 0;
+  let foundProducerSection = false;
+  const customSectionNames: string[] = [];
+
+  customSections.forEach((section) => {
+    const reader = new Reader(section.payload);
+    let name: string;
+    try {
+      name = reader.string();
+      customSectionNames.push(name);
+    } catch (error) {
+      malformedCustomSectionCount += 1;
+      warnings.push(
+        `Custom section ${section.order} has an invalid name: ${(error as Error).message}`,
+      );
+      return;
+    }
+    if (name !== 'producers') return;
+    foundProducerSection = true;
+    const raw = {
+      sectionOrder: section.order,
+      payloadBase64: section.payload.toString('base64'),
+      fields: null as WasmProvenanceReport['rawProducerMetadata'][number]['fields'],
+    };
+    try {
+      const parsed = parseProducerSection(section);
+      raw.fields = parsed.fields;
+      incompleteRecordCount += parsed.producers.filter(
+        (producer) => !producer.name || !producer.version,
+      ).length;
+      producers.push(
+        ...parsed.producers.map((producer) => ({
+          ...producer,
+          order: producers.length + producer.order,
+        })),
+      );
+      if (parsed.producers.length === 0) {
+        warnings.push(`Producer section ${section.order} contains no producer records`);
+      }
+      if (parsed.producers.some((producer) => !producer.name || !producer.version)) {
+        warnings.push(
+          `Producer section ${section.order} contains records with an empty name or version`,
+        );
+      }
+      rawProducerMetadata.push(raw);
+    } catch (error) {
+      malformedCount += 1;
+      rawProducerMetadata.push({
+        ...raw,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      warnings.push(
+        `Producer section ${section.order} is malformed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  });
+
+  const importSection = sections.find((section) => section.id === 2);
+  const functionSection = sections.find((section) => section.id === 3);
+  const exportSection = sections.find((section) => section.id === 7);
+  const codeSection = sections.find((section) => section.id === 10);
+  const importReader = importSection ? new Reader(importSection.payload) : null;
+  const exportReader = exportSection ? new Reader(exportSection.payload) : null;
+  const functionReader = functionSection ? new Reader(functionSection.payload) : null;
+  const validProducerSections = rawProducerMetadata.filter((metadata) => metadata.fields !== null);
+  const status: WasmProvenanceReport['provenanceStatus'] = !foundProducerSection
+    ? malformedCustomSectionCount > 0
+      ? 'partial'
+      : 'absent'
+    : malformedCount > 0
+      ? validProducerSections.length > 0
+        ? 'partial'
+        : 'malformed'
+      : producers.length === 0 || incompleteRecordCount > 0
+        ? 'partial'
+        : 'available';
+  if (!foundProducerSection) warnings.push('No standard producers custom section was found');
+  if (malformedCustomSectionCount > 0) {
+    warnings.push('One or more custom section names could not be decoded');
+  }
+  if (malformedCount > 0 && validProducerSections.length > 0) {
+    warnings.push('Some producer metadata was parsed, but one or more producer sections were malformed');
+  }
+
+  const normalized = producers.map(({ field, category, name, version }) => ({
+    field,
+    category,
+    name,
+    version,
+  }));
+  const normalizedSections = rawProducerMetadata.flatMap((metadata) =>
+    metadata.fields === null
+      ? []
+      : [{ sectionOrder: metadata.sectionOrder, fields: metadata.fields }],
+  );
+  return {
+    file,
+    valid: true,
+    provenanceStatus: status,
+    producers,
+    rawProducerMetadata,
+    warnings,
+    module: {
+      wasmVersion: 1,
+      functionCount: importedFunctionCount(importSection) + (functionReader?.varuint32() ?? 0),
+      importCount: importReader?.varuint32() ?? 0,
+      exportCount: exportReader?.varuint32() ?? 0,
+      codeSize: codeSection?.payload.length ?? 0,
+      customSections: {
+        present: customSections.length > 0,
+        count: customSections.length,
+        names: customSectionNames,
+      },
+    },
+    fingerprint: createHash('sha256')
+      .update(JSON.stringify({ producers: normalized, sections: normalizedSections }))
+      .digest('hex'),
+  };
+}
+
 export function analyzeMemoryTables(file: string): WasmMemoryTableReport {
   const sections = loadSections(file);
   const imports = parseImportSection(sections.find((section) => section.id === 2));
@@ -706,6 +953,275 @@ export function analyzeCustomSections(file: string): WasmCustomSectionReport {
         .sort((a, b) => b.payloadSize - a.payloadSize || a.order - b.order)
         .slice(0, 5),
     },
+  };
+}
+
+const nameSubsectionNames: Record<number, string> = {
+  0: 'module',
+  1: 'function',
+  2: 'local',
+  3: 'label',
+  4: 'type',
+  5: 'table',
+  6: 'memory',
+  7: 'global',
+  8: 'element',
+  9: 'data',
+  10: 'field',
+  11: 'tag',
+};
+
+function readNameMap(reader: Reader): Map<number, string> {
+  const names = new Map<number, string>();
+  const count = reader.varuint32();
+  for (let i = 0; i < count; i += 1) names.set(reader.varuint32(), reader.string());
+  return names;
+}
+
+function parseNameSection(
+  section: Section,
+  functionNames: Map<number, string>,
+  localNames: Map<number, Map<number, string>>,
+  subsections: Array<{ id: number; name: string }>,
+  warnings: string[],
+): void {
+  try {
+    const reader = new Reader(section.payload);
+    if (reader.string() !== 'name') return;
+    while (!reader.done) {
+      const id = reader.byte();
+      const subsection = new Reader(reader.bytes(reader.varuint32()));
+      subsections.push({ id, name: nameSubsectionNames[id] ?? 'unknown' });
+      try {
+        if (id === 1) {
+          readNameMap(subsection).forEach((name, index) => functionNames.set(index, name));
+        } else if (id === 2) {
+          const functionCount = subsection.varuint32();
+          for (let i = 0; i < functionCount; i += 1) {
+            const functionIndex = subsection.varuint32();
+            const names = readNameMap(subsection);
+            const current = localNames.get(functionIndex) ?? new Map<number, string>();
+            names.forEach((name, index) => current.set(index, name));
+            localNames.set(functionIndex, current);
+          }
+        }
+        if ((id === 1 || id === 2) && !subsection.done) {
+          warnings.push(`Name subsection ${id} contains trailing bytes`);
+        }
+      } catch (error) {
+        warnings.push(
+          `Unable to parse name subsection ${id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  } catch (error) {
+    warnings.push(
+      `Unable to parse name custom section: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function functionLayout(sections: Section[]): {
+  importedFunctionCount: number;
+  definedTypeIndexes: number[];
+  parameterCounts: number[] | null;
+  declaredLocalCounts: number[] | null;
+} {
+  const importSection = sections.find((section) => section.id === 2);
+  const importedTypeIndexes: number[] = [];
+  if (importSection) {
+    const reader = new Reader(importSection.payload);
+    const count = reader.varuint32();
+    for (let i = 0; i < count; i += 1) {
+      reader.string();
+      reader.string();
+      const kind = reader.byte();
+      if (kind === 0) importedTypeIndexes.push(reader.varuint32());
+      else if (kind === 1) {
+        reader.byte();
+        parseLimits(reader);
+      } else if (kind === 2) parseLimits(reader);
+      else if (kind === 3) {
+        reader.byte();
+        reader.byte();
+      } else if (kind === 4) {
+        reader.byte();
+        reader.varuint32();
+      } else throw new WasmValidationError(`Unsupported import kind: ${kind}`);
+    }
+  }
+
+  const functionSection = sections.find((section) => section.id === 3);
+  const definedTypeIndexes: number[] = [];
+  if (functionSection) {
+    const reader = new Reader(functionSection.payload);
+    const count = reader.varuint32();
+    for (let i = 0; i < count; i += 1) definedTypeIndexes.push(reader.varuint32());
+  }
+
+  let parameterCounts: number[] | null = null;
+  const typeSection = sections.find((section) => section.id === 1);
+  if (typeSection) {
+    const reader = new Reader(typeSection.payload);
+    const count = reader.varuint32();
+    parameterCounts = [];
+    for (let i = 0; i < count; i += 1) {
+      if (reader.byte() !== 0x60) throw new WasmValidationError('Unsupported function type form');
+      const parameterCount = reader.varuint32();
+      reader.bytes(parameterCount);
+      const resultCount = reader.varuint32();
+      reader.bytes(resultCount);
+      parameterCounts.push(parameterCount);
+    }
+  }
+
+  let declaredLocalCounts: number[] | null = null;
+  const codeSection = sections.find((section) => section.id === 10);
+  if (codeSection) {
+    const reader = new Reader(codeSection.payload);
+    const count = reader.varuint32();
+    declaredLocalCounts = [];
+    for (let i = 0; i < count; i += 1) {
+      const body = new Reader(reader.bytes(reader.varuint32()));
+      const groupCount = body.varuint32();
+      let localCount = 0;
+      for (let group = 0; group < groupCount; group += 1) {
+        localCount += body.varuint32();
+        body.byte();
+      }
+      declaredLocalCounts.push(localCount);
+    }
+  }
+
+  return {
+    importedFunctionCount: importedTypeIndexes.length,
+    definedTypeIndexes,
+    parameterCounts,
+    declaredLocalCounts,
+  };
+}
+
+function nameEntry(index: number, name: string | undefined): WasmNameEntry {
+  return {
+    index,
+    name: name ?? null,
+    status: name === undefined ? 'unmapped' : name.length === 0 ? 'explicitly-unnamed' : 'named',
+  };
+}
+
+export function analyzeWasmNames(file: string): WasmNameReport {
+  const sections = loadSections(file);
+  const nameSections = sections.filter(
+    (section) =>
+      section.id === 0 &&
+      (() => {
+        try {
+          return new Reader(section.payload).string() === 'name';
+        } catch {
+          return false;
+        }
+      })(),
+  );
+  const functionNames = new Map<number, string>();
+  const localNames = new Map<number, Map<number, string>>();
+  const subsections: Array<{ id: number; name: string }> = [];
+  const warnings: string[] = [];
+  nameSections.forEach((section) =>
+    parseNameSection(section, functionNames, localNames, subsections, warnings),
+  );
+
+  const layout = functionLayout(sections);
+  const functionCount = layout.importedFunctionCount + layout.definedTypeIndexes.length;
+  const functions = Array.from({ length: functionCount }, (_, functionIndex) => {
+    const defined = functionIndex >= layout.importedFunctionCount;
+    const definitionIndex = functionIndex - layout.importedFunctionCount;
+    const typeIndex = layout.definedTypeIndexes[definitionIndex];
+    const parameterCount =
+      typeIndex === undefined ? undefined : layout.parameterCounts?.[typeIndex];
+    const declaredLocalCount = layout.declaredLocalCounts?.[definitionIndex];
+    const expectedLocalCount =
+      defined && parameterCount !== undefined && declaredLocalCount !== undefined
+        ? parameterCount + declaredLocalCount
+        : null;
+    const mappedLocals = localNames.get(functionIndex) ?? new Map<number, string>();
+    const locals = [...mappedLocals.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([index, name]) => nameEntry(index, name));
+    const name = functionNames.get(functionIndex);
+    const mappedLocalIndexes = [...mappedLocals.keys()]
+      .filter((index) => expectedLocalCount !== null && index < expectedLocalCount)
+      .sort((a, b) => a - b);
+    const unnamedLocalRanges: Array<{ startIndex: number; endIndex: number }> = [];
+    if (expectedLocalCount !== null) {
+      let nextIndex = 0;
+      for (const index of mappedLocalIndexes) {
+        if (index > nextIndex) {
+          unnamedLocalRanges.push({ startIndex: nextIndex, endIndex: index - 1 });
+        }
+        nextIndex = index + 1;
+      }
+      if (nextIndex < expectedLocalCount) {
+        unnamedLocalRanges.push({ startIndex: nextIndex, endIndex: expectedLocalCount - 1 });
+      }
+    }
+    const namedLocalCount = [...mappedLocals.values()].filter(
+      (localName) => localName.length > 0,
+    ).length;
+    return {
+      ...nameEntry(functionIndex, name),
+      functionIndex,
+      defined,
+      locals,
+      unnamedLocalRanges,
+      localNameMetadataPresent: localNames.has(functionIndex),
+      expectedLocalCount,
+      namedLocalCount,
+      unnamedLocalCount:
+        expectedLocalCount === null ? null : Math.max(0, expectedLocalCount - namedLocalCount),
+    };
+  });
+
+  const namedFunctions = functions.filter((fn) => fn.status === 'named');
+  const localMetadataFunctions = functions.filter((fn) => fn.localNameMetadataPresent);
+  const localNameCounts = functions
+    .filter((fn) => fn.namedLocalCount > 0)
+    .sort((a, b) => b.namedLocalCount - a.namedLocalCount || a.functionIndex - b.functionIndex)
+    .slice(0, 5)
+    .map(({ functionIndex, name, namedLocalCount }) => ({
+      functionIndex,
+      name,
+      count: namedLocalCount,
+    }));
+  const functionsWithIncompleteLocalNames = functions
+    .filter(
+      (fn) =>
+        nameSections.length > 0 &&
+        fn.defined &&
+        fn.status === 'named' &&
+        fn.expectedLocalCount !== null &&
+        fn.namedLocalCount < fn.expectedLocalCount,
+    )
+    .map((fn) => fn.functionIndex);
+
+  return {
+    file,
+    valid: true,
+    nameSection: {
+      present: nameSections.length > 0,
+      count: nameSections.length,
+      subsections,
+    },
+    functions,
+    functionsWithIncompleteLocalNames,
+    statistics: {
+      totalFunctionCount: functionCount,
+      totalNamedFunctions: namedFunctions.length,
+      totalUnnamedFunctions: functionCount - namedFunctions.length,
+      totalFunctionsWithLocalNameMetadata: localMetadataFunctions.length,
+      totalNamedLocals: functions.reduce((sum, fn) => sum + fn.namedLocalCount, 0),
+      functionsWithMostNamedLocals: localNameCounts,
+    },
+    warnings,
   };
 }
 
@@ -2031,6 +2547,1215 @@ export function compareRecursionReports(
         after.statistics.recursiveComponentCount - before.statistics.recursiveComponentCount,
       recursiveFunctionCountDelta:
         after.statistics.recursiveFunctionCount - before.statistics.recursiveFunctionCount,
+    },
+  };
+}
+
+// =============================================================================
+// WASM Embedded String Analysis (ISSUE-274 / 250-wasm-strings)
+// =============================================================================
+
+export type StringEncoding = 'ascii' | 'utf8';
+
+export type StringSourceSection = 'data_segment' | 'custom_section';
+
+export type StringCategory =
+  | 'error_message'
+  | 'url_like'
+  | 'identifier_like'
+  | 'numeric_string'
+  | 'path_like'
+  | 'uncategorized';
+
+export interface WasmStringRecord {
+  value: string;
+  byteLength: number;
+  encoding: StringEncoding;
+  sourceSection: StringSourceSection;
+  segmentIndex: number | null;
+  sectionName: string | null;
+  byteOffset: number;
+  occurrenceCount: number;
+  contentHash: string;
+  category: StringCategory;
+  isNullTerminated: boolean;
+}
+
+export interface WasmStringReport {
+  file: string;
+  valid: true;
+  strings: WasmStringRecord[];
+  statistics: {
+    totalDetectedStrings: number;
+    uniqueStrings: number;
+    totalStringBytes: number;
+    averageStringLength: number;
+    maximumStringLength: number;
+    printableDataPercentage: number;
+    mostFrequentStrings: Array<{ value: string; count: number }>;
+  };
+}
+
+function classifyString(value: string): StringCategory {
+  if (/^[\w./-]{2,}$/.test(value) && /\//.test(value)) return 'path_like';
+  if (/^https?:\/\//i.test(value) || /^[a-z][a-z0-9+\-.]*:\/\//i.test(value)) return 'url_like';
+  if (/error|fail|panic|overflow|underflow|invalid|abort|assert/i.test(value)) return 'error_message';
+  if (/^-?[0-9]+(\.[0-9]+)?$/.test(value)) return 'numeric_string';
+  if (/^[a-zA-Z_][a-zA-Z0-9_:.]*$/.test(value)) return 'identifier_like';
+  return 'uncategorized';
+}
+
+function isPrintable(byte: number): boolean {
+  return byte >= 0x20 && byte <= 0x7e;
+}
+
+function isValidUtf8(buf: Buffer): boolean {
+  let i = 0;
+  while (i < buf.length) {
+    const b = buf[i];
+    let charLen: number;
+    if (b <= 0x7f) { charLen = 1; }
+    else if ((b & 0xe0) === 0xc0) { charLen = 2; }
+    else if ((b & 0xf0) === 0xe0) { charLen = 3; }
+    else if ((b & 0xf8) === 0xf0) { charLen = 4; }
+    else return false;
+    if (i + charLen > buf.length) return false;
+    for (let j = 1; j < charLen; j++) {
+      if ((buf[i + j] & 0xc0) !== 0x80) return false;
+    }
+    i += charLen;
+  }
+  return true;
+}
+
+function isAllAscii(buf: Buffer): boolean {
+  for (let i = 0; i < buf.length; i++) {
+    if (buf[i] > 0x7e || buf[i] < 0x20) return false;
+  }
+  return true;
+}
+
+function extractStringsFromBuffer(
+  buf: Buffer,
+  minLength: number,
+  sourceSection: StringSourceSection,
+  segmentIndex: number | null,
+  sectionName: string | null,
+  occurrenceMap: Map<string, WasmStringRecord>,
+): void {
+  let i = 0;
+  while (i < buf.length) {
+    // Try to find a run of printable bytes
+    let start = i;
+    while (start < buf.length && !isPrintable(buf[start])) start++;
+    let end = start;
+    while (end < buf.length && isPrintable(buf[end])) end++;
+    const len = end - start;
+    if (len >= minLength) {
+      const slice = buf.subarray(start, end);
+      const isNullTerminated = end < buf.length && buf[end] === 0x00;
+      let encoding: StringEncoding;
+      let value: string;
+      if (isAllAscii(slice)) {
+        encoding = 'ascii';
+        value = slice.toString('ascii');
+      } else if (isValidUtf8(slice)) {
+        encoding = 'utf8';
+        value = slice.toString('utf8');
+      } else {
+        i = end + 1;
+        continue;
+      }
+      const contentHash = createHash('sha256').update(slice).digest('hex').slice(0, 16);
+      const existing = occurrenceMap.get(value);
+      if (existing) {
+        existing.occurrenceCount += 1;
+      } else {
+        occurrenceMap.set(value, {
+          value,
+          byteLength: slice.length,
+          encoding,
+          sourceSection,
+          segmentIndex,
+          sectionName,
+          byteOffset: start,
+          occurrenceCount: 1,
+          contentHash,
+          category: classifyString(value),
+          isNullTerminated,
+        });
+      }
+    }
+    i = end + 1;
+  }
+}
+
+export interface WasmStringAnalysisOptions {
+  minLength?: number;
+  maxLength?: number;
+  searchPattern?: string;
+  caseInsensitive?: boolean;
+  encodingFilter?: StringEncoding;
+  sourceSectionFilter?: StringSourceSection;
+  categoryFilter?: StringCategory;
+}
+
+function parseDataSegments(section: Section | undefined): Array<{ index: number; data: Buffer }> {
+  if (!section) return [];
+  const reader = new Reader(section.payload);
+  const count = reader.varuint32();
+  const segments: Array<{ index: number; data: Buffer }> = [];
+  for (let i = 0; i < count; i++) {
+    const flags = reader.varuint32();
+    if ((flags & 0x01) === 0) {
+      // Active segment: memory index + offset expr
+      if ((flags & 0x02) !== 0) reader.varuint32(); // explicit memory index
+      // Skip offset expression until 0x0b (end)
+      let b: number;
+      do { b = reader.byte(); } while (b !== 0x0b);
+    }
+    // else passive segment: no offset expr
+    const dataLen = reader.varuint32();
+    const data = reader.bytes(dataLen);
+    segments.push({ index: i, data });
+  }
+  return segments;
+}
+
+export function analyzeStrings(file: string, options: WasmStringAnalysisOptions = {}): WasmStringReport {
+  const minLength = options.minLength ?? 4;
+  const maxLength = options.maxLength ?? Infinity;
+  const sections = loadSections(file);
+
+  const occurrenceMap = new Map<string, WasmStringRecord>();
+
+  // Scan data segments (section id 11)
+  const dataSection = sections.find((s) => s.id === 11);
+  try {
+    const segments = parseDataSegments(dataSection);
+    for (const seg of segments) {
+      extractStringsFromBuffer(seg.data, minLength, 'data_segment', seg.index, null, occurrenceMap);
+    }
+  } catch {
+    // Malformed data section: continue with custom sections
+  }
+
+  // Scan custom sections (section id 0)
+  const customSections = sections.filter((s) => s.id === 0);
+  for (const cs of customSections) {
+    try {
+      const reader = new Reader(cs.payload);
+      const sectionName = reader.string();
+      const payload = cs.payload.subarray(reader.offset);
+      extractStringsFromBuffer(payload, minLength, 'custom_section', null, sectionName, occurrenceMap);
+    } catch {
+      // Skip malformed custom section
+    }
+  }
+
+  // Calculate total printable bytes for printable-data percentage
+  let totalBytes = 0;
+  let printableBytes = 0;
+  const dataSegArr = dataSection ? (() => { try { return parseDataSegments(dataSection); } catch { return []; } })() : [];
+  for (const seg of dataSegArr) {
+    totalBytes += seg.data.length;
+    for (let i = 0; i < seg.data.length; i++) {
+      if (isPrintable(seg.data[i])) printableBytes++;
+    }
+  }
+
+  // Apply filters
+  let allStrings = [...occurrenceMap.values()];
+  if (maxLength !== Infinity) allStrings = allStrings.filter((s) => s.byteLength <= maxLength);
+  if (options.encodingFilter) allStrings = allStrings.filter((s) => s.encoding === options.encodingFilter);
+  if (options.sourceSectionFilter) allStrings = allStrings.filter((s) => s.sourceSection === options.sourceSectionFilter);
+  if (options.categoryFilter) allStrings = allStrings.filter((s) => s.category === options.categoryFilter);
+  if (options.searchPattern) {
+    const flags = options.caseInsensitive ? 'i' : '';
+    let pattern: RegExp;
+    try { pattern = new RegExp(options.searchPattern, flags); } catch { pattern = new RegExp(''); }
+    allStrings = allStrings.filter((s) => pattern.test(s.value));
+  }
+
+  // Sort deterministically
+  allStrings.sort((a, b) => a.sourceSection.localeCompare(b.sourceSection) || a.byteOffset - b.byteOffset);
+
+  const totalStringBytes = allStrings.reduce((sum, s) => sum + s.byteLength, 0);
+  const lengths = allStrings.map((s) => s.byteLength);
+  const mostFrequent = [...allStrings]
+    .sort((a, b) => b.occurrenceCount - a.occurrenceCount)
+    .slice(0, 10)
+    .map((s) => ({ value: s.value, count: s.occurrenceCount }));
+
+  return {
+    file,
+    valid: true,
+    strings: allStrings,
+    statistics: {
+      totalDetectedStrings: allStrings.reduce((sum, s) => sum + s.occurrenceCount, 0),
+      uniqueStrings: allStrings.length,
+      totalStringBytes,
+      averageStringLength: allStrings.length === 0 ? 0 : totalStringBytes / allStrings.length,
+      maximumStringLength: lengths.length === 0 ? 0 : Math.max(...lengths),
+      printableDataPercentage: totalBytes === 0 ? 0 : (printableBytes / totalBytes) * 100,
+      mostFrequentStrings: mostFrequent,
+    },
+  };
+}
+
+export function compareStringReports(beforeFile: string, afterFile: string, options: WasmStringAnalysisOptions = {}) {
+  const before = analyzeStrings(beforeFile, options);
+  const after = analyzeStrings(afterFile, options);
+
+  const beforeMap = new Map(before.strings.map((s) => [s.value, s]));
+  const afterMap = new Map(after.strings.map((s) => [s.value, s]));
+
+  const addedStrings = [...afterMap.values()].filter((s) => !beforeMap.has(s.value));
+  const removedStrings = [...beforeMap.values()].filter((s) => !afterMap.has(s.value));
+  const countChanges = [...afterMap.entries()]
+    .filter(([v, s]) => {
+      const b = beforeMap.get(v);
+      return b && b.occurrenceCount !== s.occurrenceCount;
+    })
+    .map(([v, s]) => ({ value: v, before: beforeMap.get(v)!.occurrenceCount, after: s.occurrenceCount }));
+
+  return {
+    before,
+    after,
+    comparison: {
+      addedStrings,
+      removedStrings,
+      changedOccurrenceCounts: countChanges,
+      addedCount: addedStrings.length,
+      removedCount: removedStrings.length,
+    },
+  };
+}
+
+// =============================================================================
+// WASM Operand-Stack Type Analysis (ISSUE-275 / 251-wasm-stack-types)
+// =============================================================================
+
+export type WasmValType = 'i32' | 'i64' | 'f32' | 'f64' | 'funcref' | 'externref' | 'unknown';
+
+export interface WasmStackStateRecord {
+  functionIndex: number;
+  blockIndex: number;
+  instructionIndex: number;
+  opcode: string;
+  inputTypes: WasmValType[];
+  outputTypes: WasmValType[];
+  stackDepthBefore: number;
+  stackDepthAfter: number;
+  isUnreachable: boolean;
+}
+
+export interface WasmStackTypeIssue {
+  functionIndex: number;
+  blockIndex: number;
+  instructionIndex: number;
+  opcode: string;
+  kind: 'stack_underflow' | 'type_mismatch' | 'impossible_merge';
+  description: string;
+}
+
+export interface WasmStackTypeFunctionSummary {
+  functionIndex: number;
+  maxStackDepth: number;
+  totalInstructions: number;
+  typeTransitions: number;
+  polymorphicStateCount: number;
+  issueCount: number;
+}
+
+export interface WasmStackTypesReport {
+  file: string;
+  valid: true;
+  records: WasmStackStateRecord[];
+  issues: WasmStackTypeIssue[];
+  functions: WasmStackTypeFunctionSummary[];
+  statistics: {
+    totalFunctions: number;
+    totalInstructions: number;
+    totalTypeTransitions: number;
+    totalPolymorphicStates: number;
+    totalIssues: number;
+    maxStackDepth: number;
+    typeTransitionFrequencies: Record<string, number>;
+    functionsWithHighestTransitions: Array<{ functionIndex: number; transitions: number }>;
+  };
+}
+
+// Instruction type signatures: [inputTypes, outputTypes]
+interface TypeSig { in: WasmValType[]; out: WasmValType[] }
+
+// Module-level shorthand constants for common value types used in stack analysis
+const _i32: WasmValType = 'i32';
+const _i64: WasmValType = 'i64';
+const _f32: WasmValType = 'f32';
+const _f64: WasmValType = 'f64';
+
+function valType(byte: number): WasmValType {
+  const map: Record<number, WasmValType> = {
+    0x7f: 'i32', 0x7e: 'i64', 0x7d: 'f32', 0x7c: 'f64',
+    0x70: 'funcref', 0x6f: 'externref',
+  };
+  return map[byte] ?? 'unknown';
+}
+
+function parseTypeSection(sec: Section | undefined): Array<{ params: WasmValType[]; results: WasmValType[] }> {
+  if (!sec) return [];
+  const r = new Reader(sec.payload);
+  const count = r.varuint32();
+  const types: Array<{ params: WasmValType[]; results: WasmValType[] }> = [];
+  for (let i = 0; i < count; i++) {
+    const tag = r.byte(); // 0x60 for function type
+    if (tag !== 0x60) { types.push({ params: [], results: [] }); continue; }
+    const pCount = r.varuint32();
+    const params: WasmValType[] = [];
+    for (let j = 0; j < pCount; j++) params.push(valType(r.byte()));
+    const rCount = r.varuint32();
+    const results: WasmValType[] = [];
+    for (let j = 0; j < rCount; j++) results.push(valType(r.byte()));
+    types.push({ params, results });
+  }
+  return types;
+}
+
+function parseFunctionSection(sec: Section | undefined): number[] {
+  if (!sec) return [];
+  const r = new Reader(sec.payload);
+  const count = r.varuint32();
+  const indices: number[] = [];
+  for (let i = 0; i < count; i++) indices.push(r.varuint32());
+  return indices;
+}
+
+type StackState = WasmValType[] | 'polymorphic'; // polymorphic = unreachable
+
+function typeSigFor(opcode: number, typeIdx: number, types: Array<{ params: WasmValType[]; results: WasmValType[] }>, funcTypeIndices: number[], importedFunctions: number): TypeSig {
+  const i32: WasmValType = 'i32'; const i64: WasmValType = 'i64';
+  const f32: WasmValType = 'f32'; const f64: WasmValType = 'f64';
+  const sig = (i: WasmValType[], o: WasmValType[]): TypeSig => ({ in: i, out: o });
+  switch (opcode) {
+    case 0x00: return sig([], []); // unreachable — handled separately
+    case 0x01: return sig([], []); // nop
+    case 0x1a: return sig(['unknown'], []); // drop
+    case 0x45: return sig([i32], [i32]); // i32.eqz
+    case 0x46: case 0x47: case 0x48: case 0x49: case 0x4a: case 0x4b: return sig([i32, i32], [i32]);
+    case 0x50: return sig([i64], [i32]); // i64.eqz
+    case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: return sig([i64, i64], [i32]);
+    case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f: case 0x60: return sig([f32, f32], [i32]);
+    case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: return sig([f64, f64], [i32]);
+    case 0x41: return sig([], [i32]); // i32.const
+    case 0x42: return sig([], [i64]); // i64.const
+    case 0x43: return sig([], [f32]); // f32.const
+    case 0x44: return sig([], [f64]); // f64.const
+    // i32 arithmetic
+    case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
+    case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77: case 0x78: case 0x79: case 0x7a: case 0x7b:
+      return sig([i32, i32], [i32]);
+    case 0x67: case 0x68: case 0x69: return sig([i32], [i32]); // clz/ctz/popcnt
+    // i64 arithmetic
+    case 0x7c: case 0x7d: case 0x7e: case 0x7f: case 0x80: case 0x81:
+    case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87: case 0x88: case 0x89: case 0x8a:
+      return sig([i64, i64], [i64]);
+    case 0x79: case 0x7a: case 0x7b: return sig([i64], [i64]);
+    // f32 arithmetic
+    case 0x8b: case 0x8c: case 0x91: case 0x8d: case 0x8e: case 0x8f: case 0x90: return sig([f32], [f32]);
+    case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97: case 0x98: return sig([f32, f32], [f32]);
+    // f64 arithmetic
+    case 0x99: case 0x9a: case 0x9f: case 0x9b: case 0x9c: case 0x9d: case 0x9e: return sig([f64], [f64]);
+    case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: return sig([f64, f64], [f64]);
+    // conversions
+    case 0xa7: return sig([i64], [i32]);
+    case 0xa8: return sig([f32], [i32]); case 0xa9: return sig([f32], [i32]);
+    case 0xaa: return sig([f64], [i32]); case 0xab: return sig([f64], [i32]);
+    case 0xac: return sig([i32], [i64]); case 0xad: return sig([i32], [i64]);
+    case 0xae: return sig([f32], [i64]); case 0xaf: return sig([f32], [i64]);
+    case 0xb0: return sig([f64], [i64]); case 0xb1: return sig([f64], [i64]);
+    case 0xb2: return sig([i32], [f32]); case 0xb3: return sig([i32], [f32]);
+    case 0xb4: return sig([i64], [f32]); case 0xb5: return sig([i64], [f32]);
+    case 0xb6: return sig([f64], [f32]);
+    case 0xb7: return sig([i32], [f64]); case 0xb8: return sig([i32], [f64]);
+    case 0xb9: return sig([i64], [f64]); case 0xba: return sig([i64], [f64]);
+    case 0xbb: return sig([f32], [f64]);
+    case 0xbc: return sig([f32], [i32]); case 0xbd: return sig([f64], [i64]);
+    case 0xbe: return sig([i32], [f32]); case 0xbf: return sig([i64], [f64]);
+    // memory
+    case 0x28: case 0x2c: case 0x2d: case 0x2e: case 0x2f: case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: return sig([i32], [i32]);
+    case 0x29: return sig([i32], [i64]);
+    case 0x2a: return sig([i32], [f32]);
+    case 0x2b: return sig([i32], [f64]);
+    case 0x36: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: return sig([i32, i32], []);
+    case 0x37: return sig([i32, i64], []);
+    case 0x38: return sig([i32, f32], []);
+    case 0x39: return sig([i32, f64], []);
+    case 0x3f: return sig([], [i32]); // memory.size
+    case 0x40: return sig([i32], [i32]); // memory.grow
+    // call
+    case 0x10: {
+      const ti = typeIdx < funcTypeIndices.length + importedFunctions
+        ? (typeIdx < importedFunctions ? undefined : funcTypeIndices[typeIdx - importedFunctions])
+        : undefined;
+      const t = ti !== undefined && ti < types.length ? types[ti] : null;
+      return t ? sig([...t.params], [...t.results]) : sig([], []);
+    }
+    default: return sig([], []);
+  }
+}
+
+function opcodeNameFor(opcode: number): string {
+  return opcodeNames[opcode] ?? `opcode_0x${opcode.toString(16)}`;
+}
+
+export function analyzeStackTypes(file: string): WasmStackTypesReport {
+  const sections = loadSections(file);
+  const importSec = sections.find((s) => s.id === 2);
+  const typeSec = sections.find((s) => s.id === 1);
+  const funcSec = sections.find((s) => s.id === 3);
+  const codeSec = sections.find((s) => s.id === 10);
+  const importLocalSec = sections.find((s) => s.id === 2);
+
+  const types = parseTypeSection(typeSec);
+  const funcTypeIndices = parseFunctionSection(funcSec);
+  const importedFunctions = importedFunctionCount(importLocalSec);
+
+  const allRecords: WasmStackStateRecord[] = [];
+  const allIssues: WasmStackTypeIssue[] = [];
+  const funcSummaries: WasmStackTypeFunctionSummary[] = [];
+  const globalTransitionFrequencies: Record<string, number> = {};
+
+  if (!codeSec) {
+    return {
+      file, valid: true, records: [], issues: [], functions: [],
+      statistics: { totalFunctions: 0, totalInstructions: 0, totalTypeTransitions: 0, totalPolymorphicStates: 0, totalIssues: 0, maxStackDepth: 0, typeTransitionFrequencies: {}, functionsWithHighestTransitions: [] },
+    };
+  }
+
+  const reader = new Reader(codeSec.payload);
+  const funcCount = reader.varuint32();
+
+  for (let fi = 0; fi < funcCount; fi++) {
+    const bodySize = reader.varuint32();
+    const body = new Reader(reader.bytes(bodySize));
+    const localGroupCount = body.varuint32();
+    for (let j = 0; j < localGroupCount; j++) { body.varuint32(); body.byte(); }
+
+    const functionIndex = importedFunctions + fi;
+    const stack: WasmValType[] = [];
+    let blockIndex = 0;
+    let instrIndex = 0;
+    let isUnreachable = false;
+    let maxDepth = 0;
+    let transitions = 0;
+    let polymorphicCount = 0;
+    const funcRecords: WasmStackStateRecord[] = [];
+    const funcIssues: WasmStackTypeIssue[] = [];
+
+    while (!body.done) {
+      const opcode = body.byte();
+      const opName = opcodeNameFor(opcode);
+      const depthBefore = stack.length;
+
+      let inputTypes: WasmValType[] = [];
+      let outputTypes: WasmValType[] = [];
+      let isUnreachableInstr = isUnreachable;
+
+      if (opcode === 0x00) {
+        // unreachable
+        isUnreachable = true;
+        isUnreachableInstr = true;
+        inputTypes = []; outputTypes = [];
+      } else if (opcode === 0x0b) {
+        // end — pop block
+        if (blockIndex > 0) blockIndex--;
+        if (isUnreachable) isUnreachable = false;
+      } else if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {
+        // block/loop/if
+        blockIndex++;
+        body.byte(); // block type
+        isUnreachable = false;
+      } else if (opcode === 0x05) {
+        // else
+        isUnreachable = false;
+      } else if (opcode === 0x0c || opcode === 0x0d) {
+        // br / br_if
+        body.varuint32();
+        if (opcode === 0x0c) isUnreachable = true;
+        inputTypes = opcode === 0x0d ? [_i32] : [];
+      } else if (opcode === 0x0e) {
+        // br_table
+        const n = body.varuint32();
+        for (let k = 0; k <= n; k++) body.varuint32();
+        isUnreachable = true;
+        inputTypes = [_i32];
+      } else if (opcode === 0x0f) {
+        // return
+        isUnreachable = true;
+      } else if (opcode === 0x20 || opcode === 0x21 || opcode === 0x22) {
+        // local.get / local.set / local.tee
+        body.varuint32();
+        inputTypes = opcode === 0x20 ? [] : ['i32' as WasmValType];
+        outputTypes = opcode === 0x21 ? [] : ['i32' as WasmValType];
+      } else if (opcode === 0x23 || opcode === 0x24) {
+        // global.get / global.set
+        body.varuint32();
+        inputTypes = opcode === 0x24 ? ['i32' as WasmValType] : [];
+        outputTypes = opcode === 0x23 ? ['i32' as WasmValType] : [];
+      } else if (opcode === 0x10) {
+        // call
+        const callIdx = body.varuint32();
+        const ts = typeSigFor(opcode, callIdx, types, funcTypeIndices, importedFunctions);
+        inputTypes = ts.in; outputTypes = ts.out;
+      } else if (opcode === 0x11) {
+        // call_indirect
+        const typeIdx2 = body.varuint32();
+        body.byte(); // table index
+        const t = typeIdx2 < types.length ? types[typeIdx2] : null;
+        inputTypes = [...(t ? t.params : []), 'i32' as WasmValType];
+        outputTypes = t ? t.results : [];
+      } else {
+        const ts = typeSigFor(opcode, 0, types, funcTypeIndices, importedFunctions);
+        inputTypes = ts.in; outputTypes = ts.out;
+        skipInstructionImmediate(opcode, body);
+      }
+
+      if (!isUnreachable) {
+        for (let k = 0; k < inputTypes.length; k++) {
+          if (stack.length === 0) {
+            funcIssues.push({ functionIndex, blockIndex, instructionIndex: instrIndex, opcode: opName, kind: 'stack_underflow', description: `Stack underflow consuming operand ${k} for ${opName}` });
+          } else {
+            stack.pop();
+          }
+        }
+        for (const t of outputTypes) stack.push(t);
+        maxDepth = Math.max(maxDepth, stack.length);
+        transitions++;
+        const transKey = `[${inputTypes.join(',')}]->[${outputTypes.join(',')}]`;
+        globalTransitionFrequencies[transKey] = (globalTransitionFrequencies[transKey] ?? 0) + 1;
+      } else {
+        polymorphicCount++;
+      }
+
+      funcRecords.push({
+        functionIndex,
+        blockIndex,
+        instructionIndex: instrIndex,
+        opcode: opName,
+        inputTypes,
+        outputTypes,
+        stackDepthBefore: depthBefore,
+        stackDepthAfter: stack.length,
+        isUnreachable: isUnreachableInstr,
+      });
+
+      instrIndex++;
+    }
+
+    allRecords.push(...funcRecords);
+    allIssues.push(...funcIssues);
+    funcSummaries.push({
+      functionIndex,
+      maxStackDepth: maxDepth,
+      totalInstructions: instrIndex,
+      typeTransitions: transitions,
+      polymorphicStateCount: polymorphicCount,
+      issueCount: funcIssues.length,
+    });
+  }
+
+  const allDepths = funcSummaries.map((f) => f.maxStackDepth);
+  const allTransitions = funcSummaries.map((f) => f.typeTransitions);
+
+  return {
+    file,
+    valid: true,
+    records: allRecords,
+    issues: allIssues,
+    functions: funcSummaries,
+    statistics: {
+      totalFunctions: funcSummaries.length,
+      totalInstructions: allRecords.length,
+      totalTypeTransitions: allTransitions.reduce((a, b) => a + b, 0),
+      totalPolymorphicStates: funcSummaries.reduce((a, b) => a + b.polymorphicStateCount, 0),
+      totalIssues: allIssues.length,
+      maxStackDepth: allDepths.length === 0 ? 0 : Math.max(...allDepths),
+      typeTransitionFrequencies: sortedRecord(globalTransitionFrequencies),
+      functionsWithHighestTransitions: [...funcSummaries]
+        .sort((a, b) => b.typeTransitions - a.typeTransitions)
+        .slice(0, 10)
+        .map((f) => ({ functionIndex: f.functionIndex, transitions: f.typeTransitions })),
+    },
+  };
+}
+
+export function compareStackTypesReports(beforeFile: string, afterFile: string) {
+  const before = analyzeStackTypes(beforeFile);
+  const after = analyzeStackTypes(afterFile);
+  const beforeTransSet = new Set(Object.keys(before.statistics.typeTransitionFrequencies));
+  const afterTransSet = new Set(Object.keys(after.statistics.typeTransitionFrequencies));
+  return {
+    before,
+    after,
+    comparison: {
+      addedTransitions: [...afterTransSet].filter((k) => !beforeTransSet.has(k)),
+      removedTransitions: [...beforeTransSet].filter((k) => !afterTransSet.has(k)),
+      newIssues: after.statistics.totalIssues - before.statistics.totalIssues,
+      maxStackDepthDelta: after.statistics.maxStackDepth - before.statistics.maxStackDepth,
+    },
+  };
+}
+
+// =============================================================================
+// WASM Global Mutation Analysis (ISSUE-276 / 252-wasm-globals-usage)
+// =============================================================================
+
+export type GlobalAccessKind = 'read' | 'write';
+
+export type GlobalUsageClassification = 'read_only' | 'write_only' | 'read_write' | 'never_accessed';
+
+export interface WasmGlobalAccessRecord {
+  globalIndex: number;
+  functionIndex: number;
+  blockIndex: number;
+  instructionIndex: number;
+  opcode: 'global.get' | 'global.set';
+}
+
+export interface WasmGlobalUsageSummary {
+  globalIndex: number;
+  valueType: string;
+  mutable: boolean;
+  source: 'imported' | 'defined';
+  importModule: string | null;
+  importName: string | null;
+  classification: GlobalUsageClassification;
+  totalReads: number;
+  totalWrites: number;
+  readingFunctions: number[];
+  writingFunctions: number[];
+  accessedByMultipleFunctions: boolean;
+  writtenByMultipleFunctions: boolean;
+}
+
+export interface WasmGlobalFunctionSummary {
+  functionIndex: number;
+  totalGlobalReads: number;
+  totalGlobalWrites: number;
+  uniqueGlobalsAccessed: number;
+  mutableGlobalsModified: number;
+}
+
+export interface WasmGlobalMutationReport {
+  file: string;
+  valid: true;
+  accesses: WasmGlobalAccessRecord[];
+  globals: WasmGlobalUsageSummary[];
+  functionSummaries: WasmGlobalFunctionSummary[];
+  statistics: {
+    totalGlobals: number;
+    importedGlobals: number;
+    localGlobals: number;
+    mutableGlobals: number;
+    immutableGlobals: number;
+    totalReads: number;
+    totalWrites: number;
+    globalsNeverAccessed: number;
+    globalsAccessedByMultipleFunctions: number;
+    globalsWrittenByMultipleFunctions: number;
+  };
+}
+
+function parseGlobalAccesses(
+  codeSec: Section | undefined,
+  importedFunctions: number,
+): WasmGlobalAccessRecord[] {
+  const accesses: WasmGlobalAccessRecord[] = [];
+  if (!codeSec) return accesses;
+  const reader = new Reader(codeSec.payload);
+  const count = reader.varuint32();
+  for (let fi = 0; fi < count; fi++) {
+    const bodySize = reader.varuint32();
+    const body = new Reader(reader.bytes(bodySize));
+    const localGroupCount = body.varuint32();
+    for (let j = 0; j < localGroupCount; j++) { body.varuint32(); body.byte(); }
+    const functionIndex = importedFunctions + fi;
+    let blockIndex = 0;
+    let instrIndex = 0;
+    let unreachable = false;
+    while (!body.done) {
+      const opcode = body.byte();
+      if (opcode === 0x00) { unreachable = true; }
+      else if (opcode === 0x0b) { if (blockIndex > 0) blockIndex--; unreachable = false; }
+      else if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) { blockIndex++; body.byte(); unreachable = false; }
+      else if (opcode === 0x05) { unreachable = false; }
+      if (!unreachable && (opcode === 0x23 || opcode === 0x24)) {
+        const globalIndex = body.varuint32();
+        accesses.push({
+          globalIndex,
+          functionIndex,
+          blockIndex,
+          instructionIndex: instrIndex,
+          opcode: opcode === 0x23 ? 'global.get' : 'global.set',
+        });
+      } else {
+        skipInstructionImmediate(opcode, body);
+      }
+      instrIndex++;
+    }
+  }
+  return accesses;
+}
+
+export function analyzeGlobalMutation(file: string): WasmGlobalMutationReport {
+  const sections = loadSections(file);
+  const imports = parseImportSection(sections.find((s) => s.id === 2));
+  const allGlobals = [
+    ...imports.globals,
+    ...parseGlobalSection(sections.find((s) => s.id === 6), imports.globals.length),
+  ];
+  const importedFunctions = importedFunctionCount(sections.find((s) => s.id === 2));
+  const accesses = parseGlobalAccesses(sections.find((s) => s.id === 10), importedFunctions);
+
+  // Build per-global maps
+  const readsByGlobal = new Map<number, Set<number>>();
+  const writesByGlobal = new Map<number, Set<number>>();
+  for (const g of allGlobals) {
+    readsByGlobal.set(g.index, new Set());
+    writesByGlobal.set(g.index, new Set());
+  }
+  for (const acc of accesses) {
+    if (acc.opcode === 'global.get') readsByGlobal.get(acc.globalIndex)?.add(acc.functionIndex);
+    else writesByGlobal.get(acc.globalIndex)?.add(acc.functionIndex);
+  }
+
+  const globalSummaries: WasmGlobalUsageSummary[] = allGlobals.map((g) => {
+    const reads = readsByGlobal.get(g.index) ?? new Set();
+    const writes = writesByGlobal.get(g.index) ?? new Set();
+    const totalReads = accesses.filter((a) => a.globalIndex === g.index && a.opcode === 'global.get').length;
+    const totalWrites = accesses.filter((a) => a.globalIndex === g.index && a.opcode === 'global.set').length;
+    let classification: GlobalUsageClassification;
+    if (totalReads === 0 && totalWrites === 0) classification = 'never_accessed';
+    else if (totalReads > 0 && totalWrites === 0) classification = 'read_only';
+    else if (totalReads === 0 && totalWrites > 0) classification = 'write_only';
+    else classification = 'read_write';
+    return {
+      globalIndex: g.index,
+      valueType: g.valueType,
+      mutable: g.mutable,
+      source: g.source,
+      importModule: g.module,
+      importName: g.name,
+      classification,
+      totalReads,
+      totalWrites,
+      readingFunctions: [...reads].sort((a, b) => a - b),
+      writingFunctions: [...writes].sort((a, b) => a - b),
+      accessedByMultipleFunctions: reads.size + writes.size > 1,
+      writtenByMultipleFunctions: writes.size > 1,
+    };
+  });
+
+  // Per-function summaries
+  const funcMap = new Map<number, WasmGlobalFunctionSummary>();
+  for (const acc of accesses) {
+    const existing = funcMap.get(acc.functionIndex);
+    if (!existing) {
+      funcMap.set(acc.functionIndex, {
+        functionIndex: acc.functionIndex,
+        totalGlobalReads: acc.opcode === 'global.get' ? 1 : 0,
+        totalGlobalWrites: acc.opcode === 'global.set' ? 1 : 0,
+        uniqueGlobalsAccessed: 1,
+        mutableGlobalsModified: acc.opcode === 'global.set' && allGlobals.find((g) => g.index === acc.globalIndex)?.mutable ? 1 : 0,
+      });
+    } else {
+      if (acc.opcode === 'global.get') existing.totalGlobalReads++;
+      else existing.totalGlobalWrites++;
+    }
+  }
+  // Recalculate uniqueGlobalsAccessed accurately
+  for (const [fnIdx, summary] of funcMap) {
+    const accessed = new Set(accesses.filter((a) => a.functionIndex === fnIdx).map((a) => a.globalIndex));
+    const mutMod = new Set(accesses.filter((a) => a.functionIndex === fnIdx && a.opcode === 'global.set' && allGlobals.find((g) => g.index === a.globalIndex)?.mutable).map((a) => a.globalIndex));
+    summary.uniqueGlobalsAccessed = accessed.size;
+    summary.mutableGlobalsModified = mutMod.size;
+  }
+  const functionSummaries = [...funcMap.values()].sort((a, b) => a.functionIndex - b.functionIndex);
+
+  return {
+    file,
+    valid: true,
+    accesses,
+    globals: globalSummaries,
+    functionSummaries,
+    statistics: {
+      totalGlobals: allGlobals.length,
+      importedGlobals: imports.globals.length,
+      localGlobals: allGlobals.length - imports.globals.length,
+      mutableGlobals: allGlobals.filter((g) => g.mutable).length,
+      immutableGlobals: allGlobals.filter((g) => !g.mutable).length,
+      totalReads: accesses.filter((a) => a.opcode === 'global.get').length,
+      totalWrites: accesses.filter((a) => a.opcode === 'global.set').length,
+      globalsNeverAccessed: globalSummaries.filter((g) => g.classification === 'never_accessed').length,
+      globalsAccessedByMultipleFunctions: globalSummaries.filter((g) => g.accessedByMultipleFunctions).length,
+      globalsWrittenByMultipleFunctions: globalSummaries.filter((g) => g.writtenByMultipleFunctions).length,
+    },
+  };
+}
+
+export function compareGlobalMutationReports(beforeFile: string, afterFile: string) {
+  const before = analyzeGlobalMutation(beforeFile);
+  const after = analyzeGlobalMutation(afterFile);
+  const beforeMap = new Map(before.globals.map((g) => [g.globalIndex, g]));
+  const afterMap = new Map(after.globals.map((g) => [g.globalIndex, g]));
+  const changedUsage: Array<{ globalIndex: number; before: GlobalUsageClassification; after: GlobalUsageClassification }> = [];
+  for (const [idx, ag] of afterMap) {
+    const bg = beforeMap.get(idx);
+    if (bg && bg.classification !== ag.classification) changedUsage.push({ globalIndex: idx, before: bg.classification, after: ag.classification });
+  }
+  return {
+    before,
+    after,
+    comparison: {
+      addedGlobals: [...afterMap.keys()].filter((k) => !beforeMap.has(k)).map((k) => afterMap.get(k)!),
+      removedGlobals: [...beforeMap.keys()].filter((k) => !afterMap.has(k)).map((k) => beforeMap.get(k)!),
+      changedUsageClassification: changedUsage,
+      newMutatedGlobals: after.globals.filter((g) => g.totalWrites > 0 && (beforeMap.get(g.globalIndex)?.totalWrites ?? 0) === 0),
+      globalsBecomingUnused: before.globals.filter((g) => g.classification !== 'never_accessed' && afterMap.get(g.globalIndex)?.classification === 'never_accessed'),
+    },
+  };
+}
+
+// =============================================================================
+// WASM Literal & Magic-Number Analysis (ISSUE-277 / 253-wasm-literals)
+// =============================================================================
+
+export type LiteralType = 'i32' | 'i64' | 'f32' | 'f64';
+
+export type LiteralStructuralClass =
+  | 'zero'
+  | 'one'
+  | 'negative_one'
+  | 'power_of_two'
+  | 'bit_mask'
+  | 'byte_mask'
+  | 'alignment_like'
+  | 'small_integer'
+  | 'large_integer'
+  | 'unusual_constant'
+  | 'positive_float'
+  | 'negative_float'
+  | 'zero_float'
+  | 'float_edge'
+  | 'none';
+
+export interface WasmLiteralRecord {
+  functionIndex: number;
+  blockIndex: number;
+  instructionIndex: number;
+  opcode: string;
+  literalType: LiteralType;
+  rawI32: number | null;
+  rawI64: bigint | null;
+  rawF32: number | null;
+  rawF64: number | null;
+  signedValue: string;
+  unsignedValue: string;
+  hexValue: string;
+  structuralClass: LiteralStructuralClass;
+  contentHash: string;
+}
+
+export interface WasmLiteralOccurrenceSummary {
+  signedValue: string;
+  unsignedValue: string;
+  hexValue: string;
+  literalType: LiteralType;
+  structuralClass: LiteralStructuralClass;
+  occurrenceCount: number;
+  functionIndices: number[];
+  usedInMultipleFunctions: boolean;
+  opcodeCategories: string[];
+  contentHash: string;
+}
+
+export interface WasmLiteralsReport {
+  file: string;
+  valid: true;
+  records: WasmLiteralRecord[];
+  occurrenceSummaries: WasmLiteralOccurrenceSummary[];
+  statistics: {
+    totalLiteralOccurrences: number;
+    uniqueLiterals: number;
+    integerLiterals: number;
+    floatingPointLiterals: number;
+    mostFrequentLiteral: WasmLiteralOccurrenceSummary | null;
+    maxObservedInteger: string | null;
+    minObservedInteger: string | null;
+    literalsSharedAcrossFunctions: number;
+    largeConstantThreshold: number;
+    unusualConstantCount: number;
+  };
+}
+
+function classifyLiteral(
+  literalType: LiteralType,
+  i32Val: number | null,
+  i64Val: bigint | null,
+  f32Val: number | null,
+  f64Val: number | null,
+  largeThreshold: number,
+): LiteralStructuralClass {
+  if (literalType === 'f32' && f32Val !== null) {
+    if (f32Val === 0 || Object.is(f32Val, -0)) return 'zero_float';
+    if (!isFinite(f32Val) || isNaN(f32Val)) return 'float_edge';
+    return f32Val > 0 ? 'positive_float' : 'negative_float';
+  }
+  if (literalType === 'f64' && f64Val !== null) {
+    if (f64Val === 0 || Object.is(f64Val, -0)) return 'zero_float';
+    if (!isFinite(f64Val) || isNaN(f64Val)) return 'float_edge';
+    return f64Val > 0 ? 'positive_float' : 'negative_float';
+  }
+  const val = i32Val !== null ? BigInt(i32Val) : i64Val;
+  if (val === null) return 'none';
+  if (val === 0n) return 'zero';
+  if (val === 1n) return 'one';
+  if (val === -1n || (i32Val !== null && i32Val === -1) || (i64Val !== null && i64Val === -1n)) return 'negative_one';
+  const absVal = val < 0n ? -val : val;
+  if (absVal > 0n && (absVal & (absVal - 1n)) === 0n) return 'power_of_two';
+  // byte mask: all 1s in lower N bytes (e.g. 0xff, 0xffff, etc.)
+  if (absVal === 0xffn || absVal === 0xffffn || absVal === 0xffffffn || absVal === 0xffffffffn) return 'byte_mask';
+  // bit mask: all lower bits set (power_of_two - 1)
+  if (absVal > 0n && ((absVal + 1n) & absVal) === 0n) return 'bit_mask';
+  // alignment like: multiple of page size (4096) or common alignment
+  if (i32Val !== null && i32Val > 0 && (i32Val % 4096 === 0 || i32Val % 64 === 0 || i32Val % 16 === 0)) return 'alignment_like';
+  if (absVal > BigInt(largeThreshold)) return 'unusual_constant';
+  if (absVal <= 127n) return 'small_integer';
+  return 'large_integer';
+}
+
+function literalHash(signedValue: string, literalType: string): string {
+  return createHash('sha256').update(`${literalType}:${signedValue}`).digest('hex').slice(0, 16);
+}
+
+function opcodeCategory(opcode: string): string {
+  if (opcode === 'i32.const' || opcode === 'i64.const') return 'integer_constant';
+  if (opcode === 'f32.const' || opcode === 'f64.const') return 'float_constant';
+  return 'other';
+}
+
+export interface WasmLiteralsAnalysisOptions {
+  largeConstantThreshold?: number;
+  searchValue?: string;
+  searchHex?: string;
+  literalTypeFilter?: LiteralType;
+  minOccurrences?: number;
+}
+
+export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptions = {}): WasmLiteralsReport {
+  const largeThreshold = options.largeConstantThreshold ?? 100000;
+  const sections = loadSections(file);
+  const importSec = sections.find((s) => s.id === 2);
+  const codeSec = sections.find((s) => s.id === 10);
+  const importedCount = importedFunctionCount(importSec);
+
+  const records: WasmLiteralRecord[] = [];
+
+  if (codeSec) {
+    const reader = new Reader(codeSec.payload);
+    const funcCount = reader.varuint32();
+    for (let fi = 0; fi < funcCount; fi++) {
+      const bodySize = reader.varuint32();
+      const body = new Reader(reader.bytes(bodySize));
+      const localCount = body.varuint32();
+      for (let j = 0; j < localCount; j++) { body.varuint32(); body.byte(); }
+      const functionIndex = importedCount + fi;
+      let blockIndex = 0;
+      let instrIndex = 0;
+      let unreachable = false;
+      while (!body.done) {
+        const opcode = body.byte();
+        if (opcode === 0x00) { unreachable = true; skipInstructionImmediate(opcode, body); instrIndex++; continue; }
+        if (opcode === 0x0b) { if (blockIndex > 0) blockIndex--; unreachable = false; instrIndex++; continue; }
+        if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) { blockIndex++; body.byte(); unreachable = false; instrIndex++; continue; }
+        if (opcode === 0x05) { unreachable = false; instrIndex++; continue; }
+
+        if (!unreachable) {
+          if (opcode === 0x41) {
+            // i32.const
+            const v = body.varint32();
+            const unsigned = (v >>> 0);
+            const signed = v | 0;
+            const hex = `0x${(unsigned).toString(16).padStart(8, '0')}`;
+            const cls = classifyLiteral('i32', v, null, null, null, largeThreshold);
+            records.push({
+              functionIndex, blockIndex, instructionIndex: instrIndex,
+              opcode: 'i32.const', literalType: 'i32',
+              rawI32: v, rawI64: null, rawF32: null, rawF64: null,
+              signedValue: String(signed), unsignedValue: String(unsigned), hexValue: hex,
+              structuralClass: cls, contentHash: literalHash(String(signed), 'i32'),
+            });
+          } else if (opcode === 0x42) {
+            // i64.const
+            let result = 0n; let shift = 0n; let b: number;
+            do { b = body.byte(); result |= BigInt(b & 0x7f) << shift; shift += 7n; } while ((b & 0x80) !== 0);
+            // sign extend
+            if ((b & 0x40) !== 0 && shift < 64n) result |= (~0n << shift);
+            const unsigned64 = result & 0xffffffffffffffffn;
+            const hex64 = `0x${unsigned64.toString(16).padStart(16, '0')}`;
+            const cls = classifyLiteral('i64', null, result, null, null, largeThreshold);
+            records.push({
+              functionIndex, blockIndex, instructionIndex: instrIndex,
+              opcode: 'i64.const', literalType: 'i64',
+              rawI32: null, rawI64: result, rawF32: null, rawF64: null,
+              signedValue: String(result), unsignedValue: String(unsigned64), hexValue: hex64,
+              structuralClass: cls, contentHash: literalHash(String(result), 'i64'),
+            });
+          } else if (opcode === 0x43) {
+            // f32.const
+            const bytes = body.bytes(4);
+            const buf = Buffer.alloc(4);
+            bytes.copy(buf);
+            const floatVal = buf.readFloatLE(0);
+            const bits = buf.readUInt32LE(0);
+            const hex = `0x${bits.toString(16).padStart(8, '0')}`;
+            const cls = classifyLiteral('f32', null, null, floatVal, null, largeThreshold);
+            records.push({
+              functionIndex, blockIndex, instructionIndex: instrIndex,
+              opcode: 'f32.const', literalType: 'f32',
+              rawI32: null, rawI64: null, rawF32: floatVal, rawF64: null,
+              signedValue: isNaN(floatVal) ? 'NaN' : String(floatVal), unsignedValue: hex, hexValue: hex,
+              structuralClass: cls, contentHash: literalHash(hex, 'f32'),
+            });
+          } else if (opcode === 0x44) {
+            // f64.const
+            const bytes = body.bytes(8);
+            const buf = Buffer.alloc(8);
+            bytes.copy(buf);
+            const floatVal = buf.readDoubleLE(0);
+            const lo = buf.readUInt32LE(0); const hi = buf.readUInt32LE(4);
+            const hex = `0x${hi.toString(16).padStart(8, '0')}${lo.toString(16).padStart(8, '0')}`;
+            const cls = classifyLiteral('f64', null, null, null, floatVal, largeThreshold);
+            records.push({
+              functionIndex, blockIndex, instructionIndex: instrIndex,
+              opcode: 'f64.const', literalType: 'f64',
+              rawI32: null, rawI64: null, rawF32: null, rawF64: floatVal,
+              signedValue: isNaN(floatVal) ? 'NaN' : String(floatVal), unsignedValue: hex, hexValue: hex,
+              structuralClass: cls, contentHash: literalHash(hex, 'f64'),
+            });
+          } else {
+            skipInstructionImmediate(opcode, body);
+          }
+        } else {
+          skipInstructionImmediate(opcode, body);
+        }
+        instrIndex++;
+      }
+    }
+  }
+
+  // Build occurrence summaries
+  const summaryMap = new Map<string, WasmLiteralOccurrenceSummary>();
+  for (const rec of records) {
+    const key = `${rec.literalType}:${rec.signedValue}`;
+    const existing = summaryMap.get(key);
+    if (existing) {
+      existing.occurrenceCount++;
+      if (!existing.functionIndices.includes(rec.functionIndex)) existing.functionIndices.push(rec.functionIndex);
+      if (!existing.opcodeCategories.includes(opcodeCategory(rec.opcode))) existing.opcodeCategories.push(opcodeCategory(rec.opcode));
+    } else {
+      summaryMap.set(key, {
+        signedValue: rec.signedValue,
+        unsignedValue: rec.unsignedValue,
+        hexValue: rec.hexValue,
+        literalType: rec.literalType,
+        structuralClass: rec.structuralClass,
+        occurrenceCount: 1,
+        functionIndices: [rec.functionIndex],
+        usedInMultipleFunctions: false,
+        opcodeCategories: [opcodeCategory(rec.opcode)],
+        contentHash: rec.contentHash,
+      });
+    }
+  }
+  // Finalize multi-function flags
+  for (const summary of summaryMap.values()) {
+    summary.functionIndices.sort((a, b) => a - b);
+    summary.usedInMultipleFunctions = summary.functionIndices.length > 1;
+    summary.opcodeCategories.sort();
+  }
+
+  let summaries = [...summaryMap.values()].sort((a, b) => b.occurrenceCount - a.occurrenceCount || a.signedValue.localeCompare(b.signedValue));
+
+  // Apply filters
+  if (options.literalTypeFilter) summaries = summaries.filter((s) => s.literalType === options.literalTypeFilter);
+  if (options.minOccurrences) summaries = summaries.filter((s) => s.occurrenceCount >= options.minOccurrences!);
+  if (options.searchValue !== undefined) summaries = summaries.filter((s) => s.signedValue === options.searchValue || s.unsignedValue === options.searchValue);
+  if (options.searchHex !== undefined) {
+    const normalizedHex = options.searchHex.toLowerCase().replace(/^0x/, '');
+    summaries = summaries.filter((s) => s.hexValue.toLowerCase().replace(/^0x/, '') === normalizedHex);
+  }
+
+  // Integer ranges
+  const intRecords = records.filter((r) => r.literalType === 'i32' || r.literalType === 'i64');
+  let maxInt: string | null = null;
+  let minInt: string | null = null;
+  if (intRecords.length > 0) {
+    const vals = intRecords.map((r) => r.rawI64 !== null ? r.rawI64 : BigInt(r.rawI32 ?? 0));
+    const mx = vals.reduce((a, b) => (b > a ? b : a));
+    const mn = vals.reduce((a, b) => (b < a ? b : a));
+    maxInt = String(mx);
+    minInt = String(mn);
+  }
+
+  return {
+    file,
+    valid: true,
+    records,
+    occurrenceSummaries: summaries,
+    statistics: {
+      totalLiteralOccurrences: records.length,
+      uniqueLiterals: summaryMap.size,
+      integerLiterals: records.filter((r) => r.literalType === 'i32' || r.literalType === 'i64').length,
+      floatingPointLiterals: records.filter((r) => r.literalType === 'f32' || r.literalType === 'f64').length,
+      mostFrequentLiteral: summaries[0] ?? null,
+      maxObservedInteger: maxInt,
+      minObservedInteger: minInt,
+      literalsSharedAcrossFunctions: summaries.filter((s) => s.usedInMultipleFunctions).length,
+      largeConstantThreshold: largeThreshold,
+      unusualConstantCount: summaries.filter((s) => s.structuralClass === 'unusual_constant').length,
+    },
+  };
+}
+
+export function compareLiteralsReports(beforeFile: string, afterFile: string, options: WasmLiteralsAnalysisOptions = {}) {
+  const before = analyzeLiterals(beforeFile, options);
+  const after = analyzeLiterals(afterFile, options);
+  const beforeMap = new Map(before.occurrenceSummaries.map((s) => [`${s.literalType}:${s.signedValue}`, s]));
+  const afterMap = new Map(after.occurrenceSummaries.map((s) => [`${s.literalType}:${s.signedValue}`, s]));
+  const addedLiterals = [...afterMap.values()].filter((s) => !beforeMap.has(`${s.literalType}:${s.signedValue}`));
+  const removedLiterals = [...beforeMap.values()].filter((s) => !afterMap.has(`${s.literalType}:${s.signedValue}`));
+  const changedCounts: Array<{ key: string; before: number; after: number }> = [];
+  for (const [k, as] of afterMap) {
+    const bs = beforeMap.get(k);
+    if (bs && bs.occurrenceCount !== as.occurrenceCount) changedCounts.push({ key: k, before: bs.occurrenceCount, after: as.occurrenceCount });
+  }
+  const newFunctionLiterals = [...afterMap.values()].filter((as) => {
+    const bs = beforeMap.get(`${as.literalType}:${as.signedValue}`);
+    if (!bs) return false;
+    return as.functionIndices.some((f) => !bs.functionIndices.includes(f));
+  });
+  return {
+    before,
+    after,
+    comparison: {
+      addedLiterals,
+      removedLiterals,
+      changedOccurrenceCounts: changedCounts,
+      literalsInNewFunctions: newFunctionLiterals,
+      totalOccurrenceDelta: after.statistics.totalLiteralOccurrences - before.statistics.totalLiteralOccurrences,
+      uniqueLiteralsDelta: after.statistics.uniqueLiterals - before.statistics.uniqueLiterals,
     },
   };
 }
