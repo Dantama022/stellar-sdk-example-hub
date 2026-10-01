@@ -39,6 +39,10 @@ import { run as runWasmElements } from './examples/248-wasm-elements';
 import { parseWasmFingerprintArgs, run as runWasmFingerprint } from './examples/251-wasm-fingerprint';
 import { run as runWasmProvenance } from './examples/250-wasm-provenance';
 import { parseWasmFeatureArgs, run as runWasmFeatures } from './examples/252-wasm-features';
+import { run as runWasmStrings, parseWasmStringsArgs } from './examples/250-wasm-strings';
+import { run as runWasmStackTypes } from './examples/251-wasm-stack-types';
+import { run as runWasmGlobalsUsage } from './examples/252-wasm-globals-usage';
+import { run as runWasmLiterals, parseWasmLiteralsArgs } from './examples/253-wasm-literals';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 
 dotenv.config();
@@ -79,6 +83,10 @@ function printUsage(): void {
   console.log('  wasm-fingerprint <wasmFile> [compareFile] [--json]');
   console.log('  wasm-provenance <wasmFile> [compareFile] [--json]');
   console.log('  wasm-features <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-strings <wasmFile> [compareFile] [--json] [--csv] [--min-length <n>] [--search <pattern>]');
+  console.log('  wasm-stack-types <wasmFile> [compareFile] [--json] [--csv]');
+  console.log('  wasm-globals-usage <wasmFile> [compareFile] [--json] [--csv]');
+  console.log('  wasm-literals <wasmFile> [compareFile] [--json] [--csv] [--search <value>] [--search-hex <hex>] [--type <i32|i64|f32|f64>]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -210,6 +218,17 @@ export async function runInspectorCli(args: string[]): Promise<number> {
         return 0;
       case 'wasm-features':
         runWasmFeatures(parseWasmFeatureArgs(cmdArgs));
+      case 'wasm-strings':
+        await runWasmStrings(parseWasmStringsArgs(cmdArgs));
+        return 0;
+      case 'wasm-stack-types':
+        await runWasmStackTypes(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-globals-usage':
+        await runWasmGlobalsUsage(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-literals':
+        await runWasmLiterals(parseWasmLiteralsArgs(cmdArgs));
         return 0;
       default:
         printUsage();

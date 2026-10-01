@@ -8,6 +8,7 @@
     "wasm-fingerprint": "dist/src/wasm-fingerprint.js",
     "wasm-features": "dist/src/wasm-features.js",
     "wasm-names": "dist/src/wasm-names.js"
+    "stellar-api-inspector": "dist/src/stellar-api-inspector.js"
   },
   "scripts": {
     "build": "tsc",
@@ -48,12 +49,14 @@
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "dotenv": "^16.4.5",
-    "inquirer": "^8.2.7"
+    "inquirer": "^8.2.7",
+    "wasm-parser": "^1.0.1"
   },
   "devDependencies": {
     "@types/inquirer": "^8.2.13",
     "@types/jest": "^29.5.11",
     "@types/node": "^22.10.0",
+    "@webassemblyjs/wasm-parser": "^1.14.1",
     "@typescript-eslint/eslint-plugin": "^8.4.0",
     "@typescript-eslint/parser": "^8.4.0",
     "eslint": "^8.57.0",
