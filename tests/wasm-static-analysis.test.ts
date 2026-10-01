@@ -7,12 +7,15 @@ import {
   analyzeGlobals,
   analyzeInstructions,
   analyzeMemoryTables,
+  analyzeWasmNames,
   WasmValidationError,
 } from '../src/utils/wasm-static-analysis';
 import { compareCustomSectionReports } from '../src/examples/245-wasm-custom-sections';
 import { compareGlobalReports } from '../src/examples/246-wasm-globals';
 import { compareInstructionReports } from '../src/examples/247-wasm-instructions';
 import { compareMemoryTableReports } from '../src/examples/244-wasm-memory';
+import { compareWasmNameReports } from '../src/examples/253-wasm-names';
+import { parseWasmNamesArgs, runWasmNamesCli } from '../src/wasm-names';
 
 function u32(value: number): number[] {
   const bytes: number[] = [];
@@ -29,6 +32,17 @@ function u32(value: number): number[] {
 function str(value: string): number[] {
   const bytes = Buffer.from(value, 'utf8');
   return [...u32(bytes.length), ...bytes];
+}
+
+function nameMap(entries: Array<[number, string]>): number[] {
+  return [
+    ...u32(entries.length),
+    ...entries.flatMap(([index, name]) => [...u32(index), ...str(name)]),
+  ];
+}
+
+function nameSubsection(id: number, payload: number[]): number[] {
+  return [id, ...u32(payload.length), ...payload];
 }
 
 function section(id: number, payload: number[]): number[] {
@@ -87,6 +101,35 @@ function writeWasm(buffer: Buffer): string {
   return file;
 }
 
+function wasmNamesModule(namePayload?: number[], importedFunction = false): Buffer {
+  const namedCustomSection =
+    namePayload === undefined ? [] : section(0, [...str('name'), ...namePayload]);
+  const functionBody = (locals: number) => [0x01, ...u32(locals), 0x7f, 0x0b];
+  return Buffer.from([
+    0x00,
+    0x61,
+    0x73,
+    0x6d,
+    0x01,
+    0x00,
+    0x00,
+    0x00,
+    ...namedCustomSection,
+    ...section(1, [0x01, 0x60, 0x02, 0x7f, 0x7f, 0x00]),
+    ...(importedFunction ? section(2, [0x01, ...str('env'), ...str('callback'), 0x00, 0x00]) : []),
+    ...section(3, [0x03, 0x00, 0x00, 0x00]),
+    ...section(10, [
+      0x03,
+      ...u32(functionBody(0).length),
+      ...functionBody(0),
+      ...u32(functionBody(2).length),
+      ...functionBody(2),
+      ...u32(functionBody(0).length),
+      ...functionBody(0),
+    ]),
+  ]);
+}
+
 describe('WASM static analysis examples', () => {
   it('parses imported and defined memories and tables deterministically', () => {
     const file = writeWasm(fixture());
@@ -134,6 +177,210 @@ describe('WASM static analysis examples', () => {
       'payload_size',
       'payload_hash',
     ]);
+  });
+
+  it('maps function and local names while distinguishing missing and explicit empty names', () => {
+    const payload = [
+      ...nameSubsection(
+        1,
+        nameMap([
+          [0, 'sum'],
+          [1, ''],
+        ]),
+      ),
+      ...nameSubsection(2, [
+        ...u32(2),
+        ...u32(0),
+        ...nameMap([[0, 'left']]),
+        ...u32(1),
+        ...nameMap([
+          [0, 'first'],
+          [1, 'second'],
+          [3, 'third'],
+        ]),
+      ]),
+    ];
+    const file = writeWasm(wasmNamesModule(payload));
+    const report = analyzeWasmNames(file);
+
+    expect(report.nameSection).toMatchObject({
+      present: true,
+      count: 1,
+      subsections: [
+        { id: 1, name: 'function' },
+        { id: 2, name: 'local' },
+      ],
+    });
+    expect(report.functions[0]).toMatchObject({
+      functionIndex: 0,
+      name: 'sum',
+      status: 'named',
+      expectedLocalCount: 2,
+      namedLocalCount: 1,
+      unnamedLocalRanges: [{ startIndex: 1, endIndex: 1 }],
+    });
+    expect(report.functions[1]).toMatchObject({
+      functionIndex: 1,
+      name: '',
+      status: 'explicitly-unnamed',
+      expectedLocalCount: 4,
+      namedLocalCount: 3,
+      unnamedLocalRanges: [{ startIndex: 2, endIndex: 2 }],
+    });
+    expect(report.functionsWithIncompleteLocalNames).toEqual([0]);
+    expect(report.statistics).toMatchObject({
+      totalNamedFunctions: 1,
+      totalUnnamedFunctions: 2,
+      totalFunctionsWithLocalNameMetadata: 2,
+      totalNamedLocals: 4,
+    });
+    expect(analyzeWasmNames(file)).toEqual(report);
+  });
+
+  it('recognizes complete local naming metadata and preserves imported function indexes', () => {
+    const completePayload = [
+      ...nameSubsection(
+        1,
+        nameMap([
+          [0, 'first'],
+          [1, 'second'],
+        ]),
+      ),
+      ...nameSubsection(2, [
+        ...u32(2),
+        ...u32(0),
+        ...nameMap([
+          [0, 'a'],
+          [1, 'b'],
+        ]),
+        ...u32(1),
+        ...nameMap([
+          [0, 'a'],
+          [1, 'b'],
+          [2, 'c'],
+          [3, 'd'],
+        ]),
+      ]),
+    ];
+    const complete = analyzeWasmNames(writeWasm(wasmNamesModule(completePayload)));
+    const importedPayload = nameSubsection(
+      1,
+      nameMap([
+        [0, 'host_callback'],
+        [1, 'defined_fn'],
+      ]),
+    );
+    const withImport = analyzeWasmNames(writeWasm(wasmNamesModule(importedPayload, true)));
+
+    expect(complete.functionsWithIncompleteLocalNames).toEqual([]);
+    expect(complete.statistics.functionsWithMostNamedLocals).toEqual([
+      { functionIndex: 1, name: 'second', count: 4 },
+      { functionIndex: 0, name: 'first', count: 2 },
+    ]);
+    expect(withImport.functions[0]).toMatchObject({
+      functionIndex: 0,
+      defined: false,
+      name: 'host_callback',
+    });
+    expect(withImport.functions[1]).toMatchObject({
+      functionIndex: 1,
+      defined: true,
+      name: 'defined_fn',
+    });
+    expect(parseWasmNamesArgs(['before.wasm', '--compare', 'after.wasm', '--json'])).toEqual({
+      wasmFile: 'before.wasm',
+      compareFile: 'after.wasm',
+      json: true,
+    });
+  });
+
+  it('reports absent name metadata and tolerates malformed name subsections', () => {
+    const absent = analyzeWasmNames(writeWasm(wasmNamesModule()));
+    const malformed = analyzeWasmNames(writeWasm(wasmNamesModule([0x01, 0x02, 0x01, 0x01])));
+
+    expect(absent.nameSection).toMatchObject({ present: false, count: 0, subsections: [] });
+    expect(absent.functions.every((fn) => fn.status === 'unmapped')).toBe(true);
+    expect(malformed.nameSection.present).toBe(true);
+    expect(malformed.warnings).toEqual([
+      expect.stringContaining('Unable to parse name subsection 1'),
+    ]);
+
+    const additionalSubsection = analyzeWasmNames(
+      writeWasm(wasmNamesModule(nameSubsection(10, [0x01]))),
+    );
+    expect(additionalSubsection.nameSection.subsections).toEqual([{ id: 10, name: 'field' }]);
+    expect(additionalSubsection.warnings).toEqual([]);
+  });
+
+  it('compares function and local names by raw WASM indexes', () => {
+    const before = writeWasm(
+      wasmNamesModule([
+        ...nameSubsection(
+          1,
+          nameMap([
+            [0, 'old'],
+            [1, 'removed'],
+          ]),
+        ),
+        ...nameSubsection(2, [
+          ...u32(1),
+          ...u32(0),
+          ...nameMap([
+            [0, 'before'],
+            [1, 'gone'],
+          ]),
+        ]),
+      ]),
+    );
+    const after = writeWasm(
+      wasmNamesModule([
+        ...nameSubsection(
+          1,
+          nameMap([
+            [0, 'new'],
+            [2, 'added'],
+          ]),
+        ),
+        ...nameSubsection(2, [
+          ...u32(1),
+          ...u32(0),
+          ...nameMap([
+            [0, 'after'],
+            [2, 'new-local'],
+          ]),
+        ]),
+      ]),
+    );
+    const comparison = compareWasmNameReports(before, after).comparison;
+
+    expect(comparison.renamedFunctions).toEqual([
+      { functionIndex: 0, before: 'old', after: 'new' },
+    ]);
+    expect(comparison.removedFunctionNames).toEqual([{ functionIndex: 1, name: 'removed' }]);
+    expect(comparison.addedFunctionNames).toEqual([{ functionIndex: 2, name: 'added' }]);
+    expect(comparison.changedLocalNames).toEqual([
+      { functionIndex: 0, localIndex: 0, before: 'before', after: 'after' },
+    ]);
+    expect(comparison.removedLocalNames).toEqual([
+      { functionIndex: 0, localIndex: 1, name: 'gone' },
+    ]);
+    expect(comparison.addedLocalNames).toEqual([
+      { functionIndex: 0, localIndex: 2, name: 'new-local' },
+    ]);
+  });
+
+  it('provides deterministic JSON output through the offline CLI without instantiating WASM', async () => {
+    const file = writeWasm(wasmNamesModule());
+    const log = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    const instantiate = jest.spyOn(WebAssembly, 'instantiate');
+    try {
+      await expect(runWasmNamesCli([file, '--json'])).resolves.toBe(0);
+      expect(JSON.parse(String(log.mock.calls[0][0])).nameSection.present).toBe(false);
+      expect(instantiate).not.toHaveBeenCalled();
+    } finally {
+      instantiate.mockRestore();
+      log.mockRestore();
+    }
   });
 
   it('parses imported and defined globals and detects mutability changes', () => {

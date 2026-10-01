@@ -145,6 +145,82 @@ export interface WasmCustomSectionReport {
   };
 }
 
+export interface WasmNameEntry {
+  index: number;
+  name: string | null;
+  status: 'named' | 'explicitly-unnamed' | 'unmapped';
+}
+
+export interface WasmFunctionNameInfo extends WasmNameEntry {
+  functionIndex: number;
+  defined: boolean;
+  locals: WasmNameEntry[];
+  unnamedLocalRanges: Array<{ startIndex: number; endIndex: number }>;
+  localNameMetadataPresent: boolean;
+  expectedLocalCount: number | null;
+  namedLocalCount: number;
+  unnamedLocalCount: number | null;
+}
+
+export interface WasmNameReport {
+  file: string;
+  valid: true;
+  nameSection: {
+    present: boolean;
+    count: number;
+    subsections: Array<{ id: number; name: string }>;
+  };
+  functions: WasmFunctionNameInfo[];
+  functionsWithIncompleteLocalNames: number[];
+  statistics: {
+    totalFunctionCount: number;
+    totalNamedFunctions: number;
+    totalUnnamedFunctions: number;
+    totalFunctionsWithLocalNameMetadata: number;
+    totalNamedLocals: number;
+    functionsWithMostNamedLocals: Array<{
+      functionIndex: number;
+      name: string | null;
+      count: number;
+    }>;
+  };
+  warnings: string[];
+}
+
+export type WasmProducerCategory = 'language' | 'compiler' | 'linker' | 'binary-tool' | 'other';
+
+export interface WasmProducerInfo {
+  order: number;
+  field: string;
+  category: WasmProducerCategory;
+  name: string;
+  version: string;
+  values: { name: string; version: string };
+}
+
+export interface WasmProvenanceReport {
+  file: string;
+  valid: true;
+  provenanceStatus: 'available' | 'partial' | 'absent' | 'malformed';
+  producers: WasmProducerInfo[];
+  rawProducerMetadata: Array<{
+    sectionOrder: number;
+    payloadBase64: string;
+    fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }> | null;
+    error?: string;
+  }>;
+  warnings: string[];
+  module: {
+    wasmVersion: number;
+    functionCount: number;
+    importCount: number;
+    exportCount: number;
+    codeSize: number;
+    customSections: { present: boolean; count: number; names: string[] };
+  };
+  fingerprint: string;
+}
+
 interface Section {
   id: number;
   order: number;
@@ -613,6 +689,177 @@ function importedFunctionCount(importSection: Section | undefined): number {
   return functions;
 }
 
+function producerCategory(field: string, name: string): WasmProducerCategory {
+  if (field.toLowerCase() === 'language') return 'language';
+  const value = `${field} ${name}`.toLowerCase();
+  if (/linker|wasm-ld|rust-lld|\blld\b/.test(value)) return 'linker';
+  if (/objcopy|objdump|strip|wasm-tools|binaryen|wasm-opt/.test(value)) return 'binary-tool';
+  if (/compiler|rustc|clang|\bgcc\b|swiftc|emscripten|tinygo|\bzig\b/.test(value)) {
+    return 'compiler';
+  }
+  return 'other';
+}
+
+function parseProducerSection(section: Section): {
+  fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }>;
+  producers: WasmProducerInfo[];
+} {
+  const reader = new Reader(section.payload);
+  if (reader.string() !== 'producers') throw new WasmValidationError('Not a producers section');
+  const fieldCount = reader.varuint32();
+  const fields: Array<{ name: string; producers: Array<{ name: string; version: string }> }> = [];
+  const producers: WasmProducerInfo[] = [];
+  for (let fieldIndex = 0; fieldIndex < fieldCount; fieldIndex += 1) {
+    const field = reader.string();
+    const producerCount = reader.varuint32();
+    const fieldProducers: Array<{ name: string; version: string }> = [];
+    for (let producerIndex = 0; producerIndex < producerCount; producerIndex += 1) {
+      const name = reader.string();
+      const version = reader.string();
+      fieldProducers.push({ name, version });
+      producers.push({
+        order: producers.length,
+        field,
+        category: producerCategory(field, name),
+        name,
+        version,
+        values: { name, version },
+      });
+    }
+    fields.push({ name: field, producers: fieldProducers });
+  }
+  if (!reader.done) throw new WasmValidationError('Trailing bytes in producers section');
+  return { fields, producers };
+}
+
+export function analyzeWasmProvenance(file: string): WasmProvenanceReport {
+  const sections = loadSections(file);
+  const customSections = sections.filter((section) => section.id === 0);
+  const warnings: string[] = [];
+  const rawProducerMetadata: WasmProvenanceReport['rawProducerMetadata'] = [];
+  const producers: WasmProducerInfo[] = [];
+  let malformedCount = 0;
+  let incompleteRecordCount = 0;
+  let malformedCustomSectionCount = 0;
+  let foundProducerSection = false;
+  const customSectionNames: string[] = [];
+
+  customSections.forEach((section) => {
+    const reader = new Reader(section.payload);
+    let name: string;
+    try {
+      name = reader.string();
+      customSectionNames.push(name);
+    } catch (error) {
+      malformedCustomSectionCount += 1;
+      warnings.push(
+        `Custom section ${section.order} has an invalid name: ${(error as Error).message}`,
+      );
+      return;
+    }
+    if (name !== 'producers') return;
+    foundProducerSection = true;
+    const raw = {
+      sectionOrder: section.order,
+      payloadBase64: section.payload.toString('base64'),
+      fields: null as WasmProvenanceReport['rawProducerMetadata'][number]['fields'],
+    };
+    try {
+      const parsed = parseProducerSection(section);
+      raw.fields = parsed.fields;
+      incompleteRecordCount += parsed.producers.filter(
+        (producer) => !producer.name || !producer.version,
+      ).length;
+      producers.push(
+        ...parsed.producers.map((producer) => ({
+          ...producer,
+          order: producers.length + producer.order,
+        })),
+      );
+      if (parsed.producers.length === 0) {
+        warnings.push(`Producer section ${section.order} contains no producer records`);
+      }
+      if (parsed.producers.some((producer) => !producer.name || !producer.version)) {
+        warnings.push(
+          `Producer section ${section.order} contains records with an empty name or version`,
+        );
+      }
+      rawProducerMetadata.push(raw);
+    } catch (error) {
+      malformedCount += 1;
+      rawProducerMetadata.push({
+        ...raw,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      warnings.push(
+        `Producer section ${section.order} is malformed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  });
+
+  const importSection = sections.find((section) => section.id === 2);
+  const functionSection = sections.find((section) => section.id === 3);
+  const exportSection = sections.find((section) => section.id === 7);
+  const codeSection = sections.find((section) => section.id === 10);
+  const importReader = importSection ? new Reader(importSection.payload) : null;
+  const exportReader = exportSection ? new Reader(exportSection.payload) : null;
+  const functionReader = functionSection ? new Reader(functionSection.payload) : null;
+  const validProducerSections = rawProducerMetadata.filter((metadata) => metadata.fields !== null);
+  const status: WasmProvenanceReport['provenanceStatus'] = !foundProducerSection
+    ? malformedCustomSectionCount > 0
+      ? 'partial'
+      : 'absent'
+    : malformedCount > 0
+      ? validProducerSections.length > 0
+        ? 'partial'
+        : 'malformed'
+      : producers.length === 0 || incompleteRecordCount > 0
+        ? 'partial'
+        : 'available';
+  if (!foundProducerSection) warnings.push('No standard producers custom section was found');
+  if (malformedCustomSectionCount > 0) {
+    warnings.push('One or more custom section names could not be decoded');
+  }
+  if (malformedCount > 0 && validProducerSections.length > 0) {
+    warnings.push('Some producer metadata was parsed, but one or more producer sections were malformed');
+  }
+
+  const normalized = producers.map(({ field, category, name, version }) => ({
+    field,
+    category,
+    name,
+    version,
+  }));
+  const normalizedSections = rawProducerMetadata.flatMap((metadata) =>
+    metadata.fields === null
+      ? []
+      : [{ sectionOrder: metadata.sectionOrder, fields: metadata.fields }],
+  );
+  return {
+    file,
+    valid: true,
+    provenanceStatus: status,
+    producers,
+    rawProducerMetadata,
+    warnings,
+    module: {
+      wasmVersion: 1,
+      functionCount: importedFunctionCount(importSection) + (functionReader?.varuint32() ?? 0),
+      importCount: importReader?.varuint32() ?? 0,
+      exportCount: exportReader?.varuint32() ?? 0,
+      codeSize: codeSection?.payload.length ?? 0,
+      customSections: {
+        present: customSections.length > 0,
+        count: customSections.length,
+        names: customSectionNames,
+      },
+    },
+    fingerprint: createHash('sha256')
+      .update(JSON.stringify({ producers: normalized, sections: normalizedSections }))
+      .digest('hex'),
+  };
+}
+
 export function analyzeMemoryTables(file: string): WasmMemoryTableReport {
   const sections = loadSections(file);
   const imports = parseImportSection(sections.find((section) => section.id === 2));
@@ -706,6 +953,275 @@ export function analyzeCustomSections(file: string): WasmCustomSectionReport {
         .sort((a, b) => b.payloadSize - a.payloadSize || a.order - b.order)
         .slice(0, 5),
     },
+  };
+}
+
+const nameSubsectionNames: Record<number, string> = {
+  0: 'module',
+  1: 'function',
+  2: 'local',
+  3: 'label',
+  4: 'type',
+  5: 'table',
+  6: 'memory',
+  7: 'global',
+  8: 'element',
+  9: 'data',
+  10: 'field',
+  11: 'tag',
+};
+
+function readNameMap(reader: Reader): Map<number, string> {
+  const names = new Map<number, string>();
+  const count = reader.varuint32();
+  for (let i = 0; i < count; i += 1) names.set(reader.varuint32(), reader.string());
+  return names;
+}
+
+function parseNameSection(
+  section: Section,
+  functionNames: Map<number, string>,
+  localNames: Map<number, Map<number, string>>,
+  subsections: Array<{ id: number; name: string }>,
+  warnings: string[],
+): void {
+  try {
+    const reader = new Reader(section.payload);
+    if (reader.string() !== 'name') return;
+    while (!reader.done) {
+      const id = reader.byte();
+      const subsection = new Reader(reader.bytes(reader.varuint32()));
+      subsections.push({ id, name: nameSubsectionNames[id] ?? 'unknown' });
+      try {
+        if (id === 1) {
+          readNameMap(subsection).forEach((name, index) => functionNames.set(index, name));
+        } else if (id === 2) {
+          const functionCount = subsection.varuint32();
+          for (let i = 0; i < functionCount; i += 1) {
+            const functionIndex = subsection.varuint32();
+            const names = readNameMap(subsection);
+            const current = localNames.get(functionIndex) ?? new Map<number, string>();
+            names.forEach((name, index) => current.set(index, name));
+            localNames.set(functionIndex, current);
+          }
+        }
+        if ((id === 1 || id === 2) && !subsection.done) {
+          warnings.push(`Name subsection ${id} contains trailing bytes`);
+        }
+      } catch (error) {
+        warnings.push(
+          `Unable to parse name subsection ${id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  } catch (error) {
+    warnings.push(
+      `Unable to parse name custom section: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function functionLayout(sections: Section[]): {
+  importedFunctionCount: number;
+  definedTypeIndexes: number[];
+  parameterCounts: number[] | null;
+  declaredLocalCounts: number[] | null;
+} {
+  const importSection = sections.find((section) => section.id === 2);
+  const importedTypeIndexes: number[] = [];
+  if (importSection) {
+    const reader = new Reader(importSection.payload);
+    const count = reader.varuint32();
+    for (let i = 0; i < count; i += 1) {
+      reader.string();
+      reader.string();
+      const kind = reader.byte();
+      if (kind === 0) importedTypeIndexes.push(reader.varuint32());
+      else if (kind === 1) {
+        reader.byte();
+        parseLimits(reader);
+      } else if (kind === 2) parseLimits(reader);
+      else if (kind === 3) {
+        reader.byte();
+        reader.byte();
+      } else if (kind === 4) {
+        reader.byte();
+        reader.varuint32();
+      } else throw new WasmValidationError(`Unsupported import kind: ${kind}`);
+    }
+  }
+
+  const functionSection = sections.find((section) => section.id === 3);
+  const definedTypeIndexes: number[] = [];
+  if (functionSection) {
+    const reader = new Reader(functionSection.payload);
+    const count = reader.varuint32();
+    for (let i = 0; i < count; i += 1) definedTypeIndexes.push(reader.varuint32());
+  }
+
+  let parameterCounts: number[] | null = null;
+  const typeSection = sections.find((section) => section.id === 1);
+  if (typeSection) {
+    const reader = new Reader(typeSection.payload);
+    const count = reader.varuint32();
+    parameterCounts = [];
+    for (let i = 0; i < count; i += 1) {
+      if (reader.byte() !== 0x60) throw new WasmValidationError('Unsupported function type form');
+      const parameterCount = reader.varuint32();
+      reader.bytes(parameterCount);
+      const resultCount = reader.varuint32();
+      reader.bytes(resultCount);
+      parameterCounts.push(parameterCount);
+    }
+  }
+
+  let declaredLocalCounts: number[] | null = null;
+  const codeSection = sections.find((section) => section.id === 10);
+  if (codeSection) {
+    const reader = new Reader(codeSection.payload);
+    const count = reader.varuint32();
+    declaredLocalCounts = [];
+    for (let i = 0; i < count; i += 1) {
+      const body = new Reader(reader.bytes(reader.varuint32()));
+      const groupCount = body.varuint32();
+      let localCount = 0;
+      for (let group = 0; group < groupCount; group += 1) {
+        localCount += body.varuint32();
+        body.byte();
+      }
+      declaredLocalCounts.push(localCount);
+    }
+  }
+
+  return {
+    importedFunctionCount: importedTypeIndexes.length,
+    definedTypeIndexes,
+    parameterCounts,
+    declaredLocalCounts,
+  };
+}
+
+function nameEntry(index: number, name: string | undefined): WasmNameEntry {
+  return {
+    index,
+    name: name ?? null,
+    status: name === undefined ? 'unmapped' : name.length === 0 ? 'explicitly-unnamed' : 'named',
+  };
+}
+
+export function analyzeWasmNames(file: string): WasmNameReport {
+  const sections = loadSections(file);
+  const nameSections = sections.filter(
+    (section) =>
+      section.id === 0 &&
+      (() => {
+        try {
+          return new Reader(section.payload).string() === 'name';
+        } catch {
+          return false;
+        }
+      })(),
+  );
+  const functionNames = new Map<number, string>();
+  const localNames = new Map<number, Map<number, string>>();
+  const subsections: Array<{ id: number; name: string }> = [];
+  const warnings: string[] = [];
+  nameSections.forEach((section) =>
+    parseNameSection(section, functionNames, localNames, subsections, warnings),
+  );
+
+  const layout = functionLayout(sections);
+  const functionCount = layout.importedFunctionCount + layout.definedTypeIndexes.length;
+  const functions = Array.from({ length: functionCount }, (_, functionIndex) => {
+    const defined = functionIndex >= layout.importedFunctionCount;
+    const definitionIndex = functionIndex - layout.importedFunctionCount;
+    const typeIndex = layout.definedTypeIndexes[definitionIndex];
+    const parameterCount =
+      typeIndex === undefined ? undefined : layout.parameterCounts?.[typeIndex];
+    const declaredLocalCount = layout.declaredLocalCounts?.[definitionIndex];
+    const expectedLocalCount =
+      defined && parameterCount !== undefined && declaredLocalCount !== undefined
+        ? parameterCount + declaredLocalCount
+        : null;
+    const mappedLocals = localNames.get(functionIndex) ?? new Map<number, string>();
+    const locals = [...mappedLocals.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([index, name]) => nameEntry(index, name));
+    const name = functionNames.get(functionIndex);
+    const mappedLocalIndexes = [...mappedLocals.keys()]
+      .filter((index) => expectedLocalCount !== null && index < expectedLocalCount)
+      .sort((a, b) => a - b);
+    const unnamedLocalRanges: Array<{ startIndex: number; endIndex: number }> = [];
+    if (expectedLocalCount !== null) {
+      let nextIndex = 0;
+      for (const index of mappedLocalIndexes) {
+        if (index > nextIndex) {
+          unnamedLocalRanges.push({ startIndex: nextIndex, endIndex: index - 1 });
+        }
+        nextIndex = index + 1;
+      }
+      if (nextIndex < expectedLocalCount) {
+        unnamedLocalRanges.push({ startIndex: nextIndex, endIndex: expectedLocalCount - 1 });
+      }
+    }
+    const namedLocalCount = [...mappedLocals.values()].filter(
+      (localName) => localName.length > 0,
+    ).length;
+    return {
+      ...nameEntry(functionIndex, name),
+      functionIndex,
+      defined,
+      locals,
+      unnamedLocalRanges,
+      localNameMetadataPresent: localNames.has(functionIndex),
+      expectedLocalCount,
+      namedLocalCount,
+      unnamedLocalCount:
+        expectedLocalCount === null ? null : Math.max(0, expectedLocalCount - namedLocalCount),
+    };
+  });
+
+  const namedFunctions = functions.filter((fn) => fn.status === 'named');
+  const localMetadataFunctions = functions.filter((fn) => fn.localNameMetadataPresent);
+  const localNameCounts = functions
+    .filter((fn) => fn.namedLocalCount > 0)
+    .sort((a, b) => b.namedLocalCount - a.namedLocalCount || a.functionIndex - b.functionIndex)
+    .slice(0, 5)
+    .map(({ functionIndex, name, namedLocalCount }) => ({
+      functionIndex,
+      name,
+      count: namedLocalCount,
+    }));
+  const functionsWithIncompleteLocalNames = functions
+    .filter(
+      (fn) =>
+        nameSections.length > 0 &&
+        fn.defined &&
+        fn.status === 'named' &&
+        fn.expectedLocalCount !== null &&
+        fn.namedLocalCount < fn.expectedLocalCount,
+    )
+    .map((fn) => fn.functionIndex);
+
+  return {
+    file,
+    valid: true,
+    nameSection: {
+      present: nameSections.length > 0,
+      count: nameSections.length,
+      subsections,
+    },
+    functions,
+    functionsWithIncompleteLocalNames,
+    statistics: {
+      totalFunctionCount: functionCount,
+      totalNamedFunctions: namedFunctions.length,
+      totalUnnamedFunctions: functionCount - namedFunctions.length,
+      totalFunctionsWithLocalNameMetadata: localMetadataFunctions.length,
+      totalNamedLocals: functions.reduce((sum, fn) => sum + fn.namedLocalCount, 0),
+      functionsWithMostNamedLocals: localNameCounts,
+    },
+    warnings,
   };
 }
 
