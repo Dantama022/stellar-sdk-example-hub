@@ -13347,4 +13347,8 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
     ],
   },
+  '254-contract-event-checkpointing': { name: '254-contract-event-checkpointing', description: '254-contract-event-checkpointing (issues #405–#408)', run: loadExample('../examples/254-contract-event-checkpointing') },
+  '255-asset-trustline-lifecycle': { name: '255-asset-trustline-lifecycle', description: '255-asset-trustline-lifecycle (issues #405–#408)', run: loadExample('../examples/255-asset-trustline-lifecycle') },
+  '256-path-payment-preparation': { name: '256-path-payment-preparation', description: '256-path-payment-preparation (issues #405–#408)', run: loadExample('../examples/256-path-payment-preparation') },
+  '257-transaction-history-checkpointing': { name: '257-transaction-history-checkpointing', description: '257-transaction-history-checkpointing (issues #405–#408)', run: loadExample('../examples/257-transaction-history-checkpointing') },
 };

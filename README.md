@@ -4091,3 +4091,11 @@ npm run build
 # Add test fixtures
 cp test/fixtures/template.wasm test/fixtures/new-test.wasm
 ```
+### Reliable lifecycle examples — issues #405–#408
+
+- [254: Soroban event filtering and checkpointed repeated queries](src/examples/254-contract-event-checkpointing.ts)
+- [255: Asset trustline inspection, creation, update and safe removal](src/examples/255-asset-trustline-lifecycle.ts)
+- [256: Path discovery and bounded unsigned payment preparation](src/examples/256-path-payment-preparation.ts)
+- [257: Transaction history pagination and durable resumption](src/examples/257-transaction-history-checkpointing.ts)
+
+See [setup, environment variables, sample output, checkpoint recovery and manual Testnet steps](examples/reliable-lifecycle-workflows.md).
