@@ -9,11 +9,11 @@
  *
  * WHY SEQUENCE NUMBERS MATTER
  * ---------------------------
- *   • Replay prevention — each sequence number can only be used once. Once a
+ *   â€¢ Replay prevention â€” each sequence number can only be used once. Once a
  *     transaction is applied, that exact number cannot be reused.
- *   • Ordering guarantee — transactions from the same account are applied
+ *   â€¢ Ordering guarantee â€” transactions from the same account are applied
  *     strictly in sequence-number order. You cannot skip a number.
- *   • Concurrency risk — if two parts of an application independently build
+ *   â€¢ Concurrency risk â€” if two parts of an application independently build
  *     transactions from the same snapshot, they will produce conflicting
  *     sequence numbers. Only one will succeed; the other will receive
  *     tx_bad_seq.
@@ -38,10 +38,10 @@
  *
  * DIFFERENCE FROM OPERATION BATCHING
  * ------------------------------------
- *   • Operation batching — multiple operations inside ONE transaction.
+ *   â€¢ Operation batching â€” multiple operations inside ONE transaction.
  *     They share a single sequence number and are atomic (all succeed or
  *     none apply).
- *   • Transaction batching — multiple INDEPENDENT transactions from the same
+ *   â€¢ Transaction batching â€” multiple INDEPENDENT transactions from the same
  *     source account, each with its own sequence number. They are NOT atomic.
  */
 
@@ -58,9 +58,9 @@ const DEFAULT_HORIZON_URL = 'https://horizon-testnet.stellar.org';
 const FRIENDBOT_URL = 'https://friendbot.stellar.org';
 const BASE_FEE = '100';
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Types
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface AllocatedSequence {
   index: number;
@@ -81,15 +81,18 @@ export interface RunParams {
   json?: boolean;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Sequence helpers (exported for unit testing)
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Returns the next Stellar sequence number using BigInt to avoid precision
  * loss for values larger than Number.MAX_SAFE_INTEGER.
  */
 export function nextSequence(sequence: string): string {
+  console.log("nextSequence called with:", sequence); if (!sequence || sequence.trim() === \x27\x27) {
+    throw new Error(`Invalid sequence number: ${sequence}`);
+  }
   try {
     return (BigInt(sequence) + 1n).toString();
   } catch {
@@ -104,9 +107,9 @@ export function sequencesEqual(a: string, b: string): boolean {
   return BigInt(a) === BigInt(b);
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Local sequence manager
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Manages sequence-number allocation for a single source account without
@@ -188,9 +191,9 @@ export class LocalSequenceManager {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Transaction helpers
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Builds a manageData transaction with the given name/value using a pre-created
@@ -217,9 +220,9 @@ export function buildSequencedTransaction(
   return tx;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Helpers
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function fundAccount(publicKey: string): Promise<void> {
   const response = await fetch(`${FRIENDBOT_URL}/?addr=${encodeURIComponent(publicKey)}`);
@@ -241,9 +244,9 @@ function getResultCode(error: unknown): string | null {
   return typeof tx === 'string' ? tx : null;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Entry point
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Demonstrates Stellar sequence number management:
@@ -268,14 +271,14 @@ export async function run(params: RunParams = {}): Promise<void> {
   console.log(`Using Horizon: ${horizonUrl}`);
   console.log(`Temporary account: ${accountId}`);
 
-  console.log('\n── Sequence Number Concepts ──────────────────────────────');
-  console.log('  • Every transaction must carry a sequence = accountSequence + 1.');
-  console.log('  • Each successfully applied transaction increments the account sequence.');
-  console.log('  • Reusing a consumed sequence → tx_bad_seq rejection.');
-  console.log('  • Two builders starting from the same snapshot produce conflicting sequences.');
-  console.log('  • Always submit pre-built transactions in sequence-number order.');
+  console.log('\nâ”€â”€ Sequence Number Concepts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
+  console.log('  â€¢ Every transaction must carry a sequence = accountSequence + 1.');
+  console.log('  â€¢ Each successfully applied transaction increments the account sequence.');
+  console.log('  â€¢ Reusing a consumed sequence â†’ tx_bad_seq rejection.');
+  console.log('  â€¢ Two builders starting from the same snapshot produce conflicting sequences.');
+  console.log('  â€¢ Always submit pre-built transactions in sequence-number order.');
 
-  // ── Fund and load ─────────────────────────────────────────────────────────
+  // â”€â”€ Fund and load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   console.log('\nFunding temporary account via Friendbot...');
   await fundAccount(accountId);
 
@@ -285,7 +288,7 @@ export async function run(params: RunParams = {}): Promise<void> {
   console.log(`\nOn-ledger sequence after funding: ${initialSequence}`);
   console.log(`Next available sequence:          ${nextSequence(initialSequence)}`);
 
-  // ── Local sequence manager ────────────────────────────────────────────────
+  // â”€â”€ Local sequence manager â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const manager = new LocalSequenceManager(accountId, server, initialSequence);
 
   const allocations: AllocatedSequence[] = [];
@@ -294,7 +297,7 @@ export async function run(params: RunParams = {}): Promise<void> {
     allocations.push({ index: i, sequence: seq });
   }
 
-  console.log(`\n── Locally Allocated Sequences (${txCount} transactions) ─`);
+  console.log(`\nâ”€â”€ Locally Allocated Sequences (${txCount} transactions) â”€`);
   allocations.forEach(({ index, sequence }) => {
     console.log(`  Transaction #${index + 1}: sequence ${sequence}`);
   });
@@ -302,12 +305,12 @@ export async function run(params: RunParams = {}): Promise<void> {
   // Detect duplicates (invariant check)
   const seqSet = new Set(allocations.map((a) => a.sequence));
   if (seqSet.size !== allocations.length) {
-    throw new Error('Duplicate sequence numbers detected — this is a bug in the local manager.');
+    throw new Error('Duplicate sequence numbers detected â€” this is a bug in the local manager.');
   }
-  console.log('  ✓ All allocated sequence numbers are unique.');
+  console.log('  âœ“ All allocated sequence numbers are unique.');
 
-  // ── Demonstrate stale-sequence detection ─────────────────────────────────
-  console.log('\n── Stale Sequence Detection ──────────────────────────────');
+  // â”€â”€ Demonstrate stale-sequence detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  console.log('\nâ”€â”€ Stale Sequence Detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
 
   // Build a transaction from a stale snapshot (same starting sequence as the manager)
   const staleSource = new Account(accountId, initialSequence);
@@ -331,15 +334,15 @@ export async function run(params: RunParams = {}): Promise<void> {
 
   console.log(`\nSubmitting transaction #1 (sequence ${firstTx.sequence})...`);
   const firstResult = await server.submitTransaction(firstTx);
-  console.log(`Transaction #1 accepted — hash: ${firstResult.hash}`);
+  console.log(`Transaction #1 accepted â€” hash: ${firstResult.hash}`);
 
   // Now submit the stale transaction, which reuses the already-consumed sequence
   console.log(
-    `\nAttempting stale transaction (sequence ${staleTransaction.sequence}) — expected rejection...`,
+    `\nAttempting stale transaction (sequence ${staleTransaction.sequence}) â€” expected rejection...`,
   );
   try {
     await server.submitTransaction(staleTransaction);
-    throw new Error('Expected tx_bad_seq but the submission succeeded — unexpected.');
+    throw new Error('Expected tx_bad_seq but the submission succeeded â€” unexpected.');
   } catch (err: unknown) {
     const code = getResultCode(err);
     if (code === 'tx_bad_seq') {
@@ -351,8 +354,8 @@ export async function run(params: RunParams = {}): Promise<void> {
     }
   }
 
-  // ── Refresh the manager after external activity ───────────────────────────
-  console.log('\n── Refreshing Sequence State from Horizon ─────────────────');
+  // â”€â”€ Refresh the manager after external activity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  console.log('\nâ”€â”€ Refreshing Sequence State from Horizon â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
   const wasStale = await manager.refresh();
   console.log(`Stale-sequence detected on refresh: ${wasStale}`);
 
@@ -360,9 +363,9 @@ export async function run(params: RunParams = {}): Promise<void> {
   console.log(`Refreshed on-chain sequence:        ${freshStatus.onChainSequence}`);
   console.log(`Next available sequence:             ${freshStatus.nextAvailableSequence}`);
 
-  // ── Submit remaining transactions in order ────────────────────────────────
+  // â”€â”€ Submit remaining transactions in order â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const remainingCount = txCount - 1;
-  console.log(`\n── Submitting Remaining ${remainingCount} Transactions in Order ──`);
+  console.log(`\nâ”€â”€ Submitting Remaining ${remainingCount} Transactions in Order â”€â”€`);
 
   // Build all transactions from a fresh Account object (ensures contiguous sequences)
   const freshAccount = await server.loadAccount(accountId);
@@ -390,17 +393,17 @@ export async function run(params: RunParams = {}): Promise<void> {
       );
     }
   }
-  console.log('  ✓ All pending transactions have consecutive, conflict-free sequence numbers.');
+  console.log('  âœ“ All pending transactions have consecutive, conflict-free sequence numbers.');
 
   const submittedHashes: string[] = [];
   for (let i = 0; i < pendingTransactions.length; i++) {
     const tx = pendingTransactions[i];
     const result = await server.submitTransaction(tx);
     submittedHashes.push(result.hash);
-    console.log(`  Transaction #${i + 2} accepted — hash: ${result.hash}`);
+    console.log(`  Transaction #${i + 2} accepted â€” hash: ${result.hash}`);
   }
 
-  // ── Final status ──────────────────────────────────────────────────────────
+  // â”€â”€ Final status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const finalAccount = await server.loadAccount(accountId);
   const finalSequence = finalAccount.sequenceNumber();
 
@@ -428,20 +431,20 @@ export async function run(params: RunParams = {}): Promise<void> {
       ),
     );
   } else {
-    console.log('\n── Final Account State ───────────────────────────────────');
+    console.log('\nâ”€â”€ Final Account State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
     console.log(`  On-chain sequence:     ${statusSnapshot.onChainSequence}`);
     console.log(`  Next available:        ${statusSnapshot.nextAvailableSequence}`);
     console.log(`  Transactions submitted: ${1 + submittedHashes.length}`);
   }
 
-  console.log('\n── Key Takeaways ─────────────────────────────────────────');
-  console.log('  • Fetch the latest account state before beginning a new transaction series.');
-  console.log('  • Use a single Account object for all transactions in one batch; the builder');
+  console.log('\nâ”€â”€ Key Takeaways â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
+  console.log('  â€¢ Fetch the latest account state before beginning a new transaction series.');
+  console.log('  â€¢ Use a single Account object for all transactions in one batch; the builder');
   console.log('    increments the in-memory cursor after each build.');
-  console.log('  • Submit pre-built transactions strictly in sequence-number order.');
-  console.log('  • Abandon a built transaction only after reloading the account from Horizon;');
+  console.log('  â€¢ Submit pre-built transactions strictly in sequence-number order.');
+  console.log('  â€¢ Abandon a built transaction only after reloading the account from Horizon;');
   console.log('    otherwise the skipped sequence will block all subsequent submissions.');
-  console.log('  • Never retry a value-moving transaction without confirming the original failed.');
+  console.log('  â€¢ Never retry a value-moving transaction without confirming the original failed.');
 
   console.log('\nSequence number management example completed successfully.');
 }
