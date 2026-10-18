@@ -6,7 +6,7 @@ import {
   parseJsonPreservingLargeIntegers,
   parseSnapshot,
   stableStringify,
-} from '../src/utils/soroban-state-snapshot';
+} from '../src/utils/soroban-state-canonical';
 import { normalizeSnapshot } from '../src/examples/227-state-normalize';
 import { validateRawSnapshot } from '../src/examples/228-state-validate';
 import { buildStats } from '../src/examples/229-state-stats';

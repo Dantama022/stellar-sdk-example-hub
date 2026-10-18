@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { readFileSync } from 'fs';
-import { parse } from 'wasm-parser';
+import { parse } from '@webassemblyjs/wasm-parser';
 import { StackUsageAnalyzer, StackMetrics } from '../analyzer/stack-usage-analyzer';
 
 export function setupWasmStackCommand() {

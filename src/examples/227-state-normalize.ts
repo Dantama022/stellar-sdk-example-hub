@@ -10,7 +10,7 @@ import {
   readJsonFile,
   stableStringify,
   valuesConflict,
-} from '../utils/soroban-state-snapshot';
+} from '../utils/soroban-state-canonical';
 
 export interface NormalizeOptions {
   snapshotFile?: string;

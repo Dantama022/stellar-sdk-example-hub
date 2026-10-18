@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { readFileSync } from 'fs';
-import { parse } from 'wasm-parser';
+import { parse } from '@webassemblyjs/wasm-parser';
 import { CallGraphBuilder, CallGraph } from '../analyzer/call-graph-builder';
 
 export function setupWasmCallGraphCommand() {

@@ -12,7 +12,7 @@ import {
   stableStringify,
   validateContractId,
   valuesConflict,
-} from '../utils/soroban-state-snapshot';
+} from '../utils/soroban-state-canonical';
 
 export type Severity = 'error' | 'warning' | 'info';
 
