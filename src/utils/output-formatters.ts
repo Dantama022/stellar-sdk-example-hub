@@ -3,12 +3,9 @@ export function formatJsonOutput(data: any): string {
 }
 
 export function formatDotOutput(analysis: any): string {
-  let dot = 'digraph DominatorTree {
-';
-  dot += '  rankdir=TB;
-';
-  dot += '  node [shape=box];
-';
+  let dot = 'digraph DominatorTree {\n';
+  dot += '  rankdir=TB;\n';
+  dot += '  node [shape=box];\n';
 
   for (const func of analysis.functions) {
     dot += `  subgraph cluster_${func.index} {
@@ -27,11 +24,9 @@ export function formatDotOutput(analysis: any): string {
       }
     }
 
-    dot += '  }
-';
+    dot += '  }\n';
   }
 
-  dot += '}
-';
+  dot += '}\n';
   return dot;
 }

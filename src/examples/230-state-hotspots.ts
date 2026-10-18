@@ -10,7 +10,7 @@ import {
   remainingTtl,
   requirePositiveInt,
   stableStringify,
-} from '../utils/soroban-state-snapshot';
+} from '../utils/soroban-state-canonical';
 
 export type HotspotCriterion = 'size' | 'value-size' | 'collection' | 'depth' | 'ttl';
 
