@@ -79,4 +79,21 @@ export async function run(): Promise<void> {
 
   console.log(`Transaction sent successfully! Status: ${response.status}`);
   console.log(`Hash: ${response.hash}`);
+
+  // Poll for final transaction status
+  console.log('Polling for final transaction status...');
+  let getResponse = await server.getTransaction(response.hash);
+  while (
+    (getResponse.status as string) === 'NOT_FOUND' ||
+    (getResponse.status as string) === 'PENDING'
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    getResponse = await server.getTransaction(response.hash);
+  }
+  console.log(`Final transaction status: ${getResponse.status}`);
+  if ((getResponse.status as string) === 'SUCCESS') {
+    console.log(`Result: ${(getResponse as any).resultXdr ? (getResponse as any).resultXdr.toString('base64') : 'none'}`);
+  } else if ((getResponse.status as string) === 'FAILED') {
+    console.error(`Transaction failed: ${(getResponse as any).errorResult?.toXDR?.().toString('base64') || 'Unknown error'}`);
+  }
 }
