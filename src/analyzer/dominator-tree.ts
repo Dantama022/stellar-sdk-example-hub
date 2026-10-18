@@ -113,7 +113,7 @@ export class DominatorTree {
 
   private calculateDepth(blockIndex: number, immediateDominators: Record<number, number | null>): number {
     let depth = 0;
-    let current = blockIndex;
+    let current: number | null = blockIndex;
 
     while (current !== null && immediateDominators[current] !== null) {
       current = immediateDominators[current];
@@ -186,7 +186,7 @@ export class DominatorTree {
     return headers;
   }
 
-  private findUnreachableBlocks(immediateDominators: Record<number, number | null>): number[] {
+  private findUnreachableBlocks(_immediateDominators: Record<number, number | null>): number[] {
     const reachable = new Set<number>();
     const stack = [this.cfg.entryBlock];
 

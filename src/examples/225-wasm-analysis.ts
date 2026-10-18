@@ -211,7 +211,7 @@ function parseWasm(input: Uint8Array): WasmModuleInfo {
   if (input[4] !== 1 || input[5] !== 0 || input[6] !== 0 || input[7] !== 0) {
     throw new Error('Unsupported WASM binary version.');
   }
-  if (!WebAssembly.validate(input)) throw new Error('WASM binary failed WebAssembly validation.');
+  if (!WebAssembly.validate(input as unknown as BufferSource)) throw new Error('WASM binary failed WebAssembly validation.');
 
   const reader = new WasmReader(input, 8);
   const sections: WasmSection[] = [];

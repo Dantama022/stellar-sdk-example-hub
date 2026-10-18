@@ -12,7 +12,7 @@ import {
   remainingTtl,
   requirePositiveInt,
   stableStringify,
-} from '../utils/soroban-state-snapshot';
+} from '../utils/soroban-state-canonical';
 
 export interface StatsOptions {
   snapshotFile?: string;

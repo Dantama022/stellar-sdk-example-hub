@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { readFileSync } from 'fs';
-import { parse } from 'wasm-parser';
+import { parse } from '@webassemblyjs/wasm-parser';
 import { CallGraphBuilder } from '../analyzer/call-graph-builder';
 import { ReachabilityAnalyzer, ReachabilityResult } from '../analyzer/reachability-analyzer';
 
@@ -55,7 +55,7 @@ function parseRoots(value: string): number[] {
   return value.split(',').map(v => parseInt(v.trim(), 10)).filter(n => !isNaN(n));
 }
 
-function formatJsonOutput(result: ReachabilityResult, callGraph: any): string {
+function formatJsonOutput(result: ReachabilityResult, _callGraph: any): string {
   // Convert Map to object for JSON serialization
   const reachabilityMapObj: any = {};
   result.reachabilityMap.forEach((value, key) => {
