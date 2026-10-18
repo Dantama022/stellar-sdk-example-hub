@@ -132,6 +132,13 @@ describe('state transition matrix', () => {
       snapshot(1, [observation('a'), observation('b')]),
       snapshot(2, []),
     ], { minimumFrequency: 2 });
-    expect(result.rows).toHaveLength(0);
+    // Both removals of 'a' and 'b' fall into one row with count 2, so a minimum of 2 keeps it.
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0].count).toBe(2);
+    const filtered = analyzeStateTransitions([
+      snapshot(1, [observation('a'), observation('b')]),
+      snapshot(2, []),
+    ], { minimumFrequency: 3 });
+    expect(filtered.rows).toHaveLength(0);
   });
 });

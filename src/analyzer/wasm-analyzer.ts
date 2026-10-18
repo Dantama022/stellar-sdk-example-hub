@@ -1,5 +1,4 @@
-import { readFileSync } from 'fs';
-import { parse } from 'wasm-parser';
+import { parse } from '@webassemblyjs/wasm-parser';
 import { DominatorTree } from './dominator-tree';
 import { CFGBuilder } from './cfg-builder';
 
@@ -7,21 +6,13 @@ interface WASMAnalysisResult {
   functions: Array<{
     index: number;
     name: string;
-    cfg: {
-      blocks: Array<{
-        index: number;
-        instructions: string[];
-        dominators: Set<number>;
-        immediateDominator: number | null;
-        depth: number;
-        dominatedBlocks: number;
-      }>;
-      edges: Array<{
-        from: number;
-        to: number;
-        type: 'conditional' | 'unconditional' | 'sequential';
-      }>;
-    };
+    cfg: Array<{
+      index: number;
+      dominators: Set<number>;
+      immediateDominator: number | null;
+      depth: number;
+      dominatedBlocks: number;
+    }>;
     metrics: {
       maxDepth: number;
       entryCoverage: number;
@@ -77,8 +68,8 @@ export class WASMAnalyzer {
   }
 
   compareWith(otherBuffer: Buffer): WASMComparisonResult {
-    const current = this.analyze();
-    const other = new WASMAnalyzer(otherBuffer).analyze();
+    this.analyze();
+    new WASMAnalyzer(otherBuffer).analyze();
 
     // Simplified comparison logic - full implementation would need proper diffing
     return {

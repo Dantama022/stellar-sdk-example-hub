@@ -3,7 +3,7 @@
  * Determines which functions are reachable from exported entry points
  */
 
-import { CallGraph, CallGraphNode } from './call-graph-builder';
+import { CallGraph } from './call-graph-builder';
 
 export interface ReachabilityResult {
   reachableFunctions: number[];

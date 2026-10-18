@@ -1,5 +1,3 @@
-import { parse } from 'wasm-parser';
-
 interface BasicBlock {
   index: number;
   instructions: string[];
@@ -50,7 +48,7 @@ export class CFGBuilder {
     this.finalizeCurrentBlock();
   }
 
-  private startNewBlock(startPc: number): void {
+  private startNewBlock(_startPc: number): void {
     if (this.currentBlock) {
       this.finalizeCurrentBlock();
     }
@@ -108,26 +106,32 @@ export class CFGBuilder {
     this.finalizeCurrentBlock();
   }
 
-  private handleConditionalBranch(instr: any, pc: number): void {
+  private handleConditionalBranch(instr: any, _pc: number): void {
     const target = instr.args[0];
-    this.currentBlock.successors.push(target);
+    if (this.currentBlock) {
+      this.currentBlock.successors.push(target);
+    }
   }
 
-  private handleUnconditionalBranch(instr: any, pc: number): void {
+  private handleUnconditionalBranch(instr: any, _pc: number): void {
     const target = instr.args[0];
-    this.currentBlock.successors.push(target);
+    if (this.currentBlock) {
+      this.currentBlock.successors.push(target);
+    }
   }
 
-  private handleBranchTable(instr: any, pc: number): void {
+  private handleBranchTable(instr: any, _pc: number): void {
     const targets = instr.args.slice(1);
-    this.currentBlock.successors.push(...targets);
+    if (this.currentBlock) {
+      this.currentBlock.successors.push(...targets);
+    }
   }
 
-  private handleReturn(pc: number): void {
+  private handleReturn(_pc: number): void {
     // Return implicitly goes to function exit
   }
 
-  private handleOtherControlFlow(instr: any, pc: number): void {
+  private handleOtherControlFlow(_instr: any, _pc: number): void {
     // Handle call, call_indirect, etc.
   }
 }

@@ -14,7 +14,6 @@ import { readFileSync } from 'fs';
 import {
   buildModuleCFGs,
   classifySource,
-  constValue,
   globalIndex,
   localIndex,
   parseWasmAst,
@@ -26,6 +25,7 @@ import {
 export type SliceMode = 'backward' | 'forward' | 'bidirectional';
 
 export interface SliceTarget {
+  crossFunction?: boolean;
   funcIndex?: number;
   blockIndex?: number;
   instructionIndex?: number;
@@ -38,6 +38,7 @@ export interface SliceTarget {
 export type DependencyKind = 'data' | 'control' | 'call' | 'cross-function' | 'unresolved';
 
 export interface SliceMember {
+  operands?: number[];
   funcIndex: number;
   blockIndex: number;
   instructionIndex: number;
@@ -134,10 +135,10 @@ function sliceBackward(
     // Every terminator in the function can contribute to its return value.
     const cfg = cfgs.get(target.funcIndex);
     cfg?.instructions.filter((ins) => ins.isTerminator || ins.opcode === 'drop').forEach((ins) => {
-      roots.push({ f: target.funcIndex, i: ins.index });
+      if (ins.index !== undefined && target.funcIndex !== undefined) roots.push({ f: target.funcIndex, i: ins.index });
     });
   } else {
-    roots.push({ f: target.funcIndex, i: target.instructionIndex });
+    if (target.instructionIndex !== undefined && target.funcIndex !== undefined) roots.push({ f: target.funcIndex, i: target.instructionIndex });
   }
 
   const path: SlicePathStep[] = [];

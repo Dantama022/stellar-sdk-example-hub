@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import { decode } from '@webassemblyjs/wasm-parser';
 import { traverse } from '@webassemblyjs/ast';
 
