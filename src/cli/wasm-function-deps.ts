@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { readFileSync } from 'fs';
-import { parse } from 'wasm-parser';
+import { parse } from '@webassemblyjs/wasm-parser';
 import { FunctionDependencyAnalyzer, FunctionDependencies } from '../analyzer/function-dependency-analyzer';
 
 export function setupWasmFunctionDepsCommand() {

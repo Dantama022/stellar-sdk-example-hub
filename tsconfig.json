@@ -15,6 +15,11 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@webassemblyjs/wasm-parser": ["src/types/webassemblyjs/wasm-parser.d.ts"],
+      "@webassemblyjs/ast": ["src/types/webassemblyjs/ast.d.ts"]
+    },
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

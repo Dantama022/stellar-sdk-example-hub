@@ -1365,7 +1365,7 @@ export interface FloatFunctionSummary {
   hasConversion: boolean;
   hasReinterpretation: boolean;
   hasMixedPrecision: boolean;
-  /** True when this function both converts ints→float AND float→ints. */
+  /** True when this function both converts intsâ†’float AND floatâ†’ints. */
   hasIntFloatIntRoundtrip: boolean;
   /** Density = totalFloatOps / totalInstructions, or 0 for empty bodies. */
   floatDensity: number;
@@ -1472,7 +1472,7 @@ const FLOAT_OPCODES: Record<number, FloatOpcodeInfo> = {
   0x9e: { opcode: 'f64.nearest', valueType: 'f64', category: 'rounding' },
   // --- f64 sqrt (arithmetic) ---
   0x9f: { opcode: 'f64.sqrt', valueType: 'f64', category: 'arithmetic' },
-  // --- int→float conversions ---
+  // --- intâ†’float conversions ---
   0xb2: { opcode: 'f32.convert_i32_s', valueType: 'f32', category: 'conversion' },
   0xb3: { opcode: 'f32.convert_i32_u', valueType: 'f32', category: 'conversion' },
   0xb4: { opcode: 'f32.convert_i64_s', valueType: 'f32', category: 'conversion' },
@@ -1481,7 +1481,7 @@ const FLOAT_OPCODES: Record<number, FloatOpcodeInfo> = {
   0xb8: { opcode: 'f64.convert_i32_u', valueType: 'f64', category: 'conversion' },
   0xb9: { opcode: 'f64.convert_i64_s', valueType: 'f64', category: 'conversion' },
   0xba: { opcode: 'f64.convert_i64_u', valueType: 'f64', category: 'conversion' },
-  // --- float→int conversions (truncation) ---
+  // --- floatâ†’int conversions (truncation) ---
   0xa8: { opcode: 'i32.trunc_f32_s', valueType: 'f32', category: 'conversion' },
   0xa9: { opcode: 'i32.trunc_f32_u', valueType: 'f32', category: 'conversion' },
   0xaa: { opcode: 'i32.trunc_f64_s', valueType: 'f64', category: 'conversion' },
@@ -1490,7 +1490,7 @@ const FLOAT_OPCODES: Record<number, FloatOpcodeInfo> = {
   0xaf: { opcode: 'i64.trunc_f32_u', valueType: 'f32', category: 'conversion' },
   0xb0: { opcode: 'i64.trunc_f64_s', valueType: 'f64', category: 'conversion' },
   0xb1: { opcode: 'i64.trunc_f64_u', valueType: 'f64', category: 'conversion' },
-  // --- f32↔f64 promotion / demotion ---
+  // --- f32â†”f64 promotion / demotion ---
   0xb6: { opcode: 'f32.demote_f64', valueType: 'f32', category: 'conversion' },
   0xbb: { opcode: 'f64.promote_f32', valueType: 'f64', category: 'conversion' },
   // --- bit reinterpretation ---
@@ -1578,7 +1578,7 @@ function parseFloatOpsFromCode(
       if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {
         blockIndex += 1;
       } else if (opcode === 0x0b || opcode === 0x05) {
-        // end / else — keep block index stable (we don't track exact nesting)
+        // end / else â€” keep block index stable (we don't track exact nesting)
       }
 
       const floatInfo = FLOAT_OPCODES[opcode];
@@ -2015,7 +2015,7 @@ function recCountImportedFunctions(sec: RecSection | undefined): number {
 
 /**
  * Parse element sections to build a table of function-index candidates per
- * table slot.  Returns a flat array indexed by slot number → function index
+ * table slot.  Returns a flat array indexed by slot number â†’ function index
  * (only the first/active segment that writes each slot is used).
  */
 function recParseElementTable(sec: RecSection | undefined): Map<number, number> {
@@ -2040,7 +2040,7 @@ function recParseElementTable(sec: RecSection | undefined): Map<number, number> 
         else if (op === 0x23) { r.u32(); r.byte(); }
         else { r.byte(); /* end */ }
       } else if (!hasTable && !isDeclarative) {
-        // passive — skip
+        // passive â€” skip
       }
       const elemCount = r.u32();
       for (let j = 0; j < elemCount; j++) {
@@ -2097,7 +2097,7 @@ function recParseFunctionBody(body: Buffer): ParsedFunctionCalls {
       }
     }
   } catch {
-    // truncated body — return what was parsed
+    // truncated body â€” return what was parsed
   }
   return { directEdges, indirectSites };
 }
@@ -2238,7 +2238,7 @@ function shortestCycleInScc(
         if (v === start) {
           const len = dist.get(u)! + 1;
           if (shortest === null || len < shortest) shortest = len;
-          // don't return — keep searching for even shorter
+          // don't return â€” keep searching for even shorter
         } else if (!dist.has(v)) {
           dist.set(v, dist.get(u)! + 1);
           if (shortest === null || dist.get(v)! < shortest) queue.push(v);
@@ -2891,9 +2891,6 @@ interface TypeSig { in: WasmValType[]; out: WasmValType[] }
 
 // Module-level shorthand constants for common value types used in stack analysis
 const _i32: WasmValType = 'i32';
-const _i64: WasmValType = 'i64';
-const _f32: WasmValType = 'f32';
-const _f64: WasmValType = 'f64';
 
 function valType(byte: number): WasmValType {
   const map: Record<number, WasmValType> = {
@@ -2931,14 +2928,13 @@ function parseFunctionSection(sec: Section | undefined): number[] {
   return indices;
 }
 
-type StackState = WasmValType[] | 'polymorphic'; // polymorphic = unreachable
 
 function typeSigFor(opcode: number, typeIdx: number, types: Array<{ params: WasmValType[]; results: WasmValType[] }>, funcTypeIndices: number[], importedFunctions: number): TypeSig {
   const i32: WasmValType = 'i32'; const i64: WasmValType = 'i64';
   const f32: WasmValType = 'f32'; const f64: WasmValType = 'f64';
   const sig = (i: WasmValType[], o: WasmValType[]): TypeSig => ({ in: i, out: o });
   switch (opcode) {
-    case 0x00: return sig([], []); // unreachable — handled separately
+    case 0x00: return sig([], []); // unreachable â€” handled separately
     case 0x01: return sig([], []); // nop
     case 0x1a: return sig(['unknown'], []); // drop
     case 0x45: return sig([i32], [i32]); // i32.eqz
@@ -3011,7 +3007,6 @@ function opcodeNameFor(opcode: number): string {
 
 export function analyzeStackTypes(file: string): WasmStackTypesReport {
   const sections = loadSections(file);
-  const importSec = sections.find((s) => s.id === 2);
   const typeSec = sections.find((s) => s.id === 1);
   const funcSec = sections.find((s) => s.id === 3);
   const codeSec = sections.find((s) => s.id === 10);
@@ -3068,7 +3063,7 @@ export function analyzeStackTypes(file: string): WasmStackTypesReport {
         isUnreachableInstr = true;
         inputTypes = []; outputTypes = [];
       } else if (opcode === 0x0b) {
-        // end — pop block
+        // end â€” pop block
         if (blockIndex > 0) blockIndex--;
         if (isUnreachable) isUnreachable = false;
       } else if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {

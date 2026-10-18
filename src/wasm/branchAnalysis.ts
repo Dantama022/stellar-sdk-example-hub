@@ -90,8 +90,6 @@ export interface BranchReport {
 /** Opcodes that encode a conditional control-flow decision. */
 const CONDITIONAL = new Set(['br_if', 'if']);
 
-/** Bounded walk so loop-carried dependencies converge. */
-const MAX_DEPTH = 48;
 
 /** Walks backward from a branch to collect the values feeding its condition. */
 function traceCondition(
@@ -181,7 +179,7 @@ function traceCondition(
 function classifyCondition(
   sources: Set<ValueKind>,
   locals: Set<number>,
-  constant: number | undefined,
+  _constant: number | undefined,
   localCount: number,
 ): ConditionType {
   if (sources.size === 0) return 'unknown';

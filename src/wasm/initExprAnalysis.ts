@@ -168,13 +168,20 @@ export function evaluateConstant(
 
     if (op === 'end') continue;
 
-    if (op.endsWith('.const')) {
+    if (op === 'i32.const' || op === 'i64.const') {
+      // Integer literals are kept as BigInt end to end: converting an i64 literal
+      // through Number would silently round values above 2^53.
       const raw = operands[i];
+      if (typeof raw === 'string' && /^-?\d+$/.test(raw.trim())) {
+        stack.push(BigInt(raw.trim()));
+        continue;
+      }
       const value = typeof raw === 'number' ? raw : Number(raw);
-      if (!Number.isFinite(value)) return undefined;
-      stack.push(BigInt(Math.trunc(value)));
+      if (!Number.isInteger(value)) return undefined;
+      stack.push(BigInt(value));
       continue;
     }
+    if (op.endsWith('.const')) return undefined; // f32/f64 constants are not foldable
 
     if (!FOLDABLE.has(op)) return undefined;
 
@@ -360,14 +367,14 @@ export function resolveDepths(
   const depths: number[] = records.map(() => 1);
   const cycles: string[][] = [];
   const done = new Set<string>();
+  const memo = new Map<string, number>();
   const onPath: string[] = [];
   const onPathSet = new Set<string>();
   const reportedCycles = new Set<string>();
 
   const depthOf = (key: string): number => {
     if (done.has(key)) {
-      const idx = onPath.indexOf(key);
-      return idx >= 0 ? 0 : 0;
+      return memo.get(key) ?? 0;
     }
     if (onPathSet.has(key)) {
       // Cycle: record it once, in canonical rotation.
@@ -384,7 +391,8 @@ export function resolveDepths(
     const rec = byKey.get(key);
     if (!rec || rec.referencedGlobals.length === 0) {
       done.add(key);
-      return rec?.classification === 'fully-constant' ? 1 : 1;
+      memo.set(key, 1);
+      return 1;
     }
 
     onPath.push(key);
@@ -399,6 +407,7 @@ export function resolveDepths(
     onPath.pop();
     onPathSet.delete(key);
     done.add(key);
+    memo.set(key, max);
     return max;
   };
 
@@ -412,7 +421,7 @@ export function resolveDepths(
       let max = 1;
       for (const g of r.referencedGlobals) {
         const childKey = entryKey('global', g);
-        if (byKey.has(childKey)) max = Math.max(max, 1 + depthOf(childKey));
+        if (byKey.has(childKey)) max = Math.max(max, depthOf(childKey));
       }
       depths[i] = max;
     }
