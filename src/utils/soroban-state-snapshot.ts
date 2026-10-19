@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Address, scValToNative, xdr } from '@stellar/stellar-sdk';
+import { Address, StrKey, scValToNative, xdr } from '@stellar/stellar-sdk';
 
 export type StateDurability = 'persistent' | 'temporary' | 'unknown';
 
@@ -79,7 +79,7 @@ export function jsonSafe(value: unknown): unknown {
   return value;
 }
 
-export function stableStringify(value: unknown): string {
+export function stableStringify(value: unknown, space = 2): string {
   const normalize = (input: unknown): unknown => {
     if (typeof input === 'bigint') return input.toString();
     if (Buffer.isBuffer(input)) return `0x${input.toString('hex')}`;
@@ -100,7 +100,7 @@ export function stableStringify(value: unknown): string {
     }
     return input;
   };
-  return JSON.stringify(normalize(value));
+  return JSON.stringify(normalize(value), null, space);
 }
 
 export function renderValue(value: unknown): string {
@@ -159,15 +159,6 @@ function decodeContractId(scAddress: any): string | undefined {
   } catch {
     return undefined;
   }
-}
-
-function normalizeDurability(value: unknown): StateDurability {
-  if (typeof value === 'string') {
-    const lowered = value.toLowerCase();
-    if (lowered.includes('persistent')) return 'persistent';
-    if (lowered.includes('temporary')) return 'temporary';
-  }
-  return 'unknown';
 }
 
 function decodeLedgerKey(ledgerKey: string): {
@@ -652,9 +643,6 @@ export function tryCanonicalLedgerKey(input: string): string | undefined {
     return undefined;
   }
 }
-import * as fs from 'fs';
-import * as path from 'path';
-import { StrKey, scValToNative, xdr } from '@stellar/stellar-sdk';
 
 export type Durability = 'persistent' | 'temporary' | 'unknown';
 export type JsonObject = Record<string, unknown>;
@@ -683,10 +671,6 @@ export interface DecodedMetrics {
   collectionSize: number;
   maxDepth: number;
   error?: string;
-}
-
-export function stableStringify(value: unknown, space = 2): string {
-  return JSON.stringify(sortObject(value), null, space);
 }
 
 function sortObject(value: unknown): unknown {
@@ -897,8 +881,8 @@ export function decodedValueSize(value: unknown): number {
 export function normalizeDurability(value: unknown): Durability {
   if (typeof value !== 'string') return 'unknown';
   const lowered = value.trim().toLowerCase();
-  if (lowered === 'persistent') return 'persistent';
-  if (lowered === 'temporary') return 'temporary';
+  if (lowered.includes('persistent')) return 'persistent';
+  if (lowered.includes('temporary')) return 'temporary';
   return 'unknown';
 }
 

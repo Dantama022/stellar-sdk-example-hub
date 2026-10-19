@@ -78,11 +78,7 @@ export interface AuthorizationEntrySummary {
 }
 
 export type AuthorizationSignatureState =
-  | 'missing'
-  | 'valid'
-  | 'invalid'
-  | 'source-account'
-  | 'unsupported';
+  'missing' | 'valid' | 'invalid' | 'source-account' | 'unsupported';
 
 export interface AuthorizationSignatureCheck {
   state: AuthorizationSignatureState;

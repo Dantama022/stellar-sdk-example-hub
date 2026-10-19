@@ -55,10 +55,7 @@ export interface TrustlineBalanceLike {
 }
 
 export type TrustlineAuthorizationState =
-  | 'AUTHORIZED'
-  | 'AUTHORIZED_TO_MAINTAIN_LIABILITIES'
-  | 'UNAUTHORIZED'
-  | 'NOT_FOUND';
+  'AUTHORIZED' | 'AUTHORIZED_TO_MAINTAIN_LIABILITIES' | 'UNAUTHORIZED' | 'NOT_FOUND';
 
 export function getIssuerFlagSummary(flags: IssuerFlagsLike): IssuerFlagSummary {
   return {

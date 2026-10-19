@@ -220,8 +220,14 @@ describe('wasm-float-ops: analyzeFloatOps', () => {
   // -------------------------------------------------------------------------
   it('classifies rounding instructions correctly', () => {
     const file = singleFnWasm([
-      F32_CEIL, F32_FLOOR, F32_TRUNC, F32_NEAREST,
-      F64_CEIL, F64_FLOOR, F64_TRUNC, F64_NEAREST,
+      F32_CEIL,
+      F32_FLOOR,
+      F32_TRUNC,
+      F32_NEAREST,
+      F64_CEIL,
+      F64_FLOOR,
+      F64_TRUNC,
+      F64_NEAREST,
     ]);
     const report = analyzeFloatOps(file);
 
@@ -262,8 +268,20 @@ describe('wasm-float-ops: analyzeFloatOps', () => {
   it('detects f32.const and f64.const instructions', () => {
     // f32.const takes 4 bytes of immediate; f64.const takes 8 bytes
     const file = singleFnWasm([
-      F32_CONST, 0x00, 0x00, 0x00, 0x00,
-      F64_CONST, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      F32_CONST,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      F64_CONST,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
     ]);
     const report = analyzeFloatOps(file);
 
@@ -277,7 +295,12 @@ describe('wasm-float-ops: analyzeFloatOps', () => {
   // 9. Integer-to-float conversions
   // -------------------------------------------------------------------------
   it('detects integer-to-float conversions', () => {
-    const file = singleFnWasm([F32_CONVERT_I32_S, F32_CONVERT_I32_U, F64_CONVERT_I32_S, F64_CONVERT_I64_S]);
+    const file = singleFnWasm([
+      F32_CONVERT_I32_S,
+      F32_CONVERT_I32_U,
+      F64_CONVERT_I32_S,
+      F64_CONVERT_I64_S,
+    ]);
     const report = analyzeFloatOps(file);
 
     expect(report.statistics.conversionCount).toBe(4);
@@ -364,7 +387,11 @@ describe('wasm-float-ops: analyzeFloatOps', () => {
       F32_MIN,
       F32_ABS,
       I32_REINTERPRET_F32,
-      F32_CONST, 0x00, 0x00, 0x00, 0x00,
+      F32_CONST,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
     ]);
     const report = analyzeFloatOps(file);
 
@@ -388,9 +415,9 @@ describe('wasm-float-ops: analyzeFloatOps', () => {
   // -------------------------------------------------------------------------
   it('reports accurate module-level statistics across multiple functions', () => {
     const buf = buildWasm([
-      [F32_ADD, F32_ADD, END],          // 2 f32 arithmetic
-      [F64_EQ, F64_EQ, F64_EQ, END],    // 3 f64 comparison
-      [END],                             // empty
+      [F32_ADD, F32_ADD, END], // 2 f32 arithmetic
+      [F64_EQ, F64_EQ, F64_EQ, END], // 3 f64 comparison
+      [END], // empty
     ]);
     const file = writeTmp(buf);
     const report = analyzeFloatOps(file);
@@ -427,8 +454,8 @@ describe('wasm-float-ops: analyzeFloatOps', () => {
   it('identifies the function with the highest float density', () => {
     const buf = buildWasm([
       [I32_CONST, 0x01, I32_CONST, 0x02, 0x6a, END], // 0 float
-      [F32_ADD, F32_MUL, END],                        // all float → high density
-      [I32_CONST, 0x01, F64_ADD, END],                // some float
+      [F32_ADD, F32_MUL, END], // all float → high density
+      [I32_CONST, 0x01, F64_ADD, END], // some float
     ]);
     const file = writeTmp(buf);
     const report = analyzeFloatOps(file);
@@ -628,8 +655,19 @@ describe('wasm-float-ops: analyzeFloatOps', () => {
   it('detects concentrated float usage when one function dominates', () => {
     // 10 functions: first has 10 float ops, rest have 0
     const bodies: number[][] = [
-      [F32_ADD, F32_ADD, F32_ADD, F32_ADD, F32_ADD,
-       F32_ADD, F32_ADD, F32_ADD, F32_ADD, F32_ADD, END],
+      [
+        F32_ADD,
+        F32_ADD,
+        F32_ADD,
+        F32_ADD,
+        F32_ADD,
+        F32_ADD,
+        F32_ADD,
+        F32_ADD,
+        F32_ADD,
+        F32_ADD,
+        END,
+      ],
       ...Array.from({ length: 9 }, () => [END]),
     ];
     const file = writeTmp(buildWasm(bodies));
@@ -651,15 +689,34 @@ describe('wasm-float-ops: analyzeFloatOps', () => {
   // -------------------------------------------------------------------------
   it('correctly distinguishes f32 from f64 for every category', () => {
     const file = singleFnWasm([
-      F32_ADD, F64_ADD,
-      F32_EQ, F64_EQ,
-      F32_CONVERT_I32_S, F64_CONVERT_I32_S,
-      F32_CEIL, F64_CEIL,
-      F32_MIN, F64_MIN,
-      F32_ABS, F64_ABS,
-      I32_REINTERPRET_F32, I64_REINTERPRET_F64,
-      F32_CONST, 0x00, 0x00, 0x00, 0x00,
-      F64_CONST, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      F32_ADD,
+      F64_ADD,
+      F32_EQ,
+      F64_EQ,
+      F32_CONVERT_I32_S,
+      F64_CONVERT_I32_S,
+      F32_CEIL,
+      F64_CEIL,
+      F32_MIN,
+      F64_MIN,
+      F32_ABS,
+      F64_ABS,
+      I32_REINTERPRET_F32,
+      I64_REINTERPRET_F64,
+      F32_CONST,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      F64_CONST,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
     ]);
     const report = analyzeFloatOps(file);
 

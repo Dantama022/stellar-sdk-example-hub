@@ -7,6 +7,8 @@
  * module — the AST is only read.
  */
 
+import { decode } from '@webassemblyjs/wasm-parser';
+
 /** Opcode name → the stack effect we care about for data-flow. */
 export type ValueKind = 'local' | 'global' | 'const' | 'memory' | 'call' | 'unknown';
 
@@ -51,23 +53,20 @@ const BLOCK_OPENERS = new Set(['block', 'loop', 'if']);
 
 /** Parse a WASM buffer to an AST. Never instantiates. */
 export function parseWasmAst(buffer: Buffer): any {
-  // Imported lazily to match the rest of the codebase's import style.
-  const { decode } = require('@webassemblyjs/wasm-parser');
   return decode(buffer, { dump: false, ignoreCodeSection: false, ignoreDataSection: false });
 }
 
 /** Lowercase an webassemblyjs instruction id into an opcode string. */
 export function opcodeName(id: any): string {
-  return String(id?.type ?? '').replace('Instr', '').toLowerCase();
+  return String(id?.type ?? '')
+    .replace('Instr', '')
+    .toLowerCase();
 }
 
 /** Extract the declared-local count for a function body. */
 function localCountOf(body: any): number {
   const declared = body?.locals ?? [];
-  return declared.reduce(
-    (acc: number, entry: any) => acc + Number(entry?.count ?? 0),
-    0,
-  );
+  return declared.reduce((acc: number, entry: any) => acc + Number(entry?.count ?? 0), 0);
 }
 
 /**
@@ -238,7 +237,7 @@ export function globalIndex(instr: Instr | undefined): number | undefined {
 
 /** Call target for a `call`, when it is a direct call. */
 export function callTarget(instr: Instr | undefined): number | undefined {
-  if (!instr || instr.opcode !== 'call') return undefined;
+  if (instr?.opcode !== 'call') return undefined;
   const raw = instr.operands[0];
   const n = typeof raw === 'number' ? raw : Number(raw);
   return Number.isInteger(n) ? n : undefined;
