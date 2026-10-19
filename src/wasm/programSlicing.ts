@@ -14,7 +14,6 @@ import { readFileSync } from 'fs';
 import {
   buildModuleCFGs,
   classifySource,
-  constValue,
   globalIndex,
   localIndex,
   parseWasmAst,
@@ -32,6 +31,8 @@ export interface SliceTarget {
   localIndex?: number;
   /** Target the function's return values instead of an instruction. */
   returnValue?: boolean;
+  /** Opt in to following `call` edges into the callee. Defaults to false. */
+  crossFunction?: boolean;
 }
 
 /** Why an instruction is in the slice. */
@@ -97,7 +98,8 @@ const PRODUCERS = new Set([
   'call_indirect',
 ]);
 
-const ARITHMETIC = /^(i32|i64|f32|f64)\.(add|sub|mul|div|rem|and|or|xor|shl|shr|eq|ne|lt|gt|le|ge|lt_u|gt_u|le_u|ge_u)$/;
+const ARITHMETIC =
+  /^(i32|i64|f32|f64)\.(add|sub|mul|div|rem|and|or|xor|shl|shr|eq|ne|lt|gt|le|ge|lt_u|gt_u|le_u|ge_u)$/;
 
 /** Branch-table depth guard: keeps loop-carried analysis bounded. */
 const MAX_DEPTH = 64;
@@ -132,10 +134,13 @@ function sliceBackward(
 
   if (target.returnValue) {
     // Every terminator in the function can contribute to its return value.
-    const cfg = cfgs.get(target.funcIndex);
-    cfg?.instructions.filter((ins) => ins.isTerminator || ins.opcode === 'drop').forEach((ins) => {
-      roots.push({ f: target.funcIndex, i: ins.index });
-    });
+    const funcIndex = target.funcIndex;
+    const cfg = cfgs.get(funcIndex);
+    cfg?.instructions
+      .filter((ins) => ins.isTerminator || ins.opcode === 'drop')
+      .forEach((ins) => {
+        roots.push({ f: funcIndex, i: ins.index });
+      });
   } else {
     roots.push({ f: target.funcIndex, i: target.instructionIndex });
   }
@@ -177,7 +182,11 @@ function sliceBackward(
       if (last === undefined) continue;
       const predInstr = cfg.instructions[last];
       if (!predInstr) continue;
-      if (predInstr.opcode === 'br_if' || predInstr.opcode === 'br' || predInstr.opcode === 'br_table') {
+      if (
+        predInstr.opcode === 'br_if' ||
+        predInstr.opcode === 'br' ||
+        predInstr.opcode === 'br_table'
+      ) {
         members.set(key(node.f, last), {
           funcIndex: node.f,
           blockIndex: predInstr.block,
@@ -213,9 +222,16 @@ function sliceBackward(
           });
           queue.push({ f: node.f, i: prev });
           if (path.length < 64) {
-            path.push({ instructionIndex: prev, opcode: prevInstr.opcode, source: classifySource(prevInstr) });
+            path.push({
+              instructionIndex: prev,
+              opcode: prevInstr.opcode,
+              source: classifySource(prevInstr),
+            });
           }
-        } else if (prevInstr.opcode.startsWith('local.set') || prevInstr.opcode.startsWith('global.set')) {
+        } else if (
+          prevInstr.opcode.startsWith('local.set') ||
+          prevInstr.opcode.startsWith('global.set')
+        ) {
           queue.push({ f: node.f, i: prev });
         }
       }
@@ -243,7 +259,11 @@ function sliceBackward(
             }
           });
       } else {
-        unresolved.push({ funcIndex: node.f, instructionIndex: node.i, reason: 'call target not in module' });
+        unresolved.push({
+          funcIndex: node.f,
+          instructionIndex: node.i,
+          reason: 'call target not in module',
+        });
       }
     }
 
@@ -332,13 +352,16 @@ function sliceForward(
       const li = localIndex(instr);
       const gi = globalIndex(instr);
       const isConsumer =
-        li !== undefined || gi !== undefined || ARITHMETIC.test(instr.opcode) || PRODUCERS.has(instr.opcode);
+        li !== undefined ||
+        gi !== undefined ||
+        ARITHMETIC.test(instr.opcode) ||
+        PRODUCERS.has(instr.opcode);
 
       if (!isConsumer) continue;
 
       const dependsOnSeed =
         (li !== undefined && target.localIndex !== undefined && li === target.localIndex) ||
-        (instr.opcode === 'call') ||
+        instr.opcode === 'call' ||
         (target.instructionIndex !== undefined && instr.index > target.instructionIndex);
 
       if (!dependsOnSeed) continue;
@@ -355,7 +378,11 @@ function sliceForward(
         localIndex: li,
       });
       if (influences.length < 64) {
-        influences.push({ instructionIndex: instr.index, opcode: instr.opcode, source: classifySource(instr) });
+        influences.push({
+          instructionIndex: instr.index,
+          opcode: instr.opcode,
+          source: classifySource(instr),
+        });
       }
       changed = true;
     }
@@ -365,7 +392,8 @@ function sliceForward(
   // Propagate into directly-called functions.
   for (const m of [...members.values()]) {
     if (m.opcode !== 'call') continue;
-    const callee = Number(m.operands?.[0] ?? NaN);
+    const callerCfg = cfgs.get(m.funcIndex);
+    const callee = Number(callerCfg?.instructions[m.instructionIndex]?.operands?.[0] ?? NaN);
     const calleeCfg = cfgs.get(callee);
     if (!calleeCfg) continue;
     if (limitToFunction) continue;
@@ -397,7 +425,9 @@ export function sliceWasm(
   const cfgs = buildModuleCFGs(ast);
 
   let original = 0;
-  cfgs.forEach((cfg) => { original += cfg.instructions.length; });
+  cfgs.forEach((cfg) => {
+    original += cfg.instructions.length;
+  });
 
   const limitToFunction = target.funcIndex !== undefined && !target.crossFunction;
 
@@ -457,7 +487,11 @@ export function sliceWasm(
 }
 
 /** Convenience wrapper reading from disk. */
-export function sliceWasmFile(path: string, target: SliceTarget, mode: SliceMode = 'backward'): SliceReport {
+export function sliceWasmFile(
+  path: string,
+  target: SliceTarget,
+  mode: SliceMode = 'backward',
+): SliceReport {
   return sliceWasm(readFileSync(path), target, mode);
 }
 
@@ -465,7 +499,9 @@ export function sliceWasmFile(path: string, target: SliceTarget, mode: SliceMode
 export function sliceToDot(report: SliceReport): string {
   const lines = ['digraph slice {', '  rankdir=LR;'];
   for (const m of report.members) {
-    lines.push(`  "${m.funcIndex}:${m.instructionIndex}" [label="${m.opcode}" class="${m.dependency}"];`);
+    lines.push(
+      `  "${m.funcIndex}:${m.instructionIndex}" [label="${m.opcode}" class="${m.dependency}"];`,
+    );
   }
   lines.push(`  // mode=${report.mode} members=${report.members.length}`);
   for (const u of report.unresolved) {
@@ -495,11 +531,17 @@ export function compareSlices(before: SliceReport, after: SliceReport): SliceCom
   return {
     addedInstructions: [...afterSet].filter((x) => !beforeSet.has(x)),
     removedInstructions: [...beforeSet].filter((x) => !afterSet.has(x)),
-    addedDependencies: after.members.map(depKey).filter((x) => !before.members.map(depKey).includes(x)),
-    removedDependencies: before.members.map(depKey).filter((x) => !after.members.map(depKey).includes(x)),
+    addedDependencies: after.members
+      .map(depKey)
+      .filter((x) => !before.members.map(depKey).includes(x)),
+    removedDependencies: before.members
+      .map(depKey)
+      .filter((x) => !after.members.map(depKey).includes(x)),
     newUnresolved: after.unresolved
       .map((u) => `${u.funcIndex}:${u.instructionIndex}`)
-      .filter((x) => !before.unresolved.map((u) => `${u.funcIndex}:${u.instructionIndex}`).includes(x)),
+      .filter(
+        (x) => !before.unresolved.map((u) => `${u.funcIndex}:${u.instructionIndex}`).includes(x),
+      ),
     changedCrossFunctionDependencies:
       after.stats.crossFunctionDependencies - before.stats.crossFunctionDependencies,
   };

@@ -65,14 +65,14 @@ export class FunctionDependencyAnalyzer {
   private countImports(): void {
     if (this.wasmModule.imports) {
       this.importCount = this.wasmModule.imports.filter(
-        (imp: any) => imp.kind === 'function'
+        (imp: any) => imp.kind === 'function',
       ).length;
     }
   }
 
   getDependencies(): FunctionDependencies[] {
     return Array.from(this.functionDependencies.values()).sort(
-      (a, b) => a.functionIndex - b.functionIndex
+      (a, b) => a.functionIndex - b.functionIndex,
     );
   }
 
@@ -90,17 +90,17 @@ export class FunctionDependencyAnalyzer {
       if (!deps) return depth;
 
       allFunctions.push(funcIndex);
-      
-      deps.importedFunctionCalls.forEach(imp => {
+
+      deps.importedFunctionCalls.forEach((imp) => {
         if (!allImports.includes(imp.index)) {
           allImports.push(imp.index);
         }
       });
 
-      deps.globalReferences.forEach(g => allGlobals.add(g));
+      deps.globalReferences.forEach((g) => allGlobals.add(g));
 
       let maxDepth = depth;
-      deps.directFunctionCalls.forEach(targetIndex => {
+      deps.directFunctionCalls.forEach((targetIndex) => {
         const childDepth = traverse(targetIndex, depth + 1);
         maxDepth = Math.max(maxDepth, childDepth);
       });
@@ -115,15 +115,13 @@ export class FunctionDependencyAnalyzer {
       allReachableFunctions: allFunctions.sort((a, b) => a - b),
       allImportedFunctions: allImports.sort((a, b) => a - b),
       allGlobals: Array.from(allGlobals).sort((a, b) => a - b),
-      depth: maxDepth
+      depth: maxDepth,
     };
   }
 
   compareDependencies(otherModule: any): DependencyComparison {
     const otherAnalyzer = new FunctionDependencyAnalyzer(otherModule);
-    const otherDeps = new Map(
-      otherAnalyzer.getDependencies().map(d => [d.functionIndex, d])
-    );
+    const otherDeps = new Map(otherAnalyzer.getDependencies().map((d) => [d.functionIndex, d]));
 
     const added: DependencyComparison['addedDependencies'] = [];
     const removed: DependencyComparison['removedDependencies'] = [];
@@ -138,28 +136,28 @@ export class FunctionDependencyAnalyzer {
           functionIndex: funcIndex,
           removed: {
             functions: currentDep.directFunctionCalls,
-            imports: currentDep.importedFunctionCalls.map(i => i.index),
-            globals: currentDep.globalReferences
-          }
+            imports: currentDep.importedFunctionCalls.map((i) => i.index),
+            globals: currentDep.globalReferences,
+          },
         });
       } else {
         const addedFuncs = currentDep.directFunctionCalls.filter(
-          f => !otherDep.directFunctionCalls.includes(f)
+          (f) => !otherDep.directFunctionCalls.includes(f),
         );
         const removedFuncs = otherDep.directFunctionCalls.filter(
-          f => !currentDep.directFunctionCalls.includes(f)
+          (f) => !currentDep.directFunctionCalls.includes(f),
         );
-        const addedImports = currentDep.importedFunctionCalls.filter(
-          i => !otherDep.importedFunctionCalls.some(oi => oi.index === i.index)
-        ).map(i => i.index);
-        const removedImports = otherDep.importedFunctionCalls.filter(
-          i => !currentDep.importedFunctionCalls.some(ci => ci.index === i.index)
-        ).map(i => i.index);
+        const addedImports = currentDep.importedFunctionCalls
+          .filter((i) => !otherDep.importedFunctionCalls.some((oi) => oi.index === i.index))
+          .map((i) => i.index);
+        const removedImports = otherDep.importedFunctionCalls
+          .filter((i) => !currentDep.importedFunctionCalls.some((ci) => ci.index === i.index))
+          .map((i) => i.index);
         const addedGlobals = currentDep.globalReferences.filter(
-          g => !otherDep.globalReferences.includes(g)
+          (g) => !otherDep.globalReferences.includes(g),
         );
         const removedGlobals = otherDep.globalReferences.filter(
-          g => !currentDep.globalReferences.includes(g)
+          (g) => !currentDep.globalReferences.includes(g),
         );
 
         if (addedFuncs.length > 0 || addedImports.length > 0 || addedGlobals.length > 0) {
@@ -168,8 +166,8 @@ export class FunctionDependencyAnalyzer {
             added: {
               functions: addedFuncs,
               imports: addedImports,
-              globals: addedGlobals
-            }
+              globals: addedGlobals,
+            },
           });
         }
 
@@ -179,14 +177,19 @@ export class FunctionDependencyAnalyzer {
             removed: {
               functions: removedFuncs,
               imports: removedImports,
-              globals: removedGlobals
-            }
+              globals: removedGlobals,
+            },
           });
         }
 
-        if (addedFuncs.length === 0 && removedFuncs.length === 0 &&
-            addedImports.length === 0 && removedImports.length === 0 &&
-            addedGlobals.length === 0 && removedGlobals.length === 0) {
+        if (
+          addedFuncs.length === 0 &&
+          removedFuncs.length === 0 &&
+          addedImports.length === 0 &&
+          removedImports.length === 0 &&
+          addedGlobals.length === 0 &&
+          removedGlobals.length === 0
+        ) {
           unchanged.push(funcIndex);
         }
       }
@@ -200,9 +203,9 @@ export class FunctionDependencyAnalyzer {
           functionIndex: funcIndex,
           added: {
             functions: otherDep.directFunctionCalls,
-            imports: otherDep.importedFunctionCalls.map(i => i.index),
-            globals: otherDep.globalReferences
-          }
+            imports: otherDep.importedFunctionCalls.map((i) => i.index),
+            globals: otherDep.globalReferences,
+          },
         });
       }
     });
@@ -210,7 +213,7 @@ export class FunctionDependencyAnalyzer {
     return {
       addedDependencies: added.sort((a, b) => a.functionIndex - b.functionIndex),
       removedDependencies: removed.sort((a, b) => a.functionIndex - b.functionIndex),
-      unchangedFunctions: unchanged.sort((a, b) => a - b)
+      unchangedFunctions: unchanged.sort((a, b) => a - b),
     };
   }
 
@@ -232,11 +235,11 @@ export class FunctionDependencyAnalyzer {
       loads: 0,
       stores: 0,
       sizes: 0,
-      grows: 0
+      grows: 0,
     };
     const tableReferences: number[] = [];
 
-    if (!func.body || !func.body.instructions) {
+    if (!func.body?.instructions) {
       return {
         functionIndex: funcIndex,
         functionName: func.name || `func_${funcIndex}`,
@@ -245,7 +248,7 @@ export class FunctionDependencyAnalyzer {
         globalReferences: [],
         memoryOperations: memoryOps,
         tableReferences: [],
-        totalDependencyCount: 0
+        totalDependencyCount: 0,
       };
     }
 
@@ -253,15 +256,15 @@ export class FunctionDependencyAnalyzer {
       // Function calls
       if (instr.name === 'call' && typeof instr.index === 'number') {
         const targetIndex = instr.index;
-        
+
         if (targetIndex < this.importCount) {
           // Imported function
           const importDef = this.getImportDefinition(targetIndex);
-          if (importDef && !importedFunctionCalls.some(i => i.index === targetIndex)) {
+          if (importDef && !importedFunctionCalls.some((i) => i.index === targetIndex)) {
             importedFunctionCalls.push({
               index: targetIndex,
               module: importDef.module,
-              name: importDef.name
+              name: importDef.name,
             });
           }
         } else {
@@ -273,17 +276,19 @@ export class FunctionDependencyAnalyzer {
       }
 
       // Global references
-      if ((instr.name === 'global.get' || instr.name === 'global.set') &&
-          typeof instr.index === 'number') {
+      if (
+        (instr.name === 'global.get' || instr.name === 'global.set') &&
+        typeof instr.index === 'number'
+      ) {
         if (!globalReferences.includes(instr.index)) {
           globalReferences.push(instr.index);
         }
       }
 
       // Memory operations
-      if (instr.name && instr.name.includes('.load')) {
+      if (instr.name?.includes('.load')) {
         memoryOps.loads++;
-      } else if (instr.name && instr.name.includes('.store')) {
+      } else if (instr.name?.includes('.store')) {
         memoryOps.stores++;
       } else if (instr.name === 'memory.size') {
         memoryOps.sizes++;
@@ -305,9 +310,9 @@ export class FunctionDependencyAnalyzer {
     globalReferences.sort((a, b) => a - b);
     tableReferences.sort((a, b) => a - b);
 
-    const totalDependencyCount = 
-      directFunctionCalls.length + 
-      importedFunctionCalls.length + 
+    const totalDependencyCount =
+      directFunctionCalls.length +
+      importedFunctionCalls.length +
       globalReferences.length +
       (memoryOps.loads + memoryOps.stores + memoryOps.sizes + memoryOps.grows > 0 ? 1 : 0) +
       tableReferences.length;
@@ -320,7 +325,7 @@ export class FunctionDependencyAnalyzer {
       globalReferences,
       memoryOperations: memoryOps,
       tableReferences,
-      totalDependencyCount
+      totalDependencyCount,
     };
   }
 

@@ -74,7 +74,8 @@ function readVarI64(buf: Buffer, pos: number): [bigint, number] {
   let shift = 0n;
   let b = 0;
   do {
-    if (pos >= buf.length) throw new WasmValidationError('Unexpected end of WASM data (SLEB128-64)');
+    if (pos >= buf.length)
+      throw new WasmValidationError('Unexpected end of WASM data (SLEB128-64)');
     b = buf[pos++];
     result |= BigInt(b & 0x7f) << shift;
     shift += 7n;
@@ -87,21 +88,23 @@ function readVarI64(buf: Buffer, pos: number): [bigint, number] {
 // WASM section parsing — extract only what we need for CFG construction
 // ---------------------------------------------------------------------------
 
-interface RawSection { id: number; payload: Buffer }
+interface RawSection {
+  id: number;
+  payload: Buffer;
+}
 
 function parseSections(wasm: Buffer): RawSection[] {
   if (wasm.length < 8) throw new WasmValidationError('WASM binary too short');
   if (wasm[0] !== 0x00 || wasm[1] !== 0x61 || wasm[2] !== 0x73 || wasm[3] !== 0x6d)
     throw new WasmValidationError('Missing WASM magic header');
-  if (wasm.readUInt32LE(4) !== 1)
-    throw new WasmValidationError('Unsupported WASM version');
+  if (wasm.readUInt32LE(4) !== 1) throw new WasmValidationError('Unsupported WASM version');
   const sections: RawSection[] = [];
   let pos = 8;
   while (pos < wasm.length) {
-    let id: number;
-    [id, pos] = readByte(wasm, pos);
-    let size: number;
-    [size, pos] = readVarU32(wasm, pos);
+    const [id, nextPos] = readByte(wasm, pos);
+    pos = nextPos;
+    const [size, nextPos1] = readVarU32(wasm, pos);
+    pos = nextPos1;
     if (pos + size > wasm.length) throw new WasmValidationError('Section exceeds WASM data');
     sections.push({ id, payload: wasm.subarray(pos, pos + size) });
     pos += size;
@@ -115,23 +118,38 @@ function countImportedFunctions(sections: RawSection[]): number {
   if (!importSec) return 0;
   const buf = importSec.payload;
   let pos = 0;
-  let count: number;
-  [count, pos] = readVarU32(buf, pos);
+  const [count, nextPos2] = readVarU32(buf, pos);
+  pos = nextPos2;
   let fns = 0;
   for (let i = 0; i < count; i++) {
     // skip module name
-    let len: number;
-    [len, pos] = readVarU32(buf, pos);
+    const [len, nextPos3] = readVarU32(buf, pos);
+    pos = nextPos3;
     pos += len;
     // skip field name
-    [len, pos] = readVarU32(buf, pos);
-    pos += len;
-    let kind: number;
-    [kind, pos] = readByte(buf, pos);
-    if (kind === 0x00) { fns++; [, pos] = readVarU32(buf, pos); }          // function
-    else if (kind === 0x01) { pos++; [, pos] = readVarU32(buf, pos); [, pos] = readVarU32(buf, pos); if (buf[pos - 2] & 1) [, pos] = readVarU32(buf, pos); } // table – rough skip
-    else if (kind === 0x02) { let f: number; [f, pos] = readVarU32(buf, pos); pos += f ? 4 : 2; } // memory rough
-    else if (kind === 0x03) { pos += 2; }                                    // global rough
+    const [fieldLen, nextPos5] = readVarU32(buf, pos);
+    pos = nextPos5;
+    pos += fieldLen;
+    const [kind, nextPos4] = readByte(buf, pos);
+    pos = nextPos4;
+    if (kind === 0x00) {
+      fns++;
+      [, pos] = readVarU32(buf, pos);
+    } // function
+    else if (kind === 0x01) {
+      pos++;
+      [, pos] = readVarU32(buf, pos);
+      [, pos] = readVarU32(buf, pos);
+      if (buf[pos - 2] & 1) [, pos] = readVarU32(buf, pos);
+    } // table – rough skip
+    else if (kind === 0x02) {
+      const [f, nextPos5] = readVarU32(buf, pos);
+      pos = nextPos5;
+      pos += f ? 4 : 2;
+    } // memory rough
+    else if (kind === 0x03) {
+      pos += 2;
+    } // global rough
   }
   return fns;
 }
@@ -142,12 +160,12 @@ function extractFunctionBodies(sections: RawSection[]): Buffer[] {
   if (!codeSec) return [];
   const buf = codeSec.payload;
   let pos = 0;
-  let count: number;
-  [count, pos] = readVarU32(buf, pos);
+  const [count, nextPos6] = readVarU32(buf, pos);
+  pos = nextPos6;
   const bodies: Buffer[] = [];
   for (let i = 0; i < count; i++) {
-    let size: number;
-    [size, pos] = readVarU32(buf, pos);
+    const [size, nextPos7] = readVarU32(buf, pos);
+    pos = nextPos7;
     bodies.push(buf.subarray(pos, pos + size));
     pos += size;
   }
@@ -161,11 +179,11 @@ function extractFunctionExports(sections: RawSection[]): Map<number, string> {
   if (!exportSec) return result;
   const buf = exportSec.payload;
   let pos = 0;
-  let count: number;
-  [count, pos] = readVarU32(buf, pos);
+  const [count, nextPos8] = readVarU32(buf, pos);
+  pos = nextPos8;
   for (let i = 0; i < count; i++) {
-    let nameLen: number;
-    [nameLen, pos] = readVarU32(buf, pos);
+    const [nameLen, nextPos9] = readVarU32(buf, pos);
+    pos = nextPos9;
     const name = buf.subarray(pos, pos + nameLen).toString('utf8');
     pos += nameLen;
     let kind: number, index: number;
@@ -219,7 +237,11 @@ export interface FunctionCfg {
  *   br_table      → one edge per table entry
  *   return / unreachable → terminate block, no fall-through
  */
-export function buildCfg(body: Buffer, functionIndex: number, exportName: string | null): FunctionCfg {
+export function buildCfg(
+  body: Buffer,
+  functionIndex: number,
+  exportName: string | null,
+): FunctionCfg {
   const blocks: CfgBlock[] = [];
   const loopHeaders: number[] = [];
   let parseError: string | null = null;
@@ -244,23 +266,23 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
   try {
     // Skip locals declaration at the start of the body
     let pos = 0;
-    let localGroupCount: number;
-    [localGroupCount, pos] = readVarU32(body, pos);
+    const [localGroupCount, nextPos10] = readVarU32(body, pos);
+    pos = nextPos10;
     for (let i = 0; i < localGroupCount; i++) {
       [, pos] = readVarU32(body, pos); // count
-      pos++;                            // type byte
+      pos++; // type byte
     }
 
     // Label stack entry: {breakTarget, continueTarget, isLoop}
     // breakTarget   = block ID to jump to after the construct exits
     // continueTarget = block ID for br targeting this label (loop re-entry)
     interface LabelEntry {
-      breakTargetId: number;   // target when br breaks out
+      breakTargetId: number; // target when br breaks out
       continueTargetId: number; // target when br continues (same for non-loop)
       isLoop: boolean;
       isIf: boolean;
       elseBlockId: number | null;
-      afterBlockId: number;   // continuation after the whole construct
+      afterBlockId: number; // continuation after the whole construct
     }
 
     const labelStack: LabelEntry[] = [];
@@ -269,13 +291,13 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
     // Push sentinel for the function-level "block"
     // A bare return jumps to an implicit exit; we create it lazily.
     let exitBlockId = -1;
-    function getExitBlock(): number {
+    const getExitBlock = (): number => {
       if (exitBlockId === -1) {
         exitBlockId = newBlock(body.length).id;
         blocks[exitBlockId].isTerminating = true;
       }
       return exitBlockId;
-    }
+    };
 
     // Push the function-level label
     const funcExit = newBlock(pos);
@@ -297,12 +319,13 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
 
     while (pos < body.length && blocks.length < MAX_BLOCKS) {
       const opPos = pos;
-      let opcode: number;
-      [opcode, pos] = readByte(body, pos);
+      const [opcode, nextPos11] = readByte(body, pos);
+      pos = nextPos11;
 
       switch (opcode) {
         // ── Structured control flow ──────────────────────────────────────
-        case 0x02: { // block
+        case 0x02: {
+          // block
           pos++; // block type byte
           const afterBlock = newBlock(pos);
           labelStack.push({
@@ -315,7 +338,8 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
           });
           break;
         }
-        case 0x03: { // loop
+        case 0x03: {
+          // loop
           pos++; // block type byte
           const loopHeader = newBlock(pos);
           loopHeaders.push(loopHeader.id);
@@ -332,7 +356,8 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
           current = loopHeader;
           break;
         }
-        case 0x04: { // if
+        case 0x04: {
+          // if
           pos++; // block type byte
           const thenBlock = newBlock(pos);
           const afterIf = newBlock(pos);
@@ -349,7 +374,8 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
           current = thenBlock;
           break;
         }
-        case 0x05: { // else
+        case 0x05: {
+          // else
           const top = labelStack[labelStack.length - 1];
           if (!top) break;
           // End the then-block, jump to afterIf
@@ -368,7 +394,8 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
           current = elseBlock;
           break;
         }
-        case 0x0b: { // end
+        case 0x0b: {
+          // end
           if (labelStack.length <= 1) {
             // Function-level end — connect to exit
             addEdge(current, exitBlockId);
@@ -389,9 +416,10 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
         }
 
         // ── Branch instructions ───────────────────────────────────────────
-        case 0x0c: { // br <depth>
-          let depth: number;
-          [depth, pos] = readVarU32(body, pos);
+        case 0x0c: {
+          // br <depth>
+          const [depth, nextPos12] = readVarU32(body, pos);
+          pos = nextPos12;
           const targetIdx = labelStack.length - 1 - depth;
           if (targetIdx >= 0) {
             const label = labelStack[targetIdx];
@@ -403,9 +431,10 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
           current = nextBr;
           break;
         }
-        case 0x0d: { // br_if <depth>
-          let depth: number;
-          [depth, pos] = readVarU32(body, pos);
+        case 0x0d: {
+          // br_if <depth>
+          const [depth, nextPos13] = readVarU32(body, pos);
+          pos = nextPos13;
           const targetIdx = labelStack.length - 1 - depth;
           if (targetIdx >= 0) {
             const label = labelStack[targetIdx];
@@ -418,12 +447,13 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
           current = nextBrIf;
           break;
         }
-        case 0x0e: { // br_table <labels…> <default>
-          let count: number;
-          [count, pos] = readVarU32(body, pos);
+        case 0x0e: {
+          // br_table <labels…> <default>
+          const [count, nextPos14] = readVarU32(body, pos);
+          pos = nextPos14;
           for (let t = 0; t <= count; t++) {
-            let depth: number;
-            [depth, pos] = readVarU32(body, pos);
+            const [depth, nextPos15] = readVarU32(body, pos);
+            pos = nextPos15;
             const targetIdx = labelStack.length - 1 - depth;
             if (targetIdx >= 0) {
               const label = labelStack[targetIdx];
@@ -436,7 +466,8 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
           current = nextBrTable;
           break;
         }
-        case 0x0f: { // return
+        case 0x0f: {
+          // return
           addEdge(current, exitBlockId);
           current.isTerminating = true;
           current.endOffset = pos;
@@ -444,7 +475,8 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
           current = nextRet;
           break;
         }
-        case 0x00: { // unreachable
+        case 0x00: {
+          // unreachable
           current.isTerminating = true;
           current.endOffset = pos;
           const nextUnreach = newBlock(pos);
@@ -453,32 +485,82 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
         }
 
         // ── Instructions with immediates (skip bytes) ─────────────────────
-        case 0x01: break; // nop
-        case 0x10: [, pos] = readVarU32(body, pos); break; // call
-        case 0x11: [, pos] = readVarU32(body, pos); pos++; break; // call_indirect
-        case 0x1a: case 0x1b: break; // drop, select
-        case 0x20: case 0x21: case 0x22: [, pos] = readVarU32(body, pos); break; // local.*
-        case 0x23: case 0x24: [, pos] = readVarU32(body, pos); break; // global.*
-        case 0x25: case 0x26: [, pos] = readVarU32(body, pos); break; // table.*
+        case 0x01:
+          break; // nop
+        case 0x10:
+          [, pos] = readVarU32(body, pos);
+          break; // call
+        case 0x11:
+          [, pos] = readVarU32(body, pos);
+          pos++;
+          break; // call_indirect
+        case 0x1a:
+        case 0x1b:
+          break; // drop, select
+        case 0x20:
+        case 0x21:
+        case 0x22:
+          [, pos] = readVarU32(body, pos);
+          break; // local.*
+        case 0x23:
+        case 0x24:
+          [, pos] = readVarU32(body, pos);
+          break; // global.*
+        case 0x25:
+        case 0x26:
+          [, pos] = readVarU32(body, pos);
+          break; // table.*
         // memory load/store: alignment + offset
-        case 0x28: case 0x29: case 0x2a: case 0x2b:
-        case 0x2c: case 0x2d: case 0x2e: case 0x2f:
-        case 0x30: case 0x31: case 0x32: case 0x33:
-        case 0x34: case 0x35: case 0x36: case 0x37:
-        case 0x38: case 0x39: case 0x3a: case 0x3b:
-        case 0x3c: case 0x3d: case 0x3e:
-          [, pos] = readVarU32(body, pos); [, pos] = readVarU32(body, pos); break;
-        case 0x3f: case 0x40: pos++; break; // memory.size / memory.grow
-        case 0x41: [, pos] = readVarI32(body, pos); break; // i32.const
-        case 0x42: [, pos] = readVarI64(body, pos); break; // i64.const
-        case 0x43: pos += 4; break; // f32.const
-        case 0x44: pos += 8; break; // f64.const
-        case 0xfc: { // multi-byte opcodes (memory.copy etc.)
+        case 0x28:
+        case 0x29:
+        case 0x2a:
+        case 0x2b:
+        case 0x2c:
+        case 0x2d:
+        case 0x2e:
+        case 0x2f:
+        case 0x30:
+        case 0x31:
+        case 0x32:
+        case 0x33:
+        case 0x34:
+        case 0x35:
+        case 0x36:
+        case 0x37:
+        case 0x38:
+        case 0x39:
+        case 0x3a:
+        case 0x3b:
+        case 0x3c:
+        case 0x3d:
+        case 0x3e:
+          [, pos] = readVarU32(body, pos);
+          [, pos] = readVarU32(body, pos);
+          break;
+        case 0x3f:
+        case 0x40:
+          pos++;
+          break; // memory.size / memory.grow
+        case 0x41:
+          [, pos] = readVarI32(body, pos);
+          break; // i32.const
+        case 0x42:
+          [, pos] = readVarI64(body, pos);
+          break; // i64.const
+        case 0x43:
+          pos += 4;
+          break; // f32.const
+        case 0x44:
+          pos += 8;
+          break; // f64.const
+        case 0xfc: {
+          // multi-byte opcodes (memory.copy etc.)
           [, pos] = readVarU32(body, pos);
           break;
         }
         // Everything else: 0-immediate opcodes (arithmetic, comparisons, conversions)
-        default: break;
+        default:
+          break;
       }
 
       current.endOffset = pos;
@@ -486,11 +568,9 @@ export function buildCfg(body: Buffer, functionIndex: number, exportName: string
 
     // Seal: ensure exit block is connected
     getExitBlock();
-
   } catch (err: unknown) {
-    parseError = err instanceof WasmValidationError
-      ? err.message
-      : `CFG parse error: ${String(err)}`;
+    parseError =
+      err instanceof WasmValidationError ? err.message : `CFG parse error: ${String(err)}`;
   }
 
   // Fill predecessor lists
@@ -582,14 +662,14 @@ export function computeDominators(cfg: FunctionCfg): DominatorInfo {
   {
     const visited = new Set<number>();
     const postOrder: number[] = [];
-    function dfs(id: number) {
+    const dfs = (id: number): void => {
       if (visited.has(id)) return;
       visited.add(id);
       const block = cfg.blocks[id];
       if (!block) return;
       for (const s of block.successors) if (reachable.has(s)) dfs(s);
       postOrder.push(id);
-    }
+    };
     dfs(entry);
     rpo.push(...postOrder.reverse());
   }
@@ -697,12 +777,18 @@ export function computeDominators(cfg: FunctionCfg): DominatorInfo {
       let cursor = exitId;
       let found = false;
       while (cursor !== -1) {
-        if (cursor === cand) { found = true; break; }
+        if (cursor === cand) {
+          found = true;
+          break;
+        }
         const parent = idom.get(cursor);
         if (parent === undefined || parent === cursor) break;
         cursor = parent;
       }
-      if (!found) { dominatesAll = false; break; }
+      if (!found) {
+        dominatesAll = false;
+        break;
+      }
     }
     if (dominatesAll) exitDominators.push(cand);
   }
@@ -883,12 +969,7 @@ export function analyzeWasmDominators(wasmFile: string): WasmDominatorReport {
 export interface BlockDiff {
   functionIndex: number;
   blockId: number;
-  kind:
-    | 'block-added'
-    | 'block-removed'
-    | 'idom-changed'
-    | 'depth-changed'
-    | 'subtree-changed';
+  kind: 'block-added' | 'block-removed' | 'idom-changed' | 'depth-changed' | 'subtree-changed';
   before?: unknown;
   after?: unknown;
 }
@@ -916,8 +997,14 @@ export function compareReports(
   for (const idx of [...allIndices].sort((x, y) => x - y)) {
     const fa = aFuncs.get(idx);
     const fb = bFuncs.get(idx);
-    if (!fa) { addedFunctions.push(idx); continue; }
-    if (!fb) { removedFunctions.push(idx); continue; }
+    if (!fa) {
+      addedFunctions.push(idx);
+      continue;
+    }
+    if (!fb) {
+      removedFunctions.push(idx);
+      continue;
+    }
 
     const aBlocks = new Map(fa.blocks.map((bl) => [bl.blockId, bl]));
     const bBlocks = new Map(fb.blocks.map((bl) => [bl.blockId, bl]));
@@ -935,13 +1022,31 @@ export function compareReports(
         continue;
       }
       if (ba.idomId !== bb.idomId) {
-        diffs.push({ functionIndex: idx, blockId: bid, kind: 'idom-changed', before: ba.idomId, after: bb.idomId });
+        diffs.push({
+          functionIndex: idx,
+          blockId: bid,
+          kind: 'idom-changed',
+          before: ba.idomId,
+          after: bb.idomId,
+        });
       }
       if (ba.depth !== bb.depth) {
-        diffs.push({ functionIndex: idx, blockId: bid, kind: 'depth-changed', before: ba.depth, after: bb.depth });
+        diffs.push({
+          functionIndex: idx,
+          blockId: bid,
+          kind: 'depth-changed',
+          before: ba.depth,
+          after: bb.depth,
+        });
       }
       if (ba.subtreeSize !== bb.subtreeSize) {
-        diffs.push({ functionIndex: idx, blockId: bid, kind: 'subtree-changed', before: ba.subtreeSize, after: bb.subtreeSize });
+        diffs.push({
+          functionIndex: idx,
+          blockId: bid,
+          kind: 'subtree-changed',
+          before: ba.subtreeSize,
+          after: bb.subtreeSize,
+        });
       }
     }
   }
@@ -954,14 +1059,21 @@ export function compareReports(
 // ---------------------------------------------------------------------------
 
 export function reportToDot(report: WasmDominatorReport, functionIndex?: number): string {
-  const fns = functionIndex !== undefined
-    ? report.analyzedFunctions.filter((f) => f.functionIndex === functionIndex)
-    : report.analyzedFunctions;
+  const fns =
+    functionIndex !== undefined
+      ? report.analyzedFunctions.filter((f) => f.functionIndex === functionIndex)
+      : report.analyzedFunctions;
 
-  const lines: string[] = ['digraph dominators {', '  rankdir=TB;', '  node [shape=box fontname="monospace" fontsize=10];'];
+  const lines: string[] = [
+    'digraph dominators {',
+    '  rankdir=TB;',
+    '  node [shape=box fontname="monospace" fontsize=10];',
+  ];
 
   for (const fn of fns) {
-    const label = fn.exportName ? `fn_${fn.functionIndex}_${fn.exportName}` : `fn_${fn.functionIndex}`;
+    const label = fn.exportName
+      ? `fn_${fn.functionIndex}_${fn.exportName}`
+      : `fn_${fn.functionIndex}`;
     lines.push(`  subgraph cluster_${fn.functionIndex} {`);
     lines.push(`    label="${label}";`);
     for (const b of fn.blocks) {
@@ -971,7 +1083,9 @@ export function reportToDot(report: WasmDominatorReport, functionIndex?: number)
       else if (b.isLoopHeader) attrs.push('style=filled fillcolor=lightyellow');
       else if (b.isTerminating) attrs.push('style=filled fillcolor=lightgrey');
       const attrStr = attrs.length > 0 ? ` [${attrs.join(' ')}]` : '';
-      lines.push(`    b${fn.functionIndex}_${b.blockId} [label="B${b.blockId}\\ndepth=${b.depth}"]${attrStr};`);
+      lines.push(
+        `    b${fn.functionIndex}_${b.blockId} [label="B${b.blockId}\\ndepth=${b.depth}"]${attrStr};`,
+      );
     }
     for (const b of fn.blocks) {
       if (!b.isReachable) continue;
@@ -1022,12 +1136,22 @@ function printReport(report: WasmDominatorReport, jsonMode: boolean, dotMode: bo
       ? `Function ${fn.functionIndex} (${fn.exportName})`
       : `Function ${fn.functionIndex}`;
     console.log(chalk.bold.cyan(`\n${title}`));
-    console.log(`  Blocks:              ${fn.totalBlocks} total, ${fn.reachableBlocks} reachable, ${fn.unreachableBlocks} unreachable`);
+    console.log(
+      `  Blocks:              ${fn.totalBlocks} total, ${fn.reachableBlocks} reachable, ${fn.unreachableBlocks} unreachable`,
+    );
     console.log(`  Max dominator depth: ${fn.maxDominatorDepth}`);
-    console.log(`  Loop headers:        ${fn.loopHeaders.length > 0 ? fn.loopHeaders.join(', ') : 'none'}`);
-    console.log(`  Exit dominators:     ${fn.exitDominators.length > 0 ? fn.exitDominators.join(', ') : 'none'}`);
-    console.log(`  Loop-hdr dominators: ${fn.loopHeaderDominators.length > 0 ? fn.loopHeaderDominators.join(', ') : 'none'}`);
-    console.log(`  Multi-pred blocks:   ${fn.multiPredBlocks.length > 0 ? fn.multiPredBlocks.join(', ') : 'none'}`);
+    console.log(
+      `  Loop headers:        ${fn.loopHeaders.length > 0 ? fn.loopHeaders.join(', ') : 'none'}`,
+    );
+    console.log(
+      `  Exit dominators:     ${fn.exitDominators.length > 0 ? fn.exitDominators.join(', ') : 'none'}`,
+    );
+    console.log(
+      `  Loop-hdr dominators: ${fn.loopHeaderDominators.length > 0 ? fn.loopHeaderDominators.join(', ') : 'none'}`,
+    );
+    console.log(
+      `  Multi-pred blocks:   ${fn.multiPredBlocks.length > 0 ? fn.multiPredBlocks.join(', ') : 'none'}`,
+    );
 
     if (fn.parseError) {
       console.log(chalk.red(`  Parse error: ${fn.parseError}`));
@@ -1042,11 +1166,17 @@ function printReport(report: WasmDominatorReport, jsonMode: boolean, dotMode: bo
     if (topBlocks.length > 0) {
       console.log(chalk.bold('  Top blocks by subtree size:'));
       for (const b of topBlocks) {
-        const tag = b.blockId === fn.entryBlockId ? ' [entry]'
-          : b.isLoopHeader ? ' [loop]'
-          : b.isTerminating ? ' [exit]'
-          : '';
-        console.log(`    B${b.blockId}${tag}  depth=${b.depth}  subtree=${b.subtreeSize}  idom=B${b.idomId < 0 ? 'root' : b.idomId}`);
+        const tag =
+          b.blockId === fn.entryBlockId
+            ? ' [entry]'
+            : b.isLoopHeader
+              ? ' [loop]'
+              : b.isTerminating
+                ? ' [exit]'
+                : '';
+        console.log(
+          `    B${b.blockId}${tag}  depth=${b.depth}  subtree=${b.subtreeSize}  idom=B${b.idomId < 0 ? 'root' : b.idomId}`,
+        );
       }
     }
   }
@@ -1075,9 +1205,7 @@ export async function run(params: WasmDominatorsParams = {}): Promise<void> {
     DEFAULT_WASM;
 
   const compareFile =
-    params.compareFile?.trim() ||
-    process.env.WASM_COMPARE_FILE?.trim() ||
-    process.argv[4]?.trim();
+    params.compareFile?.trim() || process.env.WASM_COMPARE_FILE?.trim() || process.argv[4]?.trim();
 
   const jsonMode = params.json ?? process.argv.includes('--json');
   const dotMode = params.dot ?? process.argv.includes('--dot');
@@ -1127,7 +1255,9 @@ export async function run(params: WasmDominatorsParams = {}): Promise<void> {
       } else {
         console.log(chalk.bold.red(`\n${comparison.diffs.length} dominator difference(s):`));
         comparison.diffs.slice(0, 20).forEach((d) => {
-          console.log(`  fn=${d.functionIndex} block=${d.blockId} [${d.kind}]${d.before !== undefined ? ` ${d.before} → ${d.after}` : ''}`);
+          console.log(
+            `  fn=${d.functionIndex} block=${d.blockId} [${d.kind}]${d.before !== undefined ? ` ${d.before} → ${d.after}` : ''}`,
+          );
         });
       }
     }
