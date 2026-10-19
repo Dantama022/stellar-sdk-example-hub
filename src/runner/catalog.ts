@@ -2951,4 +2951,35 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '258-transaction-history-export': {
+    name: '258-transaction-history-export',
+    description: 'Export and reconcile an account transaction history as CSV or JSON (ISSUE-309)',
+    run: loadExample('../examples/258-transaction-history-export'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account public key (G...):',
+      },
+      {
+        type: 'input',
+        name: 'checkpointFile',
+        message: 'Checkpoint file path:',
+        default: '.history-export-checkpoint.json',
+      },
+      {
+        type: 'select',
+        name: 'outputFormat',
+        message: 'Output format',
+        choices: ['json', 'csv'],
+        default: 'json',
+      },
+      {
+        type: 'input',
+        name: 'maxPages',
+        message: 'Maximum pages to read:',
+        default: '10',
+      },
+    ],
+  },
 };
