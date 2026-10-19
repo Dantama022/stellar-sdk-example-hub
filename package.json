@@ -1,7 +1,7 @@
 {
   "name": "stellar-sdk-example-hub",
   "version": "1.0.0",
-  "description": "🎓 Educational repository of runnable TypeScript examples demonstrating the Stellar & Soroban JavaScript SDK.",
+  "description": "\ud83c\udf93 Educational repository of runnable TypeScript examples demonstrating the Stellar & Soroban JavaScript SDK.",
   "main": "dist/runner.js",
   "bin": {
     "wasm-fingerprint": "dist/src/wasm-fingerprint.js",
@@ -10,9 +10,9 @@
     "stellar-api-inspector": "dist/src/stellar-api-inspector.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "ts-node src/runner.ts",
-    "run-example": "ts-node src/runner.ts",
+    "build": "node init && tsc",
+    "dev": "node init && ts-node src/runner.ts",
+    "run-example": "node init && ts-node src/runner.ts",
     "validate:examples": "ts-node src/validate-examples.ts",
     "validate:examples:all": "ts-node src/validate-examples.ts --include-excluded",
     "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
