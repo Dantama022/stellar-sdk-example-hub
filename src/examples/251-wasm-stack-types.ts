@@ -72,8 +72,8 @@ function printIssue(issue: WasmStackTypeIssue): void {
 function printFuncSummary(fn: WasmStackTypeFunctionSummary): void {
   console.log(
     `  [fn${fn.functionIndex}] instrs=${fn.totalInstructions}  maxDepth=${fn.maxStackDepth}  transitions=${fn.typeTransitions}` +
-    (fn.polymorphicStateCount > 0 ? `  polymorphic=${fn.polymorphicStateCount}` : '') +
-    (fn.issueCount > 0 ? chalk.red(`  issues=${fn.issueCount}`) : ''),
+      (fn.polymorphicStateCount > 0 ? `  polymorphic=${fn.polymorphicStateCount}` : '') +
+      (fn.issueCount > 0 ? chalk.red(`  issues=${fn.issueCount}`) : ''),
   );
 }
 
@@ -130,12 +130,21 @@ function printComparison(result: ReturnType<typeof compareStackTypesReports>): v
     console.log(chalk.green(`Removed type transitions: -${comparison.removedTransitions.length}`));
     comparison.removedTransitions.slice(0, 5).forEach((t) => console.log(`  - ${t}`));
   }
-  console.log(`Max stack depth delta: ${comparison.maxStackDepthDelta >= 0 ? '+' : ''}${comparison.maxStackDepthDelta}`);
+  console.log(
+    `Max stack depth delta: ${comparison.maxStackDepthDelta >= 0 ? '+' : ''}${comparison.maxStackDepthDelta}`,
+  );
   if (comparison.newIssues !== 0) {
-    const label = comparison.newIssues > 0 ? chalk.red(`+${comparison.newIssues}`) : chalk.green(`${comparison.newIssues}`);
+    const label =
+      comparison.newIssues > 0
+        ? chalk.red(`+${comparison.newIssues}`)
+        : chalk.green(`${comparison.newIssues}`);
     console.log(`Issues delta: ${label}`);
   }
-  if (comparison.addedTransitions.length === 0 && comparison.removedTransitions.length === 0 && comparison.newIssues === 0) {
+  if (
+    comparison.addedTransitions.length === 0 &&
+    comparison.removedTransitions.length === 0 &&
+    comparison.newIssues === 0
+  ) {
     console.log(chalk.green('No meaningful stack-type changes detected.'));
   }
 }

@@ -54,11 +54,7 @@ import chalk from 'chalk';
 export type Durability = 'persistent' | 'temporary' | 'unknown';
 
 export type LifecycleTransition =
-  | 'first-observed'
-  | 'persisting'
-  | 'modified'
-  | 'removed'
-  | 'reappearing';
+  'first-observed' | 'persisting' | 'modified' | 'removed' | 'reappearing';
 
 export type TtlTrend = 'increasing' | 'decreasing' | 'unchanged' | 'unknown';
 

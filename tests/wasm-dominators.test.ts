@@ -41,7 +41,15 @@ function wasmWithBody(bodyBytes: number[]): Buffer {
   const funcSec = [0x03, 0x02, 0x01, 0x00];
   // Export section: export "f" → function 0
   const exportName = [...Buffer.from('f', 'utf8')];
-  const exportSec = [0x07, 2 + exportName.length + 2, 0x01, exportName.length, ...exportName, 0x00, 0x00];
+  const exportSec = [
+    0x07,
+    2 + exportName.length + 2,
+    0x01,
+    exportName.length,
+    ...exportName,
+    0x00,
+    0x00,
+  ];
 
   // Body: 0 locals + bodyBytes
   const body = [0x00, ...bodyBytes];
@@ -61,7 +69,10 @@ function bodyBuf(bodyBytes: number[]): Buffer {
 
 /** Write to a temp file, return path. */
 function tmpWasm(buf: Buffer): string {
-  const p = path.join(os.tmpdir(), `dom-test-${Date.now()}-${Math.random().toString(36).slice(2)}.wasm`);
+  const p = path.join(
+    os.tmpdir(),
+    `dom-test-${Date.now()}-${Math.random().toString(36).slice(2)}.wasm`,
+  );
   fs.writeFileSync(p, buf);
   return p;
 }
@@ -106,11 +117,14 @@ describe('buildCfg – simple conditional (if/end)', () => {
   // if (blocktype i32) … end
   // i32.const 1, if void, i32.const 2, end, end
   const body = bodyBuf([
-    0x41, 0x01,        // i32.const 1
-    0x04, 0x40,        // if (void)
-    0x41, 0x02,        // i32.const 2
-    0x0b,              // end (if)
-    0x0b,              // end (function)
+    0x41,
+    0x01, // i32.const 1
+    0x04,
+    0x40, // if (void)
+    0x41,
+    0x02, // i32.const 2
+    0x0b, // end (if)
+    0x0b, // end (function)
   ]);
 
   it('produces multiple blocks', () => {
@@ -133,13 +147,17 @@ describe('buildCfg – simple conditional (if/end)', () => {
 
 describe('buildCfg – if/else/end', () => {
   const body = bodyBuf([
-    0x41, 0x01,  // i32.const 1
-    0x04, 0x40,  // if void
-    0x41, 0x02,  // i32.const 2 (then)
-    0x05,        // else
-    0x41, 0x03,  // i32.const 3 (else)
-    0x0b,        // end if
-    0x0b,        // end function
+    0x41,
+    0x01, // i32.const 1
+    0x04,
+    0x40, // if void
+    0x41,
+    0x02, // i32.const 2 (then)
+    0x05, // else
+    0x41,
+    0x03, // i32.const 3 (else)
+    0x0b, // end if
+    0x0b, // end function
   ]);
 
   it('produces blocks for then and else branches', () => {
@@ -156,10 +174,12 @@ describe('buildCfg – if/else/end', () => {
 describe('buildCfg – loop', () => {
   // loop (void) br 0 end  — infinite loop
   const body = bodyBuf([
-    0x03, 0x40,  // loop void
-    0x0c, 0x00,  // br 0 (back-edge)
-    0x0b,        // end loop
-    0x0b,        // end function
+    0x03,
+    0x40, // loop void
+    0x0c,
+    0x00, // br 0 (back-edge)
+    0x0b, // end loop
+    0x0b, // end function
   ]);
 
   it('identifies at least one loop header', () => {
@@ -176,7 +196,9 @@ describe('buildCfg – loop', () => {
   it('back-edge from br creates an edge to loop header', () => {
     const cfg = buildCfg(body, 0, null);
     const lhId = cfg.loopHeaders[0];
-    const hasBackEdge = cfg.blocks.some((b) => b.successors.includes(lhId) && b.id !== cfg.entryBlockId);
+    const hasBackEdge = cfg.blocks.some(
+      (b) => b.successors.includes(lhId) && b.id !== cfg.entryBlockId,
+    );
     expect(hasBackEdge).toBe(true);
   });
 });
@@ -184,13 +206,17 @@ describe('buildCfg – loop', () => {
 describe('buildCfg – nested loops', () => {
   // outer loop { inner loop { br 0 } }
   const body = bodyBuf([
-    0x03, 0x40,  // loop (outer)
-    0x03, 0x40,  // loop (inner)
-    0x0c, 0x00,  // br 0 → inner loop
-    0x0b,        // end inner
-    0x0c, 0x00,  // br 0 → outer loop
-    0x0b,        // end outer
-    0x0b,        // end function
+    0x03,
+    0x40, // loop (outer)
+    0x03,
+    0x40, // loop (inner)
+    0x0c,
+    0x00, // br 0 → inner loop
+    0x0b, // end inner
+    0x0c,
+    0x00, // br 0 → outer loop
+    0x0b, // end outer
+    0x0b, // end function
   ]);
 
   it('identifies two loop headers', () => {
@@ -202,11 +228,13 @@ describe('buildCfg – nested loops', () => {
 describe('buildCfg – early return', () => {
   // i32.const 1, if … return … end, end
   const body = bodyBuf([
-    0x41, 0x01,  // i32.const 1
-    0x04, 0x40,  // if void
-    0x0f,        // return
-    0x0b,        // end if
-    0x0b,        // end function
+    0x41,
+    0x01, // i32.const 1
+    0x04,
+    0x40, // if void
+    0x0f, // return
+    0x0b, // end if
+    0x0b, // end function
   ]);
 
   it('return block is terminating', () => {
@@ -219,12 +247,13 @@ describe('buildCfg – early return', () => {
 describe('buildCfg – branch table (br_table)', () => {
   // i32.const 0, br_table [0, 1] default=0, end
   const body = bodyBuf([
-    0x41, 0x00,       // i32.const 0
-    0x0e,             // br_table
-    ...uLEB(1),       // count=1 (labels[0])
-    ...uLEB(0),       // labels[0]=0
-    ...uLEB(0),       // default=0
-    0x0b,             // end
+    0x41,
+    0x00, // i32.const 0
+    0x0e, // br_table
+    ...uLEB(1), // count=1 (labels[0])
+    ...uLEB(0), // labels[0]=0
+    ...uLEB(0), // default=0
+    0x0b, // end
   ]);
 
   it('produces multiple successors from br_table block', () => {
@@ -251,7 +280,9 @@ describe('buildCfg – unreachable instruction', () => {
 describe('computeDominators – sequential', () => {
   const body = bodyBuf([0x41, 0x00, 0x0b]);
   let cfg: FunctionCfg;
-  beforeAll(() => { cfg = buildCfg(body, 0, null); });
+  beforeAll(() => {
+    cfg = buildCfg(body, 0, null);
+  });
 
   it('entry block has idom -1', () => {
     const dom = computeDominators(cfg);
@@ -273,7 +304,10 @@ describe('computeDominators – sequential', () => {
       let found = false;
       while (cursor !== -1) {
         const parent = dom.idom.get(cursor) ?? -1;
-        if (parent === cfg.entryBlockId) { found = true; break; }
+        if (parent === cfg.entryBlockId) {
+          found = true;
+          break;
+        }
         if (parent === -1 || parent === cursor) break;
         cursor = parent;
       }
@@ -285,16 +319,22 @@ describe('computeDominators – sequential', () => {
 
 describe('computeDominators – if/else', () => {
   const body = bodyBuf([
-    0x41, 0x01,
-    0x04, 0x40,  // if
-    0x41, 0x02,
-    0x05,        // else
-    0x41, 0x03,
-    0x0b,        // end
+    0x41,
+    0x01,
+    0x04,
+    0x40, // if
+    0x41,
+    0x02,
+    0x05, // else
+    0x41,
+    0x03,
+    0x0b, // end
     0x0b,
   ]);
   let cfg: FunctionCfg;
-  beforeAll(() => { cfg = buildCfg(body, 0, null); });
+  beforeAll(() => {
+    cfg = buildCfg(body, 0, null);
+  });
 
   it('entry block dominates all blocks', () => {
     const dom = computeDominators(cfg);
@@ -311,13 +351,17 @@ describe('computeDominators – if/else', () => {
 
 describe('computeDominators – loop', () => {
   const body = bodyBuf([
-    0x03, 0x40,  // loop
-    0x0c, 0x00,  // br 0
-    0x0b,        // end loop
-    0x0b,        // end fn
+    0x03,
+    0x40, // loop
+    0x0c,
+    0x00, // br 0
+    0x0b, // end loop
+    0x0b, // end fn
   ]);
   let cfg: FunctionCfg;
-  beforeAll(() => { cfg = buildCfg(body, 0, null); });
+  beforeAll(() => {
+    cfg = buildCfg(body, 0, null);
+  });
 
   it('loop headers are identified', () => {
     expect(cfg.loopHeaders.length).toBeGreaterThan(0);
@@ -335,9 +379,10 @@ describe('computeDominators – unreachable blocks', () => {
   // We test by building a CFG where a block is not reachable
   it('unreachable blocks have no dominator depth assigned', () => {
     const body = bodyBuf([
-      0x0f,   // return (terminates)
-      0x41, 0x01, // dead: i32.const 1
-      0x0b,   // end
+      0x0f, // return (terminates)
+      0x41,
+      0x01, // dead: i32.const 1
+      0x0b, // end
     ]);
     const cfg = buildCfg(body, 0, null);
     const reach = reachableBlocks(cfg);
@@ -353,12 +398,16 @@ describe('computeDominators – unreachable blocks', () => {
 
 describe('computeDominators – multiple predecessor blocks', () => {
   const body = bodyBuf([
-    0x41, 0x01,
-    0x04, 0x40,  // if
-    0x41, 0x02,
-    0x05,        // else
-    0x41, 0x03,
-    0x0b,        // end if — both branches converge here
+    0x41,
+    0x01,
+    0x04,
+    0x40, // if
+    0x41,
+    0x02,
+    0x05, // else
+    0x41,
+    0x03,
+    0x0b, // end if — both branches converge here
     0x0b,
   ]);
 
@@ -374,10 +423,12 @@ describe('computeDominators – immediate dominator tree correctness', () => {
   // Simple diamond: entry → A, entry → B, A → exit, B → exit
   // We simulate this with if/else with no instructions in branches
   const body = bodyBuf([
-    0x41, 0x01,
-    0x04, 0x40,  // if (then is block A)
-    0x0b,        // end if (thin then-block)
-    0x0b,        // end function
+    0x41,
+    0x01,
+    0x04,
+    0x40, // if (then is block A)
+    0x0b, // end if (thin then-block)
+    0x0b, // end function
   ]);
 
   it('every non-entry reachable block has a valid idom', () => {
@@ -406,14 +457,19 @@ describe('computeDominators – subtree size', () => {
 describe('computeDominators – dominator depth', () => {
   it('nested structure increases max depth', () => {
     const body = bodyBuf([
-      0x41, 0x01,
-      0x04, 0x40,   // if outer
-      0x41, 0x01,
-      0x04, 0x40,   // if inner
-      0x41, 0x02,
-      0x0b,         // end inner
-      0x0b,         // end outer
-      0x0b,         // end fn
+      0x41,
+      0x01,
+      0x04,
+      0x40, // if outer
+      0x41,
+      0x01,
+      0x04,
+      0x40, // if inner
+      0x41,
+      0x02,
+      0x0b, // end inner
+      0x0b, // end outer
+      0x0b, // end fn
     ]);
     const cfg = buildCfg(body, 0, null);
     const dom = computeDominators(cfg);
@@ -438,7 +494,9 @@ describe('analyzeWasmDominators', () => {
       const report = analyzeWasmDominators(p);
       expect(report.analyzedFunctions).toHaveLength(0);
       expect(report.diagnostics.length).toBeGreaterThan(0);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('analyzes a simple sequential function', () => {
@@ -449,7 +507,9 @@ describe('analyzeWasmDominators', () => {
       const fn = report.analyzedFunctions[0];
       expect(fn.reachableBlocks).toBeGreaterThan(0);
       expect(fn.parseError).toBeNull();
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('preserves original function index in output', () => {
@@ -458,7 +518,9 @@ describe('analyzeWasmDominators', () => {
       const report = analyzeWasmDominators(p);
       // No imports, so function 0 should be present
       expect(report.analyzedFunctions[0].functionIndex).toBe(0);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('preserves export name in output', () => {
@@ -466,7 +528,9 @@ describe('analyzeWasmDominators', () => {
     try {
       const report = analyzeWasmDominators(p);
       expect(report.analyzedFunctions[0].exportName).toBe('f');
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('reports correct block counts for simple function', () => {
@@ -476,21 +540,29 @@ describe('analyzeWasmDominators', () => {
       const fn = report.analyzedFunctions[0];
       expect(fn.totalBlocks).toBeGreaterThan(0);
       expect(fn.reachableBlocks).toBeLessThanOrEqual(fn.totalBlocks);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('identifies loop headers in looping function', () => {
-    const p = tmpWasm(wasmWithBody([
-      0x03, 0x40,  // loop
-      0x0c, 0x00,  // br 0
-      0x0b,        // end loop
-      0x0b,        // end fn
-    ]));
+    const p = tmpWasm(
+      wasmWithBody([
+        0x03,
+        0x40, // loop
+        0x0c,
+        0x00, // br 0
+        0x0b, // end loop
+        0x0b, // end fn
+      ]),
+    );
     try {
       const report = analyzeWasmDominators(p);
       const fn = report.analyzedFunctions[0];
       expect(fn.loopHeaders.length).toBeGreaterThan(0);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('JSON output is serialisable', () => {
@@ -500,22 +572,20 @@ describe('analyzeWasmDominators', () => {
       expect(() => JSON.stringify(report)).not.toThrow();
       const parsed = JSON.parse(JSON.stringify(report));
       expect(parsed.analyzedFunctions.length).toBe(report.analyzedFunctions.length);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('results are deterministic', () => {
-    const p = tmpWasm(wasmWithBody([
-      0x41, 0x01,
-      0x04, 0x40,
-      0x41, 0x02,
-      0x0b,
-      0x0b,
-    ]));
+    const p = tmpWasm(wasmWithBody([0x41, 0x01, 0x04, 0x40, 0x41, 0x02, 0x0b, 0x0b]));
     try {
       const r1 = analyzeWasmDominators(p);
       const r2 = analyzeWasmDominators(p);
       expect(JSON.stringify(r1)).toBe(JSON.stringify(r2));
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('never references WebAssembly runtime API', () => {
@@ -540,7 +610,9 @@ describe('reportToDot', () => {
       const dot = reportToDot(report);
       expect(dot).toContain('digraph dominators');
       expect(dot).toContain('rankdir=TB');
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('contains function cluster', () => {
@@ -549,7 +621,9 @@ describe('reportToDot', () => {
       const report = analyzeWasmDominators(p);
       const dot = reportToDot(report);
       expect(dot).toContain('subgraph cluster_');
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('closes with }', () => {
@@ -558,7 +632,9 @@ describe('reportToDot', () => {
       const report = analyzeWasmDominators(p);
       const dot = reportToDot(report);
       expect(dot.trim().endsWith('}')).toBe(true);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('filter by functionIndex produces narrower output', () => {
@@ -568,7 +644,9 @@ describe('reportToDot', () => {
       const dotAll = reportToDot(report);
       const dotFiltered = reportToDot(report, 0);
       expect(dotFiltered.length).toBeLessThanOrEqual(dotAll.length);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('writes DOT to output file', () => {
@@ -581,8 +659,8 @@ describe('reportToDot', () => {
       expect(fs.existsSync(dotPath)).toBe(true);
       expect(fs.readFileSync(dotPath, 'utf8')).toContain('digraph');
     } finally {
-      fs.existsSync(p) && fs.unlinkSync(p);
-      fs.existsSync(dotPath) && fs.unlinkSync(dotPath);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (fs.existsSync(dotPath)) fs.unlinkSync(dotPath);
     }
   });
 });
@@ -600,14 +678,14 @@ describe('compareReports', () => {
       expect(comp.diffs).toHaveLength(0);
       expect(comp.addedFunctions).toHaveLength(0);
       expect(comp.removedFunctions).toHaveLength(0);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('detects added blocks when second WASM is more complex', () => {
     const simpleBody = wasmWithBody([0x41, 0x00, 0x0b]);
-    const complexBody = wasmWithBody([
-      0x41, 0x01, 0x04, 0x40, 0x41, 0x02, 0x0b, 0x0b,
-    ]);
+    const complexBody = wasmWithBody([0x41, 0x01, 0x04, 0x40, 0x41, 0x02, 0x0b, 0x0b]);
     const pA = tmpWasm(simpleBody);
     const pB = tmpWasm(complexBody);
     try {
@@ -615,7 +693,9 @@ describe('compareReports', () => {
       const rB = analyzeWasmDominators(pB);
       const comp = compareReports(rA, rB);
       // Both have function 0; block counts differ → diffs expected
-      expect(comp.diffs.length + comp.addedFunctions.length + comp.removedFunctions.length).toBeGreaterThan(0);
+      expect(
+        comp.diffs.length + comp.addedFunctions.length + comp.removedFunctions.length,
+      ).toBeGreaterThan(0);
     } finally {
       fs.unlinkSync(pA);
       fs.unlinkSync(pB);
@@ -628,7 +708,9 @@ describe('compareReports', () => {
       const r = analyzeWasmDominators(p);
       const comp = compareReports(r, r);
       expect(() => JSON.stringify(comp)).not.toThrow();
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 });
 
@@ -646,8 +728,12 @@ describe('reachableBlocks', () => {
 
   it('returns empty set for CFG with no blocks', () => {
     const emptyCfg: FunctionCfg = {
-      functionIndex: 0, exportName: null, blocks: [],
-      entryBlockId: -1, loopHeaders: [], parseError: null,
+      functionIndex: 0,
+      exportName: null,
+      blocks: [],
+      entryBlockId: -1,
+      loopHeaders: [],
+      parseError: null,
     };
     expect(reachableBlocks(emptyCfg).size).toBe(0);
   });
@@ -670,15 +756,15 @@ describe('reachableBlocks', () => {
 
 describe('BlockAnalysis fields', () => {
   it('isLoopHeader is set for loop header blocks', () => {
-    const p = tmpWasm(wasmWithBody([
-      0x03, 0x40, 0x0c, 0x00, 0x0b, 0x0b,
-    ]));
+    const p = tmpWasm(wasmWithBody([0x03, 0x40, 0x0c, 0x00, 0x0b, 0x0b]));
     try {
       const report = analyzeWasmDominators(p);
       const fn = report.analyzedFunctions[0];
       const loopBlock = fn.blocks.find((b: BlockAnalysis) => b.isLoopHeader);
       expect(loopBlock).toBeDefined();
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('entry block has depth 0', () => {
@@ -688,7 +774,9 @@ describe('BlockAnalysis fields', () => {
       const fn = report.analyzedFunctions[0];
       const entry = fn.blocks.find((b: BlockAnalysis) => b.blockId === fn.entryBlockId);
       expect(entry?.depth).toBe(0);
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 
   it('blocks have start and end offsets', () => {
@@ -700,7 +788,9 @@ describe('BlockAnalysis fields', () => {
         expect(b.startOffset).toBeGreaterThanOrEqual(0);
         expect(b.endOffset).toBeGreaterThanOrEqual(b.startOffset);
       }
-    } finally { fs.unlinkSync(p); }
+    } finally {
+      fs.unlinkSync(p);
+    }
   });
 });
 

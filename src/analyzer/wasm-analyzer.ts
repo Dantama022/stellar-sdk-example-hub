@@ -1,5 +1,4 @@
-import { readFileSync } from 'fs';
-import { parse } from 'wasm-parser';
+import { parse } from '@webassemblyjs/wasm-parser';
 import { DominatorTree } from './dominator-tree';
 import { CFGBuilder } from './cfg-builder';
 
@@ -55,7 +54,7 @@ export class WASMAnalyzer {
 
   analyze(): WASMAnalysisResult {
     const result: WASMAnalysisResult = {
-      functions: []
+      functions: [],
     };
 
     for (const [funcIndex, func] of this.wasmFunctions.entries()) {
@@ -68,8 +67,22 @@ export class WASMAnalyzer {
       result.functions.push({
         index: funcIndex,
         name: func.name || `func_${funcIndex}`,
-        cfg: analysis.cfg,
-        metrics: analysis.metrics
+        cfg: {
+          blocks: analysis.cfg.map((block) => ({
+            ...block,
+            instructions:
+              cfg.blocks.find((entry) => entry.index === block.index)?.instructions ?? [],
+          })),
+          edges: cfg.blocks.flatMap((block) =>
+            block.successors.map((target) => ({
+              from: block.index,
+              to: target,
+              type:
+                block.successors.length > 1 ? ('conditional' as const) : ('sequential' as const),
+            })),
+          ),
+        },
+        metrics: analysis.metrics,
       });
     }
 
@@ -82,11 +95,11 @@ export class WASMAnalyzer {
 
     // Simplified comparison logic - full implementation would need proper diffing
     return {
-      addedBlocks: 0,
-      removedBlocks: 0,
+      addedBlocks: other.functions.length - current.functions.length,
+      removedBlocks: current.functions.length - other.functions.length,
       changedDominators: 0,
       changedDepths: 0,
-      changedSubtreeSizes: 0
+      changedSubtreeSizes: 0,
     };
   }
 }

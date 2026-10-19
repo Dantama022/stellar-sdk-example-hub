@@ -95,7 +95,8 @@ function readVarI64(buf: Buffer, pos: number): [bigint, number] {
   let shift = 0n;
   let b = 0;
   do {
-    if (pos >= buf.length) throw new WasmProvenanceError('Unexpected end of WASM data (SLEB128-64)');
+    if (pos >= buf.length)
+      throw new WasmProvenanceError('Unexpected end of WASM data (SLEB128-64)');
     b = buf[pos++];
     result |= BigInt(b & 0x7f) << shift;
     shift += 7n;
@@ -167,12 +168,13 @@ function parseTypeSection(sec: RawSection | undefined): FuncType[] {
   if (!sec) return [];
   const buf = sec.payload;
   let pos = 0;
-  let count: number;
-  [count, pos] = readVarU32(buf, pos);
+  const [count, nextPos] = readVarU32(buf, pos);
+  pos = nextPos;
   const types: FuncType[] = [];
   for (let i = 0; i < count; i++) {
     const tag = buf[pos++]; // 0x60
-    if (tag !== 0x60) throw new WasmProvenanceError(`Expected func type tag 0x60, got 0x${tag.toString(16)}`);
+    if (tag !== 0x60)
+      throw new WasmProvenanceError(`Expected func type tag 0x60, got 0x${tag.toString(16)}`);
     let paramCount: number, resultCount: number;
     [paramCount, pos] = readVarU32(buf, pos);
     const params: number[] = [];
@@ -204,8 +206,8 @@ function parseImportSection(sec: RawSection | undefined): {
   if (!sec) return { functions, globalMutability };
   const buf = sec.payload;
   let pos = 0;
-  let count: number;
-  [count, pos] = readVarU32(buf, pos);
+  const [count, nextPos1] = readVarU32(buf, pos);
+  pos = nextPos1;
   for (let i = 0; i < count; i++) {
     let modLen: number, nameLen: number;
     [modLen, pos] = readVarU32(buf, pos);
@@ -216,8 +218,8 @@ function parseImportSection(sec: RawSection | undefined): {
     pos += nameLen;
     const kind = buf[pos++];
     if (kind === 0x00) {
-      let typeIdx: number;
-      [typeIdx, pos] = readVarU32(buf, pos);
+      const [typeIdx, nextPos2] = readVarU32(buf, pos);
+      pos = nextPos2;
       functions.push({ module: mod, name, typeIndex: typeIdx });
     } else if (kind === 0x01) {
       pos++; // elem type
@@ -245,12 +247,12 @@ function parseFunctionSection(sec: RawSection | undefined): number[] {
   if (!sec) return [];
   const buf = sec.payload;
   let pos = 0;
-  let count: number;
-  [count, pos] = readVarU32(buf, pos);
+  const [count, nextPos3] = readVarU32(buf, pos);
+  pos = nextPos3;
   const indices: number[] = [];
   for (let i = 0; i < count; i++) {
-    let idx: number;
-    [idx, pos] = readVarU32(buf, pos);
+    const [idx, nextPos4] = readVarU32(buf, pos);
+    pos = nextPos4;
     indices.push(idx);
   }
   return indices;
@@ -264,8 +266,8 @@ function parseGlobalSection(sec: RawSection | undefined): boolean[] {
   if (!sec) return [];
   const buf = sec.payload;
   let pos = 0;
-  let count: number;
-  [count, pos] = readVarU32(buf, pos);
+  const [count, nextPos5] = readVarU32(buf, pos);
+  pos = nextPos5;
   const mutability: boolean[] = [];
   for (let i = 0; i < count; i++) {
     pos++; // value type
@@ -286,12 +288,12 @@ function extractFunctionBodies(sec: RawSection | undefined): Buffer[] {
   if (!sec) return [];
   const buf = sec.payload;
   let pos = 0;
-  let count: number;
-  [count, pos] = readVarU32(buf, pos);
+  const [count, nextPos6] = readVarU32(buf, pos);
+  pos = nextPos6;
   const bodies: Buffer[] = [];
   for (let i = 0; i < count; i++) {
-    let size: number;
-    [size, pos] = readVarU32(buf, pos);
+    const [size, nextPos7] = readVarU32(buf, pos);
+    pos = nextPos7;
     bodies.push(buf.subarray(pos, pos + size));
     pos += size;
   }
@@ -482,8 +484,8 @@ function analyseFunction(
 
   // Parse locals
   let pos = 0;
-  let localGroupCount: number;
-  [localGroupCount, pos] = readVarU32(bodyBuf, pos);
+  const [localGroupCount, nextPos8] = readVarU32(bodyBuf, pos);
+  pos = nextPos8;
   // locals[i] is a (count, type) pair
   const localTypes: number[] = [...funcType.params]; // params are also locals 0..n
   for (let i = 0; i < localGroupCount; i++) {
@@ -616,18 +618,28 @@ function analyseFunction(
         // ── Block / loop / if ────────────────────────────────────────────
         case 0x02: // block bt
         case 0x03: // loop bt
-        case 0x04: // if bt
-        {
+        case 0x04: {
+          // if bt
           const btByte = bodyBuf[pos];
           let blockType = 0;
-          if (btByte === 0x40) { pos++; blockType = 0; }
-          else if (btByte >= 0x70) { pos++; blockType = 1; }
-          else { let [bt]: [number, number] = readVarU32(bodyBuf, pos); pos = bt; blockType = 0; /* type index – treat as opaque */ }
+          if (btByte === 0x40) {
+            pos++;
+            blockType = 0;
+          } else if (btByte >= 0x70) {
+            pos++;
+            blockType = 1;
+          } else {
+            const [bt]: [number, number] = readVarU32(bodyBuf, pos);
+            pos = bt;
+            blockType = 0; /* type index – treat as opaque */
+          }
           // re-parse properly
           pos = insnOffset + 1;
           const blockTypeByte = bodyBuf[pos];
-          if (blockTypeByte === 0x40) { pos++; blockType = 0; }
-          else if ((blockTypeByte & 0x80) === 0 && blockTypeByte >= 0x60) {
+          if (blockTypeByte === 0x40) {
+            pos++;
+            blockType = 0;
+          } else if ((blockTypeByte & 0x80) === 0 && blockTypeByte >= 0x60) {
             // This is a type index; count its results (we don't resolve, treat as 1)
             [, pos] = readVarU32(bodyBuf, pos);
             blockType = 1;
@@ -648,12 +660,16 @@ function analyseFunction(
               loopMergeStates.set(insnOffset, { locals: locals.map((l) => [...l]), iter: 0 });
             }
           }
-          labels.push({ kind: op === 0x02 ? 'block' : op === 0x03 ? 'loop' : 'if', blockType, mergeValues: [] });
+          labels.push({
+            kind: op === 0x02 ? 'block' : op === 0x03 ? 'loop' : 'if',
+            blockType,
+            mergeValues: [],
+          });
           break;
         }
 
-        case 0x05: // else
-        {
+        case 0x05: {
+          // else
           const lbl = labels[labels.length - 1];
           if (lbl) {
             // merge current stack into the label's merge buffer, then reset stack
@@ -666,8 +682,8 @@ function analyseFunction(
           break;
         }
 
-        case 0x0b: // end
-        {
+        case 0x0b: {
+          // end
           const lbl = labels.pop();
           if (!lbl) {
             // end of function — record implicit return
@@ -687,8 +703,10 @@ function analyseFunction(
         }
 
         // ── Branch instructions ──────────────────────────────────────────
-        case 0x0c: { // br
-          let depth: number; [depth, pos] = readVarU32(bodyBuf, pos);
+        case 0x0c: {
+          // br
+          const [depth, nextPos9] = readVarU32(bodyBuf, pos);
+          pos = nextPos9;
           const target = labels[labels.length - 1 - depth];
           if (target && target.blockType > 0 && stack.length > 0) {
             const val = peek();
@@ -697,8 +715,10 @@ function analyseFunction(
           stack = [];
           break;
         }
-        case 0x0d: { // br_if
-          let depth: number; [depth, pos] = readVarU32(bodyBuf, pos);
+        case 0x0d: {
+          // br_if
+          const [depth, nextPos10] = readVarU32(bodyBuf, pos);
+          pos = nextPos10;
           pop(); // condition
           const target = labels[labels.length - 1 - depth];
           if (target && target.blockType > 0 && stack.length > 0) {
@@ -707,11 +727,14 @@ function analyseFunction(
           // value stays on stack (fall-through path)
           break;
         }
-        case 0x0e: { // br_table
-          let count: number; [count, pos] = readVarU32(bodyBuf, pos);
+        case 0x0e: {
+          // br_table
+          const [count, nextPos11] = readVarU32(bodyBuf, pos);
+          pos = nextPos11;
           const depths: number[] = [];
           for (let i = 0; i <= count; i++) {
-            let d: number; [d, pos] = readVarU32(bodyBuf, pos);
+            const [d, nextPos12] = readVarU32(bodyBuf, pos);
+            pos = nextPos12;
             depths.push(d);
           }
           pop(); // index
@@ -734,8 +757,10 @@ function analyseFunction(
           break;
 
         // ── Calls ────────────────────────────────────────────────────────
-        case 0x10: { // call
-          let calleeIdx: number; [calleeIdx, pos] = readVarU32(bodyBuf, pos);
+        case 0x10: {
+          // call
+          const [calleeIdx, nextPos13] = readVarU32(bodyBuf, pos);
+          pos = nextPos13;
           // Determine callee type
           let calleeType: FuncType | undefined;
           if (calleeIdx < importedFuncCount) {
@@ -744,20 +769,26 @@ function analyseFunction(
             const defIdx = calleeIdx - importedFuncCount;
             calleeType = allTypes[allFuncTypeIndices[defIdx]];
           }
-          if (!calleeType) { push([UNKNOWN]); break; }
+          if (!calleeType) {
+            push([UNKNOWN]);
+            break;
+          }
           // Pop params
           for (let i = 0; i < calleeType.params.length; i++) pop();
           // Push results
           for (let r = 0; r < calleeType.results.length; r++) {
-            const src = calleeIdx === funcIndex
-              ? { kind: 'unknown' as ProvenanceKind, note: 'recursive_call' }
-              : calleeResultProvenance(calleeIdx, r, callDepth);
+            const src =
+              calleeIdx === funcIndex
+                ? { kind: 'unknown' as ProvenanceKind, note: 'recursive_call' }
+                : calleeResultProvenance(calleeIdx, r, callDepth);
             push([src]);
           }
           break;
         }
-        case 0x11: { // call_indirect
-          let typeIdx: number; [typeIdx, pos] = readVarU32(bodyBuf, pos);
+        case 0x11: {
+          // call_indirect
+          const [typeIdx, nextPos14] = readVarU32(bodyBuf, pos);
+          pos = nextPos14;
           [, pos] = readVarU32(bodyBuf, pos); // table index
           const indirectType = allTypes[typeIdx];
           pop(); // index
@@ -776,179 +807,403 @@ function analyseFunction(
         case 0x1a: // drop
           pop();
           break;
-        case 0x1b: { // select
-          pop(); const v2 = pop(); const v1 = pop(); // pop condition, then the two values
+        case 0x1b: {
+          // select
+          pop();
+          const v2 = pop();
+          const v1 = pop(); // pop condition, then the two values
           push(mergeProvenance(v1, v2)); // conservative: either could be selected
           break;
         }
-        case 0x1c: { // select t* (typed)
-          let count: number; [count, pos] = readVarU32(bodyBuf, pos);
+        case 0x1c: {
+          // select t* (typed)
+          const [count, nextPos15] = readVarU32(bodyBuf, pos);
+          pos = nextPos15;
           for (let i = 0; i < count; i++) pos++; // skip types
-          pop(); const v2b = pop(); const v1b = pop(); // pop condition, then two values
+          pop();
+          const v2b = pop();
+          const v1b = pop(); // pop condition, then two values
           push(mergeProvenance(v1b, v2b));
           break;
         }
 
         // ── Local get/set/tee ────────────────────────────────────────────
-        case 0x20: { // local.get
-          let li: number; [li, pos] = readVarU32(bodyBuf, pos);
+        case 0x20: {
+          // local.get
+          const [li, nextPos16] = readVarU32(bodyBuf, pos);
+          pos = nextPos16;
           push(locals[li] ?? [UNKNOWN]);
           break;
         }
-        case 0x21: { // local.set
-          let li: number; [li, pos] = readVarU32(bodyBuf, pos);
+        case 0x21: {
+          // local.set
+          const [li, nextPos17] = readVarU32(bodyBuf, pos);
+          pos = nextPos17;
           locals[li] = pop();
           break;
         }
-        case 0x22: { // local.tee
-          let li: number; [li, pos] = readVarU32(bodyBuf, pos);
+        case 0x22: {
+          // local.tee
+          const [li, nextPos18] = readVarU32(bodyBuf, pos);
+          pos = nextPos18;
           locals[li] = peek();
           // value stays on stack
           break;
         }
 
         // ── Global get/set ───────────────────────────────────────────────
-        case 0x23: { // global.get
-          let gi: number; [gi, pos] = readVarU32(bodyBuf, pos);
+        case 0x23: {
+          // global.get
+          const [gi, nextPos19] = readVarU32(bodyBuf, pos);
+          pos = nextPos19;
           const mut = globalMutability[gi];
-          push([{
-            kind: mut ? 'global_mutable' : 'global_immutable',
-            globalIndex: gi,
-            instructionOffset: insnOffset,
-          }]);
+          push([
+            {
+              kind: mut ? 'global_mutable' : 'global_immutable',
+              globalIndex: gi,
+              instructionOffset: insnOffset,
+            },
+          ]);
           break;
         }
-        case 0x24: { // global.set
+        case 0x24: {
+          // global.set
           [, pos] = readVarU32(bodyBuf, pos);
           pop(); // consume written value
           break;
         }
 
         // ── Table get/set ────────────────────────────────────────────────
-        case 0x25: [, pos] = readVarU32(bodyBuf, pos); pop(); push([UNKNOWN]); break; // table.get
-        case 0x26: [, pos] = readVarU32(bodyBuf, pos); pop(); pop(); break;             // table.set
+        case 0x25:
+          [, pos] = readVarU32(bodyBuf, pos);
+          pop();
+          push([UNKNOWN]);
+          break; // table.get
+        case 0x26:
+          [, pos] = readVarU32(bodyBuf, pos);
+          pop();
+          pop();
+          break; // table.set
 
         // ── Memory loads ─────────────────────────────────────────────────
-        case 0x28: case 0x29: case 0x2a: case 0x2b: // i32.load, i64.load, f32.load, f64.load
-        case 0x2c: case 0x2d: case 0x2e: case 0x2f: // i32.load8_s/u i32.load16_s/u
-        case 0x30: case 0x31: case 0x32: case 0x33: // i64.load*
-        {
+        case 0x28:
+        case 0x29:
+        case 0x2a:
+        case 0x2b: // i32.load, i64.load, f32.load, f64.load
+        case 0x2c:
+        case 0x2d:
+        case 0x2e:
+        case 0x2f: // i32.load8_s/u i32.load16_s/u
+        case 0x30:
+        case 0x31:
+        case 0x32:
+        case 0x33: {
+          // i64.load*
           [, pos] = readVarU32(bodyBuf, pos); // align (unused)
-          let offset: number;
-          [offset, pos] = readVarU32(bodyBuf, pos);
+          const [offset, nextPos20] = readVarU32(bodyBuf, pos);
+          pos = nextPos20;
           pop(); // address
           push([{ kind: 'memory', memoryNote: `offset=${offset}`, instructionOffset: insnOffset }]);
           break;
         }
 
         // ── Memory stores ────────────────────────────────────────────────
-        case 0x36: case 0x37: case 0x38: case 0x39: // i32.store, i64.store, f32.store, f64.store
-        case 0x3a: case 0x3b: case 0x3c: case 0x3d: // i32.store8, i32.store16, i64.store8, i64.store16
-        case 0x3e: // i64.store32
-        {
+        case 0x36:
+        case 0x37:
+        case 0x38:
+        case 0x39: // i32.store, i64.store, f32.store, f64.store
+        case 0x3a:
+        case 0x3b:
+        case 0x3c:
+        case 0x3d: // i32.store8, i32.store16, i64.store8, i64.store16
+        case 0x3e: {
+          // i64.store32
           [, pos] = readVarU32(bodyBuf, pos);
           [, pos] = readVarU32(bodyBuf, pos);
-          pop(); pop(); // address, value
+          pop();
+          pop(); // address, value
           break;
         }
 
         // ── Memory size/grow ─────────────────────────────────────────────
-        case 0x3f: pos++; push([{ kind: 'unknown', note: 'memory_size' }]); break;
-        case 0x40: pos++; pop(); push([{ kind: 'unknown', note: 'memory_grow' }]); break;
+        case 0x3f:
+          pos++;
+          push([{ kind: 'unknown', note: 'memory_size' }]);
+          break;
+        case 0x40:
+          pos++;
+          pop();
+          push([{ kind: 'unknown', note: 'memory_grow' }]);
+          break;
 
         // ── Constants ────────────────────────────────────────────────────
-        case 0x41: { // i32.const
-          let v: number; [v, pos] = readVarI32(bodyBuf, pos);
+        case 0x41: {
+          // i32.const
+          const [v, nextPos21] = readVarI32(bodyBuf, pos);
+          pos = nextPos21;
           push([{ kind: 'const', constValue: String(v), instructionOffset: insnOffset }]);
           break;
         }
-        case 0x42: { // i64.const
-          let v: bigint; [v, pos] = readVarI64(bodyBuf, pos);
+        case 0x42: {
+          // i64.const
+          let v: bigint;
+          [v, pos] = readVarI64(bodyBuf, pos);
           push([{ kind: 'const', constValue: String(v), instructionOffset: insnOffset }]);
           break;
         }
-        case 0x43: { // f32.const
-          let v: number; [v, pos] = readF32(bodyBuf, pos);
+        case 0x43: {
+          // f32.const
+          const [v, nextPos22] = readF32(bodyBuf, pos);
+          pos = nextPos22;
           push([{ kind: 'const', constValue: String(v), instructionOffset: insnOffset }]);
           break;
         }
-        case 0x44: { // f64.const
-          let v: number; [v, pos] = readF64(bodyBuf, pos);
+        case 0x44: {
+          // f64.const
+          const [v, nextPos23] = readF64(bodyBuf, pos);
+          pos = nextPos23;
           push([{ kind: 'const', constValue: String(v), instructionOffset: insnOffset }]);
           break;
         }
 
         // ── Numeric tests (0 → i32, 1 → i32) ────────────────────────────
-        case 0x45: case 0x50: // i32.eqz, i64.eqz
-          pop(); push([{ kind: 'unknown', note: 'comparison_result' }]); break;
+        case 0x45:
+        case 0x50: // i32.eqz, i64.eqz
+          pop();
+          push([{ kind: 'unknown', note: 'comparison_result' }]);
+          break;
 
         // ── Comparisons (pop 2, push i32) ────────────────────────────────
-        case 0x46: case 0x47: case 0x48: case 0x49: case 0x4a: case 0x4b:
-        case 0x4c: case 0x4d: case 0x4e: case 0x4f: // i32.eq/ne/lt/gt/le/ge
-        case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56:
-        case 0x57: case 0x58: case 0x59: case 0x5a: // i64.eq/ne/lt/gt/le/ge
-        case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f: case 0x60:
-        case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: // f32/f64 cmp
-          pop(); pop(); push([{ kind: 'unknown', note: 'comparison_result' }]); break;
+        case 0x46:
+        case 0x47:
+        case 0x48:
+        case 0x49:
+        case 0x4a:
+        case 0x4b:
+        case 0x4c:
+        case 0x4d:
+        case 0x4e:
+        case 0x4f: // i32.eq/ne/lt/gt/le/ge
+        case 0x51:
+        case 0x52:
+        case 0x53:
+        case 0x54:
+        case 0x55:
+        case 0x56:
+        case 0x57:
+        case 0x58:
+        case 0x59:
+        case 0x5a: // i64.eq/ne/lt/gt/le/ge
+        case 0x5b:
+        case 0x5c:
+        case 0x5d:
+        case 0x5e:
+        case 0x5f:
+        case 0x60:
+        case 0x61:
+        case 0x62:
+        case 0x63:
+        case 0x64:
+        case 0x65:
+        case 0x66: // f32/f64 cmp
+          pop();
+          pop();
+          push([{ kind: 'unknown', note: 'comparison_result' }]);
+          break;
 
         // ── Unary arithmetic (pop 1, push 1) ─────────────────────────────
-        case 0x67: case 0x68: case 0x69: // i32.clz, i32.ctz, i32.popcnt
-        case 0x79: case 0x7a: case 0x7b: // i64.clz, i64.ctz, i64.popcnt
-        case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f: // f32 unary
-        case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: // f64 unary
-        case 0xa7: case 0xa8: case 0xa9: case 0xaa: case 0xab:
-        case 0xac: case 0xad: case 0xae: case 0xaf: case 0xb0:
-        case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5:
-        case 0xb6: case 0xb7: case 0xb8: case 0xb9: case 0xba:
-        case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf: // conversions
-        {
+        case 0x67:
+        case 0x68:
+        case 0x69: // i32.clz, i32.ctz, i32.popcnt
+        case 0x79:
+        case 0x7a:
+        case 0x7b: // i64.clz, i64.ctz, i64.popcnt
+        case 0x8b:
+        case 0x8c:
+        case 0x8d:
+        case 0x8e:
+        case 0x8f: // f32 unary
+        case 0x99:
+        case 0x9a:
+        case 0x9b:
+        case 0x9c:
+        case 0x9d: // f64 unary
+        case 0xa7:
+        case 0xa8:
+        case 0xa9:
+        case 0xaa:
+        case 0xab:
+        case 0xac:
+        case 0xad:
+        case 0xae:
+        case 0xaf:
+        case 0xb0:
+        case 0xb1:
+        case 0xb2:
+        case 0xb3:
+        case 0xb4:
+        case 0xb5:
+        case 0xb6:
+        case 0xb7:
+        case 0xb8:
+        case 0xb9:
+        case 0xba:
+        case 0xbb:
+        case 0xbc:
+        case 0xbd:
+        case 0xbe:
+        case 0xbf: {
+          // conversions
           const v = pop();
           push(v); // propagate provenance through unary op
           break;
         }
 
         // ── Binary arithmetic (pop 2, push 1) ────────────────────────────
-        case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
-        case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75:
-        case 0x76: case 0x77: case 0x78: // i32 arithmetic
-        case 0x7c: case 0x7d: case 0x7e: case 0x7f: case 0x80: case 0x81:
-        case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
-        case 0x88: case 0x89: case 0x8a: // i64 arithmetic
-        case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: // f32 arithmetic
-        case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: // f64 arithmetic
-        {
-          const rhs = pop(); const lhs = pop();
+        case 0x6a:
+        case 0x6b:
+        case 0x6c:
+        case 0x6d:
+        case 0x6e:
+        case 0x6f:
+        case 0x70:
+        case 0x71:
+        case 0x72:
+        case 0x73:
+        case 0x74:
+        case 0x75:
+        case 0x76:
+        case 0x77:
+        case 0x78: // i32 arithmetic
+        case 0x7c:
+        case 0x7d:
+        case 0x7e:
+        case 0x7f:
+        case 0x80:
+        case 0x81:
+        case 0x82:
+        case 0x83:
+        case 0x84:
+        case 0x85:
+        case 0x86:
+        case 0x87:
+        case 0x88:
+        case 0x89:
+        case 0x8a: // i64 arithmetic
+        case 0x92:
+        case 0x93:
+        case 0x94:
+        case 0x95:
+        case 0x96: // f32 arithmetic
+        case 0xa0:
+        case 0xa1:
+        case 0xa2:
+        case 0xa3:
+        case 0xa4: {
+          // f64 arithmetic
+          const rhs = pop();
+          const lhs = pop();
           push(mergeProvenance(lhs, rhs)); // conservative: result depends on both
           break;
         }
 
         // ── Extended: prefixed instructions (0xfc, 0xfd) ─────────────────
         case 0xfc: {
-          let subOp: number; [subOp, pos] = readVarU32(bodyBuf, pos);
+          const [subOp, nextPos24] = readVarU32(bodyBuf, pos);
+          pos = nextPos24;
           switch (subOp) {
-            case 0: pop(); push([UNKNOWN]); break; // i32.trunc_sat_f32_s
-            case 1: pop(); push([UNKNOWN]); break; // i32.trunc_sat_f32_u
-            case 2: pop(); push([UNKNOWN]); break; // i32.trunc_sat_f64_s
-            case 3: pop(); push([UNKNOWN]); break; // i32.trunc_sat_f64_u
-            case 4: pop(); push([UNKNOWN]); break; // i64.trunc_sat_f32_s
-            case 5: pop(); push([UNKNOWN]); break;
-            case 6: pop(); push([UNKNOWN]); break;
-            case 7: pop(); push([UNKNOWN]); break;
-            case 8: { // memory.init
+            case 0:
+              pop();
+              push([UNKNOWN]);
+              break; // i32.trunc_sat_f32_s
+            case 1:
+              pop();
+              push([UNKNOWN]);
+              break; // i32.trunc_sat_f32_u
+            case 2:
+              pop();
+              push([UNKNOWN]);
+              break; // i32.trunc_sat_f64_s
+            case 3:
+              pop();
+              push([UNKNOWN]);
+              break; // i32.trunc_sat_f64_u
+            case 4:
+              pop();
+              push([UNKNOWN]);
+              break; // i64.trunc_sat_f32_s
+            case 5:
+              pop();
+              push([UNKNOWN]);
+              break;
+            case 6:
+              pop();
+              push([UNKNOWN]);
+              break;
+            case 7:
+              pop();
+              push([UNKNOWN]);
+              break;
+            case 8: {
+              // memory.init
               [, pos] = readVarU32(bodyBuf, pos);
               [, pos] = readVarU32(bodyBuf, pos);
-              pop(); pop(); pop(); break;
+              pop();
+              pop();
+              pop();
+              break;
             }
-            case 9: [, pos] = readVarU32(bodyBuf, pos); break; // data.drop
-            case 10: [, pos] = readVarU32(bodyBuf, pos); [, pos] = readVarU32(bodyBuf, pos); pop(); pop(); pop(); break; // memory.copy
-            case 11: [, pos] = readVarU32(bodyBuf, pos); pop(); pop(); pop(); break; // memory.fill
-            case 12: [, pos] = readVarU32(bodyBuf, pos); [, pos] = readVarU32(bodyBuf, pos); pop(); pop(); pop(); break; // table.init
-            case 13: [, pos] = readVarU32(bodyBuf, pos); break; // elem.drop
-            case 14: [, pos] = readVarU32(bodyBuf, pos); [, pos] = readVarU32(bodyBuf, pos); pop(); pop(); pop(); break; // table.copy
-            case 15: [, pos] = readVarU32(bodyBuf, pos); pop(); push([UNKNOWN]); break; // table.grow
-            case 16: [, pos] = readVarU32(bodyBuf, pos); push([UNKNOWN]); break; // table.size
-            case 17: [, pos] = readVarU32(bodyBuf, pos); pop(); pop(); pop(); break; // table.fill
-            default: push([UNKNOWN]); break;
+            case 9:
+              [, pos] = readVarU32(bodyBuf, pos);
+              break; // data.drop
+            case 10:
+              [, pos] = readVarU32(bodyBuf, pos);
+              [, pos] = readVarU32(bodyBuf, pos);
+              pop();
+              pop();
+              pop();
+              break; // memory.copy
+            case 11:
+              [, pos] = readVarU32(bodyBuf, pos);
+              pop();
+              pop();
+              pop();
+              break; // memory.fill
+            case 12:
+              [, pos] = readVarU32(bodyBuf, pos);
+              [, pos] = readVarU32(bodyBuf, pos);
+              pop();
+              pop();
+              pop();
+              break; // table.init
+            case 13:
+              [, pos] = readVarU32(bodyBuf, pos);
+              break; // elem.drop
+            case 14:
+              [, pos] = readVarU32(bodyBuf, pos);
+              [, pos] = readVarU32(bodyBuf, pos);
+              pop();
+              pop();
+              pop();
+              break; // table.copy
+            case 15:
+              [, pos] = readVarU32(bodyBuf, pos);
+              pop();
+              push([UNKNOWN]);
+              break; // table.grow
+            case 16:
+              [, pos] = readVarU32(bodyBuf, pos);
+              push([UNKNOWN]);
+              break; // table.size
+            case 17:
+              [, pos] = readVarU32(bodyBuf, pos);
+              pop();
+              pop();
+              pop();
+              break; // table.fill
+            default:
+              push([UNKNOWN]);
+              break;
           }
           break;
         }
@@ -1034,17 +1289,13 @@ function summariseFunction(
     functionIndex: funcIndex,
     returnCount: returnSites.length,
     returnSites,
-    hasParameterDerivedReturn: returnSites.some(
-      (rs) => rs.classification === 'parameter_derived',
-    ),
+    hasParameterDerivedReturn: returnSites.some((rs) => rs.classification === 'parameter_derived'),
     hasMutableStateDerivedReturn: returnSites.some(
       (rs) =>
         rs.classification === 'state_derived' ||
         rs.provenanceSources.some((s) => s.kind === 'global_mutable'),
     ),
-    hasConstantDerivedReturn: returnSites.some(
-      (rs) => rs.classification === 'constant_derived',
-    ),
+    hasConstantDerivedReturn: returnSites.some((rs) => rs.classification === 'constant_derived'),
     hasCallDerivedReturn: returnSites.some((rs) => rs.classification === 'call_derived'),
     hasMemoryDerivedReturn: returnSites.some((rs) => rs.classification === 'memory_derived'),
     hasUnknownReturn: returnSites.some((rs) => rs.classification === 'unknown'),
@@ -1290,8 +1541,7 @@ export function compareProvenanceReports(
     after,
     comparison: {
       functionCountDelta: after.definedFunctionCount - before.definedFunctionCount,
-      returnSiteDelta:
-        after.statistics.totalReturnSites - before.statistics.totalReturnSites,
+      returnSiteDelta: after.statistics.totalReturnSites - before.statistics.totalReturnSites,
       addedFunctions,
       removedFunctions,
       changedFunctions,

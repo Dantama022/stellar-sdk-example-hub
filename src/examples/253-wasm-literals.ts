@@ -89,19 +89,24 @@ const TYPE_LABELS: Record<LiteralType, string> = {
 
 function printOccurrenceSummary(s: WasmLiteralOccurrenceSummary, rank: number): void {
   const multiTag = s.usedInMultipleFunctions ? chalk.blue(' [multi-fn]') : '';
-  const valueDisplay = s.literalType === 'f32' || s.literalType === 'f64'
-    ? s.signedValue
-    : `${s.signedValue} (${s.hexValue})`;
+  const valueDisplay =
+    s.literalType === 'f32' || s.literalType === 'f64'
+      ? s.signedValue
+      : `${s.signedValue} (${s.hexValue})`;
   console.log(
     `  ${String(rank).padStart(4)}. ` +
-    `[${TYPE_LABELS[s.literalType].padEnd(3)}] ` +
-    `${CLASS_LABELS[s.structuralClass].padEnd(12)}  ` +
-    `×${String(s.occurrenceCount).padStart(4)}  ` +
-    `${chalk.cyan(valueDisplay)}` +
-    multiTag,
+      `[${TYPE_LABELS[s.literalType].padEnd(3)}] ` +
+      `${CLASS_LABELS[s.structuralClass].padEnd(12)}  ` +
+      `×${String(s.occurrenceCount).padStart(4)}  ` +
+      `${chalk.cyan(valueDisplay)}` +
+      multiTag,
   );
   if (s.functionIndices.length > 0) {
-    console.log(chalk.dim(`         functions: [${s.functionIndices.slice(0, 10).join(', ')}${s.functionIndices.length > 10 ? ', …' : ''}]`));
+    console.log(
+      chalk.dim(
+        `         functions: [${s.functionIndices.slice(0, 10).join(', ')}${s.functionIndices.length > 10 ? ', …' : ''}]`,
+      ),
+    );
   }
 }
 
@@ -114,7 +119,9 @@ function printReport(report: WasmLiteralsReport): void {
   console.log(`${chalk.bold('  Integer literals:')}            ${s.integerLiterals}`);
   console.log(`${chalk.bold('  Floating-point literals:')}     ${s.floatingPointLiterals}`);
   console.log(`${chalk.bold('Shared across functions:')}       ${s.literalsSharedAcrossFunctions}`);
-  console.log(`${chalk.bold('Unusual constants (threshold=')}${s.largeConstantThreshold}): ${s.unusualConstantCount}`);
+  console.log(
+    `${chalk.bold('Unusual constants (threshold=')}${s.largeConstantThreshold}): ${s.unusualConstantCount}`,
+  );
 
   if (s.maxObservedInteger !== null) {
     console.log(`${chalk.bold('Max integer observed:')}          ${s.maxObservedInteger}`);
@@ -130,8 +137,8 @@ function printReport(report: WasmLiteralsReport): void {
     console.log(chalk.bold('\n--- Most Frequent Literal ---'));
     console.log(
       `  ${chalk.cyan(s.mostFrequentLiteral.signedValue)} (${s.mostFrequentLiteral.literalType})` +
-      `  ×${s.mostFrequentLiteral.occurrenceCount}` +
-      `  ${CLASS_LABELS[s.mostFrequentLiteral.structuralClass]}`,
+        `  ×${s.mostFrequentLiteral.occurrenceCount}` +
+        `  ${CLASS_LABELS[s.mostFrequentLiteral.structuralClass]}`,
     );
   }
 
@@ -140,7 +147,9 @@ function printReport(report: WasmLiteralsReport): void {
     printOccurrenceSummary(summary, i + 1);
   });
   if (report.occurrenceSummaries.length > 40) {
-    console.log(chalk.dim(`  … and ${report.occurrenceSummaries.length - 40} more unique literals`));
+    console.log(
+      chalk.dim(`  … and ${report.occurrenceSummaries.length - 40} more unique literals`),
+    );
   }
 
   // Structural class summary
@@ -160,28 +169,40 @@ function printReport(report: WasmLiteralsReport): void {
 function printComparison(result: ReturnType<typeof compareLiteralsReports>): void {
   const { comparison } = result;
   console.log(chalk.bold('\n--- Literal Comparison ---'));
-  console.log(`Total occurrence delta: ${comparison.totalOccurrenceDelta >= 0 ? '+' : ''}${comparison.totalOccurrenceDelta}`);
-  console.log(`Unique literals delta:  ${comparison.uniqueLiteralsDelta >= 0 ? '+' : ''}${comparison.uniqueLiteralsDelta}`);
+  console.log(
+    `Total occurrence delta: ${comparison.totalOccurrenceDelta >= 0 ? '+' : ''}${comparison.totalOccurrenceDelta}`,
+  );
+  console.log(
+    `Unique literals delta:  ${comparison.uniqueLiteralsDelta >= 0 ? '+' : ''}${comparison.uniqueLiteralsDelta}`,
+  );
   if (comparison.addedLiterals.length > 0) {
     console.log(chalk.red(`Added literals: +${comparison.addedLiterals.length}`));
-    comparison.addedLiterals.slice(0, 10).forEach((l) =>
-      console.log(`  + ${l.literalType} ${chalk.cyan(l.signedValue)} (${l.hexValue})`),
-    );
+    comparison.addedLiterals
+      .slice(0, 10)
+      .forEach((l) =>
+        console.log(`  + ${l.literalType} ${chalk.cyan(l.signedValue)} (${l.hexValue})`),
+      );
   }
   if (comparison.removedLiterals.length > 0) {
     console.log(chalk.green(`Removed literals: -${comparison.removedLiterals.length}`));
-    comparison.removedLiterals.slice(0, 10).forEach((l) =>
-      console.log(`  - ${l.literalType} ${chalk.cyan(l.signedValue)}`),
-    );
+    comparison.removedLiterals
+      .slice(0, 10)
+      .forEach((l) => console.log(`  - ${l.literalType} ${chalk.cyan(l.signedValue)}`));
   }
   if (comparison.changedOccurrenceCounts.length > 0) {
-    console.log(chalk.yellow(`Changed occurrence counts: ${comparison.changedOccurrenceCounts.length}`));
+    console.log(
+      chalk.yellow(`Changed occurrence counts: ${comparison.changedOccurrenceCounts.length}`),
+    );
     comparison.changedOccurrenceCounts.slice(0, 5).forEach(({ key, before, after }) => {
       console.log(`  ~ ${key}: ${before} → ${after}`);
     });
   }
   if (comparison.literalsInNewFunctions.length > 0) {
-    console.log(chalk.blue(`Literals introduced into new functions: ${comparison.literalsInNewFunctions.length}`));
+    console.log(
+      chalk.blue(
+        `Literals introduced into new functions: ${comparison.literalsInNewFunctions.length}`,
+      ),
+    );
   }
   const noChanges =
     comparison.addedLiterals.length === 0 &&
@@ -218,13 +239,29 @@ export function parseWasmLiteralsArgs(args: string[]): {
   const minOccurrences = minOccIdx !== -1 ? parseInt(args[minOccIdx + 1] ?? '1', 10) : undefined;
 
   const thresholdIdx = args.findIndex((a) => a === '--large-threshold');
-  const largeConstantThreshold = thresholdIdx !== -1 ? parseInt(args[thresholdIdx + 1] ?? '100000', 10) : undefined;
+  const largeConstantThreshold =
+    thresholdIdx !== -1 ? parseInt(args[thresholdIdx + 1] ?? '100000', 10) : undefined;
 
-  const flags = ['--json', '--json=true', '--csv', '--csv=true', '--search', '--search-hex', '--type', '--min-occurrences', '--large-threshold'];
+  const flags = [
+    '--json',
+    '--json=true',
+    '--csv',
+    '--csv=true',
+    '--search',
+    '--search-hex',
+    '--type',
+    '--min-occurrences',
+    '--large-threshold',
+  ];
   const files = args.filter((a) => {
     if (flags.includes(a)) return false;
     const prev = args[args.indexOf(a) - 1] ?? '';
-    if (['--search', '--search-hex', '--type', '--min-occurrences', '--large-threshold'].includes(prev)) return false;
+    if (
+      ['--search', '--search-hex', '--type', '--min-occurrences', '--large-threshold'].includes(
+        prev,
+      )
+    )
+      return false;
     return !a.startsWith('--');
   });
 
@@ -238,7 +275,9 @@ export function parseWasmLiteralsArgs(args: string[]): {
       searchHex,
       literalTypeFilter: typeFilter,
       minOccurrences: isNaN(minOccurrences as number) ? undefined : minOccurrences,
-      largeConstantThreshold: isNaN(largeConstantThreshold as number) ? undefined : largeConstantThreshold,
+      largeConstantThreshold: isNaN(largeConstantThreshold as number)
+        ? undefined
+        : largeConstantThreshold,
     },
   };
 }
@@ -274,9 +313,14 @@ export async function run(
   const options: WasmLiteralsAnalysisOptions = {
     searchValue: params.searchValue ?? process.env.SEARCH_VALUE,
     searchHex: params.searchHex ?? process.env.SEARCH_HEX,
-    literalTypeFilter: params.literalTypeFilter ?? (process.env.LITERAL_TYPE as LiteralType | undefined),
-    minOccurrences: params.minOccurrences ?? (process.env.MIN_OCCURRENCES ? parseInt(process.env.MIN_OCCURRENCES, 10) : undefined),
-    largeConstantThreshold: params.largeConstantThreshold ?? (process.env.LARGE_THRESHOLD ? parseInt(process.env.LARGE_THRESHOLD, 10) : undefined),
+    literalTypeFilter:
+      params.literalTypeFilter ?? (process.env.LITERAL_TYPE as LiteralType | undefined),
+    minOccurrences:
+      params.minOccurrences ??
+      (process.env.MIN_OCCURRENCES ? parseInt(process.env.MIN_OCCURRENCES, 10) : undefined),
+    largeConstantThreshold:
+      params.largeConstantThreshold ??
+      (process.env.LARGE_THRESHOLD ? parseInt(process.env.LARGE_THRESHOLD, 10) : undefined),
   };
 
   if (compareFile) {

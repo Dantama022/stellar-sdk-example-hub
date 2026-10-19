@@ -501,17 +501,19 @@ function parseElementSection(section: Section | undefined): WasmElementSegmentIn
       elements.push(reader.varuint32());
     }
 
-    const elementBuffer = Buffer.from(elements.flatMap((idx) => {
-      const bytes: number[] = [];
-      let current = idx >>> 0;
-      do {
-        let byte = current & 0x7f;
-        current >>>= 7;
-        if (current !== 0) byte |= 0x80;
-        bytes.push(byte);
-      } while (current !== 0);
-      return bytes;
-    }));
+    const elementBuffer = Buffer.from(
+      elements.flatMap((idx) => {
+        const bytes: number[] = [];
+        let current = idx >>> 0;
+        do {
+          let byte = current & 0x7f;
+          current >>>= 7;
+          if (current !== 0) byte |= 0x80;
+          bytes.push(byte);
+        } while (current !== 0);
+        return bytes;
+      }),
+    );
     const elementContentHash = createHash('sha256').update(elementBuffer).digest('hex');
 
     segments.push({
@@ -821,7 +823,9 @@ export function analyzeWasmProvenance(file: string): WasmProvenanceReport {
     warnings.push('One or more custom section names could not be decoded');
   }
   if (malformedCount > 0 && validProducerSections.length > 0) {
-    warnings.push('Some producer metadata was parsed, but one or more producer sections were malformed');
+    warnings.push(
+      'Some producer metadata was parsed, but one or more producer sections were malformed',
+    );
   }
 
   const normalized = producers.map(({ field, category, name, version }) => ({
@@ -1295,11 +1299,13 @@ export function analyzeElements(file: string): WasmElementReport {
   const totalElementCount = segments.reduce((sum, segment) => sum + segment.elementCount, 0);
   const averageSegmentSize = segments.length === 0 ? 0 : totalElementCount / segments.length;
 
-  const largestSegment = segments.length === 0
-    ? null
-    : segments.reduce((max, segment) =>
-        segment.elementCount > max.elementCount ? segment : max,
-      { index: -1, elementCount: -1 });
+  const largestSegment =
+    segments.length === 0
+      ? null
+      : segments.reduce(
+          (max, segment) => (segment.elementCount > max.elementCount ? segment : max),
+          { index: -1, elementCount: -1 },
+        );
 
   return {
     file,
@@ -1312,7 +1318,9 @@ export function analyzeElements(file: string): WasmElementReport {
       declarativeSegmentCount: modeCounts.declarative,
       totalElementCount,
       averageSegmentSize,
-      largestSegment: largestSegment ? { index: largestSegment.index, elementCount: largestSegment.elementCount } : null,
+      largestSegment: largestSegment
+        ? { index: largestSegment.index, elementCount: largestSegment.elementCount }
+        : null,
       segmentsByMode: modeCounts,
       segmentsByElementType: sortedRecord(typeCounts),
     },
@@ -1501,14 +1509,10 @@ const FLOAT_OPCODES: Record<number, FloatOpcodeInfo> = {
 };
 
 /** Opcodes that produce or consume float values (used for int-to-float conversion detection). */
-const INT_TO_FLOAT_OPCODES = new Set([
-  0xb2, 0xb3, 0xb4, 0xb5, 0xb7, 0xb8, 0xb9, 0xba,
-]);
+const INT_TO_FLOAT_OPCODES = new Set([0xb2, 0xb3, 0xb4, 0xb5, 0xb7, 0xb8, 0xb9, 0xba]);
 
 /** Opcodes that produce or consume float values for float-to-int conversion detection. */
-const FLOAT_TO_INT_OPCODES = new Set([
-  0xa8, 0xa9, 0xaa, 0xab, 0xae, 0xaf, 0xb0, 0xb1,
-]);
+const FLOAT_TO_INT_OPCODES = new Set([0xa8, 0xa9, 0xaa, 0xab, 0xae, 0xaf, 0xb0, 0xb1]);
 
 function zeroCategoryCounts(): Record<FloatOpCategory, number> {
   return {
@@ -1775,8 +1779,10 @@ export function compareFloatOpsReports(
       addedOpcodes,
       removedOpcodes,
       changedCategories,
-      newF32Usage: before.statistics.totalF32Instructions === 0 && after.statistics.totalF32Instructions > 0,
-      newF64Usage: before.statistics.totalF64Instructions === 0 && after.statistics.totalF64Instructions > 0,
+      newF32Usage:
+        before.statistics.totalF32Instructions === 0 && after.statistics.totalF32Instructions > 0,
+      newF64Usage:
+        before.statistics.totalF64Instructions === 0 && after.statistics.totalF64Instructions > 0,
       newlyFloatFunctions,
       removedFloatFunctions,
       totalFloatDelta:
@@ -1882,10 +1888,10 @@ export interface WasmIndirectCallCandidate {
 
 /** Classification of a strongly connected component. */
 export type WasmSccKind =
-  | 'direct_self_recursion'       // single node with self-edge
-  | 'mutual_recursion_two'        // exactly 2 nodes forming a cycle
-  | 'multi_function_cycle'        // 3+ nodes
-  | 'non_recursive';              // SCC of size 1 with no self-edge
+  | 'direct_self_recursion' // single node with self-edge
+  | 'mutual_recursion_two' // exactly 2 nodes forming a cycle
+  | 'multi_function_cycle' // 3+ nodes
+  | 'non_recursive'; // SCC of size 1 with no self-edge
 
 export interface WasmScc {
   /** Stable numeric ID, assigned in reverse topological order (SCC 0 = sink-most). */
@@ -1948,19 +1954,23 @@ export interface WasmRecursionReport {
 class RecReader {
   pos = 0;
   constructor(private readonly buf: Buffer) {}
-  get done(): boolean { return this.pos >= this.buf.length; }
+  get done(): boolean {
+    return this.pos >= this.buf.length;
+  }
   byte(): number {
     if (this.pos >= this.buf.length) throw new WasmValidationError('Unexpected end of data');
     return this.buf[this.pos++];
   }
   bytes(n: number): Buffer {
-    if (this.pos + n > this.buf.length) throw new WasmValidationError('Section length exceeds data');
+    if (this.pos + n > this.buf.length)
+      throw new WasmValidationError('Section length exceeds data');
     const out = this.buf.subarray(this.pos, this.pos + n);
     this.pos += n;
     return out;
   }
   u32(): number {
-    let result = 0; let shift = 0;
+    let result = 0;
+    let shift = 0;
     for (let i = 0; i < 5; i++) {
       const b = this.byte();
       result |= (b & 0x7f) << shift;
@@ -1970,17 +1980,32 @@ class RecReader {
     throw new WasmValidationError('Malformed LEB128');
   }
   i32(): number {
-    let result = 0; let shift = 0; let b = 0;
-    do { b = this.byte(); result |= (b & 0x7f) << shift; shift += 7; }
-    while ((b & 0x80) !== 0 && shift < 35);
+    let result = 0;
+    let shift = 0;
+    let b = 0;
+    do {
+      b = this.byte();
+      result |= (b & 0x7f) << shift;
+      shift += 7;
+    } while ((b & 0x80) !== 0 && shift < 35);
     if (shift < 32 && (b & 0x40) !== 0) result |= ~0 << shift;
     return result;
   }
-  i64Bytes(): void { let b: number; do { b = this.byte(); } while ((b & 0x80) !== 0); }
-  str(): string { return this.bytes(this.u32()).toString('utf8'); }
+  i64Bytes(): void {
+    let b: number;
+    do {
+      b = this.byte();
+    } while ((b & 0x80) !== 0);
+  }
+  str(): string {
+    return this.bytes(this.u32()).toString('utf8');
+  }
 }
 
-interface RecSection { id: number; payload: Buffer }
+interface RecSection {
+  id: number;
+  payload: Buffer;
+}
 
 function recParseSections(wasm: Buffer): RecSection[] {
   if (wasm.length < 8) throw new WasmValidationError('WASM binary too short');
@@ -2003,12 +2028,23 @@ function recCountImportedFunctions(sec: RecSection | undefined): number {
   const count = r.u32();
   let fns = 0;
   for (let i = 0; i < count; i++) {
-    r.str(); r.str();
+    r.str();
+    r.str();
     const kind = r.byte();
-    if (kind === 0x00) { fns++; r.u32(); }
-    else if (kind === 0x01) { r.byte(); r.u32(); if (sec.payload[r.pos - 4] & 1) r.u32(); }
-    else if (kind === 0x02) { r.u32(); if (sec.payload[r.pos - 1] & 1) r.u32(); }
-    else if (kind === 0x03) { r.byte(); r.byte(); }
+    if (kind === 0x00) {
+      fns++;
+      r.u32();
+    } else if (kind === 0x01) {
+      r.byte();
+      r.u32();
+      if (sec.payload[r.pos - 4] & 1) r.u32();
+    } else if (kind === 0x02) {
+      r.u32();
+      if (sec.payload[r.pos - 1] & 1) r.u32();
+    } else if (kind === 0x03) {
+      r.byte();
+      r.byte();
+    }
   }
   return fns;
 }
@@ -2034,11 +2070,19 @@ function recParseElementTable(sec: RecSection | undefined): Map<number, number> 
       if (hasTable && !isDeclarative) {
         r.u32(); // table index
         // read offset init expr
-        let op = r.byte();
-        if (op === 0x41) { offset = r.i32(); r.byte(); /* end */ }
-        else if (op === 0x42) { r.i64Bytes(); r.byte(); }
-        else if (op === 0x23) { r.u32(); r.byte(); }
-        else { r.byte(); /* end */ }
+        const op = r.byte();
+        if (op === 0x41) {
+          offset = r.i32();
+          r.byte(); /* end */
+        } else if (op === 0x42) {
+          r.i64Bytes();
+          r.byte();
+        } else if (op === 0x23) {
+          r.u32();
+          r.byte();
+        } else {
+          r.byte(); /* end */
+        }
       } else if (!hasTable && !isDeclarative) {
         // passive — skip
       }
@@ -2059,15 +2103,23 @@ function recParseElementTable(sec: RecSection | undefined): Map<number, number> 
 function recSkipImmediate(op: number, r: RecReader): void {
   if ([0x02, 0x03, 0x04].includes(op)) r.byte();
   else if ([0x0c, 0x0d, 0x10, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26].includes(op)) r.u32();
-  else if (op === 0x0e) { const n = r.u32(); for (let i = 0; i <= n; i++) r.u32(); }
-  else if (op === 0x11) { r.u32(); r.byte(); }
-  else if (op >= 0x28 && op <= 0x3e) { r.u32(); r.u32(); }
-  else if (op === 0x3f || op === 0x40) r.byte();
+  else if (op === 0x0e) {
+    const n = r.u32();
+    for (let i = 0; i <= n; i++) r.u32();
+  } else if (op === 0x11) {
+    r.u32();
+    r.byte();
+  } else if (op >= 0x28 && op <= 0x3e) {
+    r.u32();
+    r.u32();
+  } else if (op === 0x3f || op === 0x40) r.byte();
   else if (op === 0x41) r.i32();
   else if (op === 0x42) r.i64Bytes();
   else if (op === 0x43) r.bytes(4);
   else if (op === 0x44) r.bytes(8);
-  else if (op === 0xfc) { r.u32(); /* bulk memory subop */ }
+  else if (op === 0xfc) {
+    r.u32(); /* bulk memory subop */
+  }
 }
 
 interface ParsedFunctionCalls {
@@ -2081,7 +2133,10 @@ function recParseFunctionBody(body: Buffer): ParsedFunctionCalls {
   try {
     const r = new RecReader(body);
     const localCount = r.u32();
-    for (let i = 0; i < localCount; i++) { r.u32(); r.byte(); }
+    for (let i = 0; i < localCount; i++) {
+      r.u32();
+      r.byte();
+    }
     while (!r.done) {
       const instrOffset = r.pos;
       const op = r.byte();
@@ -2121,7 +2176,7 @@ function tarjanScc(adjacency: Map<number, Set<number>>, nodes: number[]): number
     stack.push(v);
     onStack.set(v, true);
 
-    for (const w of (adjacency.get(v) ?? new Set())) {
+    for (const w of adjacency.get(v) ?? new Set()) {
       if (!index.has(w)) {
         strongConnect(w);
         lowlink.set(v, Math.min(lowlink.get(v)!, lowlink.get(w)!));
@@ -2163,14 +2218,17 @@ function enumerateCyclesInScc(
   const memberSet = new Set(members);
   const blocked = new Map<number, boolean>();
   const blockMap = new Map<number, Set<number>>();
-  members.forEach((m) => { blocked.set(m, false); blockMap.set(m, new Set()); });
+  members.forEach((m) => {
+    blocked.set(m, false);
+    blockMap.set(m, new Set());
+  });
 
   const stack: number[] = [];
   let startNode = members[0];
 
   function unblock(u: number): void {
     blocked.set(u, false);
-    for (const w of (blockMap.get(u) ?? new Set())) {
+    for (const w of blockMap.get(u) ?? new Set()) {
       blockMap.get(u)!.delete(w);
       if (blocked.get(w)) unblock(w);
     }
@@ -2182,12 +2240,15 @@ function enumerateCyclesInScc(
     stack.push(v);
     blocked.set(v, true);
 
-    for (const w of (intraEdges.get(v) ?? new Set())) {
+    for (const w of intraEdges.get(v) ?? new Set()) {
       if (!memberSet.has(w)) continue;
       if (w === start) {
         cycles.push([...stack]);
         found = true;
-        if (cycles.length >= maxCycles) { stack.pop(); return found; }
+        if (cycles.length >= maxCycles) {
+          stack.pop();
+          return found;
+        }
       } else if (!blocked.get(w)) {
         if (circuit(w, start)) found = true;
       }
@@ -2196,7 +2257,7 @@ function enumerateCyclesInScc(
     if (found) {
       unblock(v);
     } else {
-      for (const w of (intraEdges.get(v) ?? new Set())) {
+      for (const w of intraEdges.get(v) ?? new Set()) {
         if (!memberSet.has(w)) continue;
         blockMap.get(w)!.add(v);
       }
@@ -2233,7 +2294,7 @@ function shortestCycleInScc(
     const queue = [start];
     while (queue.length > 0) {
       const u = queue.shift()!;
-      for (const v of (intraEdges.get(u) ?? new Set())) {
+      for (const v of intraEdges.get(u) ?? new Set()) {
         if (!new Set(members).has(v)) continue;
         if (v === start) {
           const len = dist.get(u)! + 1;
@@ -2249,10 +2310,7 @@ function shortestCycleInScc(
   return shortest;
 }
 
-function classifyScc(
-  members: number[],
-  intraEdges: Map<number, Set<number>>,
-): WasmSccKind {
+function classifyScc(members: number[], intraEdges: Map<number, Set<number>>): WasmSccKind {
   if (members.length === 1) {
     return (intraEdges.get(members[0])?.has(members[0]) ?? false)
       ? 'direct_self_recursion'
@@ -2286,8 +2344,11 @@ export function analyzeRecursion(
 ): WasmRecursionReport {
   const maxCycles = options.maxCycles ?? 0; // 0 = no enumeration
   const wasm = (() => {
-    try { return fs.readFileSync(file); }
-    catch (e) { throw new WasmValidationError(`Unable to read WASM file "${file}": ${(e as Error).message}`); }
+    try {
+      return fs.readFileSync(file);
+    } catch (e) {
+      throw new WasmValidationError(`Unable to read WASM file "${file}": ${(e as Error).message}`);
+    }
   })();
 
   const sections = recParseSections(wasm);
@@ -2381,7 +2442,7 @@ export function analyzeRecursion(
     // Collect intra-SCC direct edges
     const intraEdges: WasmCallEdge[] = [];
     for (const m of members) {
-      for (const e of (edgesByFunction.get(m) ?? [])) {
+      for (const e of edgesByFunction.get(m) ?? []) {
         if (e.callType === 'direct' && memberSet.has(e.calleeIndex)) intraEdges.push(e);
       }
     }
@@ -2397,9 +2458,7 @@ export function analyzeRecursion(
 
     // Enumerate simple cycles if requested and this SCC is recursive
     const enumeratedCycles: number[][] =
-      isRecursive && maxCycles > 0
-        ? enumerateCyclesInScc(members, intraAdj, maxCycles)
-        : [];
+      isRecursive && maxCycles > 0 ? enumerateCyclesInScc(members, intraAdj, maxCycles) : [];
 
     // Check if any indirect candidate creates a cycle within members
     let hasIndirectCycle = false;
@@ -2407,7 +2466,10 @@ export function analyzeRecursion(
       for (const site of indirectCallCandidates) {
         if (!memberSet.has(site.callerIndex)) continue;
         for (const callee of site.candidateCallees) {
-          if (memberSet.has(callee)) { hasIndirectCycle = true; break; }
+          if (memberSet.has(callee)) {
+            hasIndirectCycle = true;
+            break;
+          }
         }
         if (hasIndirectCycle) break;
       }
@@ -2460,9 +2522,7 @@ export function analyzeRecursion(
     recursiveFunctionCount: recursiveFunctions.length,
     recursiveComponentCount: recursiveSccs.length,
     largestRecursiveComponentSize: recursiveSizes.length > 0 ? Math.max(...recursiveSizes) : 0,
-    directSelfRecursiveFunctionCount: sccs.filter(
-      (s) => s.kind === 'direct_self_recursion',
-    ).length,
+    directSelfRecursiveFunctionCount: sccs.filter((s) => s.kind === 'direct_self_recursion').length,
     mutualRecursionComponentCount: sccs.filter(
       (s) => s.kind === 'mutual_recursion_two' || s.kind === 'multi_function_cycle',
     ).length,
@@ -2506,12 +2566,8 @@ export function compareRecursionReports(
   );
 
   // Compare SCCs by canonical member signature
-  const beforeSccMap = new Map(
-    before.recursiveSccs.map((s) => [s.members.join(','), s]),
-  );
-  const afterSccMap = new Map(
-    after.recursiveSccs.map((s) => [s.members.join(','), s]),
-  );
+  const beforeSccMap = new Map(before.recursiveSccs.map((s) => [s.members.join(','), s]));
+  const afterSccMap = new Map(after.recursiveSccs.map((s) => [s.members.join(','), s]));
 
   const introducedSccs = after.recursiveSccs.filter((s) => !beforeSccMap.has(s.members.join(',')));
   const removedSccs = before.recursiveSccs.filter((s) => !afterSccMap.has(s.members.join(',')));
@@ -2530,7 +2586,8 @@ export function compareRecursionReports(
       const delta = (afterScc.shortestCycleLength ?? 0) - (beforeScc.shortestCycleLength ?? 0);
       changes.push(delta > 0 ? 'cycle_size_increased' : 'cycle_size_decreased');
     }
-    if (beforeScc.internalEdges.length !== afterScc.internalEdges.length) changes.push('edge_count');
+    if (beforeScc.internalEdges.length !== afterScc.internalEdges.length)
+      changes.push('edge_count');
     if (changes.length > 0) changedSccs.push({ before: beforeScc, after: afterScc, changes });
   }
 
@@ -2599,7 +2656,8 @@ export interface WasmStringReport {
 function classifyString(value: string): StringCategory {
   if (/^[\w./-]{2,}$/.test(value) && /\//.test(value)) return 'path_like';
   if (/^https?:\/\//i.test(value) || /^[a-z][a-z0-9+\-.]*:\/\//i.test(value)) return 'url_like';
-  if (/error|fail|panic|overflow|underflow|invalid|abort|assert/i.test(value)) return 'error_message';
+  if (/error|fail|panic|overflow|underflow|invalid|abort|assert/i.test(value))
+    return 'error_message';
   if (/^-?[0-9]+(\.[0-9]+)?$/.test(value)) return 'numeric_string';
   if (/^[a-zA-Z_][a-zA-Z0-9_:.]*$/.test(value)) return 'identifier_like';
   return 'uncategorized';
@@ -2614,11 +2672,15 @@ function isValidUtf8(buf: Buffer): boolean {
   while (i < buf.length) {
     const b = buf[i];
     let charLen: number;
-    if (b <= 0x7f) { charLen = 1; }
-    else if ((b & 0xe0) === 0xc0) { charLen = 2; }
-    else if ((b & 0xf0) === 0xe0) { charLen = 3; }
-    else if ((b & 0xf8) === 0xf0) { charLen = 4; }
-    else return false;
+    if (b <= 0x7f) {
+      charLen = 1;
+    } else if ((b & 0xe0) === 0xc0) {
+      charLen = 2;
+    } else if ((b & 0xf0) === 0xe0) {
+      charLen = 3;
+    } else if ((b & 0xf8) === 0xf0) {
+      charLen = 4;
+    } else return false;
     if (i + charLen > buf.length) return false;
     for (let j = 1; j < charLen; j++) {
       if ((buf[i + j] & 0xc0) !== 0x80) return false;
@@ -2712,7 +2774,9 @@ function parseDataSegments(section: Section | undefined): Array<{ index: number;
       if ((flags & 0x02) !== 0) reader.varuint32(); // explicit memory index
       // Skip offset expression until 0x0b (end)
       let b: number;
-      do { b = reader.byte(); } while (b !== 0x0b);
+      do {
+        b = reader.byte();
+      } while (b !== 0x0b);
     }
     // else passive segment: no offset expr
     const dataLen = reader.varuint32();
@@ -2722,7 +2786,10 @@ function parseDataSegments(section: Section | undefined): Array<{ index: number;
   return segments;
 }
 
-export function analyzeStrings(file: string, options: WasmStringAnalysisOptions = {}): WasmStringReport {
+export function analyzeStrings(
+  file: string,
+  options: WasmStringAnalysisOptions = {},
+): WasmStringReport {
   const minLength = options.minLength ?? 4;
   const maxLength = options.maxLength ?? Infinity;
   const sections = loadSections(file);
@@ -2747,7 +2814,14 @@ export function analyzeStrings(file: string, options: WasmStringAnalysisOptions 
       const reader = new Reader(cs.payload);
       const sectionName = reader.string();
       const payload = cs.payload.subarray(reader.offset);
-      extractStringsFromBuffer(payload, minLength, 'custom_section', null, sectionName, occurrenceMap);
+      extractStringsFromBuffer(
+        payload,
+        minLength,
+        'custom_section',
+        null,
+        sectionName,
+        occurrenceMap,
+      );
     } catch {
       // Skip malformed custom section
     }
@@ -2756,7 +2830,15 @@ export function analyzeStrings(file: string, options: WasmStringAnalysisOptions 
   // Calculate total printable bytes for printable-data percentage
   let totalBytes = 0;
   let printableBytes = 0;
-  const dataSegArr = dataSection ? (() => { try { return parseDataSegments(dataSection); } catch { return []; } })() : [];
+  const dataSegArr = dataSection
+    ? (() => {
+        try {
+          return parseDataSegments(dataSection);
+        } catch {
+          return [];
+        }
+      })()
+    : [];
   for (const seg of dataSegArr) {
     totalBytes += seg.data.length;
     for (let i = 0; i < seg.data.length; i++) {
@@ -2767,18 +2849,27 @@ export function analyzeStrings(file: string, options: WasmStringAnalysisOptions 
   // Apply filters
   let allStrings = [...occurrenceMap.values()];
   if (maxLength !== Infinity) allStrings = allStrings.filter((s) => s.byteLength <= maxLength);
-  if (options.encodingFilter) allStrings = allStrings.filter((s) => s.encoding === options.encodingFilter);
-  if (options.sourceSectionFilter) allStrings = allStrings.filter((s) => s.sourceSection === options.sourceSectionFilter);
-  if (options.categoryFilter) allStrings = allStrings.filter((s) => s.category === options.categoryFilter);
+  if (options.encodingFilter)
+    allStrings = allStrings.filter((s) => s.encoding === options.encodingFilter);
+  if (options.sourceSectionFilter)
+    allStrings = allStrings.filter((s) => s.sourceSection === options.sourceSectionFilter);
+  if (options.categoryFilter)
+    allStrings = allStrings.filter((s) => s.category === options.categoryFilter);
   if (options.searchPattern) {
     const flags = options.caseInsensitive ? 'i' : '';
     let pattern: RegExp;
-    try { pattern = new RegExp(options.searchPattern, flags); } catch { pattern = new RegExp(''); }
+    try {
+      pattern = new RegExp(options.searchPattern, flags);
+    } catch {
+      pattern = new RegExp('');
+    }
     allStrings = allStrings.filter((s) => pattern.test(s.value));
   }
 
   // Sort deterministically
-  allStrings.sort((a, b) => a.sourceSection.localeCompare(b.sourceSection) || a.byteOffset - b.byteOffset);
+  allStrings.sort(
+    (a, b) => a.sourceSection.localeCompare(b.sourceSection) || a.byteOffset - b.byteOffset,
+  );
 
   const totalStringBytes = allStrings.reduce((sum, s) => sum + s.byteLength, 0);
   const lengths = allStrings.map((s) => s.byteLength);
@@ -2803,7 +2894,11 @@ export function analyzeStrings(file: string, options: WasmStringAnalysisOptions 
   };
 }
 
-export function compareStringReports(beforeFile: string, afterFile: string, options: WasmStringAnalysisOptions = {}) {
+export function compareStringReports(
+  beforeFile: string,
+  afterFile: string,
+  options: WasmStringAnalysisOptions = {},
+) {
   const before = analyzeStrings(beforeFile, options);
   const after = analyzeStrings(afterFile, options);
 
@@ -2817,7 +2912,11 @@ export function compareStringReports(beforeFile: string, afterFile: string, opti
       const b = beforeMap.get(v);
       return b && b.occurrenceCount !== s.occurrenceCount;
     })
-    .map(([v, s]) => ({ value: v, before: beforeMap.get(v)!.occurrenceCount, after: s.occurrenceCount }));
+    .map(([v, s]) => ({
+      value: v,
+      before: beforeMap.get(v)!.occurrenceCount,
+      after: s.occurrenceCount,
+    }));
 
   return {
     before,
@@ -2887,30 +2986,39 @@ export interface WasmStackTypesReport {
 }
 
 // Instruction type signatures: [inputTypes, outputTypes]
-interface TypeSig { in: WasmValType[]; out: WasmValType[] }
+interface TypeSig {
+  in: WasmValType[];
+  out: WasmValType[];
+}
 
 // Module-level shorthand constants for common value types used in stack analysis
 const _i32: WasmValType = 'i32';
-const _i64: WasmValType = 'i64';
-const _f32: WasmValType = 'f32';
-const _f64: WasmValType = 'f64';
 
 function valType(byte: number): WasmValType {
   const map: Record<number, WasmValType> = {
-    0x7f: 'i32', 0x7e: 'i64', 0x7d: 'f32', 0x7c: 'f64',
-    0x70: 'funcref', 0x6f: 'externref',
+    0x7f: 'i32',
+    0x7e: 'i64',
+    0x7d: 'f32',
+    0x7c: 'f64',
+    0x70: 'funcref',
+    0x6f: 'externref',
   };
   return map[byte] ?? 'unknown';
 }
 
-function parseTypeSection(sec: Section | undefined): Array<{ params: WasmValType[]; results: WasmValType[] }> {
+function parseTypeSection(
+  sec: Section | undefined,
+): Array<{ params: WasmValType[]; results: WasmValType[] }> {
   if (!sec) return [];
   const r = new Reader(sec.payload);
   const count = r.varuint32();
   const types: Array<{ params: WasmValType[]; results: WasmValType[] }> = [];
   for (let i = 0; i < count; i++) {
     const tag = r.byte(); // 0x60 for function type
-    if (tag !== 0x60) { types.push({ params: [], results: [] }); continue; }
+    if (tag !== 0x60) {
+      types.push({ params: [], results: [] });
+      continue;
+    }
     const pCount = r.varuint32();
     const params: WasmValType[] = [];
     for (let j = 0; j < pCount; j++) params.push(valType(r.byte()));
@@ -2931,77 +3039,241 @@ function parseFunctionSection(sec: Section | undefined): number[] {
   return indices;
 }
 
-type StackState = WasmValType[] | 'polymorphic'; // polymorphic = unreachable
-
-function typeSigFor(opcode: number, typeIdx: number, types: Array<{ params: WasmValType[]; results: WasmValType[] }>, funcTypeIndices: number[], importedFunctions: number): TypeSig {
-  const i32: WasmValType = 'i32'; const i64: WasmValType = 'i64';
-  const f32: WasmValType = 'f32'; const f64: WasmValType = 'f64';
+function typeSigFor(
+  opcode: number,
+  typeIdx: number,
+  types: Array<{ params: WasmValType[]; results: WasmValType[] }>,
+  funcTypeIndices: number[],
+  importedFunctions: number,
+): TypeSig {
+  const i32: WasmValType = 'i32';
+  const i64: WasmValType = 'i64';
+  const f32: WasmValType = 'f32';
+  const f64: WasmValType = 'f64';
   const sig = (i: WasmValType[], o: WasmValType[]): TypeSig => ({ in: i, out: o });
   switch (opcode) {
-    case 0x00: return sig([], []); // unreachable — handled separately
-    case 0x01: return sig([], []); // nop
-    case 0x1a: return sig(['unknown'], []); // drop
-    case 0x45: return sig([i32], [i32]); // i32.eqz
-    case 0x46: case 0x47: case 0x48: case 0x49: case 0x4a: case 0x4b: return sig([i32, i32], [i32]);
-    case 0x50: return sig([i64], [i32]); // i64.eqz
-    case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: return sig([i64, i64], [i32]);
-    case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f: case 0x60: return sig([f32, f32], [i32]);
-    case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: return sig([f64, f64], [i32]);
-    case 0x41: return sig([], [i32]); // i32.const
-    case 0x42: return sig([], [i64]); // i64.const
-    case 0x43: return sig([], [f32]); // f32.const
-    case 0x44: return sig([], [f64]); // f64.const
-    // i32 arithmetic
-    case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
-    case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77: case 0x78: case 0x79: case 0x7a: case 0x7b:
+    case 0x00:
+      return sig([], []); // unreachable — handled separately
+    case 0x01:
+      return sig([], []); // nop
+    case 0x1a:
+      return sig(['unknown'], []); // drop
+    case 0x45:
+      return sig([i32], [i32]); // i32.eqz
+    case 0x46:
+    case 0x47:
+    case 0x48:
+    case 0x49:
+    case 0x4a:
+    case 0x4b:
       return sig([i32, i32], [i32]);
-    case 0x67: case 0x68: case 0x69: return sig([i32], [i32]); // clz/ctz/popcnt
+    case 0x50:
+      return sig([i64], [i32]); // i64.eqz
+    case 0x51:
+    case 0x52:
+    case 0x53:
+    case 0x54:
+    case 0x55:
+    case 0x56:
+      return sig([i64, i64], [i32]);
+    case 0x5b:
+    case 0x5c:
+    case 0x5d:
+    case 0x5e:
+    case 0x5f:
+    case 0x60:
+      return sig([f32, f32], [i32]);
+    case 0x61:
+    case 0x62:
+    case 0x63:
+    case 0x64:
+    case 0x65:
+    case 0x66:
+      return sig([f64, f64], [i32]);
+    case 0x41:
+      return sig([], [i32]); // i32.const
+    case 0x42:
+      return sig([], [i64]); // i64.const
+    case 0x43:
+      return sig([], [f32]); // f32.const
+    case 0x44:
+      return sig([], [f64]); // f64.const
+    // i32 arithmetic
+    case 0x6a:
+    case 0x6b:
+    case 0x6c:
+    case 0x6d:
+    case 0x6e:
+    case 0x6f:
+    case 0x70:
+    case 0x71:
+    case 0x72:
+    case 0x73:
+    case 0x74:
+    case 0x75:
+    case 0x76:
+    case 0x77:
+    case 0x78:
+      return sig([i32, i32], [i32]);
+    case 0x67:
+    case 0x68:
+    case 0x69:
+      return sig([i32], [i32]); // clz/ctz/popcnt
     // i64 arithmetic
-    case 0x7c: case 0x7d: case 0x7e: case 0x7f: case 0x80: case 0x81:
-    case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87: case 0x88: case 0x89: case 0x8a:
+    case 0x7c:
+    case 0x7d:
+    case 0x7e:
+    case 0x7f:
+    case 0x80:
+    case 0x81:
+    case 0x82:
+    case 0x83:
+    case 0x84:
+    case 0x85:
+    case 0x86:
+    case 0x87:
+    case 0x88:
+    case 0x89:
+    case 0x8a:
       return sig([i64, i64], [i64]);
-    case 0x79: case 0x7a: case 0x7b: return sig([i64], [i64]);
+    case 0x79:
+    case 0x7a:
+    case 0x7b:
+      return sig([i64], [i64]);
     // f32 arithmetic
-    case 0x8b: case 0x8c: case 0x91: case 0x8d: case 0x8e: case 0x8f: case 0x90: return sig([f32], [f32]);
-    case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97: case 0x98: return sig([f32, f32], [f32]);
+    case 0x8b:
+    case 0x8c:
+    case 0x91:
+    case 0x8d:
+    case 0x8e:
+    case 0x8f:
+    case 0x90:
+      return sig([f32], [f32]);
+    case 0x92:
+    case 0x93:
+    case 0x94:
+    case 0x95:
+    case 0x96:
+    case 0x97:
+    case 0x98:
+      return sig([f32, f32], [f32]);
     // f64 arithmetic
-    case 0x99: case 0x9a: case 0x9f: case 0x9b: case 0x9c: case 0x9d: case 0x9e: return sig([f64], [f64]);
-    case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: return sig([f64, f64], [f64]);
+    case 0x99:
+    case 0x9a:
+    case 0x9f:
+    case 0x9b:
+    case 0x9c:
+    case 0x9d:
+    case 0x9e:
+      return sig([f64], [f64]);
+    case 0xa0:
+    case 0xa1:
+    case 0xa2:
+    case 0xa3:
+    case 0xa4:
+    case 0xa5:
+    case 0xa6:
+      return sig([f64, f64], [f64]);
     // conversions
-    case 0xa7: return sig([i64], [i32]);
-    case 0xa8: return sig([f32], [i32]); case 0xa9: return sig([f32], [i32]);
-    case 0xaa: return sig([f64], [i32]); case 0xab: return sig([f64], [i32]);
-    case 0xac: return sig([i32], [i64]); case 0xad: return sig([i32], [i64]);
-    case 0xae: return sig([f32], [i64]); case 0xaf: return sig([f32], [i64]);
-    case 0xb0: return sig([f64], [i64]); case 0xb1: return sig([f64], [i64]);
-    case 0xb2: return sig([i32], [f32]); case 0xb3: return sig([i32], [f32]);
-    case 0xb4: return sig([i64], [f32]); case 0xb5: return sig([i64], [f32]);
-    case 0xb6: return sig([f64], [f32]);
-    case 0xb7: return sig([i32], [f64]); case 0xb8: return sig([i32], [f64]);
-    case 0xb9: return sig([i64], [f64]); case 0xba: return sig([i64], [f64]);
-    case 0xbb: return sig([f32], [f64]);
-    case 0xbc: return sig([f32], [i32]); case 0xbd: return sig([f64], [i64]);
-    case 0xbe: return sig([i32], [f32]); case 0xbf: return sig([i64], [f64]);
+    case 0xa7:
+      return sig([i64], [i32]);
+    case 0xa8:
+      return sig([f32], [i32]);
+    case 0xa9:
+      return sig([f32], [i32]);
+    case 0xaa:
+      return sig([f64], [i32]);
+    case 0xab:
+      return sig([f64], [i32]);
+    case 0xac:
+      return sig([i32], [i64]);
+    case 0xad:
+      return sig([i32], [i64]);
+    case 0xae:
+      return sig([f32], [i64]);
+    case 0xaf:
+      return sig([f32], [i64]);
+    case 0xb0:
+      return sig([f64], [i64]);
+    case 0xb1:
+      return sig([f64], [i64]);
+    case 0xb2:
+      return sig([i32], [f32]);
+    case 0xb3:
+      return sig([i32], [f32]);
+    case 0xb4:
+      return sig([i64], [f32]);
+    case 0xb5:
+      return sig([i64], [f32]);
+    case 0xb6:
+      return sig([f64], [f32]);
+    case 0xb7:
+      return sig([i32], [f64]);
+    case 0xb8:
+      return sig([i32], [f64]);
+    case 0xb9:
+      return sig([i64], [f64]);
+    case 0xba:
+      return sig([i64], [f64]);
+    case 0xbb:
+      return sig([f32], [f64]);
+    case 0xbc:
+      return sig([f32], [i32]);
+    case 0xbd:
+      return sig([f64], [i64]);
+    case 0xbe:
+      return sig([i32], [f32]);
+    case 0xbf:
+      return sig([i64], [f64]);
     // memory
-    case 0x28: case 0x2c: case 0x2d: case 0x2e: case 0x2f: case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: return sig([i32], [i32]);
-    case 0x29: return sig([i32], [i64]);
-    case 0x2a: return sig([i32], [f32]);
-    case 0x2b: return sig([i32], [f64]);
-    case 0x36: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: return sig([i32, i32], []);
-    case 0x37: return sig([i32, i64], []);
-    case 0x38: return sig([i32, f32], []);
-    case 0x39: return sig([i32, f64], []);
-    case 0x3f: return sig([], [i32]); // memory.size
-    case 0x40: return sig([i32], [i32]); // memory.grow
+    case 0x28:
+    case 0x2c:
+    case 0x2d:
+    case 0x2e:
+    case 0x2f:
+    case 0x30:
+    case 0x31:
+    case 0x32:
+    case 0x33:
+    case 0x34:
+    case 0x35:
+      return sig([i32], [i32]);
+    case 0x29:
+      return sig([i32], [i64]);
+    case 0x2a:
+      return sig([i32], [f32]);
+    case 0x2b:
+      return sig([i32], [f64]);
+    case 0x36:
+    case 0x3a:
+    case 0x3b:
+    case 0x3c:
+    case 0x3d:
+    case 0x3e:
+      return sig([i32, i32], []);
+    case 0x37:
+      return sig([i32, i64], []);
+    case 0x38:
+      return sig([i32, f32], []);
+    case 0x39:
+      return sig([i32, f64], []);
+    case 0x3f:
+      return sig([], [i32]); // memory.size
+    case 0x40:
+      return sig([i32], [i32]); // memory.grow
     // call
     case 0x10: {
-      const ti = typeIdx < funcTypeIndices.length + importedFunctions
-        ? (typeIdx < importedFunctions ? undefined : funcTypeIndices[typeIdx - importedFunctions])
-        : undefined;
+      const ti =
+        typeIdx < funcTypeIndices.length + importedFunctions
+          ? typeIdx < importedFunctions
+            ? undefined
+            : funcTypeIndices[typeIdx - importedFunctions]
+          : undefined;
       const t = ti !== undefined && ti < types.length ? types[ti] : null;
       return t ? sig([...t.params], [...t.results]) : sig([], []);
     }
-    default: return sig([], []);
+    default:
+      return sig([], []);
   }
 }
 
@@ -3011,7 +3283,6 @@ function opcodeNameFor(opcode: number): string {
 
 export function analyzeStackTypes(file: string): WasmStackTypesReport {
   const sections = loadSections(file);
-  const importSec = sections.find((s) => s.id === 2);
   const typeSec = sections.find((s) => s.id === 1);
   const funcSec = sections.find((s) => s.id === 3);
   const codeSec = sections.find((s) => s.id === 10);
@@ -3028,8 +3299,21 @@ export function analyzeStackTypes(file: string): WasmStackTypesReport {
 
   if (!codeSec) {
     return {
-      file, valid: true, records: [], issues: [], functions: [],
-      statistics: { totalFunctions: 0, totalInstructions: 0, totalTypeTransitions: 0, totalPolymorphicStates: 0, totalIssues: 0, maxStackDepth: 0, typeTransitionFrequencies: {}, functionsWithHighestTransitions: [] },
+      file,
+      valid: true,
+      records: [],
+      issues: [],
+      functions: [],
+      statistics: {
+        totalFunctions: 0,
+        totalInstructions: 0,
+        totalTypeTransitions: 0,
+        totalPolymorphicStates: 0,
+        totalIssues: 0,
+        maxStackDepth: 0,
+        typeTransitionFrequencies: {},
+        functionsWithHighestTransitions: [],
+      },
     };
   }
 
@@ -3040,7 +3324,10 @@ export function analyzeStackTypes(file: string): WasmStackTypesReport {
     const bodySize = reader.varuint32();
     const body = new Reader(reader.bytes(bodySize));
     const localGroupCount = body.varuint32();
-    for (let j = 0; j < localGroupCount; j++) { body.varuint32(); body.byte(); }
+    for (let j = 0; j < localGroupCount; j++) {
+      body.varuint32();
+      body.byte();
+    }
 
     const functionIndex = importedFunctions + fi;
     const stack: WasmValType[] = [];
@@ -3066,7 +3353,8 @@ export function analyzeStackTypes(file: string): WasmStackTypesReport {
         // unreachable
         isUnreachable = true;
         isUnreachableInstr = true;
-        inputTypes = []; outputTypes = [];
+        inputTypes = [];
+        outputTypes = [];
       } else if (opcode === 0x0b) {
         // end — pop block
         if (blockIndex > 0) blockIndex--;
@@ -3107,7 +3395,8 @@ export function analyzeStackTypes(file: string): WasmStackTypesReport {
         // call
         const callIdx = body.varuint32();
         const ts = typeSigFor(opcode, callIdx, types, funcTypeIndices, importedFunctions);
-        inputTypes = ts.in; outputTypes = ts.out;
+        inputTypes = ts.in;
+        outputTypes = ts.out;
       } else if (opcode === 0x11) {
         // call_indirect
         const typeIdx2 = body.varuint32();
@@ -3117,14 +3406,22 @@ export function analyzeStackTypes(file: string): WasmStackTypesReport {
         outputTypes = t ? t.results : [];
       } else {
         const ts = typeSigFor(opcode, 0, types, funcTypeIndices, importedFunctions);
-        inputTypes = ts.in; outputTypes = ts.out;
+        inputTypes = ts.in;
+        outputTypes = ts.out;
         skipInstructionImmediate(opcode, body);
       }
 
       if (!isUnreachable) {
         for (let k = 0; k < inputTypes.length; k++) {
           if (stack.length === 0) {
-            funcIssues.push({ functionIndex, blockIndex, instructionIndex: instrIndex, opcode: opName, kind: 'stack_underflow', description: `Stack underflow consuming operand ${k} for ${opName}` });
+            funcIssues.push({
+              functionIndex,
+              blockIndex,
+              instructionIndex: instrIndex,
+              opcode: opName,
+              kind: 'stack_underflow',
+              description: `Stack underflow consuming operand ${k} for ${opName}`,
+            });
           } else {
             stack.pop();
           }
@@ -3213,7 +3510,8 @@ export function compareStackTypesReports(beforeFile: string, afterFile: string) 
 
 export type GlobalAccessKind = 'read' | 'write';
 
-export type GlobalUsageClassification = 'read_only' | 'write_only' | 'read_write' | 'never_accessed';
+export type GlobalUsageClassification =
+  'read_only' | 'write_only' | 'read_write' | 'never_accessed';
 
 export interface WasmGlobalAccessRecord {
   globalIndex: number;
@@ -3279,17 +3577,28 @@ function parseGlobalAccesses(
     const bodySize = reader.varuint32();
     const body = new Reader(reader.bytes(bodySize));
     const localGroupCount = body.varuint32();
-    for (let j = 0; j < localGroupCount; j++) { body.varuint32(); body.byte(); }
+    for (let j = 0; j < localGroupCount; j++) {
+      body.varuint32();
+      body.byte();
+    }
     const functionIndex = importedFunctions + fi;
     let blockIndex = 0;
     let instrIndex = 0;
     let unreachable = false;
     while (!body.done) {
       const opcode = body.byte();
-      if (opcode === 0x00) { unreachable = true; }
-      else if (opcode === 0x0b) { if (blockIndex > 0) blockIndex--; unreachable = false; }
-      else if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) { blockIndex++; body.byte(); unreachable = false; }
-      else if (opcode === 0x05) { unreachable = false; }
+      if (opcode === 0x00) {
+        unreachable = true;
+      } else if (opcode === 0x0b) {
+        if (blockIndex > 0) blockIndex--;
+        unreachable = false;
+      } else if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {
+        blockIndex++;
+        body.byte();
+        unreachable = false;
+      } else if (opcode === 0x05) {
+        unreachable = false;
+      }
       if (!unreachable && (opcode === 0x23 || opcode === 0x24)) {
         const globalIndex = body.varuint32();
         accesses.push({
@@ -3313,10 +3622,16 @@ export function analyzeGlobalMutation(file: string): WasmGlobalMutationReport {
   const imports = parseImportSection(sections.find((s) => s.id === 2));
   const allGlobals = [
     ...imports.globals,
-    ...parseGlobalSection(sections.find((s) => s.id === 6), imports.globals.length),
+    ...parseGlobalSection(
+      sections.find((s) => s.id === 6),
+      imports.globals.length,
+    ),
   ];
   const importedFunctions = importedFunctionCount(sections.find((s) => s.id === 2));
-  const accesses = parseGlobalAccesses(sections.find((s) => s.id === 10), importedFunctions);
+  const accesses = parseGlobalAccesses(
+    sections.find((s) => s.id === 10),
+    importedFunctions,
+  );
 
   // Build per-global maps
   const readsByGlobal = new Map<number, Set<number>>();
@@ -3333,8 +3648,12 @@ export function analyzeGlobalMutation(file: string): WasmGlobalMutationReport {
   const globalSummaries: WasmGlobalUsageSummary[] = allGlobals.map((g) => {
     const reads = readsByGlobal.get(g.index) ?? new Set();
     const writes = writesByGlobal.get(g.index) ?? new Set();
-    const totalReads = accesses.filter((a) => a.globalIndex === g.index && a.opcode === 'global.get').length;
-    const totalWrites = accesses.filter((a) => a.globalIndex === g.index && a.opcode === 'global.set').length;
+    const totalReads = accesses.filter(
+      (a) => a.globalIndex === g.index && a.opcode === 'global.get',
+    ).length;
+    const totalWrites = accesses.filter(
+      (a) => a.globalIndex === g.index && a.opcode === 'global.set',
+    ).length;
     let classification: GlobalUsageClassification;
     if (totalReads === 0 && totalWrites === 0) classification = 'never_accessed';
     else if (totalReads > 0 && totalWrites === 0) classification = 'read_only';
@@ -3367,7 +3686,11 @@ export function analyzeGlobalMutation(file: string): WasmGlobalMutationReport {
         totalGlobalReads: acc.opcode === 'global.get' ? 1 : 0,
         totalGlobalWrites: acc.opcode === 'global.set' ? 1 : 0,
         uniqueGlobalsAccessed: 1,
-        mutableGlobalsModified: acc.opcode === 'global.set' && allGlobals.find((g) => g.index === acc.globalIndex)?.mutable ? 1 : 0,
+        mutableGlobalsModified:
+          acc.opcode === 'global.set' &&
+          allGlobals.find((g) => g.index === acc.globalIndex)?.mutable
+            ? 1
+            : 0,
       });
     } else {
       if (acc.opcode === 'global.get') existing.totalGlobalReads++;
@@ -3376,8 +3699,19 @@ export function analyzeGlobalMutation(file: string): WasmGlobalMutationReport {
   }
   // Recalculate uniqueGlobalsAccessed accurately
   for (const [fnIdx, summary] of funcMap) {
-    const accessed = new Set(accesses.filter((a) => a.functionIndex === fnIdx).map((a) => a.globalIndex));
-    const mutMod = new Set(accesses.filter((a) => a.functionIndex === fnIdx && a.opcode === 'global.set' && allGlobals.find((g) => g.index === a.globalIndex)?.mutable).map((a) => a.globalIndex));
+    const accessed = new Set(
+      accesses.filter((a) => a.functionIndex === fnIdx).map((a) => a.globalIndex),
+    );
+    const mutMod = new Set(
+      accesses
+        .filter(
+          (a) =>
+            a.functionIndex === fnIdx &&
+            a.opcode === 'global.set' &&
+            allGlobals.find((g) => g.index === a.globalIndex)?.mutable,
+        )
+        .map((a) => a.globalIndex),
+    );
     summary.uniqueGlobalsAccessed = accessed.size;
     summary.mutableGlobalsModified = mutMod.size;
   }
@@ -3397,9 +3731,13 @@ export function analyzeGlobalMutation(file: string): WasmGlobalMutationReport {
       immutableGlobals: allGlobals.filter((g) => !g.mutable).length,
       totalReads: accesses.filter((a) => a.opcode === 'global.get').length,
       totalWrites: accesses.filter((a) => a.opcode === 'global.set').length,
-      globalsNeverAccessed: globalSummaries.filter((g) => g.classification === 'never_accessed').length,
-      globalsAccessedByMultipleFunctions: globalSummaries.filter((g) => g.accessedByMultipleFunctions).length,
-      globalsWrittenByMultipleFunctions: globalSummaries.filter((g) => g.writtenByMultipleFunctions).length,
+      globalsNeverAccessed: globalSummaries.filter((g) => g.classification === 'never_accessed')
+        .length,
+      globalsAccessedByMultipleFunctions: globalSummaries.filter(
+        (g) => g.accessedByMultipleFunctions,
+      ).length,
+      globalsWrittenByMultipleFunctions: globalSummaries.filter((g) => g.writtenByMultipleFunctions)
+        .length,
     },
   };
 }
@@ -3409,20 +3747,35 @@ export function compareGlobalMutationReports(beforeFile: string, afterFile: stri
   const after = analyzeGlobalMutation(afterFile);
   const beforeMap = new Map(before.globals.map((g) => [g.globalIndex, g]));
   const afterMap = new Map(after.globals.map((g) => [g.globalIndex, g]));
-  const changedUsage: Array<{ globalIndex: number; before: GlobalUsageClassification; after: GlobalUsageClassification }> = [];
+  const changedUsage: Array<{
+    globalIndex: number;
+    before: GlobalUsageClassification;
+    after: GlobalUsageClassification;
+  }> = [];
   for (const [idx, ag] of afterMap) {
     const bg = beforeMap.get(idx);
-    if (bg && bg.classification !== ag.classification) changedUsage.push({ globalIndex: idx, before: bg.classification, after: ag.classification });
+    if (bg && bg.classification !== ag.classification)
+      changedUsage.push({ globalIndex: idx, before: bg.classification, after: ag.classification });
   }
   return {
     before,
     after,
     comparison: {
-      addedGlobals: [...afterMap.keys()].filter((k) => !beforeMap.has(k)).map((k) => afterMap.get(k)!),
-      removedGlobals: [...beforeMap.keys()].filter((k) => !afterMap.has(k)).map((k) => beforeMap.get(k)!),
+      addedGlobals: [...afterMap.keys()]
+        .filter((k) => !beforeMap.has(k))
+        .map((k) => afterMap.get(k)!),
+      removedGlobals: [...beforeMap.keys()]
+        .filter((k) => !afterMap.has(k))
+        .map((k) => beforeMap.get(k)!),
       changedUsageClassification: changedUsage,
-      newMutatedGlobals: after.globals.filter((g) => g.totalWrites > 0 && (beforeMap.get(g.globalIndex)?.totalWrites ?? 0) === 0),
-      globalsBecomingUnused: before.globals.filter((g) => g.classification !== 'never_accessed' && afterMap.get(g.globalIndex)?.classification === 'never_accessed'),
+      newMutatedGlobals: after.globals.filter(
+        (g) => g.totalWrites > 0 && (beforeMap.get(g.globalIndex)?.totalWrites ?? 0) === 0,
+      ),
+      globalsBecomingUnused: before.globals.filter(
+        (g) =>
+          g.classification !== 'never_accessed' &&
+          afterMap.get(g.globalIndex)?.classification === 'never_accessed',
+      ),
     },
   };
 }
@@ -3521,15 +3874,22 @@ function classifyLiteral(
   if (val === null) return 'none';
   if (val === 0n) return 'zero';
   if (val === 1n) return 'one';
-  if (val === -1n || (i32Val !== null && i32Val === -1) || (i64Val !== null && i64Val === -1n)) return 'negative_one';
+  if (val === -1n || (i32Val !== null && i32Val === -1) || (i64Val !== null && i64Val === -1n))
+    return 'negative_one';
   const absVal = val < 0n ? -val : val;
   if (absVal > 0n && (absVal & (absVal - 1n)) === 0n) return 'power_of_two';
   // byte mask: all 1s in lower N bytes (e.g. 0xff, 0xffff, etc.)
-  if (absVal === 0xffn || absVal === 0xffffn || absVal === 0xffffffn || absVal === 0xffffffffn) return 'byte_mask';
+  if (absVal === 0xffn || absVal === 0xffffn || absVal === 0xffffffn || absVal === 0xffffffffn)
+    return 'byte_mask';
   // bit mask: all lower bits set (power_of_two - 1)
   if (absVal > 0n && ((absVal + 1n) & absVal) === 0n) return 'bit_mask';
   // alignment like: multiple of page size (4096) or common alignment
-  if (i32Val !== null && i32Val > 0 && (i32Val % 4096 === 0 || i32Val % 64 === 0 || i32Val % 16 === 0)) return 'alignment_like';
+  if (
+    i32Val !== null &&
+    i32Val > 0 &&
+    (i32Val % 4096 === 0 || i32Val % 64 === 0 || i32Val % 16 === 0)
+  )
+    return 'alignment_like';
   if (absVal > BigInt(largeThreshold)) return 'unusual_constant';
   if (absVal <= 127n) return 'small_integer';
   return 'large_integer';
@@ -3553,7 +3913,10 @@ export interface WasmLiteralsAnalysisOptions {
   minOccurrences?: number;
 }
 
-export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptions = {}): WasmLiteralsReport {
+export function analyzeLiterals(
+  file: string,
+  options: WasmLiteralsAnalysisOptions = {},
+): WasmLiteralsReport {
   const largeThreshold = options.largeConstantThreshold ?? 100000;
   const sections = loadSections(file);
   const importSec = sections.find((s) => s.id === 2);
@@ -3569,48 +3932,95 @@ export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptio
       const bodySize = reader.varuint32();
       const body = new Reader(reader.bytes(bodySize));
       const localCount = body.varuint32();
-      for (let j = 0; j < localCount; j++) { body.varuint32(); body.byte(); }
+      for (let j = 0; j < localCount; j++) {
+        body.varuint32();
+        body.byte();
+      }
       const functionIndex = importedCount + fi;
       let blockIndex = 0;
       let instrIndex = 0;
       let unreachable = false;
       while (!body.done) {
         const opcode = body.byte();
-        if (opcode === 0x00) { unreachable = true; skipInstructionImmediate(opcode, body); instrIndex++; continue; }
-        if (opcode === 0x0b) { if (blockIndex > 0) blockIndex--; unreachable = false; instrIndex++; continue; }
-        if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) { blockIndex++; body.byte(); unreachable = false; instrIndex++; continue; }
-        if (opcode === 0x05) { unreachable = false; instrIndex++; continue; }
+        if (opcode === 0x00) {
+          unreachable = true;
+          skipInstructionImmediate(opcode, body);
+          instrIndex++;
+          continue;
+        }
+        if (opcode === 0x0b) {
+          if (blockIndex > 0) blockIndex--;
+          unreachable = false;
+          instrIndex++;
+          continue;
+        }
+        if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {
+          blockIndex++;
+          body.byte();
+          unreachable = false;
+          instrIndex++;
+          continue;
+        }
+        if (opcode === 0x05) {
+          unreachable = false;
+          instrIndex++;
+          continue;
+        }
 
         if (!unreachable) {
           if (opcode === 0x41) {
             // i32.const
             const v = body.varint32();
-            const unsigned = (v >>> 0);
+            const unsigned = v >>> 0;
             const signed = v | 0;
-            const hex = `0x${(unsigned).toString(16).padStart(8, '0')}`;
+            const hex = `0x${unsigned.toString(16).padStart(8, '0')}`;
             const cls = classifyLiteral('i32', v, null, null, null, largeThreshold);
             records.push({
-              functionIndex, blockIndex, instructionIndex: instrIndex,
-              opcode: 'i32.const', literalType: 'i32',
-              rawI32: v, rawI64: null, rawF32: null, rawF64: null,
-              signedValue: String(signed), unsignedValue: String(unsigned), hexValue: hex,
-              structuralClass: cls, contentHash: literalHash(String(signed), 'i32'),
+              functionIndex,
+              blockIndex,
+              instructionIndex: instrIndex,
+              opcode: 'i32.const',
+              literalType: 'i32',
+              rawI32: v,
+              rawI64: null,
+              rawF32: null,
+              rawF64: null,
+              signedValue: String(signed),
+              unsignedValue: String(unsigned),
+              hexValue: hex,
+              structuralClass: cls,
+              contentHash: literalHash(String(signed), 'i32'),
             });
           } else if (opcode === 0x42) {
             // i64.const
-            let result = 0n; let shift = 0n; let b: number;
-            do { b = body.byte(); result |= BigInt(b & 0x7f) << shift; shift += 7n; } while ((b & 0x80) !== 0);
+            let result = 0n;
+            let shift = 0n;
+            let b: number;
+            do {
+              b = body.byte();
+              result |= BigInt(b & 0x7f) << shift;
+              shift += 7n;
+            } while ((b & 0x80) !== 0);
             // sign extend
-            if ((b & 0x40) !== 0 && shift < 64n) result |= (~0n << shift);
+            if ((b & 0x40) !== 0 && shift < 64n) result |= ~0n << shift;
             const unsigned64 = result & 0xffffffffffffffffn;
             const hex64 = `0x${unsigned64.toString(16).padStart(16, '0')}`;
             const cls = classifyLiteral('i64', null, result, null, null, largeThreshold);
             records.push({
-              functionIndex, blockIndex, instructionIndex: instrIndex,
-              opcode: 'i64.const', literalType: 'i64',
-              rawI32: null, rawI64: result, rawF32: null, rawF64: null,
-              signedValue: String(result), unsignedValue: String(unsigned64), hexValue: hex64,
-              structuralClass: cls, contentHash: literalHash(String(result), 'i64'),
+              functionIndex,
+              blockIndex,
+              instructionIndex: instrIndex,
+              opcode: 'i64.const',
+              literalType: 'i64',
+              rawI32: null,
+              rawI64: result,
+              rawF32: null,
+              rawF64: null,
+              signedValue: String(result),
+              unsignedValue: String(unsigned64),
+              hexValue: hex64,
+              structuralClass: cls,
+              contentHash: literalHash(String(result), 'i64'),
             });
           } else if (opcode === 0x43) {
             // f32.const
@@ -3622,11 +4032,20 @@ export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptio
             const hex = `0x${bits.toString(16).padStart(8, '0')}`;
             const cls = classifyLiteral('f32', null, null, floatVal, null, largeThreshold);
             records.push({
-              functionIndex, blockIndex, instructionIndex: instrIndex,
-              opcode: 'f32.const', literalType: 'f32',
-              rawI32: null, rawI64: null, rawF32: floatVal, rawF64: null,
-              signedValue: isNaN(floatVal) ? 'NaN' : String(floatVal), unsignedValue: hex, hexValue: hex,
-              structuralClass: cls, contentHash: literalHash(hex, 'f32'),
+              functionIndex,
+              blockIndex,
+              instructionIndex: instrIndex,
+              opcode: 'f32.const',
+              literalType: 'f32',
+              rawI32: null,
+              rawI64: null,
+              rawF32: floatVal,
+              rawF64: null,
+              signedValue: isNaN(floatVal) ? 'NaN' : String(floatVal),
+              unsignedValue: hex,
+              hexValue: hex,
+              structuralClass: cls,
+              contentHash: literalHash(hex, 'f32'),
             });
           } else if (opcode === 0x44) {
             // f64.const
@@ -3634,15 +4053,25 @@ export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptio
             const buf = Buffer.alloc(8);
             bytes.copy(buf);
             const floatVal = buf.readDoubleLE(0);
-            const lo = buf.readUInt32LE(0); const hi = buf.readUInt32LE(4);
+            const lo = buf.readUInt32LE(0);
+            const hi = buf.readUInt32LE(4);
             const hex = `0x${hi.toString(16).padStart(8, '0')}${lo.toString(16).padStart(8, '0')}`;
             const cls = classifyLiteral('f64', null, null, null, floatVal, largeThreshold);
             records.push({
-              functionIndex, blockIndex, instructionIndex: instrIndex,
-              opcode: 'f64.const', literalType: 'f64',
-              rawI32: null, rawI64: null, rawF32: null, rawF64: floatVal,
-              signedValue: isNaN(floatVal) ? 'NaN' : String(floatVal), unsignedValue: hex, hexValue: hex,
-              structuralClass: cls, contentHash: literalHash(hex, 'f64'),
+              functionIndex,
+              blockIndex,
+              instructionIndex: instrIndex,
+              opcode: 'f64.const',
+              literalType: 'f64',
+              rawI32: null,
+              rawI64: null,
+              rawF32: null,
+              rawF64: floatVal,
+              signedValue: isNaN(floatVal) ? 'NaN' : String(floatVal),
+              unsignedValue: hex,
+              hexValue: hex,
+              structuralClass: cls,
+              contentHash: literalHash(hex, 'f64'),
             });
           } else {
             skipInstructionImmediate(opcode, body);
@@ -3662,8 +4091,10 @@ export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptio
     const existing = summaryMap.get(key);
     if (existing) {
       existing.occurrenceCount++;
-      if (!existing.functionIndices.includes(rec.functionIndex)) existing.functionIndices.push(rec.functionIndex);
-      if (!existing.opcodeCategories.includes(opcodeCategory(rec.opcode))) existing.opcodeCategories.push(opcodeCategory(rec.opcode));
+      if (!existing.functionIndices.includes(rec.functionIndex))
+        existing.functionIndices.push(rec.functionIndex);
+      if (!existing.opcodeCategories.includes(opcodeCategory(rec.opcode)))
+        existing.opcodeCategories.push(opcodeCategory(rec.opcode));
     } else {
       summaryMap.set(key, {
         signedValue: rec.signedValue,
@@ -3686,15 +4117,24 @@ export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptio
     summary.opcodeCategories.sort();
   }
 
-  let summaries = [...summaryMap.values()].sort((a, b) => b.occurrenceCount - a.occurrenceCount || a.signedValue.localeCompare(b.signedValue));
+  let summaries = [...summaryMap.values()].sort(
+    (a, b) => b.occurrenceCount - a.occurrenceCount || a.signedValue.localeCompare(b.signedValue),
+  );
 
   // Apply filters
-  if (options.literalTypeFilter) summaries = summaries.filter((s) => s.literalType === options.literalTypeFilter);
-  if (options.minOccurrences) summaries = summaries.filter((s) => s.occurrenceCount >= options.minOccurrences!);
-  if (options.searchValue !== undefined) summaries = summaries.filter((s) => s.signedValue === options.searchValue || s.unsignedValue === options.searchValue);
+  if (options.literalTypeFilter)
+    summaries = summaries.filter((s) => s.literalType === options.literalTypeFilter);
+  if (options.minOccurrences)
+    summaries = summaries.filter((s) => s.occurrenceCount >= options.minOccurrences!);
+  if (options.searchValue !== undefined)
+    summaries = summaries.filter(
+      (s) => s.signedValue === options.searchValue || s.unsignedValue === options.searchValue,
+    );
   if (options.searchHex !== undefined) {
     const normalizedHex = options.searchHex.toLowerCase().replace(/^0x/, '');
-    summaries = summaries.filter((s) => s.hexValue.toLowerCase().replace(/^0x/, '') === normalizedHex);
+    summaries = summaries.filter(
+      (s) => s.hexValue.toLowerCase().replace(/^0x/, '') === normalizedHex,
+    );
   }
 
   // Integer ranges
@@ -3702,7 +4142,7 @@ export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptio
   let maxInt: string | null = null;
   let minInt: string | null = null;
   if (intRecords.length > 0) {
-    const vals = intRecords.map((r) => r.rawI64 !== null ? r.rawI64 : BigInt(r.rawI32 ?? 0));
+    const vals = intRecords.map((r) => (r.rawI64 !== null ? r.rawI64 : BigInt(r.rawI32 ?? 0)));
     const mx = vals.reduce((a, b) => (b > a ? b : a));
     const mn = vals.reduce((a, b) => (b < a ? b : a));
     maxInt = String(mx);
@@ -3717,29 +4157,46 @@ export function analyzeLiterals(file: string, options: WasmLiteralsAnalysisOptio
     statistics: {
       totalLiteralOccurrences: records.length,
       uniqueLiterals: summaryMap.size,
-      integerLiterals: records.filter((r) => r.literalType === 'i32' || r.literalType === 'i64').length,
-      floatingPointLiterals: records.filter((r) => r.literalType === 'f32' || r.literalType === 'f64').length,
+      integerLiterals: records.filter((r) => r.literalType === 'i32' || r.literalType === 'i64')
+        .length,
+      floatingPointLiterals: records.filter(
+        (r) => r.literalType === 'f32' || r.literalType === 'f64',
+      ).length,
       mostFrequentLiteral: summaries[0] ?? null,
       maxObservedInteger: maxInt,
       minObservedInteger: minInt,
       literalsSharedAcrossFunctions: summaries.filter((s) => s.usedInMultipleFunctions).length,
       largeConstantThreshold: largeThreshold,
-      unusualConstantCount: summaries.filter((s) => s.structuralClass === 'unusual_constant').length,
+      unusualConstantCount: summaries.filter((s) => s.structuralClass === 'unusual_constant')
+        .length,
     },
   };
 }
 
-export function compareLiteralsReports(beforeFile: string, afterFile: string, options: WasmLiteralsAnalysisOptions = {}) {
+export function compareLiteralsReports(
+  beforeFile: string,
+  afterFile: string,
+  options: WasmLiteralsAnalysisOptions = {},
+) {
   const before = analyzeLiterals(beforeFile, options);
   const after = analyzeLiterals(afterFile, options);
-  const beforeMap = new Map(before.occurrenceSummaries.map((s) => [`${s.literalType}:${s.signedValue}`, s]));
-  const afterMap = new Map(after.occurrenceSummaries.map((s) => [`${s.literalType}:${s.signedValue}`, s]));
-  const addedLiterals = [...afterMap.values()].filter((s) => !beforeMap.has(`${s.literalType}:${s.signedValue}`));
-  const removedLiterals = [...beforeMap.values()].filter((s) => !afterMap.has(`${s.literalType}:${s.signedValue}`));
+  const beforeMap = new Map(
+    before.occurrenceSummaries.map((s) => [`${s.literalType}:${s.signedValue}`, s]),
+  );
+  const afterMap = new Map(
+    after.occurrenceSummaries.map((s) => [`${s.literalType}:${s.signedValue}`, s]),
+  );
+  const addedLiterals = [...afterMap.values()].filter(
+    (s) => !beforeMap.has(`${s.literalType}:${s.signedValue}`),
+  );
+  const removedLiterals = [...beforeMap.values()].filter(
+    (s) => !afterMap.has(`${s.literalType}:${s.signedValue}`),
+  );
   const changedCounts: Array<{ key: string; before: number; after: number }> = [];
   for (const [k, as] of afterMap) {
     const bs = beforeMap.get(k);
-    if (bs && bs.occurrenceCount !== as.occurrenceCount) changedCounts.push({ key: k, before: bs.occurrenceCount, after: as.occurrenceCount });
+    if (bs && bs.occurrenceCount !== as.occurrenceCount)
+      changedCounts.push({ key: k, before: bs.occurrenceCount, after: as.occurrenceCount });
   }
   const newFunctionLiterals = [...afterMap.values()].filter((as) => {
     const bs = beforeMap.get(`${as.literalType}:${as.signedValue}`);
@@ -3754,7 +4211,8 @@ export function compareLiteralsReports(beforeFile: string, afterFile: string, op
       removedLiterals,
       changedOccurrenceCounts: changedCounts,
       literalsInNewFunctions: newFunctionLiterals,
-      totalOccurrenceDelta: after.statistics.totalLiteralOccurrences - before.statistics.totalLiteralOccurrences,
+      totalOccurrenceDelta:
+        after.statistics.totalLiteralOccurrences - before.statistics.totalLiteralOccurrences,
       uniqueLiteralsDelta: after.statistics.uniqueLiterals - before.statistics.uniqueLiterals,
     },
   };

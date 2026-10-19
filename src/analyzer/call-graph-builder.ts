@@ -54,7 +54,7 @@ export class CallGraphBuilder {
     // Count imported functions
     if (this.wasmModule.imports) {
       this.importCount = this.wasmModule.imports.filter(
-        (imp: any) => imp.kind === 'function'
+        (imp: any) => imp.kind === 'function',
       ).length;
     }
 
@@ -71,7 +71,7 @@ export class CallGraphBuilder {
             outgoingCalls: [],
             incomingCalls: [],
             indirectCalls: 0,
-            unresolvedCalls: 0
+            unresolvedCalls: 0,
           });
         }
       });
@@ -88,7 +88,7 @@ export class CallGraphBuilder {
           outgoingCalls: [],
           incomingCalls: [],
           indirectCalls: 0,
-          unresolvedCalls: 0
+          unresolvedCalls: 0,
         };
 
         // Check if this function is exported
@@ -96,7 +96,7 @@ export class CallGraphBuilder {
           const exports = this.wasmModule.exports
             .filter((exp: any) => exp.kind === 'function' && exp.index === funcIndex)
             .map((exp: any) => exp.name);
-          
+
           if (exports.length > 0) {
             node.type = 'exported';
             node.exportNames = exports;
@@ -118,7 +118,7 @@ export class CallGraphBuilder {
         if (a.from !== b.from) return a.from - b.from;
         return a.to - b.to;
       }),
-      statistics
+      statistics,
     };
   }
 
@@ -158,7 +158,7 @@ export class CallGraphBuilder {
     const indirect: number[] = [];
     const unresolved: number[] = [];
 
-    if (!func.body || !func.body.instructions) {
+    if (!func.body?.instructions) {
       return { direct, indirect, unresolved };
     }
 
@@ -167,10 +167,7 @@ export class CallGraphBuilder {
         direct.push(instr.index);
       } else if (instr.name === 'call_indirect') {
         indirect.push(instr);
-      } else if (
-        instr.name === 'call' && 
-        typeof instr.index !== 'number'
-      ) {
+      } else if (instr.name === 'call' && typeof instr.index !== 'number') {
         unresolved.push(instr);
       }
     });
@@ -192,7 +189,7 @@ export class CallGraphBuilder {
       }
 
       // Update or create edge
-      const existingEdge = this.edges.find(e => e.from === from && e.to === to);
+      const existingEdge = this.edges.find((e) => e.from === from && e.to === to);
       if (existingEdge) {
         existingEdge.count++;
       } else {
@@ -203,38 +200,38 @@ export class CallGraphBuilder {
 
   private calculateStatistics(): CallGraph['statistics'] {
     const nodes = Array.from(this.nodes.values());
-    
+
     // Max outgoing calls
     let maxOutgoingCalls = { functionIndex: -1, count: 0 };
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       if (node.outgoingCalls.length > maxOutgoingCalls.count) {
         maxOutgoingCalls = {
           functionIndex: node.index,
-          count: node.outgoingCalls.length
+          count: node.outgoingCalls.length,
         };
       }
     });
 
     // Max incoming calls
     let maxIncomingCalls = { functionIndex: -1, count: 0 };
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       if (node.incomingCalls.length > maxIncomingCalls.count) {
         maxIncomingCalls = {
           functionIndex: node.index,
-          count: node.incomingCalls.length
+          count: node.incomingCalls.length,
         };
       }
     });
 
     // Functions with no incoming/outgoing calls
     const functionsWithNoIncoming = nodes
-      .filter(n => n.incomingCalls.length === 0 && n.type !== 'imported')
-      .map(n => n.index)
+      .filter((n) => n.incomingCalls.length === 0 && n.type !== 'imported')
+      .map((n) => n.index)
       .sort((a, b) => a - b);
 
     const functionsWithNoOutgoing = nodes
-      .filter(n => n.outgoingCalls.length === 0)
-      .map(n => n.index)
+      .filter((n) => n.outgoingCalls.length === 0)
+      .map((n) => n.index)
       .sort((a, b) => a - b);
 
     // Detect recursive functions
@@ -246,19 +243,19 @@ export class CallGraphBuilder {
     // Total unresolved references
     const totalUnresolvedReferences = nodes.reduce(
       (sum, node) => sum + node.unresolvedCalls + node.indirectCalls,
-      0
+      0,
     );
 
     return {
       totalFunctions: nodes.length,
-      totalResolvedEdges: this.edges.filter(e => e.callType === 'direct').length,
+      totalResolvedEdges: this.edges.filter((e) => e.callType === 'direct').length,
       totalUnresolvedReferences,
       maxOutgoingCalls,
       maxIncomingCalls,
       functionsWithNoIncoming,
       functionsWithNoOutgoing,
       recursiveFunctions,
-      maxDepth
+      maxDepth,
     };
   }
 
@@ -305,7 +302,7 @@ export class CallGraphBuilder {
 
     const calculateDepth = (nodeIndex: number, visited: Set<number>): number => {
       if (visited.has(nodeIndex)) return 0; // Avoid cycles
-      
+
       const node = this.nodes.get(nodeIndex);
       if (!node || node.outgoingCalls.length === 0) return 1;
 

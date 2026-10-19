@@ -113,7 +113,7 @@ function traceCondition(
 
   // A br_if/if pops exactly one value: the nearest preceding producer in the
   // same block, or the block's entry condition from a predecessor.
-  for (let p = pos - 1; p >= 0; p--) {
+  for (let p = pos - 1; p >= 0 && pos - p <= MAX_DEPTH; p--) {
     const instr = cfg.instructions[block.instructionIndices[p]];
     if (!instr) continue;
     if (instr.isTerminator && instr.opcode !== 'end') break;
@@ -146,7 +146,11 @@ function traceCondition(
       sources.add('call');
       continue;
     }
-    if (instr.opcode === 'local.tee' || instr.opcode === 'local.set' || instr.opcode === 'global.set') {
+    if (
+      instr.opcode === 'local.tee' ||
+      instr.opcode === 'local.set' ||
+      instr.opcode === 'global.set'
+    ) {
       const idx = Number(instr.operands[0]);
       if (Number.isInteger(idx)) {
         if (instr.opcode.startsWith('local')) locals.add(idx);
@@ -190,12 +194,14 @@ function classifyCondition(
 
   // A literal alone is the only case we can decide outright.
   if (sources.size === 1 && has('const')) return 'constant';
+  if (has('const') && constant === undefined) sources.delete('const');
 
   // Parameters occupy the low local indexes (params first, then declared locals).
   const touchesParam = [...locals].some((l) => l < localCount);
   const touchesLocal = [...locals].some((l) => l >= localCount);
 
-  if (has('global') && (has('memory') || has('call') || has('local') || touchesLocal)) return 'composite';
+  if (has('global') && (has('memory') || has('call') || has('local') || touchesLocal))
+    return 'composite';
   if (has('memory') && (has('call') || has('local') || touchesLocal)) return 'composite';
   if (has('call') && (has('memory') || has('local') || touchesLocal)) return 'composite';
 
@@ -225,7 +231,11 @@ export function analyzeBranches(buffer: Buffer): BranchReport {
 
     for (const instr of cfg.instructions) {
       // Every branch-family opcode counts as a branch site.
-      if (!instr.opcode.startsWith('br') && !instr.opcode.startsWith('if') && instr.opcode !== 'return') {
+      if (
+        !instr.opcode.startsWith('br') &&
+        !instr.opcode.startsWith('if') &&
+        instr.opcode !== 'return'
+      ) {
         continue;
       }
       totalBranchSites++;
@@ -267,15 +277,14 @@ export function analyzeBranches(buffer: Buffer): BranchReport {
       funcIndex: cfg.funcIndex,
       totalBranchSites,
       conditionalBranches,
-      branchDensity: cfg.instructions.length > 0
-        ? Number((conditionalBranches / cfg.instructions.length).toFixed(4))
-        : 0,
+      branchDensity:
+        cfg.instructions.length > 0
+          ? Number((conditionalBranches / cfg.instructions.length).toFixed(4))
+          : 0,
     });
   });
 
-  branches.sort(
-    (a, b) => a.funcIndex - b.funcIndex || a.instructionIndex - b.instructionIndex,
-  );
+  branches.sort((a, b) => a.funcIndex - b.funcIndex || a.instructionIndex - b.instructionIndex);
 
   // Conditions shared by more than one branch site.
   const groups = new Map<string, BranchRecord[]>();
@@ -369,7 +378,9 @@ export function branchesToDot(report: BranchReport): string {
     lines.push(`  subgraph cluster_f${f.funcIndex} {`);
     lines.push(`    label="Function ${f.funcIndex}";`);
     for (const b of report.branches.filter((x) => x.funcIndex === f.funcIndex)) {
-      lines.push(`    "${b.instructionIndex}" [label="${b.opcode}\n${b.conditionType}" class="${b.conditionType}"];`);
+      lines.push(
+        `    "${b.instructionIndex}" [label="${b.opcode}\n${b.conditionType}" class="${b.conditionType}"];`,
+      );
       for (const t of b.targets) {
         lines.push(`    "${b.instructionIndex}" -> "b${t}";`);
       }
@@ -408,7 +419,8 @@ export function compareBranches(before: BranchReport, after: BranchReport): Bran
       continue;
     }
     if (a.targets.join(',') !== b.targets.join(',')) changedBranchTargets.push(key);
-    if (a.conditionSources.join(',') !== b.conditionSources.join(',')) changedConditionSources.push(key);
+    if (a.conditionSources.join(',') !== b.conditionSources.join(','))
+      changedConditionSources.push(key);
     if (a.conditionType === 'constant' && b.conditionType !== 'constant') {
       newlyConstantConditions.push(key);
     }
