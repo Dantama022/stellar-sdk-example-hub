@@ -122,9 +122,11 @@ function buildWasm(
   if (elementSlots && elementSlots.length > 0) {
     // flags=0 (active, funcref), table implicitly 0, offset i32.const 0 end
     const elemPayload: number[] = [
-      0x01,           // count = 1 segment
-      0x00,           // flags = 0 (active)
-      0x41, 0x00, 0x0b, // i32.const 0; end (offset = 0)
+      0x01, // count = 1 segment
+      0x00, // flags = 0 (active)
+      0x41,
+      0x00,
+      0x0b, // i32.const 0; end (offset = 0)
       ...u32(elementSlots.length),
       ...elementSlots.flatMap((idx) => u32(idx)),
     ];
@@ -147,7 +149,6 @@ function buildWasm(
 // ---------------------------------------------------------------------------
 
 describe('wasm-recursion: analyzeRecursion', () => {
-
   // -------------------------------------------------------------------------
   // No recursion
   // -------------------------------------------------------------------------
@@ -263,18 +264,12 @@ describe('wasm-recursion: analyzeRecursion', () => {
   it('detects multiple independent recursive components', () => {
     // Component A: fn0 ↔ fn1
     // Component B: fn2 → fn2 (self)
-    const file = writeWasm(
-      buildWasm([callInstr(1), callInstr(0), callInstr(2)]),
-    );
+    const file = writeWasm(buildWasm([callInstr(1), callInstr(0), callInstr(2)]));
     const report = analyzeRecursion(file);
 
     expect(report.statistics.recursiveComponentCount).toBe(2);
-    expect(
-      report.recursiveSccs.some((s) => s.kind === 'mutual_recursion_two'),
-    ).toBe(true);
-    expect(
-      report.recursiveSccs.some((s) => s.kind === 'direct_self_recursion'),
-    ).toBe(true);
+    expect(report.recursiveSccs.some((s) => s.kind === 'mutual_recursion_two')).toBe(true);
+    expect(report.recursiveSccs.some((s) => s.kind === 'direct_self_recursion')).toBe(true);
   });
 
   // -------------------------------------------------------------------------
@@ -295,9 +290,7 @@ describe('wasm-recursion: analyzeRecursion', () => {
 
   it('correctly assigns SCC IDs and membership', () => {
     // fn0 → fn1 → fn0 (SCC A), fn2 → fn3 → fn2 (SCC B)
-    const file = writeWasm(
-      buildWasm([callInstr(1), callInstr(0), callInstr(3), callInstr(2)]),
-    );
+    const file = writeWasm(buildWasm([callInstr(1), callInstr(0), callInstr(3), callInstr(2)]));
     const report = analyzeRecursion(file);
 
     const sccA = report.recursiveSccs.find((s) => s.members.includes(0));
@@ -540,9 +533,7 @@ describe('wasm-recursion: analyzeRecursion', () => {
   // -------------------------------------------------------------------------
 
   it('produces deterministic results for repeated execution', () => {
-    const file = writeWasm(
-      buildWasm([callInstr(1), callInstr(2), callInstr(0)]),
-    );
+    const file = writeWasm(buildWasm([callInstr(1), callInstr(2), callInstr(0)]));
     const r1 = analyzeRecursion(file);
     const r2 = analyzeRecursion(file);
 

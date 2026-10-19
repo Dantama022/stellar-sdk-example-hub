@@ -58,11 +58,7 @@ export interface LedgerFootprintParams {
 export type FootprintAccess = 'read-only' | 'read-write';
 
 export type ContractStorageType =
-  | 'persistent'
-  | 'temporary'
-  | 'instance'
-  | 'contract-code'
-  | 'not-contract-storage';
+  'persistent' | 'temporary' | 'instance' | 'contract-code' | 'not-contract-storage';
 
 export interface FootprintEntryInfo {
   access: FootprintAccess;

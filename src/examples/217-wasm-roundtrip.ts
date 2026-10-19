@@ -87,7 +87,6 @@ function encodeVarUint32(value: number): Buffer {
   return Buffer.from(bytes);
 }
 
-
 function encodeString(value: string): Buffer {
   const strBuf = Buffer.from(value, 'utf8');
   return Buffer.concat([encodeVarUint32(strBuf.length), strBuf]);
@@ -286,10 +285,10 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
 
   let pos = 8;
   while (pos < wasm.length) {
-    let id: number;
-    [id, pos] = readByte(wasm, pos);
-    let size: number;
-    [size, pos] = readVarUint32(wasm, pos);
+    const [id, nextPos] = readByte(wasm, pos);
+    pos = nextPos;
+    const [size, nextPos1] = readVarUint32(wasm, pos);
+    pos = nextPos1;
     const end = pos + size;
     if (end > wasm.length) throw new WasmValidationError('Section extends beyond WASM data');
     const payload = wasm.subarray(pos, end);
@@ -305,22 +304,23 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
     } else if (id === 1) {
       // Type section
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos2] = readVarUint32(payload, o);
+      o = nextPos2;
       for (let i = 0; i < count; i++) {
         const [funcByte, o2] = readByte(payload, o);
         o = o2;
-        if (funcByte !== 0x60) throw new WasmValidationError(`Unknown type form: 0x${funcByte.toString(16)}`);
-        let paramCount: number;
-        [paramCount, o] = readVarUint32(payload, o);
+        if (funcByte !== 0x60)
+          throw new WasmValidationError(`Unknown type form: 0x${funcByte.toString(16)}`);
+        const [paramCount, nextPos3] = readVarUint32(payload, o);
+        o = nextPos3;
         const params: string[] = [];
         for (let p = 0; p < paramCount; p++) {
           const [b, o3] = readByte(payload, o);
           o = o3;
           params.push(TYPE_NAME_MAP[b] ?? `unknown(0x${b.toString(16)})`);
         }
-        let resultCount: number;
-        [resultCount, o] = readVarUint32(payload, o);
+        const [resultCount, nextPos4] = readVarUint32(payload, o);
+        o = nextPos4;
         const results: string[] = [];
         for (let r = 0; r < resultCount; r++) {
           const [b, o3] = readByte(payload, o);
@@ -333,8 +333,8 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
     } else if (id === 2) {
       // Import section
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos5] = readVarUint32(payload, o);
+      o = nextPos5;
       for (let i = 0; i < count; i++) {
         let module: string, name: string, kindByte: number;
         [module, o] = readString(payload, o);
@@ -378,19 +378,19 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
     } else if (id === 3) {
       // Function section
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos6] = readVarUint32(payload, o);
+      o = nextPos6;
       for (let i = 0; i < count; i++) {
-        let typeIndex: number;
-        [typeIndex, o] = readVarUint32(payload, o);
+        const [typeIndex, nextPos7] = readVarUint32(payload, o);
+        o = nextPos7;
         mod.functions.push({ typeIndex });
       }
       mod.sectionOrder.push({ id, label: sectionLabel(id) });
     } else if (id === 4) {
       // Table section
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos8] = readVarUint32(payload, o);
+      o = nextPos8;
       for (let i = 0; i < count; i++) {
         const [elemByte, o2] = readByte(payload, o);
         o = o2;
@@ -407,19 +407,23 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
     } else if (id === 5) {
       // Memory section
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos9] = readVarUint32(payload, o);
+      o = nextPos9;
       for (let i = 0; i < count; i++) {
         const [lim, o2] = parseLimits(payload, o);
         o = o2;
-        mod.memories.push({ limitsFlags: lim.flags, limitsInitial: lim.initial, limitsMaximum: lim.maximum });
+        mod.memories.push({
+          limitsFlags: lim.flags,
+          limitsInitial: lim.initial,
+          limitsMaximum: lim.maximum,
+        });
       }
       mod.sectionOrder.push({ id, label: sectionLabel(id) });
     } else if (id === 6) {
       // Global section
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos10] = readVarUint32(payload, o);
+      o = nextPos10;
       for (let i = 0; i < count; i++) {
         const [vtByte, o2] = readByte(payload, o);
         o = o2;
@@ -437,8 +441,8 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
     } else if (id === 7) {
       // Export section
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos11] = readVarUint32(payload, o);
+      o = nextPos11;
       for (let i = 0; i < count; i++) {
         let name: string, kind: number, index: number;
         [name, o] = readString(payload, o);
@@ -456,8 +460,8 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
     } else if (id === 9) {
       // Element section — preserve raw bytes per segment for fidelity
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos12] = readVarUint32(payload, o);
+      o = nextPos12;
       for (let i = 0; i < count; i++) {
         const start = o;
         const [flags, o2] = readVarUint32(payload, o);
@@ -471,8 +475,8 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
           [, o] = parseInitExpr(payload, o); // offset
         }
         if (hasElemType) [, o] = readByte(payload, o);
-        let elemCount: number;
-        [elemCount, o] = readVarUint32(payload, o);
+        const [elemCount, nextPos13] = readVarUint32(payload, o);
+        o = nextPos13;
         for (let j = 0; j < elemCount; j++) {
           [, o] = readVarUint32(payload, o);
         }
@@ -482,11 +486,11 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
     } else if (id === 10) {
       // Code section — preserve raw function bodies for fidelity
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos14] = readVarUint32(payload, o);
+      o = nextPos14;
       for (let i = 0; i < count; i++) {
-        let bodySize: number;
-        [bodySize, o] = readVarUint32(payload, o);
+        const [bodySize, nextPos15] = readVarUint32(payload, o);
+        o = nextPos15;
         mod.functionBodies.push({ bodyBytes: payload.subarray(o, o + bodySize) });
         o += bodySize;
       }
@@ -494,8 +498,8 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
     } else if (id === 11) {
       // Data section — preserve raw bytes per segment
       let o = 0;
-      let count: number;
-      [count, o] = readVarUint32(payload, o);
+      const [count, nextPos16] = readVarUint32(payload, o);
+      o = nextPos16;
       for (let i = 0; i < count; i++) {
         const start = o;
         const [flags, o2] = readVarUint32(payload, o);
@@ -505,8 +509,8 @@ export function parseWasmModule(wasm: Buffer): NormalizedModule {
           if (flags === 2) [, o] = readVarUint32(payload, o); // explicit memory index
           [, o] = parseInitExpr(payload, o);
         }
-        let dataSize: number;
-        [dataSize, o] = readVarUint32(payload, o);
+        const [dataSize, nextPos17] = readVarUint32(payload, o);
+        o = nextPos17;
         o += dataSize;
         mod.dataSegments.push({ flags, rawBytes: payload.subarray(start, o) });
       }
@@ -607,11 +611,16 @@ export function encodeWasmModule(mod: NormalizedModule): Buffer {
       sections.push(encodeSection(3, [encodeVarUint32(mod.functions.length), ...entries]));
     } else if (id === 4 && mod.tables.length > 0) {
       const entries = mod.tables.map((t) =>
-        Buffer.concat([Buffer.from([typeByte(t.elementType)]), encodeLimits(t.limitsFlags, t.limitsInitial, t.limitsMaximum)]),
+        Buffer.concat([
+          Buffer.from([typeByte(t.elementType)]),
+          encodeLimits(t.limitsFlags, t.limitsInitial, t.limitsMaximum),
+        ]),
       );
       sections.push(encodeSection(4, [encodeVarUint32(mod.tables.length), ...entries]));
     } else if (id === 5 && mod.memories.length > 0) {
-      const entries = mod.memories.map((m) => encodeLimits(m.limitsFlags, m.limitsInitial, m.limitsMaximum));
+      const entries = mod.memories.map((m) =>
+        encodeLimits(m.limitsFlags, m.limitsInitial, m.limitsMaximum),
+      );
       sections.push(encodeSection(5, [encodeVarUint32(mod.memories.length), ...entries]));
     } else if (id === 6 && mod.globals.length > 0) {
       const entries = mod.globals.map((g) =>
@@ -649,10 +658,7 @@ export function encodeWasmModule(mod: NormalizedModule): Buffer {
 // ---------------------------------------------------------------------------
 
 export type RoundTripStatus =
-  | 'byte-identical'
-  | 'structurally-equivalent'
-  | 'structurally-changed'
-  | 'failed';
+  'byte-identical' | 'structurally-equivalent' | 'structurally-changed' | 'failed';
 
 export interface SectionDiff {
   field: string;
@@ -698,7 +704,11 @@ function compareModules(orig: NormalizedModule, rt: NormalizedModule): SectionDi
 
   // Type section
   if (orig.types.length !== rt.types.length) {
-    diffs.push({ field: 'types.count', original: orig.types.length, roundTripped: rt.types.length });
+    diffs.push({
+      field: 'types.count',
+      original: orig.types.length,
+      roundTripped: rt.types.length,
+    });
   } else {
     orig.types.forEach((t, i) => {
       const key = funcTypeKey(t);
@@ -711,91 +721,164 @@ function compareModules(orig: NormalizedModule, rt: NormalizedModule): SectionDi
 
   // Imports
   if (orig.imports.length !== rt.imports.length) {
-    diffs.push({ field: 'imports.count', original: orig.imports.length, roundTripped: rt.imports.length });
+    diffs.push({
+      field: 'imports.count',
+      original: orig.imports.length,
+      roundTripped: rt.imports.length,
+    });
   } else {
     orig.imports.forEach((imp, i) => {
       const rtImp = rt.imports[i];
-      if (imp.module !== rtImp.module || imp.name !== rtImp.name || imp.kind !== rtImp.kind || imp.typeIndex !== rtImp.typeIndex) {
-        diffs.push({ field: `imports[${i}]`, original: `${imp.module}.${imp.name}(${imp.kind})`, roundTripped: `${rtImp.module}.${rtImp.name}(${rtImp.kind})` });
+      if (
+        imp.module !== rtImp.module ||
+        imp.name !== rtImp.name ||
+        imp.kind !== rtImp.kind ||
+        imp.typeIndex !== rtImp.typeIndex
+      ) {
+        diffs.push({
+          field: `imports[${i}]`,
+          original: `${imp.module}.${imp.name}(${imp.kind})`,
+          roundTripped: `${rtImp.module}.${rtImp.name}(${rtImp.kind})`,
+        });
       }
     });
   }
 
   // Functions (type index references)
   if (orig.functions.length !== rt.functions.length) {
-    diffs.push({ field: 'functions.count', original: orig.functions.length, roundTripped: rt.functions.length });
+    diffs.push({
+      field: 'functions.count',
+      original: orig.functions.length,
+      roundTripped: rt.functions.length,
+    });
   } else {
     orig.functions.forEach((f, i) => {
       if (f.typeIndex !== rt.functions[i].typeIndex) {
-        diffs.push({ field: `functions[${i}].typeIndex`, original: f.typeIndex, roundTripped: rt.functions[i].typeIndex });
+        diffs.push({
+          field: `functions[${i}].typeIndex`,
+          original: f.typeIndex,
+          roundTripped: rt.functions[i].typeIndex,
+        });
       }
     });
   }
 
   // Function bodies
   if (orig.functionBodies.length !== rt.functionBodies.length) {
-    diffs.push({ field: 'functionBodies.count', original: orig.functionBodies.length, roundTripped: rt.functionBodies.length });
+    diffs.push({
+      field: 'functionBodies.count',
+      original: orig.functionBodies.length,
+      roundTripped: rt.functionBodies.length,
+    });
   } else {
     orig.functionBodies.forEach((b, i) => {
       const origHash = hashBuffer(b.bodyBytes);
       const rtHash = hashBuffer(rt.functionBodies[i].bodyBytes);
       if (origHash !== rtHash) {
-        diffs.push({ field: `functionBodies[${i}].hash`, original: origHash, roundTripped: rtHash });
+        diffs.push({
+          field: `functionBodies[${i}].hash`,
+          original: origHash,
+          roundTripped: rtHash,
+        });
       }
     });
   }
 
   // Tables
   if (orig.tables.length !== rt.tables.length) {
-    diffs.push({ field: 'tables.count', original: orig.tables.length, roundTripped: rt.tables.length });
+    diffs.push({
+      field: 'tables.count',
+      original: orig.tables.length,
+      roundTripped: rt.tables.length,
+    });
   } else {
     orig.tables.forEach((t, i) => {
       const rtT = rt.tables[i];
-      if (t.elementType !== rtT.elementType || t.limitsInitial !== rtT.limitsInitial || t.limitsMaximum !== rtT.limitsMaximum) {
-        diffs.push({ field: `tables[${i}]`, original: JSON.stringify(t), roundTripped: JSON.stringify(rtT) });
+      if (
+        t.elementType !== rtT.elementType ||
+        t.limitsInitial !== rtT.limitsInitial ||
+        t.limitsMaximum !== rtT.limitsMaximum
+      ) {
+        diffs.push({
+          field: `tables[${i}]`,
+          original: JSON.stringify(t),
+          roundTripped: JSON.stringify(rtT),
+        });
       }
     });
   }
 
   // Memories
   if (orig.memories.length !== rt.memories.length) {
-    diffs.push({ field: 'memories.count', original: orig.memories.length, roundTripped: rt.memories.length });
+    diffs.push({
+      field: 'memories.count',
+      original: orig.memories.length,
+      roundTripped: rt.memories.length,
+    });
   } else {
     orig.memories.forEach((m, i) => {
       const rtM = rt.memories[i];
       if (m.limitsInitial !== rtM.limitsInitial || m.limitsMaximum !== rtM.limitsMaximum) {
-        diffs.push({ field: `memories[${i}]`, original: JSON.stringify(m), roundTripped: JSON.stringify(rtM) });
+        diffs.push({
+          field: `memories[${i}]`,
+          original: JSON.stringify(m),
+          roundTripped: JSON.stringify(rtM),
+        });
       }
     });
   }
 
   // Globals
   if (orig.globals.length !== rt.globals.length) {
-    diffs.push({ field: 'globals.count', original: orig.globals.length, roundTripped: rt.globals.length });
+    diffs.push({
+      field: 'globals.count',
+      original: orig.globals.length,
+      roundTripped: rt.globals.length,
+    });
   } else {
     orig.globals.forEach((g, i) => {
       const rtG = rt.globals[i];
-      if (g.valueType !== rtG.valueType || g.mutable !== rtG.mutable || !g.initExprBytes.equals(rtG.initExprBytes)) {
-        diffs.push({ field: `globals[${i}]`, original: `${g.valueType}(mutable=${g.mutable})`, roundTripped: `${rtG.valueType}(mutable=${rtG.mutable})` });
+      if (
+        g.valueType !== rtG.valueType ||
+        g.mutable !== rtG.mutable ||
+        !g.initExprBytes.equals(rtG.initExprBytes)
+      ) {
+        diffs.push({
+          field: `globals[${i}]`,
+          original: `${g.valueType}(mutable=${g.mutable})`,
+          roundTripped: `${rtG.valueType}(mutable=${rtG.mutable})`,
+        });
       }
     });
   }
 
   // Exports
   if (orig.exports.length !== rt.exports.length) {
-    diffs.push({ field: 'exports.count', original: orig.exports.length, roundTripped: rt.exports.length });
+    diffs.push({
+      field: 'exports.count',
+      original: orig.exports.length,
+      roundTripped: rt.exports.length,
+    });
   } else {
     orig.exports.forEach((e, i) => {
       const rtE = rt.exports[i];
       if (e.name !== rtE.name || e.kind !== rtE.kind || e.index !== rtE.index) {
-        diffs.push({ field: `exports[${i}]`, original: `${e.name}(kind=${e.kind},idx=${e.index})`, roundTripped: `${rtE.name}(kind=${rtE.kind},idx=${rtE.index})` });
+        diffs.push({
+          field: `exports[${i}]`,
+          original: `${e.name}(kind=${e.kind},idx=${e.index})`,
+          roundTripped: `${rtE.name}(kind=${rtE.kind},idx=${rtE.index})`,
+        });
       }
     });
   }
 
   // Elements (raw bytes hash)
   if (orig.elements.length !== rt.elements.length) {
-    diffs.push({ field: 'elements.count', original: orig.elements.length, roundTripped: rt.elements.length });
+    diffs.push({
+      field: 'elements.count',
+      original: orig.elements.length,
+      roundTripped: rt.elements.length,
+    });
   } else {
     orig.elements.forEach((el, i) => {
       const origHash = hashBuffer(el.rawBytes);
@@ -808,7 +891,11 @@ function compareModules(orig: NormalizedModule, rt: NormalizedModule): SectionDi
 
   // Data segments (raw bytes hash)
   if (orig.dataSegments.length !== rt.dataSegments.length) {
-    diffs.push({ field: 'dataSegments.count', original: orig.dataSegments.length, roundTripped: rt.dataSegments.length });
+    diffs.push({
+      field: 'dataSegments.count',
+      original: orig.dataSegments.length,
+      roundTripped: rt.dataSegments.length,
+    });
   } else {
     orig.dataSegments.forEach((ds, i) => {
       const origHash = hashBuffer(ds.rawBytes);
@@ -821,24 +908,40 @@ function compareModules(orig: NormalizedModule, rt: NormalizedModule): SectionDi
 
   // Custom sections
   if (orig.customSections.length !== rt.customSections.length) {
-    diffs.push({ field: 'customSections.count', original: orig.customSections.length, roundTripped: rt.customSections.length });
+    diffs.push({
+      field: 'customSections.count',
+      original: orig.customSections.length,
+      roundTripped: rt.customSections.length,
+    });
   } else {
     orig.customSections.forEach((cs, i) => {
       const rtCs = rt.customSections[i];
       if (cs.name !== rtCs.name) {
-        diffs.push({ field: `customSections[${i}].name`, original: cs.name, roundTripped: rtCs.name });
+        diffs.push({
+          field: `customSections[${i}].name`,
+          original: cs.name,
+          roundTripped: rtCs.name,
+        });
       }
       const origHash = hashBuffer(cs.payload);
       const rtHash = hashBuffer(rtCs.payload);
       if (origHash !== rtHash) {
-        diffs.push({ field: `customSections[${i}].payloadHash`, original: origHash, roundTripped: rtHash });
+        diffs.push({
+          field: `customSections[${i}].payloadHash`,
+          original: origHash,
+          roundTripped: rtHash,
+        });
       }
     });
   }
 
   // Start function
   if (orig.startFunction !== rt.startFunction) {
-    diffs.push({ field: 'startFunction', original: orig.startFunction, roundTripped: rt.startFunction });
+    diffs.push({
+      field: 'startFunction',
+      original: orig.startFunction,
+      roundTripped: rt.startFunction,
+    });
   }
 
   // DataCount
@@ -928,8 +1031,8 @@ export async function performRoundTrip(params: RoundTripParams): Promise<RoundTr
     report.status = 'structurally-equivalent';
     report.diagnostics.push(
       'Binary differs but structure is identical. This is typically caused by ' +
-      'non-minimal LEB128 encoding in the original binary (a valid compiler choice). ' +
-      'The re-encoded artifact is semantically identical.',
+        'non-minimal LEB128 encoding in the original binary (a valid compiler choice). ' +
+        'The re-encoded artifact is semantically identical.',
     );
   } else {
     report.status = 'structurally-changed';
@@ -1045,7 +1148,8 @@ export async function run(params: WasmRoundTripParams = {}): Promise<void> {
     process.argv[3]?.trim() ||
     DEFAULT_WASM;
 
-  const outputFile = params.output?.trim() || process.env.WASM_OUTPUT?.trim() || process.argv[4]?.trim();
+  const outputFile =
+    params.output?.trim() || process.env.WASM_OUTPUT?.trim() || process.argv[4]?.trim();
   const jsonMode = params.json ?? process.argv.includes('--json');
   const forceOverwrite = params.forceOverwrite ?? process.argv.includes('--force');
 
@@ -1064,10 +1168,18 @@ export async function run(params: WasmRoundTripParams = {}): Promise<void> {
     return;
   }
 
-  const report = await performRoundTrip({ wasmFile, output: outputFile, json: jsonMode, forceOverwrite });
+  const report = await performRoundTrip({
+    wasmFile,
+    output: outputFile,
+    json: jsonMode,
+    forceOverwrite,
+  });
   printReport(report, jsonMode);
 
-  if (outputFile && !report.diagnostics.some((d) => d.startsWith('Refused') || d.startsWith('Failed to write'))) {
+  if (
+    outputFile &&
+    !report.diagnostics.some((d) => d.startsWith('Refused') || d.startsWith('Failed to write'))
+  ) {
     if (!jsonMode) {
       console.log(chalk.green(`Round-tripped artifact written to: ${outputFile}`));
     }

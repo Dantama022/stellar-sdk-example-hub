@@ -56,10 +56,7 @@ function smallWasm(): Buffer {
     exportName,
     Buffer.from([0x00, 0x00]), // kind=function, index=0
   ]);
-  const exportSection = Buffer.concat([
-    Buffer.from([0x07, exportPayload.length]),
-    exportPayload,
-  ]);
+  const exportSection = Buffer.concat([Buffer.from([0x07, exportPayload.length]), exportPayload]);
 
   // Code section: [{body: i32.const 42, end}]
   // body = locals_count(0) + i32.const + 42 + end
@@ -69,17 +66,17 @@ function smallWasm(): Buffer {
     Buffer.from([body.length]), // body size
     body,
   ]);
-  const codeSection = Buffer.concat([
-    Buffer.from([0x0a, codePayload.length]),
-    codePayload,
-  ]);
+  const codeSection = Buffer.concat([Buffer.from([0x0a, codePayload.length]), codePayload]);
 
   return Buffer.concat([minimalWasm(), typeSection, funcSection, exportSection, codeSection]);
 }
 
 /** Write a buffer to a temp file and return its path. */
 function writeTmp(buf: Buffer, suffix = '.wasm'): string {
-  const p = path.join(os.tmpdir(), `wasm-rt-test-${Date.now()}-${Math.random().toString(36).slice(2)}${suffix}`);
+  const p = path.join(
+    os.tmpdir(),
+    `wasm-rt-test-${Date.now()}-${Math.random().toString(36).slice(2)}${suffix}`,
+  );
   fs.writeFileSync(p, buf);
   return p;
 }
@@ -275,7 +272,9 @@ describe('performRoundTrip', () => {
     if (!fs.existsSync(SAMPLE_WASM)) return;
     const report = await performRoundTrip({ wasmFile: SAMPLE_WASM });
     // May be byte-identical or structurally-equivalent; either is acceptable
-    expect(['byte-identical', 'structurally-equivalent', 'structurally-changed']).toContain(report.status);
+    expect(['byte-identical', 'structurally-equivalent', 'structurally-changed']).toContain(
+      report.status,
+    );
     expect(report.originalHash).toHaveLength(64);
     expect(report.roundTrippedHash).toHaveLength(64);
   });
@@ -291,8 +290,8 @@ describe('performRoundTrip', () => {
       const written = fs.readFileSync(outPath);
       expect(written.subarray(0, 4)).toEqual(Buffer.from([0x00, 0x61, 0x73, 0x6d]));
     } finally {
-      fs.existsSync(srcPath) && fs.unlinkSync(srcPath);
-      fs.existsSync(outPath) && fs.unlinkSync(outPath);
+      if (fs.existsSync(srcPath)) fs.unlinkSync(srcPath);
+      if (fs.existsSync(outPath)) fs.unlinkSync(outPath);
     }
   });
 
@@ -315,13 +314,16 @@ describe('performRoundTrip', () => {
       const written = fs.readFileSync(p);
       expect(() => parseWasmModule(written)).not.toThrow();
     } finally {
-      fs.existsSync(p) && fs.unlinkSync(p);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
     }
   });
 
   it('never executes WASM code (no WebAssembly.instantiate calls)', async () => {
     // Verify the module doesn't use WebAssembly.instantiate
-    const src = fs.readFileSync(path.join(__dirname, '../src/examples/217-wasm-roundtrip.ts'), 'utf8');
+    const src = fs.readFileSync(
+      path.join(__dirname, '../src/examples/217-wasm-roundtrip.ts'),
+      'utf8',
+    );
     expect(src).not.toContain('WebAssembly.instantiate');
     expect(src).not.toContain('WebAssembly.compile');
   });
@@ -454,16 +456,14 @@ describe('global and table preservation', () => {
   it('preserves global section after round trip', async () => {
     // Build WASM with a global: i32, immutable, i32.const 7
     const globalPayload = Buffer.from([
-      0x01,       // count = 1
-      0x7f,       // value type: i32
-      0x00,       // immutable
-      0x41, 0x07, // i32.const 7
-      0x0b,       // end
+      0x01, // count = 1
+      0x7f, // value type: i32
+      0x00, // immutable
+      0x41,
+      0x07, // i32.const 7
+      0x0b, // end
     ]);
-    const globalSection = Buffer.concat([
-      Buffer.from([0x06, globalPayload.length]),
-      globalPayload,
-    ]);
+    const globalSection = Buffer.concat([Buffer.from([0x06, globalPayload.length]), globalPayload]);
     const buf = Buffer.concat([minimalWasm(), globalSection]);
     const p = writeTmp(buf);
     try {
@@ -484,10 +484,7 @@ describe('global and table preservation', () => {
   it('preserves table section after round trip', async () => {
     // Table section: 1 table, funcref, limits {initial=2, no max}
     const tablePayload = Buffer.from([0x01, 0x70, 0x00, 0x02]); // count=1, funcref, flags=0, initial=2
-    const tableSection = Buffer.concat([
-      Buffer.from([0x04, tablePayload.length]),
-      tablePayload,
-    ]);
+    const tableSection = Buffer.concat([Buffer.from([0x04, tablePayload.length]), tablePayload]);
     const buf = Buffer.concat([minimalWasm(), tableSection]);
     const p = writeTmp(buf);
     try {
@@ -518,12 +515,12 @@ describe('import preservation', () => {
     const modName = Buffer.from('env', 'utf8');
     const fnName = Buffer.from('log', 'utf8');
     const importPayload = Buffer.concat([
-      Buffer.from([0x01]),                  // count = 1
+      Buffer.from([0x01]), // count = 1
       Buffer.from([modName.length]),
       modName,
       Buffer.from([fnName.length]),
       fnName,
-      Buffer.from([0x00, 0x00]),             // kind=function, type_index=0
+      Buffer.from([0x00, 0x00]), // kind=function, type_index=0
     ]);
     const importSection = Buffer.concat([Buffer.from([0x02, importPayload.length]), importPayload]);
 
@@ -557,8 +554,8 @@ describe('data segment preservation', () => {
     // Data section: 1 passive segment (flags=1), 3 bytes
     const dataBytes = Buffer.from([0xde, 0xad, 0xbe]);
     const segmentPayload = Buffer.concat([
-      Buffer.from([0x01]),                  // flags = 1 (passive)
-      Buffer.from([dataBytes.length]),       // data length
+      Buffer.from([0x01]), // flags = 1 (passive)
+      Buffer.from([dataBytes.length]), // data length
       dataBytes,
     ]);
     const dataPayload = Buffer.concat([Buffer.from([0x01]), segmentPayload]);

@@ -247,10 +247,15 @@ describe('provenance: local derived from parameter', () => {
   //   end
   // }
   const body = [
-    0x01, 0x01, I32, // 1 local group, 1 x i32
-    0x20, ...uLEB(0), // local.get 0 (param)
-    0x21, ...uLEB(1), // local.set 1
-    0x20, ...uLEB(1), // local.get 1
+    0x01,
+    0x01,
+    I32, // 1 local group, 1 x i32
+    0x20,
+    ...uLEB(0), // local.get 0 (param)
+    0x21,
+    ...uLEB(1), // local.set 1
+    0x20,
+    ...uLEB(1), // local.get 1
     0x0b,
   ];
   const wasm = buildWasm({
@@ -411,11 +416,7 @@ describe('provenance: call-derived return (imported callee)', () => {
 
 describe('provenance: multiple return values', () => {
   // func (i32, i64) -> (i32, i64) { local.get 0; local.get 1; end }
-  const wasm = singleFuncWasm(
-    [I32, I64],
-    [I32, I64],
-    [0x20, ...uLEB(0), 0x20, ...uLEB(1), 0x0b],
-  );
+  const wasm = singleFuncWasm([I32, I64], [I32, I64], [0x20, ...uLEB(0), 0x20, ...uLEB(1), 0x0b]);
 
   it('produces two return sites (one per result position)', () => {
     const report = analyzeReturnProvenanceBuffer(wasm, 'test');
@@ -454,12 +455,16 @@ describe('provenance: multiple return sites', () => {
   // }
   const body = [
     0x00, // 0 locals
-    0x20, ...uLEB(0), // local.get 0
-    0x04, I32, // if (result i32)
-    0x41, ...sLEB32(1), //   i32.const 1
+    0x20,
+    ...uLEB(0), // local.get 0
+    0x04,
+    I32, // if (result i32)
+    0x41,
+    ...sLEB32(1), //   i32.const 1
     0x0f, //   return  ← explicit
     0x05, //  else
-    0x41, ...sLEB32(2), //   i32.const 2
+    0x41,
+    ...sLEB32(2), //   i32.const 2
     0x0b, // end (if)
     0x0b, // end (function body)
   ];
@@ -488,11 +493,7 @@ describe('provenance: multiple return sites', () => {
 
 describe('provenance: arithmetic-derived return', () => {
   // func (i32, i32) -> i32 { local.get 0; local.get 1; i32.add; end }
-  const wasm = singleFuncWasm(
-    [I32, I32],
-    [I32],
-    [0x20, ...uLEB(0), 0x20, ...uLEB(1), 0x6a, 0x0b],
-  );
+  const wasm = singleFuncWasm([I32, I32], [I32], [0x20, ...uLEB(0), 0x20, ...uLEB(1), 0x6a, 0x0b]);
 
   it('conservative merge: both params appear in provenance sources', () => {
     const report = analyzeReturnProvenanceBuffer(wasm, 'test');
@@ -525,12 +526,17 @@ describe('provenance: branch-dependent return', () => {
   // }
   const body = [
     0x00, // 0 locals
-    0x02, I32, // block (result i32)
-    0x41, ...sLEB32(10), //   i32.const 10
-    0x20, ...uLEB(0), //   local.get 0 (condition for br_if)
-    0x0d, ...uLEB(0), //   br_if 0
+    0x02,
+    I32, // block (result i32)
+    0x41,
+    ...sLEB32(10), //   i32.const 10
+    0x20,
+    ...uLEB(0), //   local.get 0 (condition for br_if)
+    0x0d,
+    ...uLEB(0), //   br_if 0
     0x1a, //   drop (10 already pushed to branch)
-    0x41, ...sLEB32(20), //   i32.const 20
+    0x41,
+    ...sLEB32(20), //   i32.const 20
     0x0b, // end block
     0x0b, // end func
   ];
@@ -557,11 +563,15 @@ describe('provenance: conflicting provenance at merge', () => {
   // if (cond) { global.get 0 } else { i32.const 5 } → multi-source
   const body = [
     0x00, // 0 locals
-    0x20, ...uLEB(0), // local.get 0 (condition)
-    0x04, I32, // if (result i32)
-    0x23, ...uLEB(0), //   global.get 0
+    0x20,
+    ...uLEB(0), // local.get 0 (condition)
+    0x04,
+    I32, // if (result i32)
+    0x23,
+    ...uLEB(0), //   global.get 0
     0x05, //  else
-    0x41, ...sLEB32(5), //   i32.const 5
+    0x41,
+    ...sLEB32(5), //   i32.const 5
     0x0b, // end (if)
     0x0b, // end func
   ];
@@ -598,14 +608,20 @@ describe('provenance: loop-carried provenance terminates', () => {
   // }
   const body = [
     0x00, // 0 locals (param 0 is local 0)
-    0x03, 0x40, //  loop (void)
-    0x20, ...uLEB(0), //    local.get 0
-    0x41, ...sLEB32(1), //    i32.const 1
+    0x03,
+    0x40, //  loop (void)
+    0x20,
+    ...uLEB(0), //    local.get 0
+    0x41,
+    ...sLEB32(1), //    i32.const 1
     0x6b, //    i32.sub
-    0x22, ...uLEB(0), //    local.tee 0
-    0x0d, ...uLEB(0), //    br_if 0
+    0x22,
+    ...uLEB(0), //    local.tee 0
+    0x0d,
+    ...uLEB(0), //    br_if 0
     0x0b, // end loop
-    0x20, ...uLEB(0), //  local.get 0
+    0x20,
+    ...uLEB(0), //  local.get 0
     0x0b, // end func
   ];
   const wasm = buildWasm({
@@ -680,10 +696,15 @@ describe('provenance: unreachable after br_table', () => {
   // }
   const body = [
     0x00,
-    0x02, I32, // block (result i32)
-    0x41, ...sLEB32(0), //   i32.const 0 — as index
-    0x0e, 0x00, ...uLEB(0), //   br_table 0 (1 target + default = label 0)
-    0x41, ...sLEB32(99), //   unreachable path
+    0x02,
+    I32, // block (result i32)
+    0x41,
+    ...sLEB32(0), //   i32.const 0 — as index
+    0x0e,
+    0x00,
+    ...uLEB(0), //   br_table 0 (1 target + default = label 0)
+    0x41,
+    ...sLEB32(99), //   unreachable path
     0x0b, // end block
     0x0b, // end func
   ];
@@ -723,11 +744,7 @@ describe('classification: single_source', () => {
 
 describe('classification: multi_source', () => {
   // func (i32, i32) -> i32 { local.get 0; local.get 1; i32.add; end }
-  const wasm = singleFuncWasm(
-    [I32, I32],
-    [I32],
-    [0x20, ...uLEB(0), 0x20, ...uLEB(1), 0x6a, 0x0b],
-  );
+  const wasm = singleFuncWasm([I32, I32], [I32], [0x20, ...uLEB(0), 0x20, ...uLEB(1), 0x6a, 0x0b]);
 
   it('merges both params conservatively', () => {
     const report = analyzeReturnProvenanceBuffer(wasm, 'test');
@@ -892,9 +909,12 @@ describe('two-artifact comparison', () => {
 
   it('comparison result is deterministic', () => {
     const wasm1 = singleFuncWasm([], [I32], [0x41, ...sLEB32(1), 0x0b]);
-    const wasm2 = singleFuncWasm([], [I32], [0x23, ...uLEB(0), 0x0b], [
-      { mutable: true, initBytes: [0x41, 0x00] },
-    ]);
+    const wasm2 = singleFuncWasm(
+      [],
+      [I32],
+      [0x23, ...uLEB(0), 0x0b],
+      [{ mutable: true, initBytes: [0x41, 0x00] }],
+    );
     const f1 = writeWasm(wasm1);
     const f2 = writeWasm(wasm2);
     try {
@@ -921,7 +941,9 @@ describe('malformed WASM input', () => {
 
   it('throws WasmProvenanceError for truncated WASM', () => {
     const truncated = Buffer.from([0x00, 0x61, 0x73]);
-    expect(() => analyzeReturnProvenanceBuffer(truncated, 'trunc.wasm')).toThrow(WasmProvenanceError);
+    expect(() => analyzeReturnProvenanceBuffer(truncated, 'trunc.wasm')).toThrow(
+      WasmProvenanceError,
+    );
   });
 
   it('throws WasmProvenanceError for wrong WASM version', () => {
@@ -944,9 +966,10 @@ describe('determinism', () => {
     const r1 = analyzeReturnProvenanceBuffer(wasm, 'test');
     const r2 = analyzeReturnProvenanceBuffer(wasm, 'test');
     // Omit dotGraph (same content, just compare structure)
-    const { dotGraph: _d1, ...rest1 } = r1;
-    const { dotGraph: _d2, ...rest2 } = r2;
-    expect(JSON.stringify(rest1)).toBe(JSON.stringify(rest2));
+    expect(r1.dotGraph).toBe(r2.dotGraph);
+    expect(JSON.stringify({ ...r1, dotGraph: undefined })).toBe(
+      JSON.stringify({ ...r2, dotGraph: undefined }),
+    );
   });
 });
 
@@ -1088,11 +1111,7 @@ describe('provenance: select merges sources', () => {
 describe('provenance: local.tee propagates provenance', () => {
   // func (i32) -> i32 { local.get 0; local.tee 0; end }
   // (tee leaves value on stack AND stores to local)
-  const wasm = singleFuncWasm(
-    [I32],
-    [I32],
-    [0x20, ...uLEB(0), 0x22, ...uLEB(0), 0x0b],
-  );
+  const wasm = singleFuncWasm([I32], [I32], [0x20, ...uLEB(0), 0x22, ...uLEB(0), 0x0b]);
 
   it('classifies as parameter_derived', () => {
     const report = analyzeReturnProvenanceBuffer(wasm, 'test');

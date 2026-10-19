@@ -136,9 +136,11 @@ function printReport(report: WasmRecursionReport): void {
 
     if (report.mostConnectedRecursiveFunctions.length > 0) {
       console.log(chalk.bold('\nMost connected recursive functions:'));
-      report.mostConnectedRecursiveFunctions.slice(0, 10).forEach(({ functionIndex, edgeCount }) =>
-        console.log(`  fn${functionIndex}: ${edgeCount} recursive edge(s)`),
-      );
+      report.mostConnectedRecursiveFunctions
+        .slice(0, 10)
+        .forEach(({ functionIndex, edgeCount }) =>
+          console.log(`  fn${functionIndex}: ${edgeCount} recursive edge(s)`),
+        );
     }
   }
 
@@ -159,9 +161,7 @@ function printReport(report: WasmRecursionReport): void {
   }
 }
 
-function printComparison(
-  result: ReturnType<typeof compareRecursionReports>,
-): void {
+function printComparison(result: ReturnType<typeof compareRecursionReports>): void {
   const { comparison } = result;
   console.log(chalk.bold('\n--- Recursion Comparison ---'));
 
@@ -185,9 +185,7 @@ function printComparison(
   }
   if (comparison.removedSccs.length > 0) {
     console.log(chalk.green(`Removed SCCs: ${comparison.removedSccs.length}`));
-    comparison.removedSccs.forEach((s) =>
-      console.log(`  - [${s.members.join(', ')}]  ${s.kind}`),
-    );
+    comparison.removedSccs.forEach((s) => console.log(`  - [${s.members.join(', ')}]  ${s.kind}`));
   }
   if (comparison.changedSccs.length > 0) {
     console.log(chalk.yellow(`Changed SCCs: ${comparison.changedSccs.length}`));

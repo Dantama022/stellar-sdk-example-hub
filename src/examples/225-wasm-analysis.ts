@@ -1,5 +1,10 @@
 import * as fs from 'fs';
-import { EntryObservation, Snapshot, loadSnapshot, validateSnapshotOrder } from './197-state-lifecycle';
+import {
+  EntryObservation,
+  Snapshot,
+  loadSnapshot,
+  validateSnapshotOrder,
+} from './197-state-lifecycle';
 
 type WasmKind = 'function' | 'table' | 'memory' | 'global' | 'tag';
 
@@ -147,7 +152,8 @@ class WasmReader {
   }
 
   finish(): void {
-    if (this.offset !== this.end) throw new Error('WASM section contains malformed or unsupported data.');
+    if (this.offset !== this.end)
+      throw new Error('WASM section contains malformed or unsupported data.');
   }
 
   private require(length: number): void {
@@ -168,7 +174,9 @@ function readLimits(reader: WasmReader): string {
   const minimum = reader.u32();
   const maximum = (flags & 0x01) !== 0 ? reader.u32() : undefined;
   const shared = (flags & 0x02) !== 0 ? ', shared' : '';
-  return maximum === undefined ? `min ${minimum}${shared}` : `min ${minimum}, max ${maximum}${shared}`;
+  return maximum === undefined
+    ? `min ${minimum}${shared}`
+    : `min ${minimum}, max ${maximum}${shared}`;
 }
 
 function readTableType(reader: WasmReader): string {
@@ -205,13 +213,20 @@ function kindName(kind: number): WasmKind {
 }
 
 function parseWasm(input: Uint8Array): WasmModuleInfo {
-  if (input.length < 8 || input[0] !== 0 || input[1] !== 0x61 || input[2] !== 0x73 || input[3] !== 0x6d) {
+  if (
+    input.length < 8 ||
+    input[0] !== 0 ||
+    input[1] !== 0x61 ||
+    input[2] !== 0x73 ||
+    input[3] !== 0x6d
+  ) {
     throw new Error('Invalid WASM file: missing WebAssembly magic header.');
   }
   if (input[4] !== 1 || input[5] !== 0 || input[6] !== 0 || input[7] !== 0) {
     throw new Error('Unsupported WASM binary version.');
   }
-  if (!WebAssembly.validate(input)) throw new Error('WASM binary failed WebAssembly validation.');
+  if (!WebAssembly.validate(new Uint8Array(input)))
+    throw new Error('WASM binary failed WebAssembly validation.');
 
   const reader = new WasmReader(input, 8);
   const sections: WasmSection[] = [];
@@ -229,10 +244,12 @@ function parseWasm(input: Uint8Array): WasmModuleInfo {
     const id = reader.byte();
     const payloadLength = reader.u32();
     const payloadStart = reader.offset;
-    if (payloadLength > reader.remaining) throw new Error('WASM binary is truncated or contains an invalid section length.');
+    if (payloadLength > reader.remaining)
+      throw new Error('WASM binary is truncated or contains an invalid section length.');
     const sectionReader = new WasmReader(input, payloadStart, payloadStart + payloadLength);
     const standardName = sectionNames[id];
-    if (id !== 0 && standardName === undefined) throw new Error(`Unsupported WASM section id ${id}.`);
+    if (id !== 0 && standardName === undefined)
+      throw new Error(`Unsupported WASM section id ${id}.`);
     const order = sectionOrder[id];
     if (id !== 0 && (order === undefined || order <= lastSectionOrder)) {
       throw new Error('WASM sections are out of order or duplicated.');
@@ -329,7 +346,17 @@ function parseWasm(input: Uint8Array): WasmModuleInfo {
   };
   for (const entry of exports) entry.type = indexTypes[entry.kind][entry.index] ?? 'unknown';
 
-  return { byteLength: input.length, sections, types, imports, exports, functionTypes, definedTables, definedMemories, definedGlobals };
+  return {
+    byteLength: input.length,
+    sections,
+    types,
+    imports,
+    exports,
+    functionTypes,
+    definedTables,
+    definedMemories,
+    definedGlobals,
+  };
 }
 
 function skipExpression(reader: WasmReader): void {
@@ -351,7 +378,14 @@ function skipExpression(reader: WasmReader): void {
       if (subopcode === 8) {
         reader.u32();
         reader.u32();
-      } else if (subopcode === 9 || subopcode === 11 || subopcode === 13 || subopcode === 15 || subopcode === 16 || subopcode === 17) {
+      } else if (
+        subopcode === 9 ||
+        subopcode === 11 ||
+        subopcode === 13 ||
+        subopcode === 15 ||
+        subopcode === 16 ||
+        subopcode === 17
+      ) {
         reader.u32();
       } else if (subopcode === 10 || subopcode === 12 || subopcode === 14) {
         reader.u32();
@@ -360,19 +394,43 @@ function skipExpression(reader: WasmReader): void {
     } else if (opcode === 0x1c) {
       const count = reader.u32();
       reader.take(count);
-    } else if (opcode === 0x00 || opcode === 0x01 || opcode === 0x0f || opcode === 0x1a || opcode === 0x1b) {
+    } else if (
+      opcode === 0x00 ||
+      opcode === 0x01 ||
+      opcode === 0x0f ||
+      opcode === 0x1a ||
+      opcode === 0x1b
+    ) {
       continue;
     } else if (opcode >= 0x28 && opcode <= 0x3e) {
       reader.u32();
       reader.u32();
-    } else if (opcode === 0x0c || opcode === 0x0d || opcode === 0x10 || opcode === 0x20 || opcode === 0x21 || opcode === 0x22 || opcode === 0x24 || opcode === 0x25 || opcode === 0x26) {
+    } else if (
+      opcode === 0x0c ||
+      opcode === 0x0d ||
+      opcode === 0x10 ||
+      opcode === 0x20 ||
+      opcode === 0x21 ||
+      opcode === 0x22 ||
+      opcode === 0x24 ||
+      opcode === 0x25 ||
+      opcode === 0x26
+    ) {
       reader.u32();
     } else if (opcode === 0x11) {
       reader.u32();
       reader.u32();
     } else if (opcode === 0x40) {
       reader.byte();
-    } else if (opcode === 0x07 || opcode === 0x08 || opcode === 0x09 || opcode === 0x0a || opcode === 0x18 || opcode === 0xd4 || opcode === 0xd5) {
+    } else if (
+      opcode === 0x07 ||
+      opcode === 0x08 ||
+      opcode === 0x09 ||
+      opcode === 0x0a ||
+      opcode === 0x18 ||
+      opcode === 0xd4 ||
+      opcode === 0xd5
+    ) {
       reader.u32();
     } else if (opcode === 0x1f) {
       reader.u32();
@@ -404,12 +462,16 @@ function loadWasm(filePath: string): WasmModuleInfo {
   try {
     bytes = fs.readFileSync(filePath);
   } catch (error: unknown) {
-    throw new Error(`Cannot read WASM file "${filePath}": ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Cannot read WASM file "${filePath}": ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
   try {
     return parseWasm(bytes);
   } catch (error: unknown) {
-    throw new Error(`Invalid or unsupported WASM file "${filePath}": ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Invalid or unsupported WASM file "${filePath}": ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -423,18 +485,28 @@ export interface WasmFootprintReport {
     file: string;
     totalBytes: number;
     totalDeltaBytes: number;
-    sections: Array<{ section: string; beforeBytes: number; afterBytes: number; deltaBytes: number }>;
+    sections: Array<{
+      section: string;
+      beforeBytes: number;
+      afterBytes: number;
+      deltaBytes: number;
+    }>;
   };
 }
 
 export function analyzeWasmFootprint(filePath: string, compareFile?: string): WasmFootprintReport {
   const info = loadWasm(filePath);
   const aggregates: Record<string, { bytes: number; percent: number }> = {};
-  for (const name of ['code', 'data', 'type', 'import', 'export', 'other']) aggregates[name] = { bytes: 0, percent: 0 };
+  for (const name of ['code', 'data', 'type', 'import', 'export', 'other'])
+    aggregates[name] = { bytes: 0, percent: 0 };
   for (const section of info.sections) aggregates[section.category].bytes += section.size;
   aggregates.other.bytes += 8;
-  for (const aggregate of Object.values(aggregates)) aggregate.percent = percentage(aggregate.bytes, info.byteLength);
-  const sections = info.sections.map((section) => ({ ...section, percent: percentage(section.size, info.byteLength) }));
+  for (const aggregate of Object.values(aggregates))
+    aggregate.percent = percentage(aggregate.bytes, info.byteLength);
+  const sections = info.sections.map((section) => ({
+    ...section,
+    percent: percentage(section.size, info.byteLength),
+  }));
   const report: WasmFootprintReport = {
     file: filePath,
     totalBytes: info.byteLength,
@@ -484,8 +556,16 @@ export interface WasmCompatibilityReport {
   oldFile: string;
   newFile: string;
   unchanged: boolean;
-  imports: { added: WasmImport[]; removed: WasmImport[]; modified: Array<{ before: WasmImport; after: WasmImport }> };
-  exports: { added: WasmExport[]; removed: WasmExport[]; modified: Array<{ before: WasmExport; after: WasmExport }> };
+  imports: {
+    added: WasmImport[];
+    removed: WasmImport[];
+    modified: Array<{ before: WasmImport; after: WasmImport }>;
+  };
+  exports: {
+    added: WasmExport[];
+    removed: WasmExport[];
+    modified: Array<{ before: WasmExport; after: WasmExport }>;
+  };
 }
 
 function compareEntries<T>(
@@ -511,7 +591,10 @@ function compareEntries<T>(
   return { added, removed, modified };
 }
 
-export function compareWasmCompatibility(oldFile: string, newFile: string): WasmCompatibilityReport {
+export function compareWasmCompatibility(
+  oldFile: string,
+  newFile: string,
+): WasmCompatibilityReport {
   const oldModule = loadWasm(oldFile);
   const newModule = loadWasm(newFile);
   const imports = compareEntries(
@@ -526,7 +609,14 @@ export function compareWasmCompatibility(oldFile: string, newFile: string): Wasm
     (entry) => `${entry.name}\0${entry.kind}`,
     (entry) => entry.type,
   );
-  const unchanged = imports.added.length + imports.removed.length + imports.modified.length + exports.added.length + exports.removed.length + exports.modified.length === 0;
+  const unchanged =
+    imports.added.length +
+      imports.removed.length +
+      imports.modified.length +
+      exports.added.length +
+      exports.removed.length +
+      exports.modified.length ===
+    0;
   return { oldFile, newFile, unchanged, imports, exports };
 }
 
@@ -550,15 +640,23 @@ function compareText(left: string, right: string): number {
 
 function uniqueImports(entries: WasmImport[]): WasmImport[] {
   const values = new Map<string, WasmImport>();
-  for (const entry of entries) if (!values.has(dependencyKey(entry))) values.set(dependencyKey(entry), entry);
-  return [...values.values()].sort((left, right) => compareText(dependencyKey(left), dependencyKey(right)));
+  for (const entry of entries)
+    if (!values.has(dependencyKey(entry))) values.set(dependencyKey(entry), entry);
+  return [...values.values()].sort((left, right) =>
+    compareText(dependencyKey(left), dependencyKey(right)),
+  );
 }
 
-export function analyzeWasmDependencies(filePath: string, compareFile?: string): WasmDependencyReport {
+export function analyzeWasmDependencies(
+  filePath: string,
+  compareFile?: string,
+): WasmDependencyReport {
   const info = loadWasm(filePath);
   const dependencies = uniqueImports(info.imports);
   const kinds: WasmKind[] = ['function', 'memory', 'table', 'global', 'tag'];
-  const countsByType = Object.fromEntries(kinds.map((kind) => [kind, dependencies.filter((entry) => entry.kind === kind).length])) as Record<WasmKind, number>;
+  const countsByType = Object.fromEntries(
+    kinds.map((kind) => [kind, dependencies.filter((entry) => entry.kind === kind).length]),
+  ) as Record<WasmKind, number>;
   const moduleNames = [...new Set(dependencies.map((entry) => entry.module))].sort();
   const report: WasmDependencyReport = {
     file: filePath,
@@ -569,7 +667,9 @@ export function analyzeWasmDependencies(filePath: string, compareFile?: string):
       const moduleImports = dependencies.filter((entry) => entry.module === module);
       return {
         module,
-        countsByType: Object.fromEntries(kinds.map((kind) => [kind, moduleImports.filter((entry) => entry.kind === kind).length])) as Record<WasmKind, number>,
+        countsByType: Object.fromEntries(
+          kinds.map((kind) => [kind, moduleImports.filter((entry) => entry.kind === kind).length]),
+        ) as Record<WasmKind, number>,
         imports: moduleImports,
       };
     }),
@@ -606,23 +706,32 @@ function wasmArgs(args: string[]): { files: string[]; json: boolean } {
 
 export async function runWasmFootprint(args: string[]): Promise<void> {
   const { files, json } = wasmArgs(args);
-  if (files.length < 1 || files.length > 2) throw new Error('Usage: wasm-footprint <wasmFile> [compareWasmFile] [--json]');
+  if (files.length < 1 || files.length > 2)
+    throw new Error('Usage: wasm-footprint <wasmFile> [compareWasmFile] [--json]');
   const report = analyzeWasmFootprint(files[0], files[1]);
   if (!json) {
-    console.log(`WASM footprint: ${report.file}\nTotal: ${report.totalBytes} bytes\nSections: ${report.sectionCount}`);
+    console.log(
+      `WASM footprint: ${report.file}\nTotal: ${report.totalBytes} bytes\nSections: ${report.sectionCount}`,
+    );
     for (const section of report.sections) {
       const type = section.customName ? `custom (${section.customName})` : section.name;
-      console.log(`section ${section.id} ${type}: ${section.size} bytes (${section.percent}%, ${section.payloadSize} payload bytes, ${section.category})`);
+      console.log(
+        `section ${section.id} ${type}: ${section.size} bytes (${section.percent}%, ${section.payloadSize} payload bytes, ${section.category})`,
+      );
     }
     console.log('Aggregates:');
     for (const [name, aggregate] of Object.entries(report.aggregates)) {
       console.log(`  ${name}: ${aggregate.bytes} bytes (${aggregate.percent}%)`);
     }
     if (report.comparison) {
-      console.log(`Comparison with ${report.comparison.file}: ${report.comparison.totalDeltaBytes > 0 ? '+' : ''}${report.comparison.totalDeltaBytes} bytes`);
+      console.log(
+        `Comparison with ${report.comparison.file}: ${report.comparison.totalDeltaBytes > 0 ? '+' : ''}${report.comparison.totalDeltaBytes} bytes`,
+      );
       if (report.comparison.sections.length === 0) console.log('  No section size changes.');
       for (const section of report.comparison.sections) {
-        console.log(`  ${section.section}: ${section.beforeBytes} -> ${section.afterBytes} bytes (${section.deltaBytes > 0 ? '+' : ''}${section.deltaBytes})`);
+        console.log(
+          `  ${section.section}: ${section.beforeBytes} -> ${section.afterBytes} bytes (${section.deltaBytes > 0 ? '+' : ''}${section.deltaBytes})`,
+        );
       }
     }
     return;
@@ -634,17 +743,32 @@ export async function runWasmCompatibility(args: string[]): Promise<void> {
   const { files, json } = wasmArgs(args);
   if (files.length !== 2) throw new Error('Usage: wasm-compat <old.wasm> <new.wasm> [--json]');
   const report = compareWasmCompatibility(files[0], files[1]);
-  printReport(report.unchanged ? 'WASM compatibility: unchanged' : 'WASM compatibility changes', report, json);
+  printReport(
+    report.unchanged ? 'WASM compatibility: unchanged' : 'WASM compatibility changes',
+    report,
+    json,
+  );
 }
 
 export async function runWasmDependencies(args: string[]): Promise<void> {
   const { files, json } = wasmArgs(args);
-  if (files.length < 1 || files.length > 2) throw new Error('Usage: wasm-deps <wasmFile> [compareWasmFile] [--json]');
+  if (files.length < 1 || files.length > 2)
+    throw new Error('Usage: wasm-deps <wasmFile> [compareWasmFile] [--json]');
   const report = analyzeWasmDependencies(files[0], files[1]);
   printReport(`WASM dependencies: ${report.uniqueDependencyCount} unique`, report, json);
 }
 
-export type StateTransitionType = 'created' | 'reappeared' | 'removed' | 'persisting' | 'value-changed' | 'durability-changed' | 'ttl-increased' | 'ttl-decreased' | 'ttl-unchanged' | 'ttl-unknown';
+export type StateTransitionType =
+  | 'created'
+  | 'reappeared'
+  | 'removed'
+  | 'persisting'
+  | 'value-changed'
+  | 'durability-changed'
+  | 'ttl-increased'
+  | 'ttl-decreased'
+  | 'ttl-unchanged'
+  | 'ttl-unknown';
 
 const stateTransitionTypes: StateTransitionType[] = [
   'created',
@@ -684,10 +808,15 @@ function stateName(entry: EntryObservation | undefined): string {
   return entry ? `present:${entry.durability}` : 'absent';
 }
 
-export function analyzeStateTransitions(snapshots: Snapshot[], options: StateTransitionOptions = {}): StateTransitionReport {
-  if (snapshots.length < 2) throw new Error('At least two snapshots are required for state transition analysis.');
+export function analyzeStateTransitions(
+  snapshots: Snapshot[],
+  options: StateTransitionOptions = {},
+): StateTransitionReport {
+  if (snapshots.length < 2)
+    throw new Error('At least two snapshots are required for state transition analysis.');
   const violations = validateSnapshotOrder(snapshots);
-  if (violations.length > 0) throw new Error(`Snapshot ordering validation failed: ${violations.join(' ')}`);
+  if (violations.length > 0)
+    throw new Error(`Snapshot ordering validation failed: ${violations.join(' ')}`);
   const byKey = new Map<string, Array<EntryObservation | undefined>>();
   snapshots.forEach((snapshot, index) => {
     const current = new Map<string, EntryObservation>();
@@ -695,7 +824,9 @@ export function analyzeStateTransitions(snapshots: Snapshot[], options: StateTra
     for (const [key, observations] of byKey) observations[index] = current.get(key);
     for (const [key, entry] of current) {
       if (!byKey.has(key)) {
-        const observations: Array<EntryObservation | undefined> = Array(snapshots.length).fill(undefined);
+        const observations: Array<EntryObservation | undefined> = Array(snapshots.length).fill(
+          undefined,
+        );
         observations[index] = entry;
         byKey.set(key, observations);
       }
@@ -703,18 +834,35 @@ export function analyzeStateTransitions(snapshots: Snapshot[], options: StateTra
   });
 
   const grouped = new Map<string, StateTransitionRow>();
-  const add = (key: string, contractId: string | undefined, previous: string, current: string, type: StateTransitionType) => {
+  const add = (
+    key: string,
+    contractId: string | undefined,
+    previous: string,
+    current: string,
+    type: StateTransitionType,
+  ) => {
     const resolvedContract = contractId ?? 'unknown';
     if (options.contractId && options.contractId !== resolvedContract) return;
     if (options.transitionType && options.transitionType !== type) return;
-    const groupingKey = `${resolvedContract}\0${previous}\0${current}\0${type}`;
-    const row = grouped.get(groupingKey) ?? { contractId: resolvedContract, previousState: previous, currentState: current, transitionType: type, count: 0, ledgerKeys: [] };
+    // Group per ledger key so `count` reflects how often a single entry made the
+    // same transition, which is what `minimumFrequency` filters on.
+    const groupingKey = `${resolvedContract}\0${key}\0${previous}\0${current}\0${type}`;
+    const row = grouped.get(groupingKey) ?? {
+      contractId: resolvedContract,
+      previousState: previous,
+      currentState: current,
+      transitionType: type,
+      count: 0,
+      ledgerKeys: [],
+    };
     row.count += 1;
     row.ledgerKeys.push(key);
     grouped.set(groupingKey, row);
   };
 
-  for (const [key, observations] of [...byKey.entries()].sort(([left], [right]) => compareText(left, right))) {
+  for (const [key, observations] of [...byKey.entries()].sort(([left], [right]) =>
+    compareText(left, right),
+  )) {
     for (let index = 1; index < snapshots.length; index += 1) {
       const before = observations[index - 1];
       const after = observations[index];
@@ -722,8 +870,16 @@ export function analyzeStateTransitions(snapshots: Snapshot[], options: StateTra
       const currentState = stateName(after);
       const contractId = after?.contractId ?? before?.contractId;
       if (!before && after) {
-        const existedEarlier = observations.slice(0, index - 1).some((entry) => entry !== undefined);
-        add(key, contractId, previousState, currentState, existedEarlier ? 'reappeared' : 'created');
+        const existedEarlier = observations
+          .slice(0, index - 1)
+          .some((entry) => entry !== undefined);
+        add(
+          key,
+          contractId,
+          previousState,
+          currentState,
+          existedEarlier ? 'reappeared' : 'created',
+        );
       } else if (before && !after) {
         add(key, contractId, previousState, currentState, 'removed');
       } else if (before && after) {
@@ -754,14 +910,24 @@ export function analyzeStateTransitions(snapshots: Snapshot[], options: StateTra
   const rows = [...grouped.values()]
     .filter((row) => row.count >= minimumFrequency)
     .map((row) => ({ ...row, ledgerKeys: row.ledgerKeys.sort() }))
-    .sort((left, right) => compareText(
-      `${left.contractId}\0${left.transitionType}\0${left.previousState}\0${left.currentState}`,
-      `${right.contractId}\0${right.transitionType}\0${right.previousState}\0${right.currentState}`,
-    ));
-  return { snapshotCount: snapshots.length, snapshotLedgers: snapshots.map((snapshot) => snapshot.ledger), rows };
+    .sort((left, right) =>
+      compareText(
+        `${left.contractId}\0${left.ledgerKeys.join(',')}\0${left.transitionType}\0${left.previousState}\0${left.currentState}`,
+        `${right.contractId}\0${right.ledgerKeys.join(',')}\0${right.transitionType}\0${right.previousState}\0${right.currentState}`,
+      ),
+    );
+  return {
+    snapshotCount: snapshots.length,
+    snapshotLedgers: snapshots.map((snapshot) => snapshot.ledger),
+    rows,
+  };
 }
 
-function parseStateOptions(args: string[]): { files: string[]; json: boolean; options: StateTransitionOptions } {
+function parseStateOptions(args: string[]): {
+  files: string[];
+  json: boolean;
+  options: StateTransitionOptions;
+} {
   const files: string[] = [];
   const options: StateTransitionOptions = {};
   let json = false;
@@ -778,10 +944,10 @@ function parseStateOptions(args: string[]): { files: string[]; json: boolean; op
           throw new Error(`Unsupported transition type "${value}".`);
         }
         options.transitionType = value as StateTransitionType;
-      }
-      else {
+      } else {
         const frequency = Number(value);
-        if (!Number.isInteger(frequency) || frequency < 1) throw new Error('--min-frequency must be a positive integer.');
+        if (!Number.isInteger(frequency) || frequency < 1)
+          throw new Error('--min-frequency must be a positive integer.');
         options.minimumFrequency = frequency;
       }
     } else if (arg.startsWith('--')) throw new Error(`Unknown state-transitions option: ${arg}`);
@@ -792,7 +958,10 @@ function parseStateOptions(args: string[]): { files: string[]; json: boolean; op
 
 export async function runStateTransitions(args: string[]): Promise<void> {
   const { files, json, options } = parseStateOptions(args);
-  if (files.length < 2) throw new Error('Usage: state-transitions <snapshot-001.json> <snapshot-002.json> [...] [--contract <id>] [--type <transition>] [--min-frequency <count>] [--json]');
+  if (files.length < 2)
+    throw new Error(
+      'Usage: state-transitions <snapshot-001.json> <snapshot-002.json> [...] [--contract <id>] [--type <transition>] [--min-frequency <count>] [--json]',
+    );
   const snapshots = files.map(loadSnapshot);
   const report = analyzeStateTransitions(snapshots, options);
   if (json) {
@@ -800,7 +969,12 @@ export async function runStateTransitions(args: string[]): Promise<void> {
     return;
   }
   console.log(`Soroban state transition matrix (${report.snapshotCount} snapshots)`);
-  console.log(`Ledgers: ${report.snapshotLedgers.map((ledger) => ledger ?? 'unknown').join(' -> ')}`);
+  console.log(
+    `Ledgers: ${report.snapshotLedgers.map((ledger) => ledger ?? 'unknown').join(' -> ')}`,
+  );
   if (report.rows.length === 0) console.log('No transitions matched.');
-  for (const row of report.rows) console.log(`${row.contractId} | ${row.previousState} -> ${row.currentState} | ${row.transitionType} | ${row.count} | ${row.ledgerKeys.join(', ')}`);
+  for (const row of report.rows)
+    console.log(
+      `${row.contractId} | ${row.previousState} -> ${row.currentState} | ${row.transitionType} | ${row.count} | ${row.ledgerKeys.join(', ')}`,
+    );
 }

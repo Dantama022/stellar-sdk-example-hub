@@ -69,7 +69,11 @@ export function calculateLedgerFreshness(
 ): LedgerFreshnessResult {
   const staleThresholdMs = 2 * 60 * 1000;
 
-  if (typeof latestLedgerSequence !== 'number' || !Number.isFinite(latestLedgerSequence) || latestLedgerSequence <= 0) {
+  if (
+    typeof latestLedgerSequence !== 'number' ||
+    !Number.isFinite(latestLedgerSequence) ||
+    latestLedgerSequence <= 0
+  ) {
     return { ageMs: 0, freshness: 'unknown', isStale: false, staleThresholdMs };
   }
 
@@ -103,25 +107,35 @@ export async function inspectSorobanRpcDiagnostics(
     const health = await Promise.race([
       server.getHealth(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`RPC request timed out after ${timeoutMs}ms`)), timeoutMs),
+        setTimeout(
+          () => reject(new Error(`RPC request timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        ),
       ),
     ]);
 
     const network = await Promise.race([
       server.getNetwork(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`RPC request timed out after ${timeoutMs}ms`)), timeoutMs),
+        setTimeout(
+          () => reject(new Error(`RPC request timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        ),
       ),
     ]);
 
     const latestLedger = await Promise.race([
       server.getLatestLedger(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`RPC request timed out after ${timeoutMs}ms`)), timeoutMs),
+        setTimeout(
+          () => reject(new Error(`RPC request timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        ),
       ),
     ]);
 
-    const latestLedgerSequence = typeof latestLedger?.sequence === 'number' ? latestLedger.sequence : undefined;
+    const latestLedgerSequence =
+      typeof latestLedger?.sequence === 'number' ? latestLedger.sequence : undefined;
     const ledgerCloseTime = typeof latestLedger?.id === 'string' ? checkedAt : undefined;
     const ledgerFreshness = calculateLedgerFreshness(latestLedgerSequence, Date.now(), undefined);
 
@@ -142,7 +156,12 @@ export async function inspectSorobanRpcDiagnostics(
       rpcUrl,
       connectionStatus: 'error',
       healthStatus: 'unavailable',
-      ledgerFreshness: { ageMs: 0, freshness: 'unknown', isStale: false, staleThresholdMs: 2 * 60 * 1000 },
+      ledgerFreshness: {
+        ageMs: 0,
+        freshness: 'unknown',
+        isStale: false,
+        staleThresholdMs: 2 * 60 * 1000,
+      },
       error: error instanceof Error ? error.message : String(error),
       checkedAt,
     };
@@ -152,7 +171,9 @@ export async function inspectSorobanRpcDiagnostics(
 function printHumanReport(report: SorobanRpcDiagnosticsReport): void {
   console.log(chalk.bold('\n=== Soroban RPC Diagnostic Report ==='));
   console.log(`RPC endpoint:          ${report.rpcUrl}`);
-  console.log(`Connection status:     ${report.connectionStatus === 'connected' ? chalk.green('connected') : chalk.red('error')}`);
+  console.log(
+    `Connection status:     ${report.connectionStatus === 'connected' ? chalk.green('connected') : chalk.red('error')}`,
+  );
   console.log(`Health status:         ${report.healthStatus}`);
   console.log(`Network passphrase:    ${report.networkPassphrase ?? 'n/a'}`);
   console.log(`Protocol version:      ${report.protocolVersion ?? 'n/a'}`);
@@ -169,7 +190,9 @@ function printHumanReport(report: SorobanRpcDiagnosticsReport): void {
 }
 
 export async function run(params: SorobanRpcDiagnosticsParams = {}): Promise<void> {
-  const rpcUrl = validateRpcUrl(params.rpcUrl ?? process.env.SOROBAN_RPC_URL ?? 'https://soroban-testnet.stellar.org');
+  const rpcUrl = validateRpcUrl(
+    params.rpcUrl ?? process.env.SOROBAN_RPC_URL ?? 'https://soroban-testnet.stellar.org',
+  );
   const timeoutMs = Number(params.timeoutMs ?? process.env.RPC_TIMEOUT_MS ?? '15000');
   const jsonOutput = prefersJson(params);
 
@@ -178,7 +201,10 @@ export async function run(params: SorobanRpcDiagnosticsParams = {}): Promise<voi
     console.log(chalk.gray(`Inspecting endpoint: ${rpcUrl}`));
   }
 
-  const report = await inspectSorobanRpcDiagnostics(rpcUrl, Number.isFinite(timeoutMs) ? timeoutMs : 15000);
+  const report = await inspectSorobanRpcDiagnostics(
+    rpcUrl,
+    Number.isFinite(timeoutMs) ? timeoutMs : 15000,
+  );
 
   if (jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
