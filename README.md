@@ -4099,3 +4099,39 @@ cp test/fixtures/template.wasm test/fixtures/new-test.wasm
 - [257: Transaction history pagination and durable resumption](src/examples/257-transaction-history-checkpointing.ts)
 
 See [setup, environment variables, sample output, checkpoint recovery and manual Testnet steps](examples/reliable-lifecycle-workflows.md).
+
+### Trading, liquidity, network, and merge safety examples — issues #423–#426
+
+Read-only inspection with unsigned-transaction preparation only. No example signs with a real secret key or submits transactions automatically.
+
+- [259: Liquidity pool inspection with deposit/withdrawal preflight and unsigned XDR](src/examples/259-liquidity-pool-deposit-withdraw-preflight.ts) (issue #425)
+
+```bash
+npm run run-example 259-liquidity-pool-deposit-withdraw-preflight
+```
+
+Use `POOL_ID`, `ACCOUNT_ID`, `MAX_AMOUNT_A`, `MAX_AMOUNT_B`, `POOL_SHARES`, and `HORIZON_URL` to inspect one pool and prepare unsigned deposit/withdrawal XDR with price-bound and impermanent-loss risk notes.
+
+- [260: Orderbook depth inspection with account offers and unsigned limit-order XDR](src/examples/260-offer-management-orderbook-preflight.ts) (issue #424)
+
+```bash
+npm run run-example 260-offer-management-orderbook-preflight
+```
+
+Use `SELLING_ASSET`, `BUYING_ASSET`, `ACCOUNT_ID`, `ORDER_SIDE`, `ORDER_AMOUNT`, and `ORDER_PRICE` to inspect aggregated bids/asks plus account offers and prepare unsigned `manageSellOffer`/`manageBuyOffer` XDR for review.
+
+- [261: Network configuration and pre-submission safety checks](src/examples/261-network-pre-submission-checks.ts) (issue #426)
+
+```bash
+npm run run-example 261-network-pre-submission-checks
+```
+
+Use `STELLAR_NETWORK`, `HORIZON_URL`, and `NETWORK_PASSPHRASE` to validate endpoint/passphrase pairing against the live Horizon root and verify transaction network settings before preparation or submission.
+
+- [262: Account merge preflight with explicit confirmation and unsigned merge XDR](src/examples/262-account-merge-confirmation-preflight.ts) (issue #423)
+
+```bash
+npm run run-example 262-account-merge-confirmation-preflight
+```
+
+Use `SOURCE_ACCOUNT`, `DESTINATION_ACCOUNT`, `CONFIRM_MERGE=yes`, and `JSON_OUTPUT=true` to check trustlines, liabilities, signers, data entries, and sponsorships, then build unsigned `accountMerge` XDR only after explicit confirmation.
