@@ -2951,4 +2951,45 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '259-strict-receive-path-payment': {
+    name: '259-strict-receive-path-payment',
+    description: 'Stellar payments with pathfinding and strict-receive validation (ISSUE-308)',
+    run: loadExample('../examples/259-strict-receive-path-payment'),
+    params: [
+      {
+        type: 'input',
+        name: 'sourceAccount',
+        message: 'Source account public key (G...):',
+      },
+      {
+        type: 'input',
+        name: 'destinationAccount',
+        message: 'Destination account public key (G...):',
+      },
+      {
+        type: 'input',
+        name: 'sendAsset',
+        message: 'Send asset (code:issuer, or XLM for native):',
+        default: 'XLM',
+      },
+      {
+        type: 'input',
+        name: 'destAsset',
+        message: 'Destination asset (code:issuer, or XLM for native):',
+        default: 'XLM',
+      },
+      {
+        type: 'input',
+        name: 'destAmount',
+        message: 'Exact destination amount:',
+        default: '1',
+      },
+      {
+        type: 'input',
+        name: 'sendMax',
+        message: 'Maximum amount to send:',
+        default: '10',
+      },
+    ],
+  },
 };

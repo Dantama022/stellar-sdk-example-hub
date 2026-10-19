@@ -1,7 +1,6 @@
 node_modules/
 dist/
 coverage/
-.env
 *.log
 .eslintcache
 .DS_Store
@@ -11,3 +10,4 @@ issue.md
 skills-lock.json
 .*-checkpoint.json
 .*-checkpoint.json.*.tmp
+config.bat
