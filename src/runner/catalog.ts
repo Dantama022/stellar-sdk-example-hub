@@ -13351,4 +13351,50 @@ export const examples: Record<string, Example> = {
   '255-asset-trustline-lifecycle': { name: '255-asset-trustline-lifecycle', description: '255-asset-trustline-lifecycle (issues #405–#408)', run: loadExample('../examples/255-asset-trustline-lifecycle') },
   '256-path-payment-preparation': { name: '256-path-payment-preparation', description: '256-path-payment-preparation (issues #405–#408)', run: loadExample('../examples/256-path-payment-preparation') },
   '257-transaction-history-checkpointing': { name: '257-transaction-history-checkpointing', description: '257-transaction-history-checkpointing (issues #405–#408)', run: loadExample('../examples/257-transaction-history-checkpointing') },
+  '259-liquidity-pool-deposit-withdraw-preflight': {
+    name: '259-liquidity-pool-deposit-withdraw-preflight',
+    description: 'Inspect liquidity pools and prepare unsigned deposit/withdrawal XDR with risk docs (issue #425)',
+    run: loadExample('../examples/259-liquidity-pool-deposit-withdraw-preflight'),
+    params: [
+      { type: 'input', name: 'poolId', message: 'Liquidity pool ID (blank browses pools):' },
+      { type: 'input', name: 'accountId', message: 'Account preparing deposit/withdrawal:' },
+      { type: 'input', name: 'maxAmountA', message: 'Max deposit amount A (blank skips deposit XDR):' },
+      { type: 'input', name: 'maxAmountB', message: 'Max deposit amount B (blank skips deposit XDR):' },
+      { type: 'input', name: 'poolShares', message: 'Pool shares to withdraw (blank skips withdrawal XDR):' },
+    ],
+  },
+  '260-offer-management-orderbook-preflight': {
+    name: '260-offer-management-orderbook-preflight',
+    description: 'Inspect orderbook depth and account offers, prepare unsigned limit buy/sell XDR (issue #424)',
+    run: loadExample('../examples/260-offer-management-orderbook-preflight'),
+    params: [
+      { type: 'input', name: 'sellingAsset', message: 'Selling asset (native or CODE:ISSUER):', default: 'native' },
+      { type: 'input', name: 'buyingAsset', message: 'Buying asset (native or CODE:ISSUER):', default: 'native' },
+      { type: 'input', name: 'accountId', message: 'Account whose offers are inspected:' },
+      { type: 'input', name: 'side', message: 'Limit order side (buy|sell, blank skips XDR):' },
+      { type: 'input', name: 'amount', message: 'Limit order amount:' },
+      { type: 'input', name: 'price', message: 'Limit order price:' },
+    ],
+  },
+  '261-network-pre-submission-checks': {
+    name: '261-network-pre-submission-checks',
+    description: 'Validate network endpoints/passphrases and verify transaction settings before submission (issue #426)',
+    run: loadExample('../examples/261-network-pre-submission-checks'),
+    params: [
+      { type: 'input', name: 'network', message: 'Network (testnet|mainnet):', default: 'testnet' },
+      { type: 'input', name: 'horizonUrl', message: 'Horizon URL override (blank uses preset):' },
+      { type: 'input', name: 'networkPassphrase', message: 'Network passphrase override (blank uses preset):' },
+    ],
+  },
+  '262-account-merge-confirmation-preflight': {
+    name: '262-account-merge-confirmation-preflight',
+    description: 'Account-merge preflight (trustlines, liabilities, signers) with confirmation and unsigned merge XDR (issue #423)',
+    run: loadExample('../examples/262-account-merge-confirmation-preflight'),
+    params: [
+      { type: 'input', name: 'sourceAccountId', message: 'Source account to merge (will be removed):' },
+      { type: 'input', name: 'destinationAccountId', message: 'Destination account receiving the balance:' },
+      { type: 'confirm', name: 'confirm', message: 'Build UNSIGNED merge XDR for review?', default: false },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
 };
