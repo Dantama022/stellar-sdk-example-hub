@@ -253,6 +253,10 @@
     {
       "match": "196-soroban-authorization-preparation",
       "reason": "Prepares and inspects Soroban authorization entries"
+    },
+    {
+      "match": "260-asset-issuance-controls",
+      "reason": "Requires a live issuer account and holder trustlines on Testnet"
     }
   ]
 }

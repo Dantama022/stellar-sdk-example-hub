@@ -2951,4 +2951,45 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '260-asset-issuance-controls': {
+    name: '260-asset-issuance-controls',
+    description: 'Stellar asset issuance, authorization and clawback controls (ISSUE-307)',
+    run: loadExample('../examples/260-asset-issuance-controls'),
+    params: [
+      {
+        type: 'input',
+        name: 'issuerAccount',
+        message: 'Issuer account public key (G...):',
+      },
+      {
+        type: 'input',
+        name: 'holderAccounts',
+        message: 'Holder account public keys, comma separated:',
+      },
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Issued asset code:',
+        default: 'ISSUED',
+      },
+      {
+        type: 'confirm',
+        name: 'enableAuthRequired',
+        message: 'Model enabling AUTH_REQUIRED?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'enableAuthRevocable',
+        message: 'Model enabling AUTH_REVOCABLE?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'setAuthImmutable',
+        message: 'Model setting AUTH_IMMUTABLE?',
+        default: false,
+      },
+    ],
+  },
 };
