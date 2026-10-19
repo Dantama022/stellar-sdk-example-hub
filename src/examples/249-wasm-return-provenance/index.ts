@@ -156,10 +156,7 @@ export interface WasmReturnProvenanceParams {
 export async function run(params: WasmReturnProvenanceParams = {}): Promise<void> {
   if (!params.wasmFile) {
     // Fallback to bundled sample WASM when available
-    const samplePath = path.resolve(
-      __dirname,
-      '../../contracts/sample/hello.wasm',
-    );
+    const samplePath = path.resolve(__dirname, '../../contracts/sample/hello.wasm');
     if (fs.existsSync(samplePath)) {
       params.wasmFile = samplePath;
     } else {
@@ -184,8 +181,12 @@ export async function run(params: WasmReturnProvenanceParams = {}): Promise<void
       printReport(result.after);
       console.log(chalk.bold('\n--- Diff ---'));
       const c = result.comparison;
-      console.log(`  Function count delta:    ${c.functionCountDelta >= 0 ? '+' : ''}${c.functionCountDelta}`);
-      console.log(`  Return-site delta:       ${c.returnSiteDelta >= 0 ? '+' : ''}${c.returnSiteDelta}`);
+      console.log(
+        `  Function count delta:    ${c.functionCountDelta >= 0 ? '+' : ''}${c.functionCountDelta}`,
+      );
+      console.log(
+        `  Return-site delta:       ${c.returnSiteDelta >= 0 ? '+' : ''}${c.returnSiteDelta}`,
+      );
       if (c.addedFunctions.length > 0)
         console.log(`  Added functions:         ${c.addedFunctions.join(', ')}`);
       if (c.removedFunctions.length > 0)

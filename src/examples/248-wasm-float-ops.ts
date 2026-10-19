@@ -43,8 +43,7 @@ function toCsvRow(record: FloatOpRecord): string {
   ].join(',');
 }
 
-const CSV_HEADER =
-  'functionIndex,blockIndex,instructionIndex,opcode,valueType,category';
+const CSV_HEADER = 'functionIndex,blockIndex,instructionIndex,opcode,valueType,category';
 
 export function toCsv(records: FloatOpRecord[]): string {
   return [CSV_HEADER, ...records.map(toCsvRow)].join('\n');
@@ -129,9 +128,7 @@ function printReport(report: WasmFloatOpsReport): void {
   }
 
   if (s.floatConcentrated) {
-    console.log(
-      chalk.yellow('\n⚠ Float usage is concentrated in a small subset of functions.'),
-    );
+    console.log(chalk.yellow('\n⚠ Float usage is concentrated in a small subset of functions.'));
   }
 
   const mixedFns = report.functions.filter((f) => f.hasMixedPrecision);
@@ -203,13 +200,9 @@ export async function run(
       if (c.newF32Usage) console.log(chalk.yellow('  New f32 usage detected'));
       if (c.newF64Usage) console.log(chalk.yellow('  New f64 usage detected'));
       if (c.newlyFloatFunctions.length > 0)
-        console.log(
-          `  Newly float functions : ${c.newlyFloatFunctions.join(', ')}`,
-        );
+        console.log(`  Newly float functions : ${c.newlyFloatFunctions.join(', ')}`);
       if (c.removedFloatFunctions.length > 0)
-        console.log(
-          `  No-longer float fns   : ${c.removedFloatFunctions.join(', ')}`,
-        );
+        console.log(`  No-longer float fns   : ${c.removedFloatFunctions.join(', ')}`);
     }
     return;
   }

@@ -31,13 +31,21 @@ function section(id: number, payload: number[]): number[] {
   return [id, ...u32(payload.length), ...payload];
 }
 
-function wasm(options: { parameterType?: number; imports?: Array<{ module: string; name: string }>; exportName?: string; custom?: boolean } = {}): Buffer {
+function wasm(
+  options: {
+    parameterType?: number;
+    imports?: Array<{ module: string; name: string }>;
+    exportName?: string;
+    custom?: boolean;
+  } = {},
+): Buffer {
   const imports = options.imports ?? [];
   const parts = [...wasmHeader];
   if (imports.length > 0) {
     parts.push(...section(1, [1, 0x60, 1, options.parameterType ?? 0x7f, 0]));
     const importPayload = [imports.length];
-    for (const entry of imports) importPayload.push(...text(entry.module), ...text(entry.name), 0, 0);
+    for (const entry of imports)
+      importPayload.push(...text(entry.module), ...text(entry.name), 0, 0);
     parts.push(...section(2, importPayload));
   }
   if (options.exportName) parts.push(...section(7, [1, ...text(options.exportName), 0, 0]));
@@ -51,8 +59,18 @@ function writeWasm(bytes: Buffer): string {
   return file;
 }
 
-function observation(ledgerKey: string, overrides: Partial<EntryObservation> = {}): EntryObservation {
-  return { ledgerKey, contractId: 'C1', durability: 'persistent', valueXdr: 'a', liveUntilLedgerSeq: 20, ...overrides };
+function observation(
+  ledgerKey: string,
+  overrides: Partial<EntryObservation> = {},
+): EntryObservation {
+  return {
+    ledgerKey,
+    contractId: 'C1',
+    durability: 'persistent',
+    valueXdr: 'a',
+    liveUntilLedgerSeq: 20,
+    ...overrides,
+  };
 }
 
 function snapshot(ledger: number, entries: EntryObservation[]): Snapshot {
@@ -61,19 +79,32 @@ function snapshot(ledger: number, entries: EntryObservation[]): Snapshot {
 
 describe('offline WASM analysis', () => {
   it('reports encoded section sizes, total bytes, percentages, and custom sections', () => {
-    const file = writeWasm(wasm({ imports: [{ module: 'env', name: 'read' }], exportName: 'read', custom: true }));
+    const file = writeWasm(
+      wasm({ imports: [{ module: 'env', name: 'read' }], exportName: 'read', custom: true }),
+    );
     const report = analyzeWasmFootprint(file);
     expect(report.totalBytes).toBe(fs.statSync(file).size);
     expect(report.sectionCount).toBe(4);
-    expect(report.sections.map((entry) => entry.name)).toEqual(['type', 'import', 'export', 'custom']);
+    expect(report.sections.map((entry) => entry.name)).toEqual([
+      'type',
+      'import',
+      'export',
+      'custom',
+    ]);
     expect(report.sections[3].customName).toBe('name');
-    expect(report.sections[0].percent).toBe(Number(((report.sections[0].size / report.totalBytes) * 100).toFixed(4)));
+    expect(report.sections[0].percent).toBe(
+      Number(((report.sections[0].size / report.totalBytes) * 100).toFixed(4)),
+    );
     expect(report.aggregates.import.bytes).toBe(report.sections[1].size);
   });
 
   it('detects import and export signature modifications without instantiating modules', () => {
-    const before = writeWasm(wasm({ imports: [{ module: 'env', name: 'run' }], exportName: 'run' }));
-    const after = writeWasm(wasm({ imports: [{ module: 'env', name: 'run' }], exportName: 'run', parameterType: 0x7e }));
+    const before = writeWasm(
+      wasm({ imports: [{ module: 'env', name: 'run' }], exportName: 'run' }),
+    );
+    const after = writeWasm(
+      wasm({ imports: [{ module: 'env', name: 'run' }], exportName: 'run', parameterType: 0x7e }),
+    );
     const report = compareWasmCompatibility(before, after);
     expect(report.unchanged).toBe(false);
     expect(report.imports.modified).toHaveLength(1);
@@ -84,8 +115,12 @@ describe('offline WASM analysis', () => {
     const before = writeWasm(wasm({ imports: [{ module: 'env', name: 'run' }] }));
     const after = writeWasm(wasm({ imports: [{ module: 'env', name: 'run' }], exportName: 'run' }));
     expect(compareWasmCompatibility(before, before).unchanged).toBe(true);
-    expect(compareWasmCompatibility(before, after).exports.added.map((entry) => entry.name)).toEqual(['run']);
-    expect(compareWasmCompatibility(after, before).exports.removed.map((entry) => entry.name)).toEqual(['run']);
+    expect(
+      compareWasmCompatibility(before, after).exports.added.map((entry) => entry.name),
+    ).toEqual(['run']);
+    expect(
+      compareWasmCompatibility(after, before).exports.removed.map((entry) => entry.name),
+    ).toEqual(['run']);
   });
 
   it('groups dependencies and reports added and removed imports', () => {
@@ -108,7 +143,10 @@ describe('state transition matrix', () => {
   it('reports creation, removal, reappearance, value, TTL, and durability transitions deterministically', () => {
     const snapshots = [
       snapshot(10, [observation('a')]),
-      snapshot(11, [observation('a', { valueXdr: 'b', liveUntilLedgerSeq: 25, durability: 'temporary' }), observation('b')]),
+      snapshot(11, [
+        observation('a', { valueXdr: 'b', liveUntilLedgerSeq: 25, durability: 'temporary' }),
+        observation('b'),
+      ]),
       snapshot(12, [observation('a'), observation('b')]),
       snapshot(13, [observation('a')]),
       snapshot(14, [observation('a'), observation('b')]),
@@ -123,15 +161,17 @@ describe('state transition matrix', () => {
     expect(types).toContain('ttl-increased');
     expect(types).toContain('ttl-decreased');
     expect(report).toEqual(analyzeStateTransitions(snapshots));
-    expect(analyzeStateTransitions(snapshots, { contractId: 'C1', transitionType: 'reappeared' }).rows).toHaveLength(1);
+    expect(
+      analyzeStateTransitions(snapshots, { contractId: 'C1', transitionType: 'reappeared' }).rows,
+    ).toHaveLength(1);
   });
 
   it('validates snapshot ordering and minimum-frequency filtering', () => {
     expect(() => analyzeStateTransitions([snapshot(12, []), snapshot(11, [])])).toThrow(/ordering/);
-    const result = analyzeStateTransitions([
-      snapshot(1, [observation('a'), observation('b')]),
-      snapshot(2, []),
-    ], { minimumFrequency: 2 });
+    const result = analyzeStateTransitions(
+      [snapshot(1, [observation('a'), observation('b')]), snapshot(2, [])],
+      { minimumFrequency: 2 },
+    );
     expect(result.rows).toHaveLength(0);
   });
 });

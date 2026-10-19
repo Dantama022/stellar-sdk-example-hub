@@ -1,4 +1,14 @@
-import { Address, Asset, Contract, Keypair, Networks, rpc, scValToNative, xdr } from '@stellar/stellar-sdk';
+import {
+  Address,
+  Asset,
+  Contract,
+  Keypair,
+  Networks,
+  StrKey,
+  rpc,
+  scValToNative,
+  xdr,
+} from '@stellar/stellar-sdk';
 import chalk from 'chalk';
 
 import { decodeScVal, renderDecodedValue } from '../utils/scval-decoder';
@@ -202,9 +212,10 @@ export function decodeLedgerKey(key: xdr.LedgerKey): DecodedLedgerKey {
     switch (name) {
       case 'account': {
         const accountId = key.account().accountId();
-        const pubkey = accountId.switch().name === 'publicKeyTypeEd25519'
-          ? encodePublicKey(accountId.ed25519())
-          : `(${accountId.switch().name})`;
+        const pubkey =
+          accountId.switch().name === 'publicKeyTypeEd25519'
+            ? encodePublicKey(accountId.ed25519())
+            : `(${accountId.switch().name})`;
         return {
           type: 'Account',
           rawXdr,
@@ -216,9 +227,10 @@ export function decodeLedgerKey(key: xdr.LedgerKey): DecodedLedgerKey {
       case 'trustline': {
         const tl = key.trustLine();
         const accountId = tl.accountId();
-        const pubkey = accountId.switch().name === 'publicKeyTypeEd25519'
-          ? encodePublicKey(accountId.ed25519())
-          : `(${accountId.switch().name})`;
+        const pubkey =
+          accountId.switch().name === 'publicKeyTypeEd25519'
+            ? encodePublicKey(accountId.ed25519())
+            : `(${accountId.switch().name})`;
         const assetStr = decodeTrustLineAsset(tl.asset());
         return {
           type: 'Trustline',
@@ -242,9 +254,10 @@ export function decodeLedgerKey(key: xdr.LedgerKey): DecodedLedgerKey {
 
       case 'data': {
         const data = key.data();
-        const accountId = data.accountId().switch().name === 'publicKeyTypeEd25519'
-          ? encodePublicKey(data.accountId().ed25519())
-          : `(${data.accountId().switch().name})`;
+        const accountId =
+          data.accountId().switch().name === 'publicKeyTypeEd25519'
+            ? encodePublicKey(data.accountId().ed25519())
+            : `(${data.accountId().switch().name})`;
         const dataName = data.dataName();
         return {
           type: 'Data',
@@ -289,7 +302,8 @@ export function decodeLedgerKey(key: xdr.LedgerKey): DecodedLedgerKey {
         } else {
           try {
             const native = scValToNative(keyVal);
-            keyDesc = native !== undefined ? JSON.stringify(native, bigintReplacer) : keyVal.switch().name;
+            keyDesc =
+              native !== undefined ? JSON.stringify(native, bigintReplacer) : keyVal.switch().name;
           } catch {
             keyDesc = keyVal.switch().name;
           }
@@ -344,7 +358,10 @@ export function decodeLedgerKey(key: xdr.LedgerKey): DecodedLedgerKey {
  * Parse a raw base64 XDR string into a `LedgerKey`.
  * Returns null and sets `error` on failure.
  */
-export function parseLedgerKeyXdr(xdrB64: string): { key: xdr.LedgerKey | null; error: string | null } {
+export function parseLedgerKeyXdr(xdrB64: string): {
+  key: xdr.LedgerKey | null;
+  error: string | null;
+} {
   try {
     const key = xdr.LedgerKey.fromXDR(xdrB64, 'base64');
     return { key, error: null };
@@ -447,8 +464,7 @@ export function decodeLedgerEntry(
           const totalShares = cp.totalPoolShares().toString();
           return {
             entryType: 'LiquidityPool',
-            decodedValue:
-              `${assetA}/${assetB} reserveA=${reserveA} reserveB=${reserveB} shares=${totalShares}`,
+            decodedValue: `${assetA}/${assetB} reserveA=${reserveA} reserveB=${reserveB} shares=${totalShares}`,
             fullyDecoded: true,
           };
         }
@@ -506,10 +522,14 @@ export function decodeLedgerEntry(
             fullyDecoded: false,
           };
         } catch {
-          return { entryType: discriminant, decodedValue: '(could not serialize)', fullyDecoded: false };
+          return {
+            entryType: discriminant,
+            decodedValue: '(could not serialize)',
+            fullyDecoded: false,
+          };
         }
     }
-  } catch (err: any) {
+  } catch {
     // Fallback: at minimum emit the raw XDR
     let rawXdr = '';
     try {
@@ -542,11 +562,7 @@ function buildDefaultKeys(): Array<{ label: string; key: xdr.LedgerKey }> {
 
   // Native SAC: a symbol key "COUNTER" (almost certainly missing — demonstrates
   // the graceful not-found path)
-  const counterKey = buildContractDataKey(
-    sacId,
-    xdr.ScVal.scvSymbol('COUNTER'),
-    'persistent',
-  );
+  const counterKey = buildContractDataKey(sacId, xdr.ScVal.scvSymbol('COUNTER'), 'persistent');
 
   // Derive the code hash from the instance entry later; for now return what
   // we can build statically.  The code key needs the hash from the live entry,
@@ -755,9 +771,7 @@ function displayResult(result: LedgerEntryResult, index: number, total: number):
   if (result.liveUntilLedger !== null) {
     console.log(chalk.gray(`  Live until ledger : ${result.liveUntilLedger}`));
     console.log(
-      chalk.gray(
-        '  (TTL-bearing entry: extend via Operation.extendFootprintTtl before expiry)',
-      ),
+      chalk.gray('  (TTL-bearing entry: extend via Operation.extendFootprintTtl before expiry)'),
     );
   }
 
@@ -797,9 +811,7 @@ function displaySummary(report: LedgerEntryReport): void {
  *
  * Returns null (and logs a warning) when the spec is unrecognised.
  */
-export function parseLedgerKeySpec(
-  spec: string,
-): { label: string; key: xdr.LedgerKey } | null {
+export function parseLedgerKeySpec(spec: string): { label: string; key: xdr.LedgerKey } | null {
   const trimmed = spec.trim();
   if (!trimmed) return null;
 
@@ -816,7 +828,10 @@ export function parseLedgerKeySpec(
       const contractId = parts[0];
       if (!contractId) throw new Error('contract ID is empty');
       if (parts.length === 1) {
-        return { label: `contract:${contractId} instance`, key: buildContractInstanceKey(contractId) };
+        return {
+          label: `contract:${contractId} instance`,
+          key: buildContractInstanceKey(contractId),
+        };
       }
       const sym = parts.slice(1).join(':');
       return {
@@ -839,7 +854,9 @@ export function parseLedgerKeySpec(
     console.warn(chalk.yellow(`  Unrecognised key spec (skipped): "${trimmed}"`));
     return null;
   } catch (err: any) {
-    console.warn(chalk.yellow(`  Could not parse key spec "${trimmed}": ${err?.message ?? String(err)}`));
+    console.warn(
+      chalk.yellow(`  Could not parse key spec "${trimmed}": ${err?.message ?? String(err)}`),
+    );
     return null;
   }
 }
@@ -857,20 +874,19 @@ export interface RunParams {
 
 export async function run(params?: RunParams): Promise<void> {
   const rpcUrl =
-    params?.rpcUrl ??
-    process.env.SOROBAN_RPC_URL ??
-    'https://soroban-testnet.stellar.org';
+    params?.rpcUrl ?? process.env.SOROBAN_RPC_URL ?? 'https://soroban-testnet.stellar.org';
 
   const jsonOutput =
-    params?.json === true ||
-    process.env.JSON_OUTPUT === 'true' ||
-    process.argv.includes('--json');
+    params?.json === true || process.env.JSON_OUTPUT === 'true' || process.argv.includes('--json');
 
   // Accept key specs from params, env, or CLI args
   const keySpecRaw =
     params?.keys ??
     process.env.LEDGER_KEYS ??
-    process.argv.slice(3).filter((a) => !a.startsWith('--')).join(',');
+    process.argv
+      .slice(3)
+      .filter((a) => !a.startsWith('--'))
+      .join(',');
 
   if (!jsonOutput) {
     console.log(chalk.bold('Soroban RPC Ledger Entry Retrieval Example'));
@@ -956,9 +972,7 @@ export async function run(params?: RunParams): Promise<void> {
   // ──────────────────────────────────────────────────────────────────────────
   if (!jsonOutput) {
     console.log(
-      chalk.yellow(
-        `\nStep 3: Calling getLedgerEntries with ${labelledKeys.length} key(s)...`,
-      ),
+      chalk.yellow(`\nStep 3: Calling getLedgerEntries with ${labelledKeys.length} key(s)...`),
     );
     console.log(
       chalk.gray(
@@ -1023,8 +1037,7 @@ export async function run(params?: RunParams): Promise<void> {
 /** StrKey-encode a raw 32-byte Ed25519 public key. */
 function encodePublicKey(raw: Buffer): string {
   try {
-    const stellarSdk = require('@stellar/stellar-sdk');
-    return stellarSdk.StrKey.encodeEd25519PublicKey(raw);
+    return StrKey.encodeEd25519PublicKey(raw);
   } catch {
     return `0x${raw.toString('hex')}`;
   }
@@ -1090,8 +1103,7 @@ function contractAddressFromScAddress(scAddress: xdr.ScAddress): string {
     const name = scAddress.switch().name;
     if (name === 'scAddressTypeContract') {
       const contractId = scAddress.contractId();
-      const stellarSdk = require('@stellar/stellar-sdk');
-      return stellarSdk.StrKey.encodeContract(contractId);
+      return StrKey.encodeContract(contractId);
     }
     if (name === 'scAddressTypeAccount') {
       return encodePublicKey(scAddress.accountId().ed25519());

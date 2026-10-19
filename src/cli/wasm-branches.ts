@@ -21,7 +21,11 @@ export function setupWasmBranchesCommand() {
     .action((wasmFile: string, options: any) => {
       try {
         if (options.compare) {
-          console.log(formatJsonOutput(compareBranches(analyzeBranchesFile(wasmFile), analyzeBranchesFile(options.compare))));
+          console.log(
+            formatJsonOutput(
+              compareBranches(analyzeBranchesFile(wasmFile), analyzeBranchesFile(options.compare)),
+            ),
+          );
           return;
         }
 

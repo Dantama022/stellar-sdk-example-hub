@@ -6,11 +6,7 @@ import {
   stableStringify,
 } from '../utils/soroban-state-inspection';
 export type SignatureState =
-  | 'present'
-  | 'absent'
-  | 'structurally-invalid'
-  | 'unable-to-verify'
-  | 'not-applicable';
+  'present' | 'absent' | 'structurally-invalid' | 'unable-to-verify' | 'not-applicable';
 export interface AuthInspectionOptions {
   entries?: string[] | string;
   json?: boolean;

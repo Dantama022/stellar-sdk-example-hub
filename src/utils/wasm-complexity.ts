@@ -347,15 +347,13 @@ function decodeInstruction(reader: Reader): { opcode: number; prefix?: number } 
     return { opcode, prefix };
   } else if (opcode === 0xfd || opcode === 0xfe || opcode === 0xfb) {
     throw new WasmValidationError(`Unsupported prefixed instruction 0x${opcode.toString(16)}`);
-  } else if (
-    !(
-      opcode <= 0x05 ||
-      (opcode >= 0x0b && opcode <= 0x0f) ||
-      (opcode >= 0x1a && opcode <= 0x1b) ||
-      (opcode >= 0x45 && opcode <= 0xc4) ||
-      [0xd1, 0xd3, 0xd4].includes(opcode)
-    )
-  )
+  } else if (!(
+    opcode <= 0x05 ||
+    (opcode >= 0x0b && opcode <= 0x0f) ||
+    (opcode >= 0x1a && opcode <= 0x1b) ||
+    (opcode >= 0x45 && opcode <= 0xc4) ||
+    [0xd1, 0xd3, 0xd4].includes(opcode)
+  ))
     throw new WasmValidationError(
       `Unsupported or invalid instruction opcode 0x${opcode.toString(16)}`,
     );

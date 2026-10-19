@@ -38,14 +38,14 @@ export class DominatorTree {
     const metrics = this.calculateMetrics(immediateDominators);
 
     return {
-      cfg: this.cfg.blocks.map(block => ({
+      cfg: this.cfg.blocks.map((block) => ({
         index: block.index,
         dominators: dominators[block.index],
         immediateDominator: immediateDominators[block.index],
         depth: this.calculateDepth(block.index, immediateDominators),
-        dominatedBlocks: this.countDominatedBlocks(block.index, immediateDominators)
+        dominatedBlocks: this.countDominatedBlocks(block.index, immediateDominators),
       })),
-      metrics
+      metrics,
     };
   }
 
@@ -65,7 +65,9 @@ export class DominatorTree {
     return dominators;
   }
 
-  private calculateImmediateDominators(dominators: Record<number, Set<number>>): Record<number, number | null> {
+  private calculateImmediateDominators(
+    dominators: Record<number, Set<number>>,
+  ): Record<number, number | null> {
     const idoms: Record<number, number | null> = {};
     const blocks = this.cfg.blocks;
 
@@ -98,7 +100,11 @@ export class DominatorTree {
     return idoms;
   }
 
-  private findCommonDominator(a: number, b: number, dominators: Record<number, Set<number>>): number {
+  private findCommonDominator(
+    a: number,
+    b: number,
+    dominators: Record<number, Set<number>>,
+  ): number {
     const aDominators = dominators[a];
     const bDominators = dominators[b];
 
@@ -111,19 +117,29 @@ export class DominatorTree {
     return this.cfg.entryBlock;
   }
 
-  private calculateDepth(blockIndex: number, immediateDominators: Record<number, number | null>): number {
+  private calculateDepth(
+    blockIndex: number,
+    immediateDominators: Record<number, number | null>,
+  ): number {
     let depth = 0;
     let current = blockIndex;
 
-    while (current !== null && immediateDominators[current] !== null) {
-      current = immediateDominators[current];
+    for (
+      let next = immediateDominators[current];
+      next !== null && next !== undefined;
+      next = immediateDominators[current]
+    ) {
+      current = next;
       depth++;
     }
 
     return depth;
   }
 
-  private countDominatedBlocks(blockIndex: number, immediateDominators: Record<number, number | null>): number {
+  private countDominatedBlocks(
+    blockIndex: number,
+    immediateDominators: Record<number, number | null>,
+  ): number {
     const visited = new Set<number>();
     const stack = [blockIndex];
     let count = 0;
@@ -147,7 +163,9 @@ export class DominatorTree {
 
   private calculateMetrics(immediateDominators: Record<number, number | null>): any {
     const blocks = this.cfg.blocks;
-    const maxDepth = Math.max(...blocks.map(b => this.calculateDepth(b.index, immediateDominators)));
+    const maxDepth = Math.max(
+      ...blocks.map((b) => this.calculateDepth(b.index, immediateDominators)),
+    );
     const entryCoverage = this.calculateEntryCoverage(immediateDominators);
     const loopHeaders = this.findLoopHeaders(immediateDominators);
     const unreachableBlocks = this.findUnreachableBlocks(immediateDominators);
@@ -156,7 +174,7 @@ export class DominatorTree {
       maxDepth,
       entryCoverage,
       loopHeaders,
-      unreachableBlocks
+      unreachableBlocks,
     };
   }
 
@@ -178,7 +196,7 @@ export class DominatorTree {
     const blocks = this.cfg.blocks;
 
     for (const block of blocks) {
-      if (block.predecessors.some(pred => immediateDominators[block.index] === pred)) {
+      if (block.predecessors.some((pred) => immediateDominators[block.index] === pred)) {
         headers.push(block.index);
       }
     }
@@ -186,7 +204,7 @@ export class DominatorTree {
     return headers;
   }
 
-  private findUnreachableBlocks(immediateDominators: Record<number, number | null>): number[] {
+  private findUnreachableBlocks(_immediateDominators: Record<number, number | null>): number[] {
     const reachable = new Set<number>();
     const stack = [this.cfg.entryBlock];
 
@@ -203,7 +221,7 @@ export class DominatorTree {
     }
 
     return this.cfg.blocks
-      .filter(block => !reachable.has(block.index))
-      .map(block => block.index);
+      .filter((block) => !reachable.has(block.index))
+      .map((block) => block.index);
   }
 }
