@@ -253,6 +253,10 @@
     {
       "match": "196-soroban-authorization-preparation",
       "reason": "Prepares and inspects Soroban authorization entries"
+    },
+    {
+      "match": "261-transaction-submission-diagnostics",
+      "reason": "Requires live Horizon account state for the pre-submission diagnostics"
     }
   ]
 }

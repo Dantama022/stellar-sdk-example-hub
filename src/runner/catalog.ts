@@ -2951,4 +2951,33 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '261-transaction-submission-diagnostics': {
+    name: '261-transaction-submission-diagnostics',
+    description: 'Stellar transaction submission diagnostics and failure analysis (ISSUE-310)',
+    run: loadExample('../examples/261-transaction-submission-diagnostics'),
+    params: [
+      {
+        type: 'input',
+        name: 'sourceAccount',
+        message: 'Source account public key (G...):',
+      },
+      {
+        type: 'input',
+        name: 'destinationAccount',
+        message: 'Destination account public key (G...):',
+      },
+      {
+        type: 'input',
+        name: 'paymentAsset',
+        message: 'Payment asset (code:issuer, or XLM for native):',
+        default: 'XLM',
+      },
+      {
+        type: 'input',
+        name: 'paymentAmount',
+        message: 'Payment amount:',
+        default: '1',
+      },
+    ],
+  },
 };
