@@ -13351,4 +13351,39 @@ export const examples: Record<string, Example> = {
   '255-asset-trustline-lifecycle': { name: '255-asset-trustline-lifecycle', description: '255-asset-trustline-lifecycle (issues #405–#408)', run: loadExample('../examples/255-asset-trustline-lifecycle') },
   '256-path-payment-preparation': { name: '256-path-payment-preparation', description: '256-path-payment-preparation (issues #405–#408)', run: loadExample('../examples/256-path-payment-preparation') },
   '257-transaction-history-checkpointing': { name: '257-transaction-history-checkpointing', description: '257-transaction-history-checkpointing (issues #405–#408)', run: loadExample('../examples/257-transaction-history-checkpointing') },
+  '259-transaction-fee-bid-analysis': {
+    name: '259-transaction-fee-bid-analysis',
+    description:
+      'Analyze fresh Horizon fee statistics, enforce a congestion-aware fee policy, and prepare a payment transaction without submitting by default',
+    run: loadExample('../examples/259-transaction-fee-bid-analysis'),
+    params: [
+      { type: 'input', name: 'sourceAccountId', message: 'Source account ID:' },
+      { type: 'input', name: 'destinationAccountId', message: 'Destination account ID:' },
+      { type: 'input', name: 'operationCount', message: 'Number of payment operations:', default: '1' },
+      {
+        type: 'list',
+        name: 'strategy',
+        message: 'Fee strategy:',
+        choices: ['economy', 'standard', 'priority'],
+        default: 'standard',
+      },
+      { type: 'input', name: 'maxTotalFee', message: 'Maximum total fee in stroops:', default: '5000' },
+      { type: 'confirm', name: 'submit', message: 'Submit the signed transaction?', default: false },
+    ],
+  },
+  '260-signer-recovery-readiness-audit': {
+    name: '260-signer-recovery-readiness-audit',
+    description:
+      'Audit Horizon signer weights and threshold feasibility without claiming key availability or account recoverability',
+    run: loadExample('../examples/260-signer-recovery-readiness-audit'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to audit:',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
 };
