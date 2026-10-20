@@ -37,6 +37,26 @@ function loadExample(modulePath: string): ExampleRunner {
 }
 
 export const examples: Record<string, Example> = {
+  '334-soroban-ledger-entry-inspector': {
+    name: '334-soroban-ledger-entry-inspector',
+    description: 'Read-only Soroban RPC ledger entries and contract storage XDR',
+    run: loadExample('../examples/334-soroban-ledger-entry-inspector'),
+  },
+  '335-sep7-uri': {
+    name: '335-sep7-uri',
+    description: 'Offline SEP-7 payment and transaction URI generation and validation',
+    run: loadExample('../examples/335-sep7-uri'),
+  },
+  '336-sep30-account-recovery': {
+    name: '336-sep30-account-recovery',
+    description: 'SEP-30 account registration and response validation using an offline mock',
+    run: loadExample('../examples/336-sep30-account-recovery'),
+  },
+  '337-sep5-key-derivation': {
+    name: '337-sep5-key-derivation',
+    description: 'Offline SEP-5 hardened key derivation and public-key test vector',
+    run: loadExample('../examples/337-sep5-key-derivation'),
+  },
   '01-create-account': {
     name: '01-create-account',
     description: 'Generate keypairs and fund a test account using Friendbot',
