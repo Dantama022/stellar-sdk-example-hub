@@ -1,6 +1,11 @@
 import { xdr, rpc, scValToNative, Contract } from '@stellar/stellar-sdk';
 import chalk from 'chalk';
 
+/**
+ * Monitor a Soroban invocation, decode its return value, and correlate emitted
+ * contract events with the invocation using their shared transaction hash.
+ */
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -475,9 +480,15 @@ function printReport(report: MonitorReport, jsonOutput: boolean): void {
     console.log(`${chalk.bold('Poll Attempts:')} ${report.pollAttempts}`);
   }
 
+  console.log(chalk.bold('\n--- Invocation Result ---'));
   if (report.returnValue) {
     console.log(`${chalk.bold('Return Value:')} ${renderValue(report.returnValue)}`);
+  } else {
+    console.log(chalk.gray('No decoded contract return value is available.'));
   }
+  console.log(
+    chalk.gray(`Contract events below are correlated by transaction hash: ${report.txHash}`),
+  );
 
   if (report.error) {
     console.log(chalk.red(`\nError: ${report.error}`));

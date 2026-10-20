@@ -482,6 +482,27 @@ Run a specific example by passing its catalog name:
 npm run run-example 01-create-account
 ```
 
+Audit account signer weights and threshold feasibility without signing or submitting a transaction:
+
+```bash
+npm run run-example -- 260-signer-recovery-readiness-audit <account-id>
+```
+
+The report checks configured signer-weight totals against low, medium, and high thresholds. It
+cannot verify that signing keys are available or controlled, so threshold feasibility is not a
+guarantee that the account can be recovered.
+
+Analyze current fee conditions and prepare an unsigned payment transaction without submitting it:
+
+```bash
+npm run run-example -- 259-transaction-fee-bid-analysis
+```
+
+Configure the fee strategy, operation count, and total-fee ceiling with `FEE_STRATEGY`,
+`OPERATION_COUNT`, and `MAX_TOTAL_FEE`. Fee statistics are compared with Horizon's latest ledger;
+stale statistics or estimates above the configured ceiling are rejected. Submission is disabled by
+default. To opt in, set `SUBMIT_TRANSACTION=true` and provide the source account's `SECRET_KEY`.
+
 Poll a Soroban transaction until it succeeds or fails:
 
 ```bash
