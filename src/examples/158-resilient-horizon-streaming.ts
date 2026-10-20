@@ -2,14 +2,15 @@ import { Horizon } from '@stellar/stellar-sdk';
 import type { ServerApi } from '@stellar/stellar-sdk/lib/horizon/server_api';
 import chalk from 'chalk';
 
-type StreamRecord = ServerApi.OperationRecord | ServerApi.TransactionRecord;
+type StreamRecord = ServerApi.OperationRecord | ServerApi.TransactionRecord | ServerApi.LedgerRecord;
 
 export interface ResilientStreamingParams {
   horizonUrl?: string;
-  resource?: 'payments' | 'transactions' | 'operations';
+  resource?: 'payments' | 'transactions' | 'operations' | 'ledgers';
   cursor?: string;
   maxEvents?: string | number;
   streamDurationSeconds?: string | number;
+  maxReconnectAttempts?: string | number;
   baseRetryDelayMs?: string | number;
   maxRetryDelayMs?: string | number;
   json?: boolean | string;
@@ -71,6 +72,10 @@ export function computeReconnectDelay(
   return Math.min(maxDelayMs, exponential);
 }
 
+export function hasExceededReconnectLimit(attempt: number, maxAttempts: number): boolean {
+  return attempt > maxAttempts;
+}
+
 export function formatConnectionStatus(
   state: 'connected' | 'reconnecting' | 'closed',
   details: { cursor: string; attempt?: number; delayMs?: number },
@@ -87,13 +92,28 @@ export function formatConnectionStatus(
   }
 }
 
-export function isMalformedStreamRecord(record: unknown): boolean {
+export function isMalformedStreamRecord(
+  record: unknown,
+  resource?: ResilientStreamingParams['resource'],
+): boolean {
   if (!record || typeof record !== 'object') {
     return true;
   }
 
   const candidate = record as Record<string, unknown>;
-  return typeof candidate.paging_token !== 'string' || candidate.paging_token.length === 0;
+  if (typeof candidate.paging_token !== 'string' || candidate.paging_token.length === 0) {
+    return true;
+  }
+
+  if (resource === 'ledgers') {
+    return (
+      !Number.isSafeInteger(candidate.sequence) ||
+      typeof candidate.closed_at !== 'string' ||
+      !Number.isFinite(Date.parse(candidate.closed_at))
+    );
+  }
+
+  return false;
 }
 
 function describeStreamError(error: unknown): string {
@@ -110,6 +130,10 @@ function describeStreamError(error: unknown): string {
 }
 
 function formatRecordSummary(record: StreamRecord, eventNumber: number): string {
+  if ('sequence' in record && 'closed_at' in record) {
+    return formatLedgerSummary(record.sequence, record.closed_at, record.paging_token, eventNumber);
+  }
+
   if ('transaction_hash' in record) {
     return [
       chalk.bold.cyan(`\nStream event #${eventNumber}`),
@@ -127,6 +151,20 @@ function formatRecordSummary(record: StreamRecord, eventNumber: number): string 
     `  Record ID:     ${transaction.hash}`,
     `  Cursor:        ${transaction.paging_token}`,
     `  Transaction:   ${transaction.hash}`,
+  ].join('\n');
+}
+
+export function formatLedgerSummary(
+  sequence: number,
+  closedAt: string,
+  cursor: string,
+  eventNumber: number,
+): string {
+  return [
+    chalk.bold.cyan(`\nLedger close #${eventNumber}`),
+    `  Sequence:      ${sequence}`,
+    `  Closed at:     ${closedAt}`,
+    `  Cursor:        ${cursor}`,
   ].join('\n');
 }
 
@@ -150,6 +188,18 @@ export async function run(
     params.streamDurationSeconds ?? process.env.STREAM_DURATION_SECONDS,
     'STREAM_DURATION_SECONDS',
   );
+  const maxReconnectAttempts =
+    resource === 'ledgers'
+      ? Math.max(
+          1,
+          Math.floor(
+          readPositiveNumber(
+            params.maxReconnectAttempts ?? process.env.STREAM_MAX_RECONNECT_ATTEMPTS,
+            'STREAM_MAX_RECONNECT_ATTEMPTS',
+          ) ?? 8,
+          ),
+        )
+      : undefined;
   const baseRetryDelayMs =
     readPositiveNumber(
       params.baseRetryDelayMs ?? process.env.STREAM_BASE_RETRY_MS,
@@ -170,6 +220,9 @@ export async function run(
     console.log(`Horizon URL: ${horizonUrl}`);
     console.log(`Resource: ${resource}`);
     console.log('Tracks cursor, ignores duplicates/malformed events, and reconnects with backoff.');
+    if (resource === 'ledgers') {
+      console.log('Ledger monitoring reports new closes only; reconnecting cannot recover missed history.');
+    }
     console.log('Press Ctrl+C to shut down cleanly.\n');
   }
 
@@ -270,7 +323,9 @@ export async function run(
     }
 
     const builder =
-      resource === 'transactions'
+      resource === 'ledgers'
+        ? server.ledgers()
+        : resource === 'transactions'
         ? server.transactions()
         : resource === 'operations'
           ? server.operations()
@@ -278,9 +333,9 @@ export async function run(
 
     closeStream = builder.cursor(cursor).stream({
       reconnectTimeout: 24 * 60 * 60 * 1000,
-      onmessage: (record: ServerApi.OperationRecord | ServerApi.TransactionRecord) => {
+      onmessage: (record: StreamRecord) => {
         const streamRecord = record as StreamRecord;
-        if (isMalformedStreamRecord(streamRecord)) {
+        if (isMalformedStreamRecord(streamRecord, resource)) {
           stats.malformedIgnored += 1;
           if (!json) {
             console.warn(chalk.yellow('Ignored malformed stream record'));
@@ -328,6 +383,13 @@ export async function run(
     }
 
     reconnectAttempt += 1;
+    if (
+      maxReconnectAttempts !== undefined &&
+      hasExceededReconnectLimit(reconnectAttempt, maxReconnectAttempts)
+    ) {
+      void stop(`maximum reconnect attempts reached (${maxReconnectAttempts})`);
+      return;
+    }
     stats.reconnectAttempts += 1;
     const delayMs = computeReconnectDelay(reconnectAttempt, baseRetryDelayMs, maxRetryDelayMs);
 

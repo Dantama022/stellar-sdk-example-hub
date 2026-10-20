@@ -306,7 +306,7 @@ The repository currently includes the following runnable examples:
 232. **`135-transaction-preflight-validation`**: Run local and network-dependent preflight validation checks (sequence, fees, time bounds, signatures) on a transaction envelope prior to submission.
 233. **`137-dynamic-fee-selection`**: Query Horizon fee statistics and dynamically calculate a transaction fee based on strategies like median, high priority, or custom multipliers, with safety caps.
 234. **`157-horizon-pagination`**: Reusable pagination across Horizon transactions, operations, and payments with duplicate prevention, early termination, timeouts, and metrics.
-235. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
+235. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming for payments, operations, transactions, or ledger closes, with cursor resume, duplicate/malformed event handling, bounded reconnects, and stream statistics. Ledger monitoring cannot recover missed history after a disconnect.
 236. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 237. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
 238. **`177-soroban-event-decoding`**: Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding, supporting configurable ledger ranges and event-type filtering.
@@ -867,6 +867,8 @@ Run a resilient Horizon stream with cursor resume and reconnect backoff:
 ```bash
 npm run run-example 158-resilient-horizon-streaming
 ```
+
+Select `ledgers` as the stream resource to monitor newly closed ledgers. Ledger streams start at the configured cursor and cannot backfill missed closes after a disconnect; set `STREAM_MAX_RECONNECT_ATTEMPTS` to bound retries (default: 8 for ledger streams).
 
 Filter streamed Horizon operations client-side while preserving the underlying cursor:
 
@@ -1577,7 +1579,7 @@ The repository currently includes the following runnable examples:
 232. **`135-transaction-preflight-validation`**: Run local and network-dependent preflight validation checks (sequence, fees, time bounds, signatures) on a transaction envelope prior to submission.
 233. **`137-dynamic-fee-selection`**: Query Horizon fee statistics and dynamically calculate a transaction fee based on strategies like median, high priority, or custom multipliers, with safety caps.
 234. **`157-horizon-pagination`**: Reusable pagination across Horizon transactions, operations, and payments with duplicate prevention, early termination, timeouts, and metrics.
-235. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
+235. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming for payments, operations, transactions, or ledger closes, with cursor resume, duplicate/malformed event handling, bounded reconnects, and stream statistics. Ledger monitoring cannot recover missed history after a disconnect.
 236. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 237. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
 238. **`177-soroban-event-decoding`**: Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding, supporting configurable ledger ranges and event-type filtering.
@@ -2805,7 +2807,7 @@ The repository currently includes the following runnable examples:
 78. **`135-transaction-preflight-validation`**: Run local and network-dependent preflight validation checks (sequence, fees, time bounds, signatures) on a transaction envelope prior to submission.
 79. **`137-dynamic-fee-selection`**: Query Horizon fee statistics and dynamically calculate a transaction fee based on strategies like median, high priority, or custom multipliers, with safety caps.
 80. **`157-horizon-pagination`**: Reusable pagination across Horizon transactions, operations, and payments with duplicate prevention, early termination, timeouts, and metrics.
-81. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
+81. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming for payments, operations, transactions, or ledger closes, with cursor resume, duplicate/malformed event handling, bounded reconnects, and stream statistics. Ledger monitoring cannot recover missed history after a disconnect.
 82. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 83. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
 84. **`177-soroban-event-decoding`**: Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding, supporting configurable ledger ranges and event-type filtering.
@@ -3066,7 +3068,7 @@ The repository currently includes the following runnable examples:
 232. **`135-transaction-preflight-validation`**: Run local and network-dependent preflight validation checks (sequence, fees, time bounds, signatures) on a transaction envelope prior to submission.
 233. **`137-dynamic-fee-selection`**: Query Horizon fee statistics and dynamically calculate a transaction fee based on strategies like median, high priority, or custom multipliers, with safety caps.
 234. **`157-horizon-pagination`**: Reusable pagination across Horizon transactions, operations, and payments with duplicate prevention, early termination, timeouts, and metrics.
-235. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming with cursor resume, duplicate/malformed event handling, exponential backoff reconnects, and stream statistics.
+235. **`158-resilient-horizon-streaming`**: Resilient Horizon streaming for payments, operations, transactions, or ledger closes, with cursor resume, duplicate/malformed event handling, bounded reconnects, and stream statistics. Ledger monitoring cannot recover missed history after a disconnect.
 236. **`159-horizon-stream-filtering`**: Client-side AND/OR filtering pipeline for Horizon operation streams covering account, asset, operation type, success status, and amount ranges.
 237. **`160-horizon-retry-rate-limit`**: Retry wrapper for transient Horizon failures and 429 rate limits with Retry-After parsing, exponential backoff, and request diagnostics.
 238. **`177-soroban-event-decoding`**: Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding, supporting configurable ledger ranges and event-type filtering.

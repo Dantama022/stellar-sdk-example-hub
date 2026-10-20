@@ -1480,7 +1480,7 @@ export const examples: Record<string, Example> = {
         type: 'list',
         name: 'resource',
         message: 'Horizon stream resource:',
-        choices: ['payments', 'operations', 'transactions'],
+        choices: ['payments', 'operations', 'transactions', 'ledgers'],
         default: 'payments',
       },
       {
@@ -3240,7 +3240,7 @@ export const examples: Record<string, Example> = {
         type: 'list',
         name: 'resource',
         message: 'Horizon stream resource:',
-        choices: ['payments', 'operations', 'transactions'],
+        choices: ['payments', 'operations', 'transactions', 'ledgers'],
         default: 'payments',
       },
       {
@@ -5505,7 +5505,7 @@ export const examples: Record<string, Example> = {
         type: 'list',
         name: 'resource',
         message: 'Horizon stream resource:',
-        choices: ['payments', 'operations', 'transactions'],
+        choices: ['payments', 'operations', 'transactions', 'ledgers'],
         default: 'payments',
       },
       {
@@ -7929,7 +7929,7 @@ export const examples: Record<string, Example> = {
         type: 'list',
         name: 'resource',
         message: 'Horizon stream resource:',
-        choices: ['payments', 'operations', 'transactions'],
+        choices: ['payments', 'operations', 'transactions', 'ledgers'],
         default: 'payments',
       },
       {
@@ -10222,7 +10222,7 @@ export const examples: Record<string, Example> = {
         type: 'list',
         name: 'resource',
         message: 'Horizon stream resource:',
-        choices: ['payments', 'operations', 'transactions'],
+        choices: ['payments', 'operations', 'transactions', 'ledgers'],
         default: 'payments',
       },
       {
@@ -12534,7 +12534,7 @@ export const examples: Record<string, Example> = {
         type: 'list',
         name: 'resource',
         message: 'Horizon stream resource:',
-        choices: ['payments', 'operations', 'transactions'],
+        choices: ['payments', 'operations', 'transactions', 'ledgers'],
         default: 'payments',
       },
       {
