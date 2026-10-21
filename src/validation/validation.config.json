@@ -253,6 +253,10 @@
     {
       "match": "196-soroban-authorization-preparation",
       "reason": "Prepares and inspects Soroban authorization entries"
+    },
+    {
+      "match": "262-ledger-transaction-volume-analytics",
+      "reason": "Requires live Horizon ledger, transaction, and operation data"
     }
   ]
 }
