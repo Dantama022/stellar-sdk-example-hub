@@ -4,6 +4,7 @@ coverage/
 .env
 *.log
 .eslintcache
+temp_auto_push.bat
 .DS_Store
 
 .agents/
@@ -11,3 +12,5 @@ issue.md
 skills-lock.json
 .*-checkpoint.json
 .*-checkpoint.json.*.tmp
+.gitignore
+branch_structure.json

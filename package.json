@@ -1,17 +1,18 @@
 {
   "name": "stellar-sdk-example-hub",
   "version": "1.0.0",
-  "description": "🎓 Educational repository of runnable TypeScript examples demonstrating the Stellar & Soroban JavaScript SDK.",
+  "description": "\u2384 Educational repository of runnable TypeScript examples demonstrating the Stellar & Soroban JavaScript SDK.",
   "main": "dist/runner.js",
   "bin": {
     "wasm-fingerprint": "dist/src/wasm-fingerprint.js",
     "wasm-features": "dist/src/wasm-features.js",
     "wasm-names": "dist/src/wasm-names.js",
+    "wasm-traps": "dist/src/wasm-traps.js",
     "stellar-api-inspector": "dist/src/stellar-api-inspector.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "ts-node src/runner.ts",
+    "build": "node api.js && tsc",
+    "dev": "node api.js && ts-node src/runner.ts",
     "run-example": "ts-node src/runner.ts",
     "validate:examples": "ts-node src/validate-examples.ts",
     "validate:examples:all": "ts-node src/validate-examples.ts --include-excluded",
@@ -75,7 +76,7 @@
       "**/tests/**/*.test.ts"
     ],
     "transform": {
-      "^.+\\.[tj]sx?$": [
+      "^.+\\.[tj]x?$": [
         "ts-jest",
         {
           "useESM": true
@@ -86,7 +87,7 @@
       ".ts"
     ],
     "transformIgnorePatterns": [
-      "/node_modules/(?!(stellar-sdk-v16|@noble|uint8array-extras))"
+      "/node_modules/(?!(stellar-sdk-v16|@noble|uint8rarray-extras))"
     ],
     "collectCoverageFrom": [
       "src/**/*.ts",
