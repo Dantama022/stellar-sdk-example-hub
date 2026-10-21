@@ -6194,61 +6194,7 @@ export const examples: Record<string, Example> = {
       },
       { type: 'input', name: 'maxDepth', message: 'Maximum recursion depth (optional):' },
       { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-  '227-state-normalize': {
-    name: '227-state-normalize',
-    description:
-      'Normalize Soroban state snapshots into a deterministic canonical offline representation',
-    run: loadExample('../examples/227-state-normalize'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
-  '228-state-validate': {
-    name: '228-state-validate',
-    description:
-      'Validate Soroban state snapshots and report errors, warnings, and informational diagnostics',
-    run: loadExample('../examples/228-state-validate'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
-  '229-state-stats': {
-    name: '229-state-stats',
-    description:
-      'Calculate deterministic aggregate statistics for an offline Soroban state snapshot',
-    run: loadExample('../examples/229-state-stats'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
-  '230-state-hotspots': {
-    name: '230-state-hotspots',
-    description:
-      'Rank Soroban contract-state storage hotspots by size, collection complexity, depth, or TTL proximity',
-    run: loadExample('../examples/230-state-hotspots'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
-  '227-state-normalize': {
-    name: '227-state-normalize',
-    description:
-      'Normalize Soroban state snapshots into a deterministic canonical offline representation',
-    run: loadExample('../examples/227-state-normalize'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
-  '228-state-validate': {
-    name: '228-state-validate',
-    description:
-      'Validate Soroban state snapshots and report errors, warnings, and informational diagnostics',
-    run: loadExample('../examples/228-state-validate'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
-  '229-state-stats': {
-    name: '229-state-stats',
-    description:
-      'Calculate deterministic aggregate statistics for an offline Soroban state snapshot',
-    run: loadExample('../examples/229-state-stats'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
-  '230-state-hotspots': {
-    name: '230-state-hotspots',
-    description:
-      'Rank Soroban contract-state storage hotspots by size, collection complexity, depth, or TTL proximity',
-    run: loadExample('../examples/230-state-hotspots'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+    ],
   },
   '224-state-deps': {
     name: '224-state-deps',
@@ -13391,5 +13337,152 @@ export const examples: Record<string, Example> = {
     description:
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
+  },
+  '354-transaction-monitoring-finality': {
+    name: '354-transaction-monitoring-finality',
+    description:
+      'Monitor a Stellar transaction through confirmation and finality tracking with ledger depth verification',
+    run: loadExample('../examples/354-transaction-monitoring-finality'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Transaction hash (blank uses the latest Horizon transaction):',
+      },
+      {
+        type: 'input',
+        name: 'horizonUrl',
+        message: 'Horizon URL (blank uses testnet):',
+        default: 'https://horizon-testnet.stellar.org',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Polling interval in milliseconds:',
+        default: '2000',
+      },
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Polling timeout in milliseconds:',
+        default: '60000',
+      },
+      {
+        type: 'input',
+        name: 'finalityDepth',
+        message: 'Finality depth (ledgers):',
+        default: '3',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '355-sep2-federation-resolution': {
+    name: '355-sep2-federation-resolution',
+    description:
+      'Resolve a Stellar address via SEP-2 Federation protocol and validate the resolved account',
+    run: loadExample('../examples/355-sep2-federation-resolution'),
+    params: [
+      {
+        type: 'input',
+        name: 'stellarAddress',
+        message: 'Stellar address (username*domain.com):',
+      },
+      {
+        type: 'input',
+        name: 'horizonUrl',
+        message: 'Horizon URL (blank uses testnet):',
+        default: 'https://horizon-testnet.stellar.org',
+      },
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Request timeout in milliseconds:',
+        default: '10000',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '356-sep41-token-inspector': {
+    name: '356-sep41-token-inspector',
+    description:
+      'Inspect a Soroban token contract for SEP-41 compliance: methods, events, and interface compatibility',
+    run: loadExample('../examples/356-sep41-token-inspector'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Token contract ID (blank uses native SAC on Testnet):',
+      },
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC URL (blank uses testnet):',
+        default: 'https://soroban-testnet.stellar.org',
+      },
+      {
+        type: 'input',
+        name: 'networkPassphrase',
+        message: 'Network passphrase:',
+        default: 'Test SDF Network ; September 2015',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '357-home-domain-audit': {
+    name: '357-home-domain-audit',
+    description:
+      'Audit an account home domain configuration: stellar.toml validation, organization identity, and endpoint reachability',
+    run: loadExample('../examples/357-home-domain-audit'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to audit (optional, will fetch home domain):',
+      },
+      {
+        type: 'input',
+        name: 'domain',
+        message: 'Domain to audit directly (optional):',
+      },
+      {
+        type: 'input',
+        name: 'horizonUrl',
+        message: 'Horizon URL (blank uses testnet):',
+        default: 'https://horizon-testnet.stellar.org',
+      },
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Request timeout in milliseconds:',
+        default: '10000',
+      },
+      {
+        type: 'confirm',
+        name: 'deepAudit',
+        message: 'Perform deep audit (check endpoint reachability)?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
   },
 };
