@@ -13386,4 +13386,10 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
     ],
   },
+  '261-sep11-txrep-transaction-representation': {
+    name: '261-sep11-txrep-transaction-representation',
+    description:
+      'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
+    run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
+  },
 };
