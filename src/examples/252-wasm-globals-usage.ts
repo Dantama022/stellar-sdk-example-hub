@@ -33,11 +33,16 @@ import {
 // CSV helpers
 // ---------------------------------------------------------------------------
 
-const CSV_HEADER =
-  'globalIndex,functionIndex,blockIndex,instructionIndex,opcode';
+const CSV_HEADER = 'globalIndex,functionIndex,blockIndex,instructionIndex,opcode';
 
 function toCsvRow(rec: WasmGlobalAccessRecord): string {
-  return [rec.globalIndex, rec.functionIndex, rec.blockIndex, rec.instructionIndex, rec.opcode].join(',');
+  return [
+    rec.globalIndex,
+    rec.functionIndex,
+    rec.blockIndex,
+    rec.instructionIndex,
+    rec.opcode,
+  ].join(',');
 }
 
 export function toCsv(records: WasmGlobalAccessRecord[]): string {
@@ -56,14 +61,15 @@ const CLASSIFICATION_LABELS: Record<GlobalUsageClassification, string> = {
 };
 
 function printGlobalSummary(g: WasmGlobalUsageSummary): void {
-  const importTag = g.source === 'imported' ? chalk.dim(` [import: ${g.importModule}.${g.importName}]`) : '';
+  const importTag =
+    g.source === 'imported' ? chalk.dim(` [import: ${g.importModule}.${g.importName}]`) : '';
   const mutTag = g.mutable ? chalk.yellow(' [mutable]') : chalk.dim(' [immutable]');
   console.log(
     `  global[${g.globalIndex}]  ${g.valueType}${mutTag}  ${CLASSIFICATION_LABELS[g.classification]}` +
-    (g.totalReads > 0 ? `  reads=${g.totalReads}` : '') +
-    (g.totalWrites > 0 ? `  writes=${g.totalWrites}` : '') +
-    (g.accessedByMultipleFunctions ? chalk.blue('  [multi-fn]') : '') +
-    importTag,
+      (g.totalReads > 0 ? `  reads=${g.totalReads}` : '') +
+      (g.totalWrites > 0 ? `  writes=${g.totalWrites}` : '') +
+      (g.accessedByMultipleFunctions ? chalk.blue('  [multi-fn]') : '') +
+      importTag,
   );
   if (g.readingFunctions.length > 0) {
     console.log(chalk.dim(`    Reading functions: [${g.readingFunctions.join(', ')}]`));
@@ -77,8 +83,8 @@ function printFuncSummary(fn: WasmGlobalFunctionSummary): void {
   if (fn.totalGlobalReads === 0 && fn.totalGlobalWrites === 0) return;
   console.log(
     `  [fn${fn.functionIndex}]  reads=${fn.totalGlobalReads}  writes=${fn.totalGlobalWrites}` +
-    `  unique globals=${fn.uniqueGlobalsAccessed}` +
-    (fn.mutableGlobalsModified > 0 ? chalk.yellow(`  mutates=${fn.mutableGlobalsModified}`) : ''),
+      `  unique globals=${fn.uniqueGlobalsAccessed}` +
+      (fn.mutableGlobalsModified > 0 ? chalk.yellow(`  mutates=${fn.mutableGlobalsModified}`) : ''),
   );
 }
 
@@ -94,8 +100,12 @@ function printReport(report: WasmGlobalMutationReport): void {
   console.log(`${chalk.bold('Total reads:')}                      ${s.totalReads}`);
   console.log(`${chalk.bold('Total writes:')}                     ${s.totalWrites}`);
   console.log(`${chalk.bold('Globals never accessed:')}           ${s.globalsNeverAccessed}`);
-  console.log(`${chalk.bold('Globals accessed by multiple fns:')} ${s.globalsAccessedByMultipleFunctions}`);
-  console.log(`${chalk.bold('Globals written by multiple fns:')}  ${s.globalsWrittenByMultipleFunctions}`);
+  console.log(
+    `${chalk.bold('Globals accessed by multiple fns:')} ${s.globalsAccessedByMultipleFunctions}`,
+  );
+  console.log(
+    `${chalk.bold('Globals written by multiple fns:')}  ${s.globalsWrittenByMultipleFunctions}`,
+  );
 
   if (report.globals.length === 0) {
     console.log(chalk.dim('\nNo globals defined.'));
@@ -137,9 +147,11 @@ function printReport(report: WasmGlobalMutationReport): void {
   }
   if (rwrFunctions.size > 0) {
     console.log(chalk.bold('\n--- Functions Reading a Global Before and After Writing ---'));
-    [...rwrFunctions].sort((a, b) => a - b).forEach((fnIdx) => {
-      console.log(`  fn${fnIdx}`);
-    });
+    [...rwrFunctions]
+      .sort((a, b) => a - b)
+      .forEach((fnIdx) => {
+        console.log(`  fn${fnIdx}`);
+      });
   }
 }
 
@@ -148,14 +160,20 @@ function printComparison(result: ReturnType<typeof compareGlobalMutationReports>
   console.log(chalk.bold('\n--- Global Mutation Comparison ---'));
   if (comparison.addedGlobals.length > 0) {
     console.log(chalk.red(`Added globals: +${comparison.addedGlobals.length}`));
-    comparison.addedGlobals.forEach((g) => console.log(`  + global[${g.globalIndex}] ${g.valueType} ${g.classification}`));
+    comparison.addedGlobals.forEach((g) =>
+      console.log(`  + global[${g.globalIndex}] ${g.valueType} ${g.classification}`),
+    );
   }
   if (comparison.removedGlobals.length > 0) {
     console.log(chalk.green(`Removed globals: -${comparison.removedGlobals.length}`));
-    comparison.removedGlobals.forEach((g) => console.log(`  - global[${g.globalIndex}] ${g.valueType}`));
+    comparison.removedGlobals.forEach((g) =>
+      console.log(`  - global[${g.globalIndex}] ${g.valueType}`),
+    );
   }
   if (comparison.changedUsageClassification.length > 0) {
-    console.log(chalk.yellow(`Changed usage classification: ${comparison.changedUsageClassification.length}`));
+    console.log(
+      chalk.yellow(`Changed usage classification: ${comparison.changedUsageClassification.length}`),
+    );
     comparison.changedUsageClassification.forEach(({ globalIndex, before, after }) => {
       console.log(`  ~ global[${globalIndex}]: ${before} → ${after}`);
     });

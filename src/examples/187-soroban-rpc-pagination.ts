@@ -69,7 +69,11 @@ function prefersJson(params?: SorobanPaginationParams): boolean {
   );
 }
 
-function readPositiveInt(value: number | string | undefined, fallback: number, field: string): number {
+function readPositiveInt(
+  value: number | string | undefined,
+  fallback: number,
+  field: string,
+): number {
   if (value === undefined || value === '') return fallback;
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -111,17 +115,26 @@ export async function paginateSorobanRpc<T = Record<string, unknown>>({
     const page = await Promise.race([
       fetchPage(cursor),
       new Promise<never>((_, reject) => {
-        timeoutHandle = setTimeout(() => reject(new Error(`RPC pagination timed out after ${deadline}ms`)), deadline);
+        timeoutHandle = setTimeout(
+          () => reject(new Error(`RPC pagination timed out after ${deadline}ms`)),
+          deadline,
+        );
       }),
     ]).finally(() => {
       if (timeoutHandle) clearTimeout(timeoutHandle);
     });
 
-    if (!page || typeof page !== 'object' || (!Array.isArray((page as any).records) && !Array.isArray((page as any).events))) {
+    if (
+      !page ||
+      typeof page !== 'object' ||
+      (!Array.isArray((page as any).records) && !Array.isArray((page as any).events))
+    ) {
       throw new Error('Malformed pagination response: expected an object with a records array.');
     }
 
-    const pageRecords = Array.isArray((page as any).records) ? (page as any).records : (page as any).events;
+    const pageRecords = Array.isArray((page as any).records)
+      ? (page as any).records
+      : (page as any).events;
     const nextCursor = (page as any).next ?? (page as any).cursor ?? null;
 
     if (cursor && seen.has(cursor)) {
@@ -237,15 +250,25 @@ export async function paginateSorobanRpc<T = Record<string, unknown>>({
 export async function run(params: SorobanPaginationParams = {}): Promise<void> {
   const rpcUrl = (() => {
     try {
-      return new URL(params.rpcUrl ?? process.env.SOROBAN_RPC_URL ?? 'https://soroban-testnet.stellar.org').toString();
+      return new URL(
+        params.rpcUrl ?? process.env.SOROBAN_RPC_URL ?? 'https://soroban-testnet.stellar.org',
+      ).toString();
     } catch {
       return 'https://soroban-testnet.stellar.org';
     }
   })();
 
-  const pageSize = readPositiveInt(params.pageSize ?? process.env.PAGE_SIZE ?? '10', 10, 'pageSize');
+  const pageSize = readPositiveInt(
+    params.pageSize ?? process.env.PAGE_SIZE ?? '10',
+    10,
+    'pageSize',
+  );
   const maxPages = readPositiveInt(params.maxPages ?? process.env.MAX_PAGES ?? '5', 5, 'maxPages');
-  const timeoutMs = readPositiveInt(params.timeoutMs ?? process.env.RPC_TIMEOUT_MS ?? '15000', 15000, 'timeoutMs');
+  const timeoutMs = readPositiveInt(
+    params.timeoutMs ?? process.env.RPC_TIMEOUT_MS ?? '15000',
+    15000,
+    'timeoutMs',
+  );
   const jsonOutput = prefersJson(params);
 
   if (!jsonOutput) {

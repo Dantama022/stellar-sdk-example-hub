@@ -1,10 +1,5 @@
 import { Command } from 'commander';
-import {
-  sliceWasmFile,
-  sliceToDot,
-  compareSlices,
-  type SliceMode,
-} from '../wasm/programSlicing';
+import { sliceWasmFile, sliceToDot, compareSlices, type SliceMode } from '../wasm/programSlicing';
 import { formatJsonOutput } from '../utils/output-formatters';
 
 /**

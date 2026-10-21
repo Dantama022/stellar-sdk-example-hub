@@ -1,5 +1,3 @@
-import { parse } from 'wasm-parser';
-
 interface BasicBlock {
   index: number;
   instructions: string[];
@@ -26,7 +24,7 @@ export class CFGBuilder {
     this.analyzeFunction();
     return {
       blocks: this.blocks,
-      entryBlock: this.blocks.length > 0 ? 0 : -1
+      entryBlock: this.blocks.length > 0 ? 0 : -1,
     };
   }
 
@@ -50,7 +48,7 @@ export class CFGBuilder {
     this.finalizeCurrentBlock();
   }
 
-  private startNewBlock(startPc: number): void {
+  private startNewBlock(_startPc: number): void {
     if (this.currentBlock) {
       this.finalizeCurrentBlock();
     }
@@ -59,7 +57,7 @@ export class CFGBuilder {
       index: this.blockIndex++,
       instructions: [],
       successors: [],
-      predecessors: []
+      predecessors: [],
     };
   }
 
@@ -81,7 +79,9 @@ export class CFGBuilder {
   }
 
   private isControlFlowInstruction(instr: any): boolean {
-    return ['if', 'br', 'br_if', 'br_table', 'return', 'call', 'call_indirect'].includes(instr.opcode);
+    return ['if', 'br', 'br_if', 'br_table', 'return', 'call', 'call_indirect'].includes(
+      instr.opcode,
+    );
   }
 
   private handleControlFlow(instr: any, pc: number): void {
@@ -89,17 +89,17 @@ export class CFGBuilder {
 
     switch (instr.opcode) {
       case 'if':
-        this.handleConditionalBranch(instr, pc);
+        this.handleConditionalBranch(instr);
         break;
       case 'br':
       case 'br_if':
-        this.handleUnconditionalBranch(instr, pc);
+        this.handleUnconditionalBranch(instr);
         break;
       case 'br_table':
-        this.handleBranchTable(instr, pc);
+        this.handleBranchTable(instr);
         break;
       case 'return':
-        this.handleReturn(pc);
+        this.handleReturn();
         break;
       default:
         this.handleOtherControlFlow(instr, pc);
@@ -108,26 +108,32 @@ export class CFGBuilder {
     this.finalizeCurrentBlock();
   }
 
-  private handleConditionalBranch(instr: any, pc: number): void {
-    const target = instr.args[0];
-    this.currentBlock.successors.push(target);
+  private handleConditionalBranch(instr: any): void {
+    const block = this.currentBlock;
+    if (!block) return;
+
+    block.successors.push(instr.args[0]);
   }
 
-  private handleUnconditionalBranch(instr: any, pc: number): void {
-    const target = instr.args[0];
-    this.currentBlock.successors.push(target);
+  private handleUnconditionalBranch(instr: any): void {
+    const block = this.currentBlock;
+    if (!block) return;
+
+    block.successors.push(instr.args[0]);
   }
 
-  private handleBranchTable(instr: any, pc: number): void {
-    const targets = instr.args.slice(1);
-    this.currentBlock.successors.push(...targets);
+  private handleBranchTable(instr: any): void {
+    const block = this.currentBlock;
+    if (!block) return;
+
+    block.successors.push(...instr.args.slice(1));
   }
 
-  private handleReturn(pc: number): void {
+  private handleReturn(): void {
     // Return implicitly goes to function exit
   }
 
-  private handleOtherControlFlow(instr: any, pc: number): void {
+  private handleOtherControlFlow(_instr: any, _pc: number): void {
     // Handle call, call_indirect, etc.
   }
 }

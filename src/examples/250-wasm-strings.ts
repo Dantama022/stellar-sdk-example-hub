@@ -35,7 +35,8 @@ import {
 // CSV helpers
 // ---------------------------------------------------------------------------
 
-const CSV_HEADER = 'sourceSection,segmentIndex,sectionName,byteOffset,encoding,category,occurrenceCount,byteLength,contentHash,value';
+const CSV_HEADER =
+  'sourceSection,segmentIndex,sectionName,byteOffset,encoding,category,occurrenceCount,byteLength,contentHash,value';
 
 function toCsvRow(rec: WasmStringRecord): string {
   const escapedValue = `"${rec.value.replace(/"/g, '""')}"`;
@@ -109,12 +110,13 @@ function printReport(report: WasmStringReport): void {
     recs.slice(0, 30).forEach((rec) => {
       const truncated = rec.value.length > 60 ? rec.value.slice(0, 57) + '...' : rec.value;
       const repeated = rec.occurrenceCount > 1 ? chalk.yellow(` ×${rec.occurrenceCount}`) : '';
-      const location = rec.segmentIndex !== null
-        ? `seg[${rec.segmentIndex}]+${rec.byteOffset}`
-        : `${rec.sectionName ?? '?'}+${rec.byteOffset}`;
+      const location =
+        rec.segmentIndex !== null
+          ? `seg[${rec.segmentIndex}]+${rec.byteOffset}`
+          : `${rec.sectionName ?? '?'}+${rec.byteOffset}`;
       console.log(
         `  [${ENCODING_LABELS[rec.encoding].padEnd(5)}] [${CATEGORY_LABELS[rec.category].padEnd(17)}] ` +
-        `@${location}  ${chalk.cyan(truncated)}${repeated}`,
+          `@${location}  ${chalk.cyan(truncated)}${repeated}`,
       );
     });
     if (recs.length > 30) {
@@ -151,13 +153,19 @@ function printComparison(result: ReturnType<typeof compareStringReports>): void 
     });
   }
   if (comparison.changedOccurrenceCounts.length > 0) {
-    console.log(chalk.yellow(`Changed occurrence counts: ${comparison.changedOccurrenceCounts.length}`));
+    console.log(
+      chalk.yellow(`Changed occurrence counts: ${comparison.changedOccurrenceCounts.length}`),
+    );
     comparison.changedOccurrenceCounts.slice(0, 5).forEach(({ value, before, after }) => {
       const t = value.length > 40 ? value.slice(0, 37) + '...' : value;
       console.log(`  ~ ${chalk.cyan(t)}: ${before} → ${after}`);
     });
   }
-  if (comparison.addedStrings.length === 0 && comparison.removedStrings.length === 0 && comparison.changedOccurrenceCounts.length === 0) {
+  if (
+    comparison.addedStrings.length === 0 &&
+    comparison.removedStrings.length === 0 &&
+    comparison.changedOccurrenceCounts.length === 0
+  ) {
     console.log(chalk.green('No string changes detected between artifacts.'));
   }
 }
@@ -185,7 +193,16 @@ export function parseWasmStringsArgs(args: string[]): {
   const searchIdx = args.findIndex((a) => a === '--search');
   const searchPattern = searchIdx !== -1 ? args[searchIdx + 1] : undefined;
 
-  const flags = ['--json', '--json=true', '--csv', '--csv=true', '--min-length', '--max-length', '--search', '--case-insensitive'];
+  const flags = [
+    '--json',
+    '--json=true',
+    '--csv',
+    '--csv=true',
+    '--min-length',
+    '--max-length',
+    '--search',
+    '--case-insensitive',
+  ];
   const caseInsensitive = args.includes('--case-insensitive');
 
   const files = args.filter((a) => {
@@ -237,8 +254,12 @@ export async function run(
   const compareFile = params.compareFile ?? process.env.COMPARE_WASM_FILE;
 
   const options: WasmStringAnalysisOptions = {
-    minLength: params.minLength ?? (process.env.MIN_LENGTH ? parseInt(process.env.MIN_LENGTH, 10) : undefined),
-    maxLength: params.maxLength ?? (process.env.MAX_LENGTH ? parseInt(process.env.MAX_LENGTH, 10) : undefined),
+    minLength:
+      params.minLength ??
+      (process.env.MIN_LENGTH ? parseInt(process.env.MIN_LENGTH, 10) : undefined),
+    maxLength:
+      params.maxLength ??
+      (process.env.MAX_LENGTH ? parseInt(process.env.MAX_LENGTH, 10) : undefined),
     searchPattern: params.searchPattern ?? process.env.SEARCH_PATTERN,
     caseInsensitive: params.caseInsensitive ?? process.env.CASE_INSENSITIVE === 'true',
   };

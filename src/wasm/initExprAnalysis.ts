@@ -100,8 +100,7 @@ export interface InitExprReport {
 }
 
 /** Stable key for an entry, used in edges and cycle reports. */
-export const entryKey = (section: InitExprSection, index: number): string =>
-  `${section}:${index}`;
+export const entryKey = (section: InitExprSection, index: number): string => `${section}:${index}`;
 
 /**
  * Instructions we can evaluate with integer constant folding.
@@ -134,7 +133,9 @@ function flattenInit(node: any): { opcodes: string[]; operands: (string | number
     }
     if (n.type === 'Instr' && typeof n.id === 'object') {
       const id = n.id as Record<string, any>;
-      const name = String(id.type ?? '').replace('Instr', '').toLowerCase();
+      const name = String(id.type ?? '')
+        .replace('Instr', '')
+        .toLowerCase();
       opcodes.push(name);
       if (id.value !== undefined) operands.push(id.value as string | number);
       else operands.push('');
@@ -168,15 +169,27 @@ export function evaluateConstant(
 
     if (op === 'end') continue;
 
+    if (!FOLDABLE.has(op)) return undefined;
+
     if (op.endsWith('.const')) {
       const raw = operands[i];
-      const value = typeof raw === 'number' ? raw : Number(raw);
-      if (!Number.isFinite(value)) return undefined;
-      stack.push(BigInt(Math.trunc(value)));
+      if (raw === undefined || raw === '') return undefined;
+      if (op === 'i64.const') {
+        // i64 literals exceed the safe integer range, so parse them exactly.
+        let value: bigint;
+        try {
+          value = typeof raw === 'string' ? BigInt(raw.trim()) : BigInt(Math.trunc(raw));
+        } catch {
+          return undefined;
+        }
+        stack.push(value);
+        continue;
+      }
+      const numeric = typeof raw === 'number' ? raw : Number(raw);
+      if (!Number.isFinite(numeric)) return undefined;
+      stack.push(BigInt(Math.trunc(numeric)));
       continue;
     }
-
-    if (!FOLDABLE.has(op)) return undefined;
 
     // Binary arithmetic: pop b then a, push a op b.
     const b = stack.pop();
@@ -234,10 +247,7 @@ export function indexGlobals(ast: any): ReferencedGlobal[] {
 }
 
 /** Collect init expressions from globals, data segments, and element segments. */
-export function collectInitExprs(
-  ast: any,
-  globals: ReferencedGlobal[],
-): InitExprRecord[] {
+export function collectInitExprs(ast: any, globals: ReferencedGlobal[]): InitExprRecord[] {
   const records: InitExprRecord[] = [];
 
   const addRecord = (
@@ -257,9 +267,7 @@ export function collectInitExprs(
       }
     });
 
-    const dependsOnImportedGlobals = referencedGlobals.some(
-      (g) => globals[g]?.imported === true,
-    );
+    const dependsOnImportedGlobals = referencedGlobals.some((g) => globals[g]?.imported === true);
 
     let classification: InitExprClassification;
     let constantValue: bigint | number | undefined;
@@ -349,9 +357,7 @@ export function collectInitExprs(
  * Also reports cycles. Both use an iterative walk with a visited set so a
  * cyclic or malformed binary cannot spin forever.
  */
-export function resolveDepths(
-  records: InitExprRecord[],
-): { depths: number[]; cycles: string[][] } {
+export function resolveDepths(records: InitExprRecord[]): { depths: number[]; cycles: string[][] } {
   const byKey = new Map<string, InitExprRecord>();
   for (const r of records) {
     if (r.section === 'global') byKey.set(entryKey('global', r.entryIndex), r);
@@ -359,16 +365,15 @@ export function resolveDepths(
 
   const depths: number[] = records.map(() => 1);
   const cycles: string[][] = [];
-  const done = new Set<string>();
+  const memo = new Map<string, number>();
   const onPath: string[] = [];
   const onPathSet = new Set<string>();
   const reportedCycles = new Set<string>();
 
   const depthOf = (key: string): number => {
-    if (done.has(key)) {
-      const idx = onPath.indexOf(key);
-      return idx >= 0 ? 0 : 0;
-    }
+    const cached = memo.get(key);
+    if (cached !== undefined) return cached;
+
     if (onPathSet.has(key)) {
       // Cycle: record it once, in canonical rotation.
       const start = onPath.indexOf(key);
@@ -383,8 +388,8 @@ export function resolveDepths(
 
     const rec = byKey.get(key);
     if (!rec || rec.referencedGlobals.length === 0) {
-      done.add(key);
-      return rec?.classification === 'fully-constant' ? 1 : 1;
+      memo.set(key, 1);
+      return 1;
     }
 
     onPath.push(key);
@@ -398,7 +403,7 @@ export function resolveDepths(
     }
     onPath.pop();
     onPathSet.delete(key);
-    done.add(key);
+    memo.set(key, max);
     return max;
   };
 
@@ -409,10 +414,12 @@ export function resolveDepths(
     } else if (r.referencedGlobals.length === 0) {
       depths[i] = 1;
     } else {
+      // Data and element offsets inherit the depth of the global they read,
+      // rather than adding a level of their own.
       let max = 1;
       for (const g of r.referencedGlobals) {
         const childKey = entryKey('global', g);
-        if (byKey.has(childKey)) max = Math.max(max, 1 + depthOf(childKey));
+        if (byKey.has(childKey)) max = Math.max(max, depthOf(childKey));
       }
       depths[i] = max;
     }
@@ -446,8 +453,11 @@ export function analyzeInitExprs(buffer: Buffer): InitExprReport {
     totals: {
       totalInitExprs: expressions.length,
       fullyConstant: expressions.filter((e) => e.classification === 'fully-constant').length,
-      globalDependent: expressions.filter((e) => e.classification === 'locally-state-dependent').length,
-      importedGlobalDependent: expressions.filter((e) => e.classification === 'imported-state-dependent').length,
+      globalDependent: expressions.filter((e) => e.classification === 'locally-state-dependent')
+        .length,
+      importedGlobalDependent: expressions.filter(
+        (e) => e.classification === 'imported-state-dependent',
+      ).length,
       unsupported: expressions.filter((e) => e.classification === 'unsupported').length,
       totalReferencedGlobals: referencedGlobals.length,
       maxDependencyDepth: depths.length ? Math.max(...depths) : 0,

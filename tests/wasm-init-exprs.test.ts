@@ -18,6 +18,7 @@ import {
   toDot,
   type InitExprRecord,
 } from '../src/wasm/initExprAnalysis';
+import * as initExprModule from '../src/wasm/initExprAnalysis';
 
 describe('ISSUE-282: WASM initialization expression analysis', () => {
   // ─── Constant folding ──────────────────────────────────────────────────────
@@ -28,29 +29,46 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     });
 
     it('evaluates i32.add', () => {
-      expect(evaluateConstant(['i32.const', 'i32.const', 'i32.add', 'end'], [2, 3, '', ''])).toBe(BigInt(5));
+      expect(evaluateConstant(['i32.const', 'i32.const', 'i32.add', 'end'], [2, 3, '', ''])).toBe(
+        BigInt(5),
+      );
     });
 
     it('evaluates i32.sub', () => {
-      expect(evaluateConstant(['i32.const', 'i32.const', 'i32.sub', 'end'], [10, 4, '', ''])).toBe(BigInt(6));
+      expect(evaluateConstant(['i32.const', 'i32.const', 'i32.sub', 'end'], [10, 4, '', ''])).toBe(
+        BigInt(6),
+      );
     });
 
     it('evaluates i32.mul', () => {
-      expect(evaluateConstant(['i32.const', 'i32.const', 'i32.mul', 'end'], [6, 7, '', ''])).toBe(BigInt(42));
+      expect(evaluateConstant(['i32.const', 'i32.const', 'i32.mul', 'end'], [6, 7, '', ''])).toBe(
+        BigInt(42),
+      );
     });
 
     it('folds chained arithmetic left to right', () => {
       // ((1 + 2) * 3) - 4 = 5
       expect(
         evaluateConstant(
-          ['i32.const', 'i32.const', 'i32.add', 'i32.const', 'i32.mul', 'i32.const', 'i32.sub', 'end'],
+          [
+            'i32.const',
+            'i32.const',
+            'i32.add',
+            'i32.const',
+            'i32.mul',
+            'i32.const',
+            'i32.sub',
+            'end',
+          ],
           [1, 2, '', 3, '', 4, '', ''],
         ),
       ).toBe(BigInt(5));
     });
 
     it('evaluates i64 constants', () => {
-      expect(evaluateConstant(['i64.const', 'end'], ['9007199254740993', ''])).toBe(BigInt('9007199254740993'));
+      expect(evaluateConstant(['i64.const', 'end'], ['9007199254740993', ''])).toBe(
+        BigInt('9007199254740993'),
+      );
     });
 
     it('handles negative constants', () => {
@@ -151,9 +169,7 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     });
 
     it('terminates on a self-referencing cycle and reports it', () => {
-      const { depths, cycles } = resolveDepths([
-        rec('global', 0, [0], 'locally-state-dependent'),
-      ]);
+      const { depths, cycles } = resolveDepths([rec('global', 0, [0], 'locally-state-dependent')]);
       expect(depths).toHaveLength(1);
       expect(cycles.length).toBeGreaterThan(0);
     });
@@ -177,9 +193,7 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     });
 
     it('treats a reference to a non-existent global as depth 1', () => {
-      const { depths } = resolveDepths([
-        rec('global', 0, [99], 'locally-state-dependent'),
-      ]);
+      const { depths } = resolveDepths([rec('global', 0, [99], 'locally-state-dependent')]);
       expect(depths).toEqual([1]);
     });
 
@@ -200,8 +214,18 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     it('numbers imported globals before defined globals', () => {
       const ast = {
         body: [
-          { type: 'Import', entries: [{ module: 'env', kind: 'global', name: 'a', type: { value: 'i32', mutable: true } }] },
-          { type: 'Import', entries: [{ module: 'env', kind: 'global', name: 'b', type: { value: 'i64', mutable: false } }] },
+          {
+            type: 'Import',
+            entries: [
+              { module: 'env', kind: 'global', name: 'a', type: { value: 'i32', mutable: true } },
+            ],
+          },
+          {
+            type: 'Import',
+            entries: [
+              { module: 'env', kind: 'global', name: 'b', type: { value: 'i64', mutable: false } },
+            ],
+          },
           { type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: {} }] },
         ],
       };
@@ -223,7 +247,9 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
 
   describe('collectInitExprs', () => {
     const withGlobals = (initNode: any) => ({
-      body: [{ type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: initNode }] }],
+      body: [
+        { type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: initNode }] },
+      ],
     });
 
     const constInstr = (value: number) => ({
@@ -242,8 +268,21 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     it('classifies a global.get on an imported global', () => {
       const ast = {
         body: [
-          { type: 'Import', entries: [{ module: 'env', kind: 'global', name: 'g', type: { value: 'i32', mutable: false } }] },
-          { type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: { type: 'Instr', id: { type: 'global.get', value: 0 } } }] },
+          {
+            type: 'Import',
+            entries: [
+              { module: 'env', kind: 'global', name: 'g', type: { value: 'i32', mutable: false } },
+            ],
+          },
+          {
+            type: 'Global',
+            entries: [
+              {
+                type: { value: 'i32', mutable: false },
+                init: { type: 'Instr', id: { type: 'global.get', value: 0 } },
+              },
+            ],
+          },
         ],
       };
       const globals = indexGlobals(ast);
@@ -256,8 +295,19 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     it('classifies a global.get on a locally defined global', () => {
       const ast = {
         body: [
-          { type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: constInstr(1) }] },
-          { type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: { type: 'Instr', id: { type: 'global.get', value: 0 } } }] },
+          {
+            type: 'Global',
+            entries: [{ type: { value: 'i32', mutable: false }, init: constInstr(1) }],
+          },
+          {
+            type: 'Global',
+            entries: [
+              {
+                type: { value: 'i32', mutable: false },
+                init: { type: 'Instr', id: { type: 'global.get', value: 0 } },
+              },
+            ],
+          },
         ],
       };
       const globals = indexGlobals(ast);
@@ -268,8 +318,13 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     });
 
     it('marks an unsupported instruction as unsupported, not constant', () => {
-      const globals = indexGlobals(withGlobals({ type: 'Instr', id: { type: 'f32.const', value: 1.5 } }));
-      const records = collectInitExprs(withGlobals({ type: 'Instr', id: { type: 'f32.const', value: 1.5 } }), globals);
+      const globals = indexGlobals(
+        withGlobals({ type: 'Instr', id: { type: 'f32.const', value: 1.5 } }),
+      );
+      const records = collectInitExprs(
+        withGlobals({ type: 'Instr', id: { type: 'f32.const', value: 1.5 } }),
+        globals,
+      );
       expect(records[0].classification).toBe('unsupported');
       expect(records[0].constantValue).toBeUndefined();
     });
@@ -277,8 +332,19 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     it('records a referenced global on the globals index', () => {
       const ast = {
         body: [
-          { type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: constInstr(0) }] },
-          { type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: { type: 'Instr', id: { type: 'global.get', value: 0 } } }] },
+          {
+            type: 'Global',
+            entries: [{ type: { value: 'i32', mutable: false }, init: constInstr(0) }],
+          },
+          {
+            type: 'Global',
+            entries: [
+              {
+                type: { value: 'i32', mutable: false },
+                init: { type: 'Instr', id: { type: 'global.get', value: 0 } },
+              },
+            ],
+          },
         ],
       };
       const globals = indexGlobals(ast);
@@ -288,9 +354,7 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
 
     it('extracts a constant data-segment offset', () => {
       const ast = {
-        body: [
-          { type: 'Data', entries: [{ offset: constInstr(1024), init: [] }] },
-        ],
+        body: [{ type: 'Data', entries: [{ offset: constInstr(1024), init: [] }] }],
       };
       const globals = indexGlobals(ast);
       const records = collectInitExprs(ast, globals);
@@ -368,7 +432,13 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     it('leaves the constant blank when unresolved', () => {
       const unresolved = {
         ...sampleReport,
-        expressions: [{ ...sampleReport.expressions[0], constantValue: undefined, classification: 'unsupported' as const }],
+        expressions: [
+          {
+            ...sampleReport.expressions[0],
+            constantValue: undefined,
+            classification: 'unsupported' as const,
+          },
+        ],
       };
       const row = toCsv(unresolved).split('\n')[1];
       expect(row).toContain('unsupported');
@@ -379,19 +449,39 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
   describe('toDot', () => {
     const base = {
       totals: {
-        totalInitExprs: 2, fullyConstant: 1, globalDependent: 1, importedGlobalDependent: 0,
-        unsupported: 0, totalReferencedGlobals: 1, maxDependencyDepth: 2, totalExpressions: 2,
+        totalInitExprs: 2,
+        fullyConstant: 1,
+        globalDependent: 1,
+        importedGlobalDependent: 0,
+        unsupported: 0,
+        totalReferencedGlobals: 1,
+        maxDependencyDepth: 2,
+        totalExpressions: 2,
       },
       expressions: [
         {
-          section: 'global' as const, entryIndex: 0, opcodes: [], operands: [],
-          referencedGlobals: [], dependsOnImportedGlobals: false, definesGlobal: true,
-          classification: 'fully-constant' as const, dependencyDepth: 1, dependencies: [],
+          section: 'global' as const,
+          entryIndex: 0,
+          opcodes: [],
+          operands: [],
+          referencedGlobals: [],
+          dependsOnImportedGlobals: false,
+          definesGlobal: true,
+          classification: 'fully-constant' as const,
+          dependencyDepth: 1,
+          dependencies: [],
         },
         {
-          section: 'data' as const, entryIndex: 0, opcodes: [], operands: [],
-          referencedGlobals: [0], dependsOnImportedGlobals: false, definesGlobal: false,
-          classification: 'locally-state-dependent' as const, dependencyDepth: 2, dependencies: [0],
+          section: 'data' as const,
+          entryIndex: 0,
+          opcodes: [],
+          operands: [],
+          referencedGlobals: [0],
+          dependsOnImportedGlobals: false,
+          definesGlobal: false,
+          classification: 'locally-state-dependent' as const,
+          dependencyDepth: 2,
+          dependencies: [0],
         },
       ],
       referencedGlobals: [],
@@ -416,7 +506,12 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
   // ─── Comparison ────────────────────────────────────────────────────────────
 
   describe('compareInitExprs', () => {
-    const mk = (index: number, section: 'global' | 'data', value?: bigint, globals: number[] = []) => ({
+    const mk = (
+      index: number,
+      section: 'global' | 'data',
+      value?: bigint,
+      globals: number[] = [],
+    ) => ({
       section,
       entryIndex: index,
       opcodes: [],
@@ -424,7 +519,9 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
       referencedGlobals: globals,
       dependsOnImportedGlobals: false,
       definesGlobal: section === 'global',
-      classification: (globals.length ? 'locally-state-dependent' : 'fully-constant') as InitExprRecord['classification'],
+      classification: (globals.length
+        ? 'locally-state-dependent'
+        : 'fully-constant') as InitExprRecord['classification'],
       constantValue: value,
       dependencyDepth: 1,
       dependencies: globals,
@@ -432,8 +529,14 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
 
     const report = (exprs: InitExprRecord[]) => ({
       totals: {
-        totalInitExprs: exprs.length, fullyConstant: 0, globalDependent: 0, importedGlobalDependent: 0,
-        unsupported: 0, totalReferencedGlobals: 0, maxDependencyDepth: 1, totalExpressions: exprs.length,
+        totalInitExprs: exprs.length,
+        fullyConstant: 0,
+        globalDependent: 0,
+        importedGlobalDependent: 0,
+        unsupported: 0,
+        totalReferencedGlobals: 0,
+        maxDependencyDepth: 1,
+        totalExpressions: exprs.length,
       },
       expressions: exprs,
       referencedGlobals: [],
@@ -442,32 +545,50 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     });
 
     it('reports an added expression', () => {
-      const diff = compareInitExprs(report([mk(0, 'global', BigInt(1))]), report([mk(0, 'global', BigInt(1)), mk(1, 'global', BigInt(2))]));
+      const diff = compareInitExprs(
+        report([mk(0, 'global', BigInt(1))]),
+        report([mk(0, 'global', BigInt(1)), mk(1, 'global', BigInt(2))]),
+      );
       expect(diff.added).toEqual(['global:1']);
     });
 
     it('reports a removed expression', () => {
-      const diff = compareInitExprs(report([mk(0, 'global', BigInt(1)), mk(1, 'global', BigInt(2))]), report([mk(0, 'global', BigInt(1))]));
+      const diff = compareInitExprs(
+        report([mk(0, 'global', BigInt(1)), mk(1, 'global', BigInt(2))]),
+        report([mk(0, 'global', BigInt(1))]),
+      );
       expect(diff.removed).toEqual(['global:1']);
     });
 
     it('reports a changed constant value', () => {
-      const diff = compareInitExprs(report([mk(0, 'global', BigInt(1))]), report([mk(0, 'global', BigInt(9))]));
+      const diff = compareInitExprs(
+        report([mk(0, 'global', BigInt(1))]),
+        report([mk(0, 'global', BigInt(9))]),
+      );
       expect(diff.changedConstantValues).toEqual(['global:0']);
     });
 
     it('reports changed global dependencies', () => {
-      const diff = compareInitExprs(report([mk(1, 'global', undefined, [0])]), report([mk(1, 'global', undefined, [1])]));
+      const diff = compareInitExprs(
+        report([mk(1, 'global', undefined, [0])]),
+        report([mk(1, 'global', undefined, [1])]),
+      );
       expect(diff.changedGlobalDependencies).toEqual(['global:1']);
     });
 
     it('reports a changed data offset', () => {
-      const diff = compareInitExprs(report([mk(0, 'data', BigInt(16))]), report([mk(0, 'data', BigInt(32))]));
+      const diff = compareInitExprs(
+        report([mk(0, 'data', BigInt(16))]),
+        report([mk(0, 'data', BigInt(32))]),
+      );
       expect(diff.changedDataOffsets).toEqual(['data:0']);
     });
 
     it('reports a changed element offset', () => {
-      const diff = compareInitExprs(report([mk(0, 'element' as any, BigInt(16))]), report([mk(0, 'element' as any, BigInt(32))]));
+      const diff = compareInitExprs(
+        report([mk(0, 'element' as any, BigInt(16))]),
+        report([mk(0, 'element' as any, BigInt(32))]),
+      );
       expect(diff.changedElementOffsets).toEqual(['element:0']);
     });
 
@@ -480,10 +601,17 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
     });
 
     it('reports nothing for two identical reports', () => {
-      const diff = compareInitExprs(report([mk(0, 'global', BigInt(1))]), report([mk(0, 'global', BigInt(1))]));
+      const diff = compareInitExprs(
+        report([mk(0, 'global', BigInt(1))]),
+        report([mk(0, 'global', BigInt(1))]),
+      );
       expect(diff).toEqual({
-        added: [], removed: [], changedConstantValues: [],
-        changedGlobalDependencies: [], changedDataOffsets: [], changedElementOffsets: [],
+        added: [],
+        removed: [],
+        changedConstantValues: [],
+        changedGlobalDependencies: [],
+        changedDataOffsets: [],
+        changedElementOffsets: [],
         changedDependencyDepth: [],
       });
     });
@@ -493,7 +621,7 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
 
   describe('offline / no-execution guarantee', () => {
     it('does not expose any execute or instantiate symbol', () => {
-      const module = require('../src/wasm/initExprAnalysis');
+      const module = initExprModule;
       const exported = Object.keys(module);
       expect(exported).not.toContain('instantiate');
       expect(exported.some((k: string) => k.toLowerCase().includes('execute'))).toBe(false);
@@ -507,13 +635,24 @@ describe('ISSUE-282: WASM initialization expression analysis', () => {
 
     it('is deterministic for the same input', () => {
       const ast = {
-        body: [{ type: 'Global', entries: [{ type: { value: 'i32', mutable: false }, init: { type: 'Instr', id: { type: 'i32.const', value: 7 } } }] }],
+        body: [
+          {
+            type: 'Global',
+            entries: [
+              {
+                type: { value: 'i32', mutable: false },
+                init: { type: 'Instr', id: { type: 'i32.const', value: 7 } },
+              },
+            ],
+          },
+        ],
       };
       const globals = indexGlobals(ast);
       const first = collectInitExprs(ast, globals);
       const second = collectInitExprs(ast, globals);
-      expect(JSON.stringify(first, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)))
-        .toEqual(JSON.stringify(second, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)));
+      expect(JSON.stringify(first, (_k, v) => (typeof v === 'bigint' ? v.toString() : v))).toEqual(
+        JSON.stringify(second, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)),
+      );
     });
   });
 });

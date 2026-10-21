@@ -3,7 +3,7 @@
  * Determines which functions are reachable from exported entry points
  */
 
-import { CallGraph, CallGraphNode } from './call-graph-builder';
+import { CallGraph } from './call-graph-builder';
 
 export interface ReachabilityResult {
   reachableFunctions: number[];
@@ -13,11 +13,14 @@ export interface ReachabilityResult {
     roots: number[];
   }>;
   rootsWithNoOutgoing: number[];
-  reachabilityMap: Map<number, {
-    isReachable: boolean;
-    reachedFrom: number[];
-    depth: number;
-  }>;
+  reachabilityMap: Map<
+    number,
+    {
+      isReachable: boolean;
+      reachedFrom: number[];
+      depth: number;
+    }
+  >;
   statistics: {
     totalFunctions: number;
     reachableFunctions: number;
@@ -33,35 +36,38 @@ export class ReachabilityAnalyzer {
 
   constructor(callGraph: CallGraph, customRoots?: number[]) {
     this.callGraph = callGraph;
-    
+
     // Use exported functions as default roots
     if (customRoots && customRoots.length > 0) {
       this.rootFunctions = customRoots;
     } else {
       this.rootFunctions = callGraph.nodes
-        .filter(node => node.type === 'exported')
-        .map(node => node.index);
+        .filter((node) => node.type === 'exported')
+        .map((node) => node.index);
     }
   }
 
   analyze(): ReachabilityResult {
-    const reachabilityMap = new Map<number, {
-      isReachable: boolean;
-      reachedFrom: number[];
-      depth: number;
-    }>();
+    const reachabilityMap = new Map<
+      number,
+      {
+        isReachable: boolean;
+        reachedFrom: number[];
+        depth: number;
+      }
+    >();
 
     // Initialize all functions as unreachable
-    this.callGraph.nodes.forEach(node => {
+    this.callGraph.nodes.forEach((node) => {
       reachabilityMap.set(node.index, {
         isReachable: false,
         reachedFrom: [],
-        depth: -1
+        depth: -1,
       });
     });
 
     // Mark root functions as reachable at depth 0
-    this.rootFunctions.forEach(rootIndex => {
+    this.rootFunctions.forEach((rootIndex) => {
       const entry = reachabilityMap.get(rootIndex);
       if (entry) {
         entry.isReachable = true;
@@ -70,7 +76,7 @@ export class ReachabilityAnalyzer {
     });
 
     // Traverse from each root
-    this.rootFunctions.forEach(rootIndex => {
+    this.rootFunctions.forEach((rootIndex) => {
       this.traverseFrom(rootIndex, reachabilityMap, new Set());
     });
 
@@ -79,16 +85,16 @@ export class ReachabilityAnalyzer {
     const unreachableFunctions: number[] = [];
     const reachableFromMultiple: Array<{ functionIndex: number; roots: number[] }> = [];
 
-    this.callGraph.nodes.forEach(node => {
+    this.callGraph.nodes.forEach((node) => {
       const entry = reachabilityMap.get(node.index);
       if (entry) {
         if (entry.isReachable) {
           reachableFunctions.push(node.index);
-          
+
           if (entry.reachedFrom.length > 1) {
             reachableFromMultiple.push({
               functionIndex: node.index,
-              roots: entry.reachedFrom.sort((a, b) => a - b)
+              roots: entry.reachedFrom.sort((a, b) => a - b),
             });
           }
         } else {
@@ -103,10 +109,12 @@ export class ReachabilityAnalyzer {
     reachableFromMultiple.sort((a, b) => a.functionIndex - b.functionIndex);
 
     // Find roots with no outgoing calls
-    const rootsWithNoOutgoing = this.rootFunctions.filter(rootIndex => {
-      const node = this.callGraph.nodes.find(n => n.index === rootIndex);
-      return node && node.outgoingCalls.length === 0;
-    }).sort((a, b) => a - b);
+    const rootsWithNoOutgoing = this.rootFunctions
+      .filter((rootIndex) => {
+        const node = this.callGraph.nodes.find((n) => n.index === rootIndex);
+        return node?.outgoingCalls.length === 0;
+      })
+      .sort((a, b) => a - b);
 
     // Calculate statistics
     const statistics = this.calculateStatistics(reachabilityMap);
@@ -117,19 +125,19 @@ export class ReachabilityAnalyzer {
       reachableFromMultipleRoots: reachableFromMultiple,
       rootsWithNoOutgoing,
       reachabilityMap,
-      statistics
+      statistics,
     };
   }
 
   private traverseFrom(
     currentIndex: number,
     reachabilityMap: Map<number, { isReachable: boolean; reachedFrom: number[]; depth: number }>,
-    visited: Set<number>
+    visited: Set<number>,
   ): void {
     if (visited.has(currentIndex)) return;
     visited.add(currentIndex);
 
-    const currentNode = this.callGraph.nodes.find(n => n.index === currentIndex);
+    const currentNode = this.callGraph.nodes.find((n) => n.index === currentIndex);
     if (!currentNode) return;
 
     const currentEntry = reachabilityMap.get(currentIndex);
@@ -138,22 +146,22 @@ export class ReachabilityAnalyzer {
     const currentDepth = currentEntry.depth;
     const rootIndex = this.findRoot(currentIndex, reachabilityMap);
 
-    currentNode.outgoingCalls.forEach(targetIndex => {
+    currentNode.outgoingCalls.forEach((targetIndex) => {
       const targetEntry = reachabilityMap.get(targetIndex);
       if (targetEntry) {
         targetEntry.isReachable = true;
-        
+
         // Track which root this came from
         if (rootIndex !== null && !targetEntry.reachedFrom.includes(rootIndex)) {
           targetEntry.reachedFrom.push(rootIndex);
         }
-        
+
         // Update depth if this is a shorter path
         const newDepth = currentDepth + 1;
         if (targetEntry.depth === -1 || newDepth < targetEntry.depth) {
           targetEntry.depth = newDepth;
         }
-        
+
         this.traverseFrom(targetIndex, reachabilityMap, visited);
       }
     });
@@ -161,7 +169,7 @@ export class ReachabilityAnalyzer {
 
   private findRoot(
     functionIndex: number,
-    reachabilityMap: Map<number, { isReachable: boolean; reachedFrom: number[]; depth: number }>
+    reachabilityMap: Map<number, { isReachable: boolean; reachedFrom: number[]; depth: number }>,
   ): number | null {
     if (this.rootFunctions.includes(functionIndex)) {
       return functionIndex;
@@ -176,13 +184,13 @@ export class ReachabilityAnalyzer {
   }
 
   private calculateStatistics(
-    reachabilityMap: Map<number, { isReachable: boolean; reachedFrom: number[]; depth: number }>
+    reachabilityMap: Map<number, { isReachable: boolean; reachedFrom: number[]; depth: number }>,
   ): ReachabilityResult['statistics'] {
     let totalDepth = 0;
     let reachableCount = 0;
     let maxDepth = 0;
 
-    reachabilityMap.forEach(entry => {
+    reachabilityMap.forEach((entry) => {
       if (entry.isReachable) {
         reachableCount++;
         if (entry.depth >= 0) {
@@ -197,7 +205,7 @@ export class ReachabilityAnalyzer {
       reachableFunctions: reachableCount,
       unreachableFunctions: this.callGraph.nodes.length - reachableCount,
       averageDepth: reachableCount > 0 ? totalDepth / reachableCount : 0,
-      maxDepth
+      maxDepth,
     };
   }
 }
