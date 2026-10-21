@@ -4125,3 +4125,18 @@ cp test/fixtures/template.wasm test/fixtures/new-test.wasm
 - [257: Transaction history pagination and durable resumption](src/examples/257-transaction-history-checkpointing.ts)
 
 See [setup, environment variables, sample output, checkpoint recovery and manual Testnet steps](examples/reliable-lifecycle-workflows.md).
+
+## SEP-11 Txrep Transaction Representation
+
+[SEP-11](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0011.md) is the active Stellar Txrep specification: a human-readable representation of transaction-envelope XDR. It does **not** define an HTTP signing-service API, endpoint, method, request headers, or JSON response. A provider's signing API must be documented and treated as provider-specific; do not infer it from SEP-11.
+
+Run the offline example with the lockfile-pinned `@stellar/stellar-sdk` 13.3.0:
+
+```bash
+npm run run-example 261-sep11-txrep-transaction-representation
+npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
+```
+
+The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
+
+The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
