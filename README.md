@@ -4119,6 +4119,22 @@ cp test/fixtures/template.wasm test/fixtures/new-test.wasm
 - [256: Path discovery and bounded unsigned payment preparation](src/examples/256-path-payment-preparation.ts)
 - [257: Transaction history pagination and durable resumption](src/examples/257-transaction-history-checkpointing.ts)
 
+### Transaction Monitoring and Finality — issue #354
+
+- [354: Stellar transaction monitoring with confirmation and finality tracking](src/examples/354-transaction-monitoring-finality.ts)
+
+### SEP-2 Federation Protocol — issue #355
+
+- [355: SEP-2 federation address resolution and validation](src/examples/355-sep2-federation-resolution.ts)
+
+### SEP-41 Token Contract Inspector — issue #356
+
+- [356: SEP-41 token contract interface and compatibility inspector](src/examples/356-sep41-token-inspector.ts)
+
+### Home Domain Verification and Audit — issue #357
+
+- [357: Account home-domain verification and organization identity audit](src/examples/357-home-domain-audit.ts)
+
 See [setup, environment variables, sample output, checkpoint recovery and manual Testnet steps](examples/reliable-lifecycle-workflows.md).
 
 ## SEP-11 Txrep Transaction Representation
