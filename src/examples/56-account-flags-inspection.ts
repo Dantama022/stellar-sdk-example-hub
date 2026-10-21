@@ -67,6 +67,12 @@ export interface AccountFlagsReport {
   flags: FlagDescription[];
   /** Reconstructed bitmask value of the enabled flags. */
   rawFlagValue: number;
+  authorizationImplications: {
+    approvalRequiredForNewTrustlines: boolean;
+    canRevokeAuthorizedTrustlines: boolean;
+    clawbackEnabledForNewTrustlines: boolean;
+    flagConfigurationImmutable: boolean;
+  };
   /** True when none of the four flags are set (the default for a new account). */
   usesDefaults: boolean;
   /** Weight of the account's own key as a signer; 0 means the master key is disabled. */
@@ -247,6 +253,7 @@ export function buildAccountFlagsReport(account: {
   signers?: Array<{ key: string; weight: number }>;
 }): AccountFlagsReport {
   const flags = describeAccountFlags(account.flags);
+  const enabled = new Set(flags.filter((flag) => flag.enabled).map((flag) => flag.key));
   const signers = account.signers ?? [];
   const masterKeyWeight = getMasterKeyWeight(account.id, signers);
   const otherSignerCount = signers.filter((signer) => signer.key !== account.id).length;
@@ -255,6 +262,12 @@ export function buildAccountFlagsReport(account: {
     accountId: account.id,
     flags,
     rawFlagValue: computeRawFlagValue(flags),
+    authorizationImplications: {
+      approvalRequiredForNewTrustlines: enabled.has('auth_required'),
+      canRevokeAuthorizedTrustlines: enabled.has('auth_revocable'),
+      clawbackEnabledForNewTrustlines: enabled.has('auth_clawback_enabled'),
+      flagConfigurationImmutable: enabled.has('auth_immutable'),
+    },
     usesDefaults: flags.every((flag) => !flag.enabled),
     masterKeyWeight,
     notableFindings: identifyNotableConfigurations(flags, masterKeyWeight, otherSignerCount),
@@ -283,6 +296,21 @@ export function formatFlagsReport(report: AccountFlagsReport): string {
       lines.push(`      Currently: ${flag.whenUnset}`);
     }
   }
+
+  lines.push('\nAsset and Trustline Implications:');
+  lines.push(
+    `  New trustlines: ${report.authorizationImplications.approvalRequiredForNewTrustlines ? 'issuer approval required before receiving the asset' : 'permissionless; no issuer approval required'}`,
+  );
+  lines.push(
+    `  Existing authorization: ${report.authorizationImplications.canRevokeAuthorizedTrustlines ? 'the issuer can revoke authorization on existing trustlines' : 'the issuer cannot revoke authorization after it is granted'}`,
+  );
+  lines.push(
+    `  Clawback: ${report.authorizationImplications.clawbackEnabledForNewTrustlines ? 'enabled for trustlines created while this flag is set' : 'not enabled for newly created trustlines'}`,
+  );
+  lines.push(
+    `  Flag changes: ${report.authorizationImplications.flagConfigurationImmutable ? 'permanently locked by AUTH_IMMUTABLE' : 'still changeable by the account'}`,
+  );
+  lines.push('  These account-level settings apply to assets issued by this account.');
 
   lines.push('\nMaster Key:');
   lines.push(`  Weight: ${report.masterKeyWeight}`);

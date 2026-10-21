@@ -388,6 +388,30 @@ describe('monitorTransaction', () => {
     expect(report.error).toBeNull();
   });
 
+  it('decodes the invocation result and includes only events with the same transaction hash', async () => {
+    const matchingEvent = buildEvent();
+    const unrelatedEvent = buildEvent({ txHash: 'b'.repeat(64) });
+    const server = makeServer(rpc.Api.GetTransactionStatus.SUCCESS);
+    server.getTransaction.mockResolvedValue({
+      status: rpc.Api.GetTransactionStatus.SUCCESS,
+      ledger: 1000,
+      createdAt: '1700000000',
+      envelopeXdr: null,
+      resultXdr: null,
+      returnValue: nativeToScVal(12345n, { type: 'i128' }),
+    });
+    server.getEvents.mockImplementation(async ({ filters }: any) => ({
+      events: filters[0].type === 'contract' ? [unrelatedEvent, matchingEvent] : [],
+    }));
+
+    const report = await monitorTransaction(server, VALID_HASH, config);
+
+    expect(report.returnValue).toMatchObject({ xdrType: 'scvI128', value: '12345', decoded: true });
+    expect(report.events).toHaveLength(1);
+    expect(report.events[0].txHash).toBe(report.txHash);
+    expect(report.events[0].eventName).toBe('transfer');
+  });
+
   it('builds a FAILED report with an error message', async () => {
     const server = makeServer(rpc.Api.GetTransactionStatus.FAILED);
     const report = await monitorTransaction(server, VALID_HASH, config);

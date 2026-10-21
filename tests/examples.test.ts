@@ -628,8 +628,37 @@ describe('ISSUE-056: Account Flags Inspection Unit Tests', () => {
 
     expect(report.usesDefaults).toBe(true);
     expect(report.rawFlagValue).toBe(0);
+    expect(report.authorizationImplications).toEqual({
+      approvalRequiredForNewTrustlines: false,
+      canRevokeAuthorizedTrustlines: false,
+      clawbackEnabledForNewTrustlines: false,
+      flagConfigurationImmutable: false,
+    });
     expect(report.notableFindings).toEqual([]);
     expect(ex56.formatFlagsReport(report)).toContain('No restrictive or unusual configuration');
+  });
+
+  it('summarizes authorization implications for trustline operations', () => {
+    const report = ex56.buildAccountFlagsReport({
+      id: accountId,
+      flags: {
+        auth_required: true,
+        auth_revocable: true,
+        auth_clawback_enabled: true,
+      },
+      signers: [{ key: accountId, weight: 1 }],
+    });
+
+    expect(report.authorizationImplications).toEqual({
+      approvalRequiredForNewTrustlines: true,
+      canRevokeAuthorizedTrustlines: true,
+      clawbackEnabledForNewTrustlines: true,
+      flagConfigurationImmutable: false,
+    });
+    const formatted = ex56.formatFlagsReport(report);
+    expect(formatted).toContain('issuer approval required before receiving the asset');
+    expect(formatted).toContain('issuer can revoke authorization on existing trustlines');
+    expect(formatted).toContain('enabled for trustlines created while this flag is set');
   });
 
   it('identifies restrictive issuer configurations', () => {
