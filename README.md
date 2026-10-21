@@ -4018,3 +4018,86 @@ npm run build
 # Add test fixtures
 cp test/fixtures/template.wasm test/fixtures/new-test.wasm
 ```
+---
+
+# Offline WASM Section, Memory Access and Constant Propagation Tools (ISSUE-239, ISSUE-267, ISSUE-268)
+
+Three offline analyses for Soroban contract artifacts are available as
+subcommands of the `stellar-api-inspector` CLI. They decode a `.wasm` file,
+inspect its structure and never instantiate or execute the module.
+
+## WASM section diff (ISSUE-239)
+
+Compares two contract artifacts at the level of their WebAssembly section
+table and reports which sections were added, removed, modified or left
+untouched.
+
+```bash
+npm run build
+node dist/src/stellar-api-inspector.js wasm-diff old.wasm new.wasm
+
+# Machine readable output and CSV
+node dist/src/stellar-api-inspector.js wasm-diff old.wasm new.wasm --output json
+node dist/src/stellar-api-inspector.js wasm-diff old.wasm new.wasm --output csv
+```
+
+The report contains the old and the new size of every section, the size
+delta, a SHA-256 hash of the section payload and the custom section names.
+Content changes are detected even when the section keeps the same size.
+
+## WASM memory access analysis (ISSUE-267)
+
+Builds a normalized inventory of the linear-memory traffic of a contract: every
+load and store instruction with its function, basic block, instruction index,
+access width, alignment, static offset and memory index.
+
+```bash
+node dist/src/stellar-api-inspector.js wasm-memory-access contract.wasm
+node dist/src/stellar-api-inspector.js wasm-memory-access contract.wasm --output json
+node dist/src/stellar-api-inspector.js wasm-memory-access contract.wasm --csv accesses.csv
+node dist/src/stellar-api-inspector.js wasm-memory-access old.wasm --compare new.wasm
+```
+
+Accesses whose effective address is statically known are separated from
+accesses that depend on runtime values. The report also contains per-function
+statistics (loads, stores, read/write ratio, unique widths, unique offsets,
+maximum offset), module level statistics, the functions with the most memory
+traffic and the most frequently reused static offsets.
+
+## WASM constant propagation analysis (ISSUE-268)
+
+Tracks the values of a contract that can be determined statically: literals,
+constant-derived locals, resolved comparisons and branch conditions whose
+outcome is known in advance.
+
+```bash
+node dist/src/stellar-api-inspector.js wasm-constants contract.wasm
+node dist/src/stellar-api-inspector.js wasm-constants contract.wasm --output json
+node dist/src/stellar-api-inspector.js wasm-constants contract.wasm --csv constants.csv
+node dist/src/stellar-api-inspector.js wasm-constants old.wasm --compare new.wasm
+```
+
+The analysis is conservative: values that depend on unresolved runtime state
+are never reported as constants, conflicting values at control-flow merge
+points are represented as unknown, and the fix-point iteration is bounded so
+loops always terminate.
+
+## Account merge readiness auditor (ISSUE-378)
+
+A read-only audit of an account before a potential account merge. It reports
+the merge blockers of the account, the balance and reserve implications and a
+readiness classification. It never signs and never submits a transaction.
+
+```bash
+node dist/examples/account-merge-readiness/index.js \
+  --account GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF \
+  --endpoint https://horizon-testnet.stellar.org
+
+node dist/examples/account-merge-readiness/index.js \
+  --account GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF \
+  --format json --output merge-audit.json
+```
+
+See [`examples/account-merge-readiness/README.md`](examples/account-merge-readiness/README.md)
+for the protocol rules, the readiness classifications, the options and the
+limitations of a static audit.
