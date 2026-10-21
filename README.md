@@ -332,6 +332,11 @@ The repository currently includes the following runnable examples:
 257. **`215-event-compat`**: Verify if a collection of actual Soroban events can be decoded and represented against an expected schema.
 258. **`216-state-diff`**: Compare two Soroban contract state snapshots to find added, removed, modified, and TTL-adjusted ledger entries offline.
 
+- **`261-transaction-precondition-validator`**: Inspect and validate Stellar transaction preconditions (time bounds, ledger bounds, sequence constraints) against a reference time or ledger, with PASS/FAIL/UNKNOWN statuses and a local-vs-network disclaimer.
+- **`262-asset-authorization-audit`**: Audit issuer authorization flags, a holder's trustline authorization state, and historical authorization operations for an asset, with bounded pagination and current-vs-historical separation.
+- **`263-transaction-signature-threshold-analyzer`**: Parse a transaction envelope, cryptographically verify attached signatures, and analyze signer threshold satisfaction, separating signature verification from authorization conclusions.
+- **`264-sponsorship-reserve-calculator`**: Inspect account sponsorship relationships and estimate minimum-balance reserve impact from sponsored entries and reserving obligations.
+
 - **`217-state-summary`**: Summarize captured Soroban contract state offline, including entry types, durability, ScVal types, TTL statistics, ledger ranges, and decode warnings.
 - **`218-state-key`**: Query captured Soroban contract state by encoded or decoded key and inspect decoded value, durability, TTL, and optional raw XDR.
 - **`219-state-search`**: Search decoded Soroban state values recursively across strings, symbols, addresses, integers, booleans, bytes, vectors, and maps.

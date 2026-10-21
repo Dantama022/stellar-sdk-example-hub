@@ -13386,10 +13386,120 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
     ],
   },
+  '261-transaction-precondition-validator': {
+    name: '261-transaction-precondition-validator',
+    description:
+      'Inspect and validate Stellar transaction preconditions: time bounds, ledger bounds, and sequence constraints',
+    run: loadExample('../examples/261-transaction-precondition-validator'),
+    params: [
+      {
+        type: 'input',
+        name: 'envelopeXdr',
+        message: 'Base64 transaction envelope XDR (blank builds an unsigned local sample):',
+      },
+      {
+        type: 'input',
+        name: 'referenceTime',
+        message: 'Reference Unix timestamp (seconds) or ISO time (blank uses now):',
+      },
+      {
+        type: 'input',
+        name: 'referenceLedger',
+        message: 'Reference ledger sequence (blank queries the latest ledger):',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '262-asset-authorization-audit': {
+    name: '262-asset-authorization-audit',
+    description:
+      'Audit issuer authorization flags, trustline authorization state, and historical authorization operations for an asset',
+    run: loadExample('../examples/262-asset-authorization-audit'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code (alphanumeric, 1-12 characters):',
+      },
+      {
+        type: 'input',
+        name: 'assetIssuer',
+        message: 'Asset issuer public key:',
+      },
+      {
+        type: 'input',
+        name: 'holder',
+        message: 'Optional holder account public key (blank skips trustline inspection):',
+      },
+      {
+        type: 'input',
+        name: 'maxPages',
+        message: 'Maximum history pages to scan (1-50):',
+        default: '5',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '263-transaction-signature-threshold-analyzer': {
+    name: '263-transaction-signature-threshold-analyzer',
+    description:
+      'Parse a transaction envelope, verify attached signatures, and analyze signer threshold satisfaction',
+    run: loadExample('../examples/263-transaction-signature-threshold-analyzer'),
+    params: [
+      {
+        type: 'input',
+        name: 'envelopeXdr',
+        message: 'Base64 transaction envelope XDR (blank builds an unsigned local sample):',
+      },
+      {
+        type: 'input',
+        name: 'signerKeys',
+        message: 'Comma-separated public keys to verify against (blank uses defaults):',
+      },
+      {
+        type: 'input',
+        name: 'signerWeights',
+        message: 'Comma-separated signer weights aligned with signer keys (offline mode):',
+      },
+      {
+        type: 'input',
+        name: 'thresholds',
+        message: 'JSON thresholds, e.g. {"low":1,"medium":2,"high":3} (offline mode):',
+      },
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID for signer config lookup (blank uses the envelope source account):',
+      },
+      { type: 'confirm', name: 'offline', message: 'Use offline mode (supplied config only, no Horizon)?', default: false },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '264-sponsorship-reserve-calculator': {
+    name: '264-sponsorship-reserve-calculator',
+    description:
+      'Inspect account sponsorship relationships and estimate minimum-balance reserve impact',
+    run: loadExample('../examples/264-sponsorship-reserve-calculator'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account public key to audit:',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      {
+        type: 'input',
+        name: 'baseReserveStroops',
+        message: 'Base reserve in stroops (blank reads the latest ledger):',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
   '261-sep11-txrep-transaction-representation': {
     name: '261-sep11-txrep-transaction-representation',
     description:
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
+
   },
 };
