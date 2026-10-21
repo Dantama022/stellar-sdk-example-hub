@@ -37,6 +37,27 @@ function loadExample(modulePath: string): ExampleRunner {
 }
 
 export const examples: Record<string, Example> = {
+  '330-sep24-interactive-transfers': {
+    name: '330-sep24-interactive-transfers',
+    description: 'SEP-24 hosted deposit and withdrawal lifecycle (safe mocked default)',
+    run: loadExample('../examples/330-sep24-interactive-transfers'),
+  },
+  '331-sep12-customer-kyc': {
+    name: '331-sep12-customer-kyc',
+    description: 'SEP-12 customer information requirements, synthetic submission and status',
+    run: loadExample('../examples/331-sep12-customer-kyc'),
+  },
+  '332-sep31-cross-border-payment': {
+    name: '332-sep31-cross-border-payment',
+    description: 'SEP-31 receiving-anchor payment request and status (mock-first)',
+    run: loadExample('../examples/332-sep31-cross-border-payment'),
+  },
+  '333-sep6-programmatic-transfers': {
+    name: '333-sep6-programmatic-transfers',
+    description: 'SEP-6 programmatic deposits and withdrawals (mock-first)',
+    run: loadExample('../examples/333-sep6-programmatic-transfers'),
+  },
+
   '01-create-account': {
     name: '01-create-account',
     description: 'Generate keypairs and fund a test account using Friendbot',
