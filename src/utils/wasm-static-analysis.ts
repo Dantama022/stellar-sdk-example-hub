@@ -2375,9 +2375,6 @@ interface TypeSig { in: WasmValType[]; out: WasmValType[] }
 
 // Module-level shorthand constants for common value types used in stack analysis
 const _i32: WasmValType = 'i32';
-const _i64: WasmValType = 'i64';
-const _f32: WasmValType = 'f32';
-const _f64: WasmValType = 'f64';
 
 function valType(byte: number): WasmValType {
   const map: Record<number, WasmValType> = {
@@ -2414,8 +2411,6 @@ function parseFunctionSection(sec: Section | undefined): number[] {
   for (let i = 0; i < count; i++) indices.push(r.varuint32());
   return indices;
 }
-
-type StackState = WasmValType[] | 'polymorphic'; // polymorphic = unreachable
 
 function typeSigFor(opcode: number, typeIdx: number, types: Array<{ params: WasmValType[]; results: WasmValType[] }>, funcTypeIndices: number[], importedFunctions: number): TypeSig {
   const i32: WasmValType = 'i32'; const i64: WasmValType = 'i64';
@@ -2500,6 +2495,7 @@ export function analyzeStackTypes(file: string): WasmStackTypesReport {
   const funcSec = sections.find((s) => s.id === 3);
   const codeSec = sections.find((s) => s.id === 10);
   const importLocalSec = sections.find((s) => s.id === 2);
+  void importSec;
 
   const types = parseTypeSection(typeSec);
   const funcTypeIndices = parseFunctionSection(funcSec);

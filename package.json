@@ -12,8 +12,8 @@
     "run-example": "ts-node src/runner.ts",
     "validate:examples": "ts-node src/validate-examples.ts",
     "validate:examples:all": "ts-node src/validate-examples.ts --include-excluded",
-    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/account-merge-readiness/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/account-merge-readiness/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "jest --coverage",
     "typecheck": "tsc --noEmit",
@@ -44,8 +44,7 @@
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "dotenv": "^16.4.5",
-    "inquirer": "^8.2.7",
-    "wasm-parser": "^1.0.1"
+    "inquirer": "^8.2.7"
   },
   "devDependencies": {
     "@types/inquirer": "^8.2.13",

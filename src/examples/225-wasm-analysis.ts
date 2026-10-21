@@ -211,7 +211,9 @@ function parseWasm(input: Uint8Array): WasmModuleInfo {
   if (input[4] !== 1 || input[5] !== 0 || input[6] !== 0 || input[7] !== 0) {
     throw new Error('Unsupported WASM binary version.');
   }
-  if (!WebAssembly.validate(input)) throw new Error('WASM binary failed WebAssembly validation.');
+  if (!WebAssembly.validate(new Uint8Array(input))) {
+    throw new Error('WASM binary failed WebAssembly validation.');
+  }
 
   const reader = new WasmReader(input, 8);
   const sections: WasmSection[] = [];
@@ -703,13 +705,20 @@ export function analyzeStateTransitions(snapshots: Snapshot[], options: StateTra
   });
 
   const grouped = new Map<string, StateTransitionRow>();
+  // The frequency of a transition is counted per ledger key: a transition that
+  // happens once for every key of a contract is not the same as a transition
+  // that happens repeatedly for a single key.
+  const perKeyCounts = new Map<string, Map<string, number>>();
   const add = (key: string, contractId: string | undefined, previous: string, current: string, type: StateTransitionType) => {
     const resolvedContract = contractId ?? 'unknown';
     if (options.contractId && options.contractId !== resolvedContract) return;
     if (options.transitionType && options.transitionType !== type) return;
     const groupingKey = `${resolvedContract}\0${previous}\0${current}\0${type}`;
     const row = grouped.get(groupingKey) ?? { contractId: resolvedContract, previousState: previous, currentState: current, transitionType: type, count: 0, ledgerKeys: [] };
-    row.count += 1;
+    const counts = perKeyCounts.get(groupingKey) ?? new Map<string, number>();
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+    perKeyCounts.set(groupingKey, counts);
+    row.count = Math.max(...counts.values());
     row.ledgerKeys.push(key);
     grouped.set(groupingKey, row);
   };

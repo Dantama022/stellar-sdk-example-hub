@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Address, scValToNative, xdr } from '@stellar/stellar-sdk';
+import { Address, StrKey, scValToNative, xdr } from '@stellar/stellar-sdk';
 
 export type StateDurability = 'persistent' | 'temporary' | 'unknown';
 
@@ -652,9 +652,7 @@ export function tryCanonicalLedgerKey(input: string): string | undefined {
     return undefined;
   }
 }
-import * as fs from 'fs';
-import * as path from 'path';
-import { StrKey, scValToNative, xdr } from '@stellar/stellar-sdk';
+
 
 export type Durability = 'persistent' | 'temporary' | 'unknown';
 export type JsonObject = Record<string, unknown>;
@@ -685,7 +683,7 @@ export interface DecodedMetrics {
   error?: string;
 }
 
-export function stableStringify(value: unknown, space = 2): string {
+export function stableStringifySorted(value: unknown, space = 2): string {
   return JSON.stringify(sortObject(value), null, space);
 }
 
@@ -891,10 +889,10 @@ export function inspectDecoded(value: unknown): { collectionSize: number; maxDep
 }
 
 export function decodedValueSize(value: unknown): number {
-  return Buffer.byteLength(stableStringify(makeJsonSafe(value), 0), 'utf8');
+  return Buffer.byteLength(stableStringifySorted(makeJsonSafe(value), 0), 'utf8');
 }
 
-export function normalizeDurability(value: unknown): Durability {
+export function normalizeCanonicalDurability(value: unknown): Durability {
   if (typeof value !== 'string') return 'unknown';
   const lowered = value.trim().toLowerCase();
   if (lowered === 'persistent') return 'persistent';
@@ -942,7 +940,7 @@ export function normalizeEntry(raw: unknown): CanonicalEntry {
         ? obj.entryType.trim()
         : ledgerKeyType(ledgerKey),
     contractId: normalizeContractId(obj.contractId),
-    durability: normalizeDurability(obj.durability),
+    durability: normalizeCanonicalDurability(obj.durability),
     lastModifiedLedgerSeq: normalizeInteger(obj.lastModifiedLedgerSeq, 'lastModifiedLedgerSeq'),
     liveUntilLedgerSeq: normalizeInteger(obj.liveUntilLedgerSeq, 'liveUntilLedgerSeq'),
     valueXdr,
@@ -1028,7 +1026,7 @@ export function valuesConflict(entry: CanonicalEntry): boolean {
   const decoded = decodeScValXdr(entry.valueXdr);
   if (!decoded.decoded) return false;
   return (
-    stableStringify(decoded.value, 0) !== stableStringify(normalizeDecoded(entry.valueDecoded), 0)
+    stableStringifySorted(decoded.value, 0) !== stableStringifySorted(normalizeDecoded(entry.valueDecoded), 0)
   );
 }
 

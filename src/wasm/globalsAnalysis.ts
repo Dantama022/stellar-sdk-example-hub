@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import { decode } from '@webassemblyjs/wasm-parser';
 import { traverse } from '@webassemblyjs/ast';
 
@@ -79,7 +78,7 @@ function buildGlobals(ast: any): GlobalInfo[] {
           mutable: node.descr.globalType.mutability === 'var',
           import: { module: node.module, name: node.name },
           reads: [],
-          writes: []
+          writes: [],
         };
         globals.push(info);
         importCount++;
@@ -92,11 +91,11 @@ function buildGlobals(ast: any): GlobalInfo[] {
         mutable: node.globalType.mutability === 'var',
         init: node.init,
         reads: [],
-        writes: []
+        writes: [],
       };
       globals.push(info);
       definedCount++;
-    }
+    },
   });
 
   return globals;
@@ -118,7 +117,7 @@ function scanFunctions(ast: any, globals: GlobalInfo[]) {
           const record: AccessRecord = {
             funcIndex,
             instrIndex: instrIdx,
-            opcode: instr.id
+            opcode: instr.id,
           };
           const globalInfo = globals[globalIdx];
           if (globalInfo) {
@@ -133,24 +132,23 @@ function scanFunctions(ast: any, globals: GlobalInfo[]) {
       });
 
       // Aggregate per‑function stats
-      const reads = accesses.filter(a => a.opcode === 'global.get').length;
-      const writes = accesses.filter(a => a.opcode === 'global.set').length;
-      const uniqueGlobals = new Set(accesses.map(a => a.instrIndex)).size; // simplistic unique count
+      const reads = accesses.filter((a) => a.opcode === 'global.get').length;
+      const writes = accesses.filter((a) => a.opcode === 'global.set').length;
+      const uniqueGlobals = new Set(accesses.map((a) => a.instrIndex)).size; // simplistic unique count
       const mutableGlobalsModified = accesses
-        .filter(a => a.opcode === 'global.set')
-        .filter(a => globals[a.funcIndex]?.mutable)
-        .length;
+        .filter((a) => a.opcode === 'global.set')
+        .filter((a) => globals[a.funcIndex]?.mutable).length;
 
       functionStats.set(funcIndex, {
         funcIndex,
         reads,
         writes,
         uniqueGlobals,
-        mutableGlobalsModified
+        mutableGlobalsModified,
       });
 
       funcIndex++;
-    }
+    },
   });
 
   return functionStats;
@@ -166,19 +164,21 @@ export function analyzeWasm(buffer: Buffer): AnalysisReport {
 
   // Totals calculation
   const totalGlobals = globals.length;
-  const importedGlobals = globals.filter(g => g.import).length;
+  const importedGlobals = globals.filter((g) => g.import).length;
   const localGlobals = totalGlobals - importedGlobals;
-  const mutableGlobals = globals.filter(g => g.mutable).length;
+  const mutableGlobals = globals.filter((g) => g.mutable).length;
   const immutableGlobals = totalGlobals - mutableGlobals;
   const totalReads = globals.reduce((sum, g) => sum + g.reads.length, 0);
   const totalWrites = globals.reduce((sum, g) => sum + g.writes.length, 0);
-  const neverAccessedGlobals = globals.filter(g => g.reads.length === 0 && g.writes.length === 0).length;
-  const globalsAccessedByMultipleFunctions = globals.filter(g => {
-    const funcSet = new Set(g.reads.concat(g.writes).map(r => r.funcIndex));
+  const neverAccessedGlobals = globals.filter(
+    (g) => g.reads.length === 0 && g.writes.length === 0,
+  ).length;
+  const globalsAccessedByMultipleFunctions = globals.filter((g) => {
+    const funcSet = new Set(g.reads.concat(g.writes).map((r) => r.funcIndex));
     return funcSet.size > 1;
   }).length;
-  const globalsWrittenByMultipleFunctions = globals.filter(g => {
-    const funcSet = new Set(g.writes.map(w => w.funcIndex));
+  const globalsWrittenByMultipleFunctions = globals.filter((g) => {
+    const funcSet = new Set(g.writes.map((w) => w.funcIndex));
     return funcSet.size > 1;
   }).length;
 
@@ -195,10 +195,10 @@ export function analyzeWasm(buffer: Buffer): AnalysisReport {
       totalWrites,
       neverAccessedGlobals,
       globalsAccessedByMultipleFunctions,
-      globalsWrittenByMultipleFunctions
+      globalsWrittenByMultipleFunctions,
     },
     globals,
-    functions
+    functions,
   };
 }
 
@@ -209,19 +209,17 @@ export function reportToCsv(report: AnalysisReport): string {
   const lines: string[] = [];
   // Header for global access records
   lines.push('globalIndex,type,mutable,importModule,importName,readCount,writeCount');
-  report.globals.forEach(g => {
+  report.globals.forEach((g) => {
     const importModule = g.import?.module ?? '';
     const importName = g.import?.name ?? '';
-    lines.push([
-      g.index,
-      g.type,
-      g.mutable,
-      importModule,
-      importName,
-      g.reads.length,
-      g.writes.length
-    ].join(','));
+    lines.push(
+      [g.index, g.type, g.mutable, importModule, importName, g.reads.length, g.writes.length].join(
+        ',',
+      ),
+    );
   });
-  return lines.join('\
-');
+  return lines.join(
+    '\
+',
+  );
 }
