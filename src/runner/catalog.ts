@@ -37,6 +37,27 @@ function loadExample(modulePath: string): ExampleRunner {
 }
 
 export const examples: Record<string, Example> = {
+  '325-multi-operation-atomicity': {
+    name: '325-multi-operation-atomicity',
+    description: 'Classic Stellar multi-operation transaction and atomicity safety',
+    run: loadExample('../examples/325-multi-operation-atomicity'),
+  },
+  '342-sep30-service-diagnostics': {
+    name: '342-sep30-service-diagnostics',
+    description: 'SEP-30 provider-specific reachability and health diagnostics',
+    run: loadExample('../examples/342-sep30-service-diagnostics'),
+  },
+  '343-transaction-precondition-inspector': {
+    name: '343-transaction-precondition-inspector',
+    description: 'Inspect time, ledger and sequence preconditions without submitting',
+    run: loadExample('../examples/343-transaction-precondition-inspector'),
+  },
+  '344-horizon-resumable-pagination': {
+    name: '344-horizon-resumable-pagination',
+    description: 'Horizon incremental collection scanner with durable cursor checkpoints',
+    run: loadExample('../examples/344-horizon-resumable-pagination'),
+  },
+
   '01-create-account': {
     name: '01-create-account',
     description: 'Generate keypairs and fund a test account using Friendbot',
