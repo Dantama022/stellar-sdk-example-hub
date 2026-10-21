@@ -37,6 +37,27 @@ function loadExample(modulePath: string): ExampleRunner {
 }
 
 export const examples: Record<string, Example> = {
+  '326-network-passphrase-safety': {
+    name: '326-network-passphrase-safety',
+    description: 'Explicit Stellar network preflight checks and signing protection',
+    run: loadExample('../examples/326-network-passphrase-safety'),
+  },
+  '327-fee-bump-relayer-safety': {
+    name: '327-fee-bump-relayer-safety',
+    description: 'Fee-bump sponsorship policy and relayer safeguards',
+    run: loadExample('../examples/327-fee-bump-relayer-safety'),
+  },
+  '328-soroban-storage-ttl': {
+    name: '328-soroban-storage-ttl',
+    description: 'Soroban ledger entry TTL inspection, extension and restoration',
+    run: loadExample('../examples/328-soroban-storage-ttl'),
+  },
+  '329-sep38-anchor-quotes': {
+    name: '329-sep38-anchor-quotes',
+    description: 'SEP-38 indicative pricing and validated firm anchor quotes',
+    run: loadExample('../examples/329-sep38-anchor-quotes'),
+  },
+
   '01-create-account': {
     name: '01-create-account',
     description: 'Generate keypairs and fund a test account using Friendbot',
