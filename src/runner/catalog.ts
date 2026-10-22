@@ -13392,4 +13392,10 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '262-sep9-sep12-customer-information-validation': {
+    name: '262-sep9-sep12-customer-information-validation',
+    description:
+      'Validate fictional SEP-9 customer fields locally and prepare the SEP-12 field shape without network submission',
+    run: loadExample('../examples/262-sep9-sep12-customer-information-validation'),
+  },
 };
