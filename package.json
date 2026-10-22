@@ -4,10 +4,9 @@
   "description": "🎓 Educational repository of runnable TypeScript examples demonstrating the Stellar & Soroban JavaScript SDK.",
   "main": "dist/runner.js",
   "bin": {
-    "stellar-api-inspector": "dist/src/stellar-api-inspector.js",
     "wasm-fingerprint": "dist/src/wasm-fingerprint.js",
     "wasm-features": "dist/src/wasm-features.js",
-    "wasm-names": "dist/src/wasm-names.js"
+    "wasm-names": "dist/src/wasm-names.js",
     "stellar-api-inspector": "dist/src/stellar-api-inspector.js"
   },
   "scripts": {

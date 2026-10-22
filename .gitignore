@@ -9,3 +9,5 @@ coverage/
 .agents/
 issue.md
 skills-lock.json
+.*-checkpoint.json
+.*-checkpoint.json.*.tmp
