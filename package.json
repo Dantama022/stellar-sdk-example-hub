@@ -11,8 +11,8 @@
     "stellar-api-inspector": "dist/src/stellar-api-inspector.js"
   },
   "scripts": {
-    "build": "node api.js && tsc",
-    "dev": "node api.js && ts-node src/runner.ts",
+    "build": "tsc",
+    "dev": "ts-node src/runner.ts",
     "run-example": "ts-node src/runner.ts",
     "validate:examples": "ts-node src/validate-examples.ts",
     "validate:examples:all": "ts-node src/validate-examples.ts --include-excluded",
