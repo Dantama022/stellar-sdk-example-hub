@@ -13392,4 +13392,24 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '262-transaction-submission-diagnostics': {
+    name: '262-transaction-submission-diagnostics',
+    description:
+      'Classify submission outcomes across local validation, network rejection, confirmed ledger result, and ambiguous timeout, then inspect fee, ledger, and operation-level results for a hash without resubmitting',
+    run: loadExample('../examples/262-transaction-submission-diagnostics'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Transaction hash (blank runs the offline demonstration of all outcome stages):',
+      },
+      {
+        type: 'input',
+        name: 'horizonUrl',
+        message: 'Horizon endpoint for hash lookup:',
+        default: 'https://horizon-testnet.stellar.org',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
 };

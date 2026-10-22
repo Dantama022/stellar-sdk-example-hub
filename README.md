@@ -4135,3 +4135,28 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Transaction Submission Diagnostics and Failure Analysis
+
+Classify what actually happened to a submission — local validation failure, network rejection, confirmed ledger result, or ambiguous timeout — and diagnose a confirmed or unknown transaction by hash, read-only:
+
+```bash
+npm run run-example 262-transaction-submission-diagnostics
+```
+
+Run the lookup mode against a known hash:
+
+```bash
+npm run run-example -- 262-transaction-submission-diagnostics <transaction-hash>
+```
+
+The hash can also be supplied through `TRANSACTION_HASH`, the Horizon endpoint through `HORIZON_URL`, and JSON output through `JSON_OUTPUT=true`. With no hash the example runs a fully offline demonstration that classifies all four outcome stages and prints recovery guidance for each.
+
+The example distinguishes the four ways a submission can end:
+
+- **`local_validation`** — the SDK rejected the transaction before any request was sent (bad hash/XDR shape, invalid sequence data). Nothing was broadcast, so rebuilding is always safe.
+- **`network_submission`** — Horizon or Soroban RPC rejected or failed the request without giving a ledger outcome. A definite rejection (HTTP 400 with result codes) is disposable and safe to correct-and-rebuild; a transport timeout is **not** and moves into the ambiguous bucket.
+- **`confirmed_ledger`** — the transaction hash has a terminal result on a closed ledger. The report surfaces the charged fee versus the requested maximum fee, the fee source (fee-bump or source account), the ledger sequence and close time, and every per-operation result code with the failing operation index highlighted.
+- **`ambiguous_outcome`** — the submission timed out or the connection dropped. The report holds a wait-and-lookup disposition: poll by hash, never blindly resubmit while the original envelope may still be pending, and only rebuild with a fresh sequence number after the polling window is exhausted.
+
+Every report carries structured fields (`stage`, `terminal`, `disposition`, `recoverySteps`, `safetyNotes`) plus human-readable rendering, so tooling and operators read the same diagnosis. Unknown result codes are preserved rather than rejected, and the flow never signs, submits, resubmits, requests secret keys, or prints secret material.
