@@ -6,6 +6,7 @@ import { setupWasmStackCommand } from '../cli/wasm-stack';
 import { setupWasmInitExprsCommand } from '../cli/wasm-init-exprs';
 import { setupWasmSliceCommand } from '../cli/wasm-slice';
 import { setupWasmBranchesCommand } from '../cli/wasm-branches';
+import { setupWasmTrapsCommand } from '../cli/wasm-traps';
 import { Command } from 'commander';
 
 const program = new Command();
@@ -19,4 +20,5 @@ program
   .addCommand(setupWasmInitExprsCommand())
   .addCommand(setupWasmSliceCommand())
   .addCommand(setupWasmBranchesCommand())
+  .addCommand(setupWasmTrapsCommand())
   .parse(process.argv);
