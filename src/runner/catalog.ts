@@ -40033,4 +40033,16 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '265-authorization-footprint-audit': {
+    name: '265-authorization-footprint-audit',
+    description:
+      'Simulate a Soroban invocation and audit its authorization entries: credential types, authorizers, invocation paths against an expected footprint, and signature expiration',
+    run: loadExample('../examples/265-authorization-footprint-audit'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Contract ID (C...):' },
+      { type: 'input', name: 'method', message: 'Function to invoke:' },
+      { type: 'input', name: 'sourceAccount', message: 'Source account (G...):' },
+      { type: 'input', name: 'args', message: 'Arguments as a JSON array (optional):', default: '' },
+    ],
+  },
 };
