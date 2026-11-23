@@ -4046,6 +4046,54 @@ Optional `--csv` output emits one row per floating-point instruction with column
 
 Unknown or unsupported opcodes are silently treated as non-float instructions and do not abort the analysis. No WASM instructions are ever executed.
 
+### WASM memory-alias analysis
+
+`wasm-memory-alias` reconstructs conservative effective-address expressions for supported WASM loads and stores and classifies pairs of accesses as `must-alias`, `may-alias`, `no-alias`, or `unknown`. It parses the code section only; the module is never instantiated, linked, or executed.
+
+```bash
+wasm-memory-alias src/contracts/sample/hello.wasm
+wasm-memory-alias src/contracts/sample/hello.wasm --json
+wasm-memory-alias src/contracts/sample/hello.wasm --csv
+wasm-memory-alias src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+# The same analysis is available through the bundled inspector:
+stellar-api-inspector wasm-memory-alias src/contracts/sample/hello.wasm --json
+```
+
+Each memory access records its function index, basic-block index, instruction index, byte offset, access type (`load`/`store`), access width, alignment, static memarg offset, memory index, loop context, and an address classification:
+
+| Address class | Meaning |
+|---|---|
+| **exact** | The dynamic address is a statically known `i32.const` value plus the static memarg offset. |
+| **range** | The dynamic address is bounded by a mask or remainder operation, giving a finite numeric range. |
+| **symbolic** | The address is a known base symbol (`local:N` or `global:N`) plus a known addend. |
+| **unknown** | The address cannot be reconstructed from the supported static patterns. |
+
+Pair classification uses access widths, so partially overlapping byte ranges are distinguished from identical ranges. The analyzer also reports read/read, read/write, and write/write relationships, potential read/write conflicts, per-function statistics, alias relationships grouped by function pair and by 512-byte memory region, and the functions with the largest aliasing access sets.
+
+Optional filters:
+
+```bash
+wasm-memory-alias contract.wasm --function 3
+wasm-memory-alias contract.wasm --type store
+wasm-memory-alias contract.wasm --min-address 0 --max-address 4096
+wasm-memory-alias contract.wasm --alias may-alias
+wasm-memory-alias contract.wasm --max-pairs 50000
+```
+
+`--json` emits normalized access and pair records plus aggregate statistics. `--csv` emits one row per analyzed pair with columns `functionA,blockA,instructionA,accessTypeA,functionB,blockB,instructionB,accessTypeB,memoryIndex,alias,relationship,sameBlock,sameFunction,overlappingBytes,potentialConflict,addressA,addressB,widthA,widthB`. Supplying a second artifact enables comparison mode, which reports added and removed alias relationships, changed classifications, and newly introduced potential read/write conflicts.
+
+#### Alias model and conservative assumptions
+
+- Address reconstruction is a small block-local abstract interpretation. A block starts with an empty abstract stack, so block parameters, values produced by calls, and values carried across block boundaries are not assumed.
+- Unknown instructions make the remainder of the current block unknown instead of guessing a stack shape. Values produced by calls are treated as unknown.
+- Pairs are compared within a function. Cross-function accesses are not related because each function has its own call context and no interprocedural value model is applied.
+- Symbolic addresses are compared only when they share the same base symbol. Different symbolic bases are reported as `unknown` because the runtime values may be equal.
+- Exact and range-bounded accesses are compared using their absolute byte intervals. Disjoint intervals are `no-alias`; identical ranges with the same width are `must-alias`; other overlaps are `may-alias`.
+- Accesses inside loops are flagged. Non-exact relationships inside loops are treated conservatively as `may-alias` or `unknown`; exact constants and disjoint bounded ranges remain safe to compare.
+- Read/write conflicts are reported whenever the analysis can establish a possible overlap, including `unknown` relationships where overlap cannot be excluded.
+- Pair comparison is limited by `--max-pairs` (default 200,000) to avoid uncontrolled quadratic growth on very large access sets. Truncation is deterministic and reported in `pairComparisonsTruncated`.
+- Results are deterministic for a given artifact and options. The analysis works completely offline and never executes contract code.
+
 ### WASM function complexity scoring
 
 `wasm-complexity` reads and validates the binary structure and code section; it never
