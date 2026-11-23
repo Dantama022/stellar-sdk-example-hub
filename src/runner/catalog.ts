@@ -40012,6 +40012,16 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'submit', message: 'Submit the signed transaction?', default: false },
     ],
   },
+  '262-sep7-uri-security-inspector': {
+    name: '262-sep7-uri-security-inspector',
+    description:
+      'Parse and validate a SEP-7 web+stellar: pay or tx request, inspect its XDR, network and callback, and report security findings without signing, submitting or fetching anything',
+    run: loadExample('../examples/262-sep7-uri-security-inspector'),
+    params: [
+      { type: 'input', name: 'uri', message: 'SEP-7 URI (blank for the demo request):', default: '' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
   '260-signer-recovery-readiness-audit': {
     name: '260-signer-recovery-readiness-audit',
     description:

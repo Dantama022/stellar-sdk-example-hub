@@ -4126,6 +4126,10 @@ cp test/fixtures/template.wasm test/fixtures/new-test.wasm
 
 See [setup, environment variables, sample output, checkpoint recovery and manual Testnet steps](examples/reliable-lifecycle-workflows.md).
 
+## SEP-7 URI Security Inspector
+
+`262-sep7-uri-security-inspector` parses a SEP-7 `web+stellar:pay` or `web+stellar:tx` request and reports every problem it finds, with a severity, before a wallet acts on it. It works offline and never signs, submits or opens the callback. See [examples/sep-7](examples/sep-7/README.md) for usage, checks and limitations.
+
 ## SEP-11 Txrep Transaction Representation
 
 [SEP-11](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0011.md) is the active Stellar Txrep specification: a human-readable representation of transaction-envelope XDR. It does **not** define an HTTP signing-service API, endpoint, method, request headers, or JSON response. A provider's signing API must be documented and treated as provider-specific; do not infer it from SEP-11.
