@@ -4140,3 +4140,13 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Soroban Authorization Footprint Audit
+
+Simulate a contract invocation and audit what it asks to be authorized: credential type and authorizer per entry, the invocation tree as root-to-leaf paths, differences from an expected footprint, and signature expiration where the credential carries one. Structural checks only; nothing is signed, verified or submitted.
+
+```bash
+CONTRACT_ID=C... METHOD=swap SOURCE_ACCOUNT=G... EXPECTED_CONTRACTS=C...,C... npm run run-example -- 265-authorization-footprint-audit
+```
+
+See [examples/soroban/authorization-footprint-audit.md](examples/soroban/authorization-footprint-audit.md).
