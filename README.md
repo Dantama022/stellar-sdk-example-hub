@@ -4140,3 +4140,39 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## SEP-10 Challenge Transaction Security Validator (`266-sep10-challenge-validator`)
+
+Validates SEP-10 challenge transaction XDR structure, sequence number (`0`), time bounds, `manageData` operations, and server signature against an independently trusted server signing key without signing or submitting.
+
+```bash
+npm run run-example -- 266-sep10-challenge-validator
+npm test -- --runInBand tests/sep10-challenge-validator.test.ts
+```
+
+## SEP-38 Quote Expiration & Exchange Rate Auditor (`267-sep38-quote-auditor`)
+
+Audits SEP-38 anchor quotes for schema validity, expiration thresholds, decimal-safe effective exchange rates, fee breakdowns, and directional multi-quote comparisons.
+
+```bash
+npm run run-example -- 267-sep38-quote-auditor
+npm test -- --runInBand tests/sep38-quote-auditor.test.ts
+```
+
+## SEP-24 Deposit & Withdrawal Transaction Reconciliation (`268-sep24-transaction-reconciliation`)
+
+Reconciles SEP-24 interactive deposit and withdrawal records against on-chain Stellar payment records, tracking anchor completion separately from on-chain verification.
+
+```bash
+npm run run-example -- 268-sep24-transaction-reconciliation
+npm test -- --runInBand tests/sep24-transaction-reconciliation.test.ts
+```
+
+## SEP-12 KYC Status & Customer Verification Auditor (`269-sep12-kyc-auditor`)
+
+Audits SEP-12 customer-level and field-level verification statuses, required/conditional fields, and status inconsistencies while redacting sensitive customer identifiers.
+
+```bash
+npm run run-example -- 269-sep12-kyc-auditor
+npm test -- --runInBand tests/sep12-kyc-auditor.test.ts
+```
