@@ -4123,6 +4123,7 @@ cp test/fixtures/template.wasm test/fixtures/new-test.wasm
 - [255: Asset trustline inspection, creation, update and safe removal](src/examples/255-asset-trustline-lifecycle.ts)
 - [256: Path discovery and bounded unsigned payment preparation](src/examples/256-path-payment-preparation.ts)
 - [257: Transaction history pagination and durable resumption](src/examples/257-transaction-history-checkpointing.ts)
+- [263: Soroban event replay and checkpoint recovery](src/examples/263-soroban-event-replay-checkpoint.ts): resumable, deduplicated replay with retention-gap reporting ([guide](examples/soroban/event-replay-checkpoint.md))
 
 See [setup, environment variables, sample output, checkpoint recovery and manual Testnet steps](examples/reliable-lifecycle-workflows.md).
 
