@@ -253,6 +253,22 @@
     {
       "match": "196-soroban-authorization-preparation",
       "reason": "Prepares and inspects Soroban authorization entries"
+    },
+    {
+      "match": "262-issuer-identity-audit",
+      "reason": "Requires live Horizon issuer data and an external stellar.toml document"
+    },
+    {
+      "match": "263-liquidity-pool-withdrawal-risk",
+      "reason": "Requires live Horizon liquidity pool and account data"
+    },
+    {
+      "match": "264-sequence-reconciliation",
+      "reason": "Requires live Horizon account sequence data"
+    },
+    {
+      "match": "265-authorization-revocation-impact",
+      "reason": "Requires live Horizon issuer and trustline data"
     }
   ]
 }

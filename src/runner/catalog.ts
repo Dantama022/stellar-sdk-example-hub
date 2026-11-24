@@ -40033,4 +40033,71 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '262-issuer-identity-audit': {
+    name: '262-issuer-identity-audit',
+    description:
+      'Audit an issuer home domain, stellar.toml metadata, public keys, service endpoints, and asset declarations without treating them as verified identity',
+    run: loadExample('../examples/262-issuer-identity-audit'),
+    params: [
+      { type: 'input', name: 'assetCode', message: 'Asset code:', default: 'USDC' },
+      { type: 'input', name: 'assetIssuer', message: 'Issuer account ID:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '263-liquidity-pool-withdrawal-risk': {
+    name: '263-liquidity-pool-withdrawal-risk',
+    description:
+      'Analyze liquidity pool reserve composition and estimate withdrawal amounts for a requested pool-share quantity',
+    run: loadExample('../examples/263-liquidity-pool-withdrawal-risk'),
+    params: [
+      { type: 'input', name: 'poolId', message: 'Liquidity pool ID:' },
+      {
+        type: 'input',
+        name: 'requestedShares',
+        message: 'Pool shares to withdraw:',
+        default: '1.0000000',
+      },
+      { type: 'input', name: 'accountId', message: 'Optional provider account ID:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '264-sequence-reconciliation': {
+    name: '264-sequence-reconciliation',
+    description:
+      'Reconcile locally tracked transaction sequences with Horizon and generate resubmission-safe recovery recommendations',
+    run: loadExample('../examples/264-sequence-reconciliation'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID:',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      { type: 'input', name: 'queueFile', message: 'Optional sequence queue JSON file:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '265-authorization-revocation-impact': {
+    name: '265-authorization-revocation-impact',
+    description:
+      'Inspect issuer authorization flags and trustlines, then project the impact of a proposed authorization change without submitting it',
+    run: loadExample('../examples/265-authorization-revocation-impact'),
+    params: [
+      { type: 'input', name: 'assetCode', message: 'Asset code:', default: 'USDC' },
+      { type: 'input', name: 'assetIssuer', message: 'Issuer account ID:' },
+      {
+        type: 'list',
+        name: 'proposedChange',
+        message: 'Proposed authorization change:',
+        choices: ['revoke', 'authorize', 'maintain_liabilities'],
+        default: 'revoke',
+      },
+      {
+        type: 'input',
+        name: 'targetAccounts',
+        message: 'Optional comma-separated target accounts:',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
 };
