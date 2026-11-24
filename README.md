@@ -493,6 +493,22 @@ The report checks configured signer-weight totals against low, medium, and high 
 cannot verify that signing keys are available or controlled, so threshold feasibility is not a
 guarantee that the account can be recovered.
 
+Read-only dependency, payment, lifecycle and key-derivation auditors:
+
+```bash
+npm run run-example -- 358-sponsorship-dependency-analyzer <account-id>
+npm run run-example -- 410-sep-31-payment-reconciliation-auditor
+npm run run-example -- 411-sep-6-transaction-lifecycle-monitor
+npm run run-example -- 412-sep-5-hd-wallet-derivation
+```
+
+Detailed setup, sample output and limitations live in
+`examples/sponsorship-dependency-analyzer/README.md`,
+`examples/sep-31/payment-reconciliation-auditor/README.md`,
+`examples/sep-6/transaction-lifecycle-monitor/README.md`, and
+`examples/wallets/sep-5-hd-wallet-derivation/README.md`. None of these examples
+submits a transaction or requires a secret key.
+
 Analyze current fee conditions and prepare an unsigned payment transaction without submitting it:
 
 ```bash

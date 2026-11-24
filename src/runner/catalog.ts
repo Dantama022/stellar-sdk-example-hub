@@ -40033,4 +40033,47 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '358-sponsorship-dependency-analyzer': {
+    name: '358-sponsorship-dependency-analyzer',
+    description:
+      'Build a read-only Stellar sponsorship dependency graph from Horizon account and ledger-entry data',
+    run: loadExample('../examples/358-sponsorship-dependency-analyzer'),
+    params: [
+      { type: 'input', name: 'accountId', message: 'Account ID to inspect (G...):' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '410-sep-31-payment-reconciliation-auditor': {
+    name: '410-sep-31-payment-reconciliation-auditor',
+    description:
+      'Reconcile SEP-31 requested, reported and delivered amounts, fees and on-chain settlement',
+    run: loadExample('../examples/410-sep-31-payment-reconciliation-auditor'),
+    params: [
+      { type: 'input', name: 'anchorUrl', message: 'SEP-31 anchor service URL:' },
+      { type: 'input', name: 'transactionId', message: 'SEP-31 transaction ID:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '411-sep-6-transaction-lifecycle-monitor': {
+    name: '411-sep-6-transaction-lifecycle-monitor',
+    description:
+      'Monitor SEP-6 deposit and withdrawal lifecycles with bounded polling and on-chain correlation',
+    run: loadExample('../examples/411-sep-6-transaction-lifecycle-monitor'),
+    params: [
+      { type: 'input', name: 'anchorUrl', message: 'SEP-6 anchor service URL:' },
+      { type: 'input', name: 'transactionId', message: 'Transaction ID:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '412-sep-5-hd-wallet-derivation': {
+    name: '412-sep-5-hd-wallet-derivation',
+    description:
+      'Validate a test-only BIP-39 mnemonic and derive SEP-5 Stellar public keys offline',
+    run: loadExample('../examples/412-sep-5-hd-wallet-derivation'),
+    params: [
+      { type: 'input', name: 'mnemonic', message: 'Test-only mnemonic:' },
+      { type: 'input', name: 'accountIndex', message: 'Account index:', default: '0' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
 };
