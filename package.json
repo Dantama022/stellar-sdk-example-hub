@@ -1,7 +1,7 @@
 {
   "name": "stellar-sdk-example-hub",
   "version": "1.0.0",
-  "description": "🎓 Educational repository of runnable TypeScript examples demonstrating the Stellar & Soroban JavaScript SDK.",
+  "description": "\ud83c\udf93 Educational repository of runnable TypeScript examples demonstrating the Stellar & Soroban JavaScript SDK.",
   "main": "dist/runner.js",
   "bin": {
     "wasm-fingerprint": "dist/src/wasm-fingerprint.js",
@@ -48,8 +48,7 @@
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "dotenv": "^16.4.5",
-    "inquirer": "^8.2.7",
-    "wasm-parser": "^1.0.1"
+    "inquirer": "^8.2.7"
   },
   "devDependencies": {
     "@types/inquirer": "^8.2.13",

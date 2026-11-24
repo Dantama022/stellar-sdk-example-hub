@@ -40033,4 +40033,10 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '262-muxed-account-routing': {
+    name: '262-muxed-account-routing',
+    description:
+      'Parse, validate, and route payments to muxed (M...) and regular (G...) Stellar accounts with recipient mapping and safety checks',
+    run: loadExample('../examples/262-muxed-account-routing'),
+  },
 };
