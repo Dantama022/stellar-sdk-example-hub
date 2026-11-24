@@ -4140,3 +4140,69 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Issuer identity, withdrawal risk, sequence reconciliation, and authorization impact — issues #615–#618
+
+These four read-only examples inspect Horizon state. They never sign or submit a
+transaction, and they do not treat published metadata or projected impact as
+independently verified facts.
+
+- **`262-issuer-identity-audit`** retrieves an issuer account, discovers its
+  `home_domain`, fetches `https://<domain>/.well-known/stellar.toml` with
+  timeout, response-size, HTTPS, and same-host redirect checks, then validates
+  organization metadata, public-key formats, service endpoints, and
+  `[[CURRENCIES]]` declarations.
+
+  ```bash
+  npm run run-example -- 262-issuer-identity-audit
+  ```
+
+  Configure `ASSET_CODE`, `ASSET_ISSUER`, `HORIZON_URL`, `TOML_TIMEOUT_MS`,
+  `TOML_MAX_BYTES`, and `JSON_OUTPUT=true` as needed. A valid document is an
+  issuer’s published claim, not proof of legal identity or asset safety.
+
+- **`263-liquidity-pool-withdrawal-risk`** retrieves a liquidity pool, reports
+  reserve composition and imbalance, and estimates withdrawal payouts with
+  decimal-safe integer arithmetic. An optional provider account supplies the
+  available pool-share balance, and an optional snapshot file enables reserve
+  comparison.
+
+  ```bash
+  LIQUIDITY_POOL_ID=<64-hex-id> WITHDRAWAL_SHARES=10 npm run run-example 263-liquidity-pool-withdrawal-risk
+  ```
+
+  Other settings include `ACCOUNT_ID`, `AVAILABLE_POOL_SHARES`,
+  `IMBALANCE_THRESHOLD_PERCENT`, `PREVIOUS_POOL_SNAPSHOT_FILE`, and
+  `JSON_OUTPUT=true`. Estimates use the retrieved snapshot and can change before
+  execution.
+
+- **`264-sequence-reconciliation`** compares the latest Horizon account sequence
+  with locally tracked transaction allocations, detects duplicates, gaps, stale
+  state, and unresolved submissions, and produces recovery guidance. It checks
+  transaction status before recommending any retry and never automatically
+  resubmits or discards a record.
+
+  ```bash
+  ACCOUNT_ID=<G...> SEQUENCE_QUEUE_FILE=./sequence-queue.json npm run run-example 264-sequence-reconciliation
+  ```
+
+  Set `CHECK_PENDING_STATUSES=true` to query unresolved hashes and
+  `JSON_OUTPUT=true` for JSON. The JSON file adapter is a demonstration;
+  production systems need durable, concurrency-safe allocation shared by every
+  worker.
+
+- **`265-authorization-revocation-impact`** inspects issuer authorization flags,
+  paginates every trustline for an asset, summarizes authorization states and
+  balances, and projects the accounts affected by a proposed `revoke`,
+  `authorize`, or `maintain_liabilities` change. Optional historical operations
+  show earlier authorization changes.
+
+  ```bash
+  ASSET_CODE=USDC ASSET_ISSUER=<G...> PROPOSED_AUTHORIZATION_CHANGE=revoke npm run run-example 265-authorization-revocation-impact
+  ```
+
+  Configure `TARGET_ACCOUNTS`, `MAX_TRUSTLINES`,
+  `INCLUDE_AUTHORIZATION_HISTORY=true`, `AUTHORIZATION_HISTORY_LIMIT`, and
+  `JSON_OUTPUT=true`. Revocation is not clawback: revoking authorization does
+  not automatically remove an existing asset balance, and projected impact is an
+  estimate based on retrieved state.
