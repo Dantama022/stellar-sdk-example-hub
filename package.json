@@ -75,6 +75,10 @@
       "**/tests/**/*.test.ts",
       "**/examples/soroban/event-schema-validation/**/*.test.ts"
     ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/examples/"
+    ],
     "transform": {
       "^.+\\.[tj]sx?$": [
         "ts-jest",
