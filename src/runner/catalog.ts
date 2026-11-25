@@ -40033,4 +40033,13 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '262-cross-network-compatibility': {
+    name: '262-cross-network-compatibility',
+    description:
+      'Test Soroban contract availability, interface consistency, and read-only simulation outcomes across multiple Stellar network environments',
+    run: loadExample('../examples/262-cross-network-compatibility'),
+    params: [
+      { type: 'input', name: 'functionName', message: 'Contract function to simulate:', default: 'hello' },
+    ],
+  },
 };
