@@ -13392,4 +13392,34 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '262-soroban-contract-function-interface-auditor': {
+    name: '262-soroban-contract-function-interface-auditor',
+    description:
+      'Inspect a deployed Soroban contract\'s exported functions and audit them against an expected interface definition',
+    run: loadExample('../examples/262-soroban-contract-function-interface-auditor'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID to audit (blank uses default Testnet token):',
+        default: '',
+      },
+      {
+        type: 'list',
+        name: 'network',
+        message: 'Stellar network:',
+        choices: [
+          { name: 'Testnet', value: 'testnet' },
+          { name: 'Mainnet', value: 'mainnet' },
+        ],
+        default: 'testnet',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON report?',
+        default: false,
+      },
+    ],
+  },
 };
