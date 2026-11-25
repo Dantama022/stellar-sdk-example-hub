@@ -1,0 +1,10 @@
+{
+  "name": "missing-metadata",
+  "description": "Transaction whose result is available but whose metadata was not exposed",
+  "networkPassphrase": "Test SDF Network ; September 2015",
+  "transactionHash": "29494443bc1bd2d4e1191ec036c0f57eefd1c9af52bd4ba0def04211097a0d04",
+  "ledger": 4321,
+  "envelopeXdr": "AAAAAgAAAADqSmxj4pxSCr71UHsTLsX5lUd2rr6+e5JCHuppFEbSLAAAAMgAAAAAAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAQAAAAD9FyQ4WqDHW2T7eM1gL6HZkf3r92sTxY7XAurINen2GAAAAAAAAAAABfXhAAAAAAAAAAAKAAAABmNvbmZpZwAAAAAAAQAAAAJ2MQAAAAAAAAAAAAA=",
+  "resultXdr": "AAAAAAAAAMgAAAAAAAAAAgAAAAAAAAABAAAAAAAAAAAAAAAKAAAAAAAAAAA=",
+  "resultMetaXdr": null
+}

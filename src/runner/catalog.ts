@@ -40033,4 +40033,29 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '262-transaction-result-inspector': {
+    name: '262-transaction-result-inspector',
+    description:
+      'Decode transaction result XDR and metadata from Horizon or Soroban RPC into a human-readable and JSON execution report',
+    run: loadExample('../examples/262-transaction-result-inspector'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Transaction hash (64 hex characters; blank uses TRANSACTION_HASH):',
+      },
+      {
+        type: 'list',
+        name: 'source',
+        message: 'Retrieval source:',
+        choices: [
+          { name: 'Auto (Horizon, then Soroban RPC)', value: 'auto' },
+          { name: 'Horizon', value: 'horizon' },
+          { name: 'Soroban RPC', value: 'rpc' },
+        ],
+        default: 'auto',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
 };
