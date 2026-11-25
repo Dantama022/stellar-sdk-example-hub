@@ -4140,3 +4140,12 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Soroban contract invocation toolkit
+
+Four standalone, read-only TypeScript examples (each with its own `package.json`, README and offline tests) cover preparing a Soroban call, understanding its result, diagnosing failures, and verifying the code that runs:
+
+- [Argument encoder and validator](examples/soroban/argument-encoding/README.md): validate inputs and encode them as `ScVal`/XDR, optionally guided by a contract specification.
+- [Return value decoder and type validator](examples/soroban/return-value-decoding/README.md): decode `ScVal` return values with exact big integers and check them against the expected type.
+- [Invocation error classification](examples/soroban/invocation-error-analysis/README.md): identify the failing stage, classify the error and get safe recovery guidance (never auto-retries).
+- [WASM provenance verification](examples/soroban/wasm-provenance-verification/README.md): hash a built contract, compare with a trusted checksum and the deployed executable.

@@ -74,6 +74,10 @@
     "testMatch": [
       "**/tests/**/*.test.ts"
     ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/examples/"
+    ],
     "transform": {
       "^.+\\.[tj]sx?$": [
         "ts-jest",
