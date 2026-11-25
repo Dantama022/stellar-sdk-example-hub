@@ -49,6 +49,7 @@
     "commander": "^11.1.0",
     "dotenv": "^16.4.5",
     "inquirer": "^8.2.7",
+    "toml": "^4.3.0",
     "wasm-parser": "^1.0.1"
   },
   "devDependencies": {
