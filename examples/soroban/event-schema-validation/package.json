@@ -1,0 +1,24 @@
+{
+  "name": "soroban-event-schema-validation",
+  "version": "1.0.0",
+  "description": "Soroban contract event schema validation and typed event decoding example",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node index.ts",
+    "test": "jest --testPathPattern=event-validation.test.ts"
+  },
+  "keywords": [
+    "stellar",
+    "soroban",
+    "events",
+    "schema-validation",
+    "xdr",
+    "scval"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "@stellar/stellar-sdk": ">=13.0.0"
+  }
+}
