@@ -4140,3 +4140,158 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Account Inflation Destination and Network Configuration Auditor (ISSUE-419)
+
+Stellar accounts can still carry an **inflation destination**, but the inflation
+mechanism itself was disabled at the protocol level (protocol 12). The field is
+legacy configuration: setting or retaining it does not enable inflation payments,
+and the network does not currently distribute inflation rewards.
+
+[src/examples/263-inflation-destination-audit.ts](src/examples/263-inflation-destination-audit.ts)
+retrieves an account from Horizon, inspects the legacy field, validates the
+destination with StrKey helpers, verifies that the endpoint's network matches the
+configured passphrase, optionally inspects historical `set_options` operations,
+and produces human-readable and JSON audit reports. Every report states
+explicitly that the mechanism is disabled.
+
+### Setup
+
+```bash
+npm ci
+```
+
+The example is read-only: it uses the lockfile-pinned `@stellar/stellar-sdk`
+13.3.0 Horizon client, needs no signing keys, and never submits a transaction.
+
+### Execution
+
+```bash
+# Audit an account's current configuration
+ACCOUNT_ID=<G...> npm run run-example 263-inflation-destination-audit
+
+# Also inspect recent account operations for inflation destination changes
+ACCOUNT_ID=<G...> AUDIT_HISTORY=true npm run run-example 263-inflation-destination-audit
+
+# Inspect the operations of one transaction instead
+ACCOUNT_ID=<G...> AUDIT_TRANSACTION_HASH=<64 hex characters> npm run run-example 263-inflation-destination-audit
+
+# JSON export
+ACCOUNT_ID=<G...> npm run run-example 263-inflation-destination-audit --json
+```
+
+Configuration is read from arguments, then environment variables:
+
+| Setting | Environment variable | Default |
+| --- | --- | --- |
+| Account public key | `ACCOUNT_ID` | required |
+| Horizon endpoint | `HORIZON_URL` | `https://horizon-testnet.stellar.org` |
+| Network passphrase | `NETWORK_PASSPHRASE` | Testnet |
+| Inspect account history | `AUDIT_HISTORY` (`true`/`false`) | `false` |
+| Inspect one transaction | `AUDIT_TRANSACTION_HASH` | unset |
+
+Endpoint configuration (`horizonUrl`) is kept separate from account data in both
+the report and the JSON export.
+
+### Sample output
+
+The destination and operation records below come from the deterministic test
+fixtures; a live run prints the same fields for the requested account.
+
+```text
+========== ACCOUNT CONFIGURATION AUDIT ==========
+Account public key : GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7
+Network            : testnet (Test SDF Network ; September 2015)
+Horizon endpoint   : https://horizon-testnet.stellar.org
+Account exists     : yes
+Sequence number    : 1070000000000000000
+Home domain        : legacy.example.com
+Subentries         : 2
+Last modified      : ledger 4321
+
+Legacy inflation destination
+  Field returned         : yes
+  Configured destination : GBTL47RTFR5EKMZSXWOQU735WBK7LRPPDIDK3JTNTCZZ7NUBBRDTVSK2
+  Destination valid      : yes
+  Destination format     : ed25519-account
+  Operational inflation  : no (legacy configuration only; the mechanism is disabled)
+  Explanation            : The account still carries a legacy inflation destination. This is historical configuration; it does not route payments or entitle the destination to rewards.
+  Legacy notice          : The Stellar inflation mechanism has been disabled since protocol 12. An inflation destination is a historical account field only: configuring or retaining one does not enable inflation payments, and the network does not currently distribute inflation rewards. Do not configure inflation destinations for new applications.
+
+Network configuration
+  Configured passphrase  : Test SDF Network ; September 2015
+  Configured network     : testnet
+  Endpoint passphrase    : Test SDF Network ; September 2015
+  Endpoint network       : testnet
+  Verified               : yes
+  Mismatch               : no
+
+Historical configuration changes
+  Status                 : retrieved
+  Scope                  : recent account operations
+  Operations examined    : 5
+  Configuration changes  : 2
+    - 2020-01-01T00:00:00Z ledger=90 tx=4444444444444444444444444444444444444444444444444444444444444444
+        Set legacy inflation destination to GBTL47RTFR5EKMZSXWOQU735WBK7LRPPDIDK3JTNTCZZ7NUBBRDTVSK2 (valid ed25519 account).
+    - 2020-02-01T00:00:00Z ledger=120 tx=2222222222222222222222222222222222222222222222222222222222222222
+        Set legacy inflation destination to GAFVCOWZWSJEAFOKBEBO2B4QITJ2YXN6YIYG6BUURQINVDVW4OPS3OL6 (valid ed25519 account).
+
+Audit result
+  Overall status         : WARNING
+  Warnings:
+    - [inflationDestination] Legacy inflation destination is configured on this account. Inflation is disabled; this configuration does not create rewards or payment routing.
+  Unavailable:
+    (none)
+=================================================
+```
+
+JSON output uses the same structure: `accountId`, `horizonUrl`, `network`,
+`networkPassphrase`, `account`, `inflationDestination`, `networkCheck`,
+`history`, `legacyNotice`, `status`, `warnings`, and `unavailable`.
+
+### Audit decisions the example makes
+
+- A **missing** inflation destination field is normal and is reported as "not
+  applicable", never as unavailable data.
+- A field that is returned with a `null` value is distinguished from a field
+  that is absent (`fieldReturned` vs `configured`).
+- A destination is validated with `StrKey.isValidEd25519PublicKey`. Muxed `M...`
+  addresses are valid StrKeys but are rejected because the field requires an
+  ed25519 `G...` account.
+- A mismatched endpoint/network passphrase is reported as a warning and makes
+  the overall status at least `WARNING`; account data is never presented as
+  belonging to the configured network when the endpoint disagrees.
+- History inspection is opt-in. `empty` (operations retrieved, no destination
+  changes) and `unavailable` (retrieval failed) are reported separately, and
+  older history beyond the retrieved window is never inferred.
+- Overall status is `OK`, `WARNING`, `ERROR`, or `NOT FOUND`; the legacy field
+  being present yields `WARNING`, an invalid stored destination yields `ERROR`.
+
+### Limitations
+
+- Read-only audit; it does not and cannot set an inflation destination, and it
+  does not suggest doing so.
+- Horizon is the only data source. Account and operation retention limits mean
+  older history may not be retrievable; the report says so instead of guessing.
+- The historical search only recognises `set_options` operations that carry an
+  `inflation_dest`/`inflation_destination` field. Horizon's current operation
+  schema no longer documents this field, so records are read defensively.
+- Network verification compares the configured passphrase with the endpoint's
+  `network_passphrase`; it does not prove that a later transaction is valid for
+  that network.
+- Inflation payout behaviour is not simulated or replayed, because the
+  mechanism is disabled.
+
+### Tests
+
+```bash
+npm test -- --runInBand tests/inflation-destination-audit.test.ts
+```
+
+The suite is offline and mocks the Horizon provider. Deterministic fixtures live
+in `tests/fixtures/inflation-destination-audit/` and cover a configured
+destination, no destination, a null field, an invalid destination, a malformed
+account response, and mixed operation history. Tests cover retrieval, missing
+accounts, request failures, destination validation, network mismatch, historical
+changes, empty and unavailable history, report rendering, JSON serialization, and
+the legacy-functionality warning.
