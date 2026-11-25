@@ -40033,4 +40033,21 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '263-inflation-destination-audit': {
+    name: '263-inflation-destination-audit',
+    description:
+      'Audit a legacy inflation destination and network configuration, including historical set_options changes',
+    run: loadExample('../examples/263-inflation-destination-audit'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Stellar account public key (G...):',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      { type: 'confirm', name: 'includeHistory', message: 'Inspect recent account history?', default: false },
+      { type: 'input', name: 'transactionHash', message: 'Optional transaction hash to inspect:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
 };
