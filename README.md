@@ -4140,3 +4140,170 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Transaction Result and Metadata Inspector (ISSUE-420)
+
+A transaction being included in a ledger, and even a `txSuccess` transaction
+result, does not prove that every application-level outcome you expected
+happened. Operations can succeed while returning an unexpected value, a Soroban
+contract can return an error ScVal, and a transaction-level rejection produces
+no operation results at all.
+
+[src/examples/262-transaction-result-inspector.ts](src/examples/262-transaction-result-inspector.ts)
+retrieves a transaction from Horizon or Soroban RPC, decodes its result XDR and
+`TransactionMeta`, normalizes Soroban values, and produces a human-readable and
+JSON execution report. Original XDR strings are preserved on the report.
+
+The example is split into four independent stages: retrieval (Horizon/RPC
+providers), decoding (result XDR, metadata, envelope), normalization (JSON-safe
+ScVal values, ledger change summaries, diagnostic events), and reporting.
+
+### Setup
+
+The example uses the `stellar-sdk-v16` alias (`@stellar/stellar-sdk` 16.2.0), which
+is the version in this repository that understands `TransactionMeta` versions 0
+through 4. No credentials, keys, or submissions are needed; retrieval is
+read-only.
+
+```bash
+npm ci
+```
+
+### Execution
+
+```bash
+# Inspect a transaction through Horizon, falling back to Soroban RPC
+TRANSACTION_HASH=<64 hex characters> npm run run-example 262-transaction-result-inspector
+
+# Choose the source explicitly
+TRANSACTION_HASH=<hash> RESULT_INSPECTOR_SOURCE=rpc npm run run-example 262-transaction-result-inspector
+
+# JSON export (also available through the interactive runner prompt)
+TRANSACTION_HASH=<hash> npm run run-example 262-transaction-result-inspector --json
+```
+
+Configuration is read from arguments, then environment variables:
+
+| Setting | Environment variable | Default |
+| --- | --- | --- |
+| Transaction hash | `TRANSACTION_HASH` | required |
+| Retrieval source (`auto`, `horizon`, `rpc`) | `RESULT_INSPECTOR_SOURCE` | `auto` |
+| Horizon endpoint | `HORIZON_URL` | `https://horizon-testnet.stellar.org` |
+| Soroban RPC endpoint | `SOROBAN_RPC_URL` | `https://soroban-testnet.stellar.org` |
+| Network passphrase | `NETWORK_PASSPHRASE` | Testnet |
+
+In `auto` mode Horizon is queried first; when the hash is not found there, or the
+request fails, Soroban RPC is tried. A transport failure is reported as a
+retrieval failure, never as a transaction failure.
+
+### Sample output
+
+The XDR values below are truncated; the report always prints the full base64.
+
+```text
+========== TRANSACTION EXECUTION REPORT ==========
+Transaction hash : ac485cbf9193e9e9191d13b44bc6c3da80dd975b8b22b111613aa024b0b2b6b4
+Network          : testnet (Test SDF Network ; September 2015)
+Retrieval        : horizon @ https://horizon-testnet.stellar.org
+Ledger           : 4321
+Included         : included, provider reports success
+Transaction type : soroban
+Source account   : GDVEU3DD4KOFECV66VIHWEZOYX4ZKR3WV27L464SIIPOU2IUI3JCZA57
+
+Overall result
+  Result status      : decoded
+  Result code        : txSuccess
+  Fee charged        : 1500 stroops
+  Operation results  :
+    [0] invokeHostFunction SUCCESS (outer=opInner, code=invokeHostFunctionSuccess)
+  Note               : inclusion and txSuccess do not prove that an application-level business outcome was achieved; inspect operation results and return values.
+
+Transaction metadata
+  Status             : decoded
+  Metadata version   : 3
+  Ledger changes     : 2
+  Change summary     : created=1, updated=1
+    - updated account: account GDVEU3DD4KOFECV66VIHWEZOYX4ZKR3WV27L464SIIPOU2IUI3JCZA57
+    - created contractData: contract CABQGAYDAMBQGAYDAMBQGAYDAMBQGAYDAMBQGAYDAMBQGAYDAMBQGCK3 key="counter"
+
+Soroban execution
+  Applicable         : yes
+  Return value       : scvI64 "42"
+  Contract events    : 1
+  Diagnostic events  : 1
+    [0] diagnostic (success) topics=["fn_call", "increment"]
+        data: "invoked"
+  Execution failure details: none detected
+  Prepared resource limits (from the submitted envelope, not actual usage):
+    Instructions       : 1000000
+    Disk read bytes    : 2000
+    Write bytes        : 3000
+    Resource fee       : 1200 stroops
+    Footprint          : 1 read-only, 1 read-write
+
+Raw XDR (retained for further inspection)
+  Envelope XDR       : AAAAAgAAAADqSmxj...
+  Result XDR         : AAAAAAAABdwAAAA...
+  Metadata XDR       : AAAAAwAAAAAAAA...
+```
+
+A failed Soroban invocation additionally lists each failure, for example
+`Operation [0] invokeHostFunction failed with invokeHostFunctionTrapped:
+The Soroban host trapped while executing the contract call.` together with any
+`ContractError(code=N)` diagnostic event.
+
+JSON output keeps the same structure (`transactionHash`, `network`,
+`retrieval`, `result`, `metadata`, `soroban`, `unavailable`, `warnings`), retains
+`envelopeXdr`, `resultXdr`, and `resultMetaXdr`, and converts bigints, buffers, and
+maps into JSON-safe values.
+
+### What the report distinguishes
+
+- `txSuccess`/`txFailed` and per-operation result codes, including nested
+  `opInner` results.
+- Transaction-level validation failures, which are reported as
+  `Failure scope: transaction-level` with no operation results rather than as
+  failed operations.
+- Metadata that is unavailable, malformed, or a version newer than the SDK
+  supports (`unsupported`, with the version tag reported).
+- Metadata that decoded successfully but contains no ledger changes, which is
+  not the same as metadata being unavailable.
+- Soroban return values (`scvError` values are surfaced as errors), contract
+  events, diagnostic events, and prepared resource limits from the envelope.
+- Fields that are unavailable or unsupported, listed explicitly under
+  `Unavailable or unsupported fields`.
+
+### Limitations
+
+- Retrieve-only: the example never signs or submits a transaction.
+- Horizon returns `result_xdr` and `result_meta_xdr`; Soroban RPC returns result
+  and metadata XDR for its retention window. Older history or pruned metadata is
+  reported as unavailable instead of being reconstructed.
+- Actual Soroban resource consumption is not exposed by transaction results, so
+  the report labels the envelope's declared limits as prepared limits.
+- Contract error codes are shown numerically; mapping them to a contract's error
+  enum requires the contract specification.
+- Metadata versions newer than the installed SDK are reported, not decoded. The
+  version tag is read from the XDR union discriminant only for classification;
+  all decoding uses SDK XDR types.
+- `state` and `restored` ledger changes are summarized where present, but the
+  example does not replay ledger state.
+
+### Tests
+
+```bash
+npm test -- --runInBand tests/transaction-result-inspector.test.ts
+```
+
+The suite is fully offline. Deterministic fixtures live in
+`tests/fixtures/transaction-result/` and are regenerated with:
+
+```bash
+node tests/fixtures/transaction-result/generate-fixtures.js
+```
+
+Coverage includes successful and failed classic transactions, mixed
+multi-operation results, successful and failed Soroban invocations, scalar and
+map return values, contract and diagnostic events, metadata versions 0 through 4,
+unsupported and malformed metadata, missing metadata, missing transactions,
+endpoint failures, hash validation, report rendering, and JSON serialization.
