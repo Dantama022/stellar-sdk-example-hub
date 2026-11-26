@@ -4184,3 +4184,11 @@ npm test -- --runInBand tests/sponsorship-reserve-audit.test.ts
 ```
 
 > **Note:** This audit does not modify sponsorship relationships or guarantee transaction affordability.
+## Soroban contract invocation toolkit
+
+Four standalone, read-only TypeScript examples (each with its own `package.json`, README and offline tests) cover preparing a Soroban call, understanding its result, diagnosing failures, and verifying the code that runs:
+
+- [Argument encoder and validator](examples/soroban/argument-encoding/README.md): validate inputs and encode them as `ScVal`/XDR, optionally guided by a contract specification.
+- [Return value decoder and type validator](examples/soroban/return-value-decoding/README.md): decode `ScVal` return values with exact big integers and check them against the expected type.
+- [Invocation error classification](examples/soroban/invocation-error-analysis/README.md): identify the failing stage, classify the error and get safe recovery guidance (never auto-retries).
+- [WASM provenance verification](examples/soroban/wasm-provenance-verification/README.md): hash a built contract, compare with a trusted checksum and the deployed executable.
