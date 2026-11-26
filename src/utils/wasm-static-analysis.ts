@@ -2889,11 +2889,8 @@ export interface WasmStackTypesReport {
 // Instruction type signatures: [inputTypes, outputTypes]
 interface TypeSig { in: WasmValType[]; out: WasmValType[] }
 
-// Module-level shorthand constants for common value types used in stack analysis
+// Module-level shorthand constant for common value types used in stack analysis
 const _i32: WasmValType = 'i32';
-const _i64: WasmValType = 'i64';
-const _f32: WasmValType = 'f32';
-const _f64: WasmValType = 'f64';
 
 function valType(byte: number): WasmValType {
   const map: Record<number, WasmValType> = {
@@ -2930,8 +2927,6 @@ function parseFunctionSection(sec: Section | undefined): number[] {
   for (let i = 0; i < count; i++) indices.push(r.varuint32());
   return indices;
 }
-
-type StackState = WasmValType[] | 'polymorphic'; // polymorphic = unreachable
 
 function typeSigFor(opcode: number, typeIdx: number, types: Array<{ params: WasmValType[]; results: WasmValType[] }>, funcTypeIndices: number[], importedFunctions: number): TypeSig {
   const i32: WasmValType = 'i32'; const i64: WasmValType = 'i64';
@@ -3011,7 +3006,6 @@ function opcodeNameFor(opcode: number): string {
 
 export function analyzeStackTypes(file: string): WasmStackTypesReport {
   const sections = loadSections(file);
-  const importSec = sections.find((s) => s.id === 2);
   const typeSec = sections.find((s) => s.id === 1);
   const funcSec = sections.find((s) => s.id === 3);
   const codeSec = sections.find((s) => s.id === 10);
@@ -3756,6 +3750,1216 @@ export function compareLiteralsReports(beforeFile: string, afterFile: string, op
       literalsInNewFunctions: newFunctionLiterals,
       totalOccurrenceDelta: after.statistics.totalLiteralOccurrences - before.statistics.totalLiteralOccurrences,
       uniqueLiteralsDelta: after.statistics.uniqueLiterals - before.statistics.uniqueLiterals,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// ISSUE-269: Offline WASM numeric conversion analysis
+// ---------------------------------------------------------------------------
+
+export type NumericConversionCategory =
+  | 'integer-extension'
+  | 'integer-truncation'
+  | 'sign-extension'
+  | 'int-to-float'
+  | 'float-to-int'
+  | 'float-widening'
+  | 'float-narrowing'
+  | 'reinterpretation'
+  | 'saturating-conversion';
+
+export const NUMERIC_CONVERSION_CATEGORIES: NumericConversionCategory[] = [
+  'integer-extension',
+  'integer-truncation',
+  'sign-extension',
+  'int-to-float',
+  'float-to-int',
+  'float-widening',
+  'float-narrowing',
+  'reinterpretation',
+  'saturating-conversion',
+];
+
+export type NumericValueType = 'i32' | 'i64' | 'f32' | 'f64';
+
+export type NumericSignedness = 'signed' | 'unsigned' | 'none';
+
+export type NumericDiagnosticCategory =
+  'lossy' | 'representation-change' | 'widening' | 'reinterpretation';
+
+export interface NumericConversionRecord {
+  functionIndex: number;
+  blockIndex: number;
+  instructionIndex: number;
+  instructionOffset: number;
+  opcode: string;
+  sourceType: NumericValueType;
+  destinationType: NumericValueType;
+  category: NumericConversionCategory;
+  sourceSignedness: NumericSignedness;
+  destinationSignedness: NumericSignedness;
+  widening: boolean;
+  narrowing: boolean;
+  mayDiscardHighOrderBits: boolean;
+  mayLosePrecision: boolean;
+  exact: boolean;
+  trapping: boolean;
+  saturating: boolean;
+  diagnostics: NumericDiagnosticCategory[];
+}
+
+export interface NumericFunctionSummary {
+  functionIndex: number;
+  totalInstructions: number;
+  totalConversions: number;
+  conversionDensity: number;
+  categoryCounts: Record<NumericConversionCategory, number>;
+  narrowingConversions: number;
+  wideningConversions: number;
+  precisionLossConversions: number;
+  highOrderBitDiscardConversions: number;
+  signednessSensitiveConversions: number;
+  trappingConversions: number;
+  saturatingConversions: number;
+  chainCount: number;
+  suspiciousChainCount: number;
+}
+
+export interface NumericConversionChain {
+  functionIndex: number;
+  blockIndex: number;
+  startInstructionIndex: number;
+  endInstructionIndex: number;
+  length: number;
+  opcodes: string[];
+  categories: NumericConversionCategory[];
+  patterns: string[];
+  suspicious: boolean;
+  redundant: boolean;
+  precisionLoss: boolean;
+  reasons: string[];
+}
+
+export interface WasmNumericConversionsReport {
+  file: string;
+  valid: true;
+  records: NumericConversionRecord[];
+  functions: NumericFunctionSummary[];
+  chains: NumericConversionChain[];
+  statistics: {
+    totalNumericConversions: number;
+    conversionsByCategory: Record<NumericConversionCategory, number>;
+    narrowingConversions: number;
+    wideningConversions: number;
+    potentialPrecisionLossConversions: number;
+    highOrderBitDiscardConversions: number;
+    signednessSensitiveConversions: number;
+    trappingConversions: number;
+    saturatingConversions: number;
+    conversionChainCount: number;
+    suspiciousChainCount: number;
+    redundantChainCount: number;
+    functionsWithConversions: number;
+    highestConversionDensityFunction: { functionIndex: number; conversionDensity: number } | null;
+    highestConversionDensityFunctions: Array<{
+      functionIndex: number;
+      conversionDensity: number;
+      totalConversions: number;
+    }>;
+  };
+  warnings: string[];
+}
+
+interface NumericOpcodeInfo {
+  opcode: string;
+  sourceType: NumericValueType;
+  destinationType: NumericValueType;
+  category: NumericConversionCategory;
+  sourceSignedness: NumericSignedness;
+  destinationSignedness: NumericSignedness;
+  trapping: boolean;
+  saturating: boolean;
+  exact: boolean;
+  mayDiscardHighOrderBits: boolean;
+  mayLosePrecision: boolean;
+}
+
+const SINGLE_BYTE_NUMERIC_CONVERSIONS: Record<number, NumericOpcodeInfo> = {
+  // Integer truncation (narrowing, may discard high-order bits).
+  0xa7: {
+    opcode: 'i32.wrap_i64',
+    sourceType: 'i64',
+    destinationType: 'i32',
+    category: 'integer-truncation',
+    sourceSignedness: 'none',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: true,
+    mayLosePrecision: true,
+  },
+  // Trapping floating-point-to-integer conversions.
+  0xa8: {
+    opcode: 'i32.trunc_f32_s',
+    sourceType: 'f32',
+    destinationType: 'i32',
+    category: 'float-to-int',
+    sourceSignedness: 'none',
+    destinationSignedness: 'signed',
+    trapping: true,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xa9: {
+    opcode: 'i32.trunc_f32_u',
+    sourceType: 'f32',
+    destinationType: 'i32',
+    category: 'float-to-int',
+    sourceSignedness: 'none',
+    destinationSignedness: 'unsigned',
+    trapping: true,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xaa: {
+    opcode: 'i32.trunc_f64_s',
+    sourceType: 'f64',
+    destinationType: 'i32',
+    category: 'float-to-int',
+    sourceSignedness: 'none',
+    destinationSignedness: 'signed',
+    trapping: true,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xab: {
+    opcode: 'i32.trunc_f64_u',
+    sourceType: 'f64',
+    destinationType: 'i32',
+    category: 'float-to-int',
+    sourceSignedness: 'none',
+    destinationSignedness: 'unsigned',
+    trapping: true,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xae: {
+    opcode: 'i64.trunc_f32_s',
+    sourceType: 'f32',
+    destinationType: 'i64',
+    category: 'float-to-int',
+    sourceSignedness: 'none',
+    destinationSignedness: 'signed',
+    trapping: true,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xaf: {
+    opcode: 'i64.trunc_f32_u',
+    sourceType: 'f32',
+    destinationType: 'i64',
+    category: 'float-to-int',
+    sourceSignedness: 'none',
+    destinationSignedness: 'unsigned',
+    trapping: true,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xb0: {
+    opcode: 'i64.trunc_f64_s',
+    sourceType: 'f64',
+    destinationType: 'i64',
+    category: 'float-to-int',
+    sourceSignedness: 'none',
+    destinationSignedness: 'signed',
+    trapping: true,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xb1: {
+    opcode: 'i64.trunc_f64_u',
+    sourceType: 'f64',
+    destinationType: 'i64',
+    category: 'float-to-int',
+    sourceSignedness: 'none',
+    destinationSignedness: 'unsigned',
+    trapping: true,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  // Integer extension (value-preserving widening).
+  0xac: {
+    opcode: 'i64.extend_i32_s',
+    sourceType: 'i32',
+    destinationType: 'i64',
+    category: 'integer-extension',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: false,
+    exact: true,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+  0xad: {
+    opcode: 'i64.extend_i32_u',
+    sourceType: 'i32',
+    destinationType: 'i64',
+    category: 'integer-extension',
+    sourceSignedness: 'unsigned',
+    destinationSignedness: 'unsigned',
+    trapping: false,
+    saturating: false,
+    exact: true,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+  // Integer-to-floating-point conversions.
+  0xb2: {
+    opcode: 'f32.convert_i32_s',
+    sourceType: 'i32',
+    destinationType: 'f32',
+    category: 'int-to-float',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xb3: {
+    opcode: 'f32.convert_i32_u',
+    sourceType: 'i32',
+    destinationType: 'f32',
+    category: 'int-to-float',
+    sourceSignedness: 'unsigned',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xb4: {
+    opcode: 'f32.convert_i64_s',
+    sourceType: 'i64',
+    destinationType: 'f32',
+    category: 'int-to-float',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xb5: {
+    opcode: 'f32.convert_i64_u',
+    sourceType: 'i64',
+    destinationType: 'f32',
+    category: 'int-to-float',
+    sourceSignedness: 'unsigned',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xb7: {
+    opcode: 'f64.convert_i32_s',
+    sourceType: 'i32',
+    destinationType: 'f64',
+    category: 'int-to-float',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: true,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+  0xb8: {
+    opcode: 'f64.convert_i32_u',
+    sourceType: 'i32',
+    destinationType: 'f64',
+    category: 'int-to-float',
+    sourceSignedness: 'unsigned',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: true,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+  0xb9: {
+    opcode: 'f64.convert_i64_s',
+    sourceType: 'i64',
+    destinationType: 'f64',
+    category: 'int-to-float',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xba: {
+    opcode: 'f64.convert_i64_u',
+    sourceType: 'i64',
+    destinationType: 'f64',
+    category: 'int-to-float',
+    sourceSignedness: 'unsigned',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  // Floating-point narrowing / widening.
+  0xb6: {
+    opcode: 'f32.demote_f64',
+    sourceType: 'f64',
+    destinationType: 'f32',
+    category: 'float-narrowing',
+    sourceSignedness: 'none',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0xbb: {
+    opcode: 'f64.promote_f32',
+    sourceType: 'f32',
+    destinationType: 'f64',
+    category: 'float-widening',
+    sourceSignedness: 'none',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: true,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+  // Numeric sign extension.
+  0xc0: {
+    opcode: 'i32.extend8_s',
+    sourceType: 'i32',
+    destinationType: 'i32',
+    category: 'sign-extension',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: true,
+    mayLosePrecision: true,
+  },
+  0xc1: {
+    opcode: 'i32.extend16_s',
+    sourceType: 'i32',
+    destinationType: 'i32',
+    category: 'sign-extension',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: true,
+    mayLosePrecision: true,
+  },
+  0xc2: {
+    opcode: 'i64.extend8_s',
+    sourceType: 'i64',
+    destinationType: 'i64',
+    category: 'sign-extension',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: true,
+    mayLosePrecision: true,
+  },
+  0xc3: {
+    opcode: 'i64.extend16_s',
+    sourceType: 'i64',
+    destinationType: 'i64',
+    category: 'sign-extension',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: true,
+    mayLosePrecision: true,
+  },
+  0xc4: {
+    opcode: 'i64.extend32_s',
+    sourceType: 'i64',
+    destinationType: 'i64',
+    category: 'sign-extension',
+    sourceSignedness: 'signed',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: true,
+    mayLosePrecision: true,
+  },
+  // Bit-pattern reinterpretation.
+  0xbc: {
+    opcode: 'i32.reinterpret_f32',
+    sourceType: 'f32',
+    destinationType: 'i32',
+    category: 'reinterpretation',
+    sourceSignedness: 'none',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+  0xbd: {
+    opcode: 'i64.reinterpret_f64',
+    sourceType: 'f64',
+    destinationType: 'i64',
+    category: 'reinterpretation',
+    sourceSignedness: 'none',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+  0xbe: {
+    opcode: 'f32.reinterpret_i32',
+    sourceType: 'i32',
+    destinationType: 'f32',
+    category: 'reinterpretation',
+    sourceSignedness: 'none',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+  0xbf: {
+    opcode: 'f64.reinterpret_i64',
+    sourceType: 'i64',
+    destinationType: 'f64',
+    category: 'reinterpretation',
+    sourceSignedness: 'none',
+    destinationSignedness: 'none',
+    trapping: false,
+    saturating: false,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: false,
+  },
+};
+
+const SATURATING_NUMERIC_CONVERSIONS: Record<number, NumericOpcodeInfo> = {
+  0x00: {
+    opcode: 'i32.trunc_sat_f32_s',
+    sourceType: 'f32',
+    destinationType: 'i32',
+    category: 'saturating-conversion',
+    sourceSignedness: 'none',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: true,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0x01: {
+    opcode: 'i32.trunc_sat_f32_u',
+    sourceType: 'f32',
+    destinationType: 'i32',
+    category: 'saturating-conversion',
+    sourceSignedness: 'none',
+    destinationSignedness: 'unsigned',
+    trapping: false,
+    saturating: true,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0x02: {
+    opcode: 'i32.trunc_sat_f64_s',
+    sourceType: 'f64',
+    destinationType: 'i32',
+    category: 'saturating-conversion',
+    sourceSignedness: 'none',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: true,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0x03: {
+    opcode: 'i32.trunc_sat_f64_u',
+    sourceType: 'f64',
+    destinationType: 'i32',
+    category: 'saturating-conversion',
+    sourceSignedness: 'none',
+    destinationSignedness: 'unsigned',
+    trapping: false,
+    saturating: true,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0x04: {
+    opcode: 'i64.trunc_sat_f32_s',
+    sourceType: 'f32',
+    destinationType: 'i64',
+    category: 'saturating-conversion',
+    sourceSignedness: 'none',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: true,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0x05: {
+    opcode: 'i64.trunc_sat_f32_u',
+    sourceType: 'f32',
+    destinationType: 'i64',
+    category: 'saturating-conversion',
+    sourceSignedness: 'none',
+    destinationSignedness: 'unsigned',
+    trapping: false,
+    saturating: true,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0x06: {
+    opcode: 'i64.trunc_sat_f64_s',
+    sourceType: 'f64',
+    destinationType: 'i64',
+    category: 'saturating-conversion',
+    sourceSignedness: 'none',
+    destinationSignedness: 'signed',
+    trapping: false,
+    saturating: true,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+  0x07: {
+    opcode: 'i64.trunc_sat_f64_u',
+    sourceType: 'f64',
+    destinationType: 'i64',
+    category: 'saturating-conversion',
+    sourceSignedness: 'none',
+    destinationSignedness: 'unsigned',
+    trapping: false,
+    saturating: true,
+    exact: false,
+    mayDiscardHighOrderBits: false,
+    mayLosePrecision: true,
+  },
+};
+
+function zeroNumericCategoryCounts(): Record<NumericConversionCategory, number> {
+  return {
+    'integer-extension': 0,
+    'integer-truncation': 0,
+    'sign-extension': 0,
+    'int-to-float': 0,
+    'float-to-int': 0,
+    'float-widening': 0,
+    'float-narrowing': 0,
+    reinterpretation: 0,
+    'saturating-conversion': 0,
+  };
+}
+
+function numericDiagnostics(info: NumericOpcodeInfo): NumericDiagnosticCategory[] {
+  const diagnostics: NumericDiagnosticCategory[] = [];
+  if (info.category === 'integer-extension' || info.category === 'float-widening') {
+    diagnostics.push('widening');
+  }
+  if (info.category === 'reinterpretation') diagnostics.push('reinterpretation');
+  if (info.mayLosePrecision || info.mayDiscardHighOrderBits) diagnostics.push('lossy');
+  if (info.category !== 'integer-extension' && info.category !== 'float-widening') {
+    diagnostics.push('representation-change');
+  }
+  return diagnostics;
+}
+
+function skipFcInstructionImmediate(subopcode: number, reader: Reader): void {
+  if (subopcode <= 0x07) return;
+  if (subopcode === 0x08) {
+    reader.varuint32();
+    reader.varuint32();
+  } else if (subopcode === 0x0a || subopcode === 0x0c || subopcode === 0x0e) {
+    reader.varuint32();
+    reader.varuint32();
+  } else if (
+    subopcode === 0x09 ||
+    subopcode === 0x0b ||
+    subopcode === 0x0d ||
+    subopcode === 0x0f ||
+    subopcode === 0x10 ||
+    subopcode === 0x11
+  ) {
+    reader.varuint32();
+  }
+}
+
+function skipNumericInstructionImmediate(opcode: number, reader: Reader): void {
+  if (opcode === 0x12) {
+    reader.varuint32();
+  } else if (opcode === 0x13) {
+    reader.varuint32();
+    reader.varuint32();
+  } else if (opcode === 0x1c) {
+    const count = reader.varuint32();
+    for (let i = 0; i < count; i += 1) reader.byte();
+  } else if (opcode === 0x25 || opcode === 0x26) {
+    reader.varuint32();
+  } else if (opcode === 0xd0) {
+    reader.byte();
+  } else if (opcode === 0xd2) {
+    reader.varuint32();
+  } else {
+    skipInstructionImmediate(opcode, reader);
+  }
+}
+
+function buildNumericConversionRecord(
+  info: NumericOpcodeInfo,
+  functionIndex: number,
+  blockIndex: number,
+  instructionIndex: number,
+  instructionOffset: number,
+): NumericConversionRecord {
+  return {
+    functionIndex,
+    blockIndex,
+    instructionIndex,
+    instructionOffset,
+    opcode: info.opcode,
+    sourceType: info.sourceType,
+    destinationType: info.destinationType,
+    category: info.category,
+    sourceSignedness: info.sourceSignedness,
+    destinationSignedness: info.destinationSignedness,
+    widening: info.category === 'integer-extension' || info.category === 'float-widening',
+    narrowing: info.category === 'integer-truncation' || info.category === 'float-narrowing',
+    mayDiscardHighOrderBits: info.mayDiscardHighOrderBits,
+    mayLosePrecision: info.mayLosePrecision,
+    exact: info.exact,
+    trapping: info.trapping,
+    saturating: info.saturating,
+    diagnostics: numericDiagnostics(info),
+  };
+}
+
+function buildNumericConversionChain(
+  functionIndex: number,
+  run: NumericConversionRecord[],
+): NumericConversionChain {
+  const patterns = new Set<string>();
+  for (let i = 0; i < run.length; i += 1) {
+    for (let j = i + 1; j < run.length; j += 1) {
+      const a = run[i];
+      const b = run[j];
+      if (a.widening && b.narrowing) patterns.add('widen->narrow');
+      if (a.narrowing && b.widening) patterns.add('narrow->widen');
+      if (
+        a.category === 'int-to-float' &&
+        (b.category === 'float-to-int' || b.category === 'saturating-conversion')
+      ) {
+        patterns.add('int->float->int');
+      }
+      if (
+        (a.category === 'float-to-int' || a.category === 'saturating-conversion') &&
+        b.category === 'int-to-float'
+      ) {
+        patterns.add('float->int->float');
+      }
+    }
+    if (i > 0) {
+      const previous = run[i - 1];
+      const current = run[i];
+      if (
+        previous.destinationSignedness !== 'none' &&
+        current.sourceSignedness !== 'none' &&
+        previous.destinationSignedness !== current.sourceSignedness
+      ) {
+        patterns.add('repeated-signed-unsigned');
+      }
+      if (previous.category === current.category && previous.opcode !== current.opcode) {
+        patterns.add('repeated-conversion');
+      }
+    }
+  }
+
+  const first = run[0];
+  const last = run[run.length - 1];
+  const roundTripPatterns = [
+    'widen->narrow',
+    'narrow->widen',
+    'int->float->int',
+    'float->int->float',
+  ];
+  const roundTrip = first.sourceType === last.destinationType;
+  const redundant = roundTrip && roundTripPatterns.some((pattern) => patterns.has(pattern));
+  const precisionLoss = run.some(
+    (record) => record.mayLosePrecision || record.mayDiscardHighOrderBits,
+  );
+
+  const reasons: string[] = [];
+  if (patterns.has('widen->narrow')) reasons.push('widening followed by narrowing');
+  if (patterns.has('narrow->widen')) reasons.push('narrowing followed by widening');
+  if (patterns.has('int->float->int')) reasons.push('integer-to-float-to-integer round trip');
+  if (patterns.has('float->int->float')) reasons.push('float-to-integer-to-float round trip');
+  if (patterns.has('repeated-signed-unsigned')) {
+    reasons.push('consecutive signed/unsigned interpretation change');
+  }
+  if (patterns.has('repeated-conversion')) reasons.push('repeated conversion class');
+  if (redundant) reasons.push('round-trip returns to the original numeric type');
+  if (precisionLoss) reasons.push('chain contains a conversion that may lose information');
+
+  return {
+    functionIndex,
+    blockIndex: first.blockIndex,
+    startInstructionIndex: first.instructionIndex,
+    endInstructionIndex: last.instructionIndex,
+    length: run.length,
+    opcodes: run.map((record) => record.opcode),
+    categories: run.map((record) => record.category),
+    patterns: [...patterns].sort(),
+    suspicious: patterns.size > 0 || redundant || precisionLoss,
+    redundant,
+    precisionLoss,
+    reasons,
+  };
+}
+
+function buildNumericConversionChains(
+  functionIndex: number,
+  records: NumericConversionRecord[],
+): NumericConversionChain[] {
+  const chains: NumericConversionChain[] = [];
+  let run: NumericConversionRecord[] = [];
+
+  const flush = (): void => {
+    if (run.length >= 2) chains.push(buildNumericConversionChain(functionIndex, run));
+    run = [];
+  };
+
+  for (const record of records) {
+    if (run.length === 0) {
+      run.push(record);
+      continue;
+    }
+    const previous = run[run.length - 1];
+    const adjacent = record.instructionIndex === previous.instructionIndex + 1;
+    const typeCompatible = record.sourceType === previous.destinationType;
+    const sameBlock = record.blockIndex === previous.blockIndex;
+    if (adjacent && typeCompatible && sameBlock) {
+      run.push(record);
+    } else {
+      flush();
+      run.push(record);
+    }
+  }
+  flush();
+  return chains;
+}
+
+function summarizeNumericConversions(
+  functionIndex: number,
+  totalInstructions: number,
+  records: NumericConversionRecord[],
+  chains: NumericConversionChain[],
+): NumericFunctionSummary {
+  const categoryCounts = zeroNumericCategoryCounts();
+  let narrowingConversions = 0;
+  let wideningConversions = 0;
+  let precisionLossConversions = 0;
+  let highOrderBitDiscardConversions = 0;
+  let signednessSensitiveConversions = 0;
+  let trappingConversions = 0;
+  let saturatingConversions = 0;
+
+  for (const record of records) {
+    categoryCounts[record.category] += 1;
+    if (record.narrowing) narrowingConversions += 1;
+    if (record.widening) wideningConversions += 1;
+    if (record.mayLosePrecision) precisionLossConversions += 1;
+    if (record.mayDiscardHighOrderBits) highOrderBitDiscardConversions += 1;
+    if (record.sourceSignedness !== 'none' || record.destinationSignedness !== 'none') {
+      signednessSensitiveConversions += 1;
+    }
+    if (record.trapping) trappingConversions += 1;
+    if (record.saturating) saturatingConversions += 1;
+  }
+
+  return {
+    functionIndex,
+    totalInstructions,
+    totalConversions: records.length,
+    conversionDensity: totalInstructions === 0 ? 0 : records.length / totalInstructions,
+    categoryCounts,
+    narrowingConversions,
+    wideningConversions,
+    precisionLossConversions,
+    highOrderBitDiscardConversions,
+    signednessSensitiveConversions,
+    trappingConversions,
+    saturatingConversions,
+    chainCount: chains.length,
+    suspiciousChainCount: chains.filter((chain) => chain.suspicious).length,
+  };
+}
+
+function parseNumericConversionsFromCode(
+  section: Section | undefined,
+  importedFunctions: number,
+): {
+  records: NumericConversionRecord[];
+  functions: NumericFunctionSummary[];
+  chains: NumericConversionChain[];
+  warnings: string[];
+} {
+  const records: NumericConversionRecord[] = [];
+  const functions: NumericFunctionSummary[] = [];
+  const chains: NumericConversionChain[] = [];
+  const warnings: string[] = [];
+
+  if (!section) return { records, functions, chains, warnings };
+
+  const reader = new Reader(section.payload);
+  const count = reader.varuint32();
+
+  for (let fi = 0; fi < count; fi += 1) {
+    const bodySize = reader.varuint32();
+    const body = new Reader(reader.bytes(bodySize));
+
+    const localGroupCount = body.varuint32();
+    for (let j = 0; j < localGroupCount; j += 1) {
+      body.varuint32();
+      body.byte();
+    }
+
+    const functionIndex = importedFunctions + fi;
+    const functionRecords: NumericConversionRecord[] = [];
+    let instructionIndex = 0;
+    let totalInstructions = 0;
+    let blockDepth = 0;
+
+    while (!body.done) {
+      const instructionOffset = body.offset;
+      const opcode = body.byte();
+      totalInstructions += 1;
+
+      let info: NumericOpcodeInfo | undefined;
+      if (opcode === 0xfc) {
+        const subopcode = body.varuint32();
+        info = SATURATING_NUMERIC_CONVERSIONS[subopcode];
+        if (!info) skipFcInstructionImmediate(subopcode, body);
+      } else if (opcode === 0xfd || opcode === 0xfe) {
+        warnings.push(
+          `Unsupported ${opcode === 0xfd ? 'SIMD' : 'atomic'} instruction prefix in function ${functionIndex}; remaining instructions in that function were not scanned.`,
+        );
+        break;
+      } else {
+        info = SINGLE_BYTE_NUMERIC_CONVERSIONS[opcode];
+      }
+
+      if (info) {
+        functionRecords.push(
+          buildNumericConversionRecord(
+            info,
+            functionIndex,
+            blockDepth,
+            instructionIndex,
+            instructionOffset,
+          ),
+        );
+      }
+
+      if (opcode === 0x02 || opcode === 0x03 || opcode === 0x04) {
+        skipNumericInstructionImmediate(opcode, body);
+        blockDepth += 1;
+      } else if (opcode === 0x0b) {
+        if (blockDepth > 0) blockDepth -= 1;
+      } else if (opcode !== 0xfc) {
+        skipNumericInstructionImmediate(opcode, body);
+      }
+
+      instructionIndex += 1;
+    }
+
+    const functionChains = buildNumericConversionChains(functionIndex, functionRecords);
+    records.push(...functionRecords);
+    chains.push(...functionChains);
+    functions.push(
+      summarizeNumericConversions(
+        functionIndex,
+        totalInstructions,
+        functionRecords,
+        functionChains,
+      ),
+    );
+  }
+
+  return { records, functions, chains, warnings };
+}
+
+export function analyzeNumericConversions(file: string): WasmNumericConversionsReport {
+  const sections = loadSections(file);
+  const importSection = sections.find((section) => section.id === 2);
+  const codeSection = sections.find((section) => section.id === 10);
+  const importedCount = importedFunctionCount(importSection);
+
+  const { records, functions, chains, warnings } = parseNumericConversionsFromCode(
+    codeSection,
+    importedCount,
+  );
+
+  const conversionsByCategory = zeroNumericCategoryCounts();
+  let narrowingConversions = 0;
+  let wideningConversions = 0;
+  let potentialPrecisionLossConversions = 0;
+  let highOrderBitDiscardConversions = 0;
+  let signednessSensitiveConversions = 0;
+  let trappingConversions = 0;
+  let saturatingConversions = 0;
+
+  for (const record of records) {
+    conversionsByCategory[record.category] += 1;
+    if (record.narrowing) narrowingConversions += 1;
+    if (record.widening) wideningConversions += 1;
+    if (record.mayLosePrecision) potentialPrecisionLossConversions += 1;
+    if (record.mayDiscardHighOrderBits) highOrderBitDiscardConversions += 1;
+    if (record.sourceSignedness !== 'none' || record.destinationSignedness !== 'none') {
+      signednessSensitiveConversions += 1;
+    }
+    if (record.trapping) trappingConversions += 1;
+    if (record.saturating) saturatingConversions += 1;
+  }
+
+  const functionsWithConversions = functions.filter((summary) => summary.totalConversions > 0);
+  const highestConversionDensityFunctions = [...functionsWithConversions]
+    .sort((a, b) => {
+      if (b.conversionDensity !== a.conversionDensity) {
+        return b.conversionDensity - a.conversionDensity;
+      }
+      return a.functionIndex - b.functionIndex;
+    })
+    .slice(0, 5)
+    .map((summary) => ({
+      functionIndex: summary.functionIndex,
+      conversionDensity: summary.conversionDensity,
+      totalConversions: summary.totalConversions,
+    }));
+
+  return {
+    file,
+    valid: true,
+    records,
+    functions,
+    chains,
+    statistics: {
+      totalNumericConversions: records.length,
+      conversionsByCategory,
+      narrowingConversions,
+      wideningConversions,
+      potentialPrecisionLossConversions,
+      highOrderBitDiscardConversions,
+      signednessSensitiveConversions,
+      trappingConversions,
+      saturatingConversions,
+      conversionChainCount: chains.length,
+      suspiciousChainCount: chains.filter((chain) => chain.suspicious).length,
+      redundantChainCount: chains.filter((chain) => chain.redundant).length,
+      functionsWithConversions: functionsWithConversions.length,
+      highestConversionDensityFunction:
+        highestConversionDensityFunctions.length > 0
+          ? {
+              functionIndex: highestConversionDensityFunctions[0].functionIndex,
+              conversionDensity: highestConversionDensityFunctions[0].conversionDensity,
+            }
+          : null,
+      highestConversionDensityFunctions,
+    },
+    warnings,
+  };
+}
+
+function compareNumericConversionRecords(
+  a: NumericConversionRecord,
+  b: NumericConversionRecord,
+): number {
+  if (a.functionIndex !== b.functionIndex) return a.functionIndex - b.functionIndex;
+  if (a.blockIndex !== b.blockIndex) return a.blockIndex - b.blockIndex;
+  return a.instructionIndex - b.instructionIndex;
+}
+
+export function compareNumericConversionsReports(
+  beforeFile: string,
+  afterFile: string,
+): {
+  before: WasmNumericConversionsReport;
+  after: WasmNumericConversionsReport;
+  comparison: {
+    addedConversions: NumericConversionRecord[];
+    removedConversions: NumericConversionRecord[];
+    changedConversions: Array<{
+      functionIndex: number;
+      blockIndex: number;
+      instructionIndex: number;
+      before: NumericConversionRecord;
+      after: NumericConversionRecord;
+      changes: string[];
+    }>;
+    newlyIntroducedNarrowing: NumericConversionRecord[];
+    newlyIntroducedPrecisionLoss: NumericConversionRecord[];
+    newSuspiciousChains: NumericConversionChain[];
+    totalConversionDelta: number;
+    narrowingDelta: number;
+    precisionLossDelta: number;
+    categoryDeltas: Record<NumericConversionCategory, number>;
+  };
+} {
+  const before = analyzeNumericConversions(beforeFile);
+  const after = analyzeNumericConversions(afterFile);
+
+  const locationKey = (record: NumericConversionRecord): string =>
+    `${record.functionIndex}:${record.blockIndex}:${record.instructionIndex}`;
+
+  const beforeByLocation = new Map(before.records.map((record) => [locationKey(record), record]));
+  const afterByLocation = new Map(after.records.map((record) => [locationKey(record), record]));
+
+  const addedConversions = after.records
+    .filter((record) => !beforeByLocation.has(locationKey(record)))
+    .sort(compareNumericConversionRecords);
+  const removedConversions = before.records
+    .filter((record) => !afterByLocation.has(locationKey(record)))
+    .sort(compareNumericConversionRecords);
+
+  const changedConversions: Array<{
+    functionIndex: number;
+    blockIndex: number;
+    instructionIndex: number;
+    before: NumericConversionRecord;
+    after: NumericConversionRecord;
+    changes: string[];
+  }> = [];
+
+  for (const afterRecord of after.records) {
+    const beforeRecord = beforeByLocation.get(locationKey(afterRecord));
+    if (!beforeRecord) continue;
+    const changes: string[] = [];
+    if (beforeRecord.opcode !== afterRecord.opcode) changes.push('opcode');
+    if (beforeRecord.sourceType !== afterRecord.sourceType) changes.push('sourceType');
+    if (beforeRecord.destinationType !== afterRecord.destinationType) {
+      changes.push('destinationType');
+    }
+    if (beforeRecord.category !== afterRecord.category) changes.push('category');
+    if (changes.length > 0) {
+      changedConversions.push({
+        functionIndex: afterRecord.functionIndex,
+        blockIndex: afterRecord.blockIndex,
+        instructionIndex: afterRecord.instructionIndex,
+        before: beforeRecord,
+        after: afterRecord,
+        changes,
+      });
+    }
+  }
+  changedConversions.sort(
+    (a, b) =>
+      a.functionIndex - b.functionIndex ||
+      a.blockIndex - b.blockIndex ||
+      a.instructionIndex - b.instructionIndex,
+  );
+
+  const newlyIntroducedNarrowing = [
+    ...addedConversions.filter((record) => record.narrowing),
+    ...changedConversions
+      .filter((change) => !change.before.narrowing && change.after.narrowing)
+      .map((change) => change.after),
+  ].sort(compareNumericConversionRecords);
+
+  const newlyIntroducedPrecisionLoss = [
+    ...addedConversions.filter((record) => record.mayLosePrecision),
+    ...changedConversions
+      .filter((change) => !change.before.mayLosePrecision && change.after.mayLosePrecision)
+      .map((change) => change.after),
+  ].sort(compareNumericConversionRecords);
+
+  const chainSignature = (chain: NumericConversionChain): string =>
+    `${chain.functionIndex}:${chain.startInstructionIndex}:${chain.endInstructionIndex}:${chain.patterns.join('|')}`;
+  const beforeChainSignatures = new Set(before.chains.map(chainSignature));
+  const newSuspiciousChains = after.chains
+    .filter((chain) => chain.suspicious && !beforeChainSignatures.has(chainSignature(chain)))
+    .sort(
+      (a, b) =>
+        a.functionIndex - b.functionIndex || a.startInstructionIndex - b.startInstructionIndex,
+    );
+
+  const categoryDeltas = zeroNumericCategoryCounts();
+  for (const category of NUMERIC_CONVERSION_CATEGORIES) {
+    categoryDeltas[category] =
+      after.statistics.conversionsByCategory[category] -
+      before.statistics.conversionsByCategory[category];
+  }
+
+  return {
+    before,
+    after,
+    comparison: {
+      addedConversions,
+      removedConversions,
+      changedConversions,
+      newlyIntroducedNarrowing,
+      newlyIntroducedPrecisionLoss,
+      newSuspiciousChains,
+      totalConversionDelta:
+        after.statistics.totalNumericConversions - before.statistics.totalNumericConversions,
+      narrowingDelta:
+        after.statistics.narrowingConversions - before.statistics.narrowingConversions,
+      precisionLossDelta:
+        after.statistics.potentialPrecisionLossConversions -
+        before.statistics.potentialPrecisionLossConversions,
+      categoryDeltas,
     },
   };
 }

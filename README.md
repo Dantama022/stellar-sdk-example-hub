@@ -4093,6 +4093,43 @@ wasm-memory-alias contract.wasm --max-pairs 50000
 - Read/write conflicts are reported whenever the analysis can establish a possible overlap, including `unknown` relationships where overlap cannot be excluded.
 - Pair comparison is limited by `--max-pairs` (default 200,000) to avoid uncontrolled quadratic growth on very large access sets. Truncation is deterministic and reported in `pairComparisonsTruncated`.
 - Results are deterministic for a given artifact and options. The analysis works completely offline and never executes contract code.
+### WASM numeric conversion analysis
+
+`wasm-numeric-conversions` inventories instructions that convert values between integer widths, floating-point precisions, signed and unsigned interpretations, and bit patterns. It parses the code section only; it never instantiates, links, or executes the module.
+
+```bash
+wasm-numeric-conversions src/contracts/sample/hello.wasm
+wasm-numeric-conversions src/contracts/sample/hello.wasm --json
+wasm-numeric-conversions src/contracts/sample/hello.wasm --csv
+wasm-numeric-conversions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+# The same analysis is available through the bundled inspector:
+stellar-api-inspector wasm-numeric-conversions src/contracts/sample/hello.wasm --json
+```
+
+Supported instructions are classified into these categories:
+
+| Category | Instructions |
+|---|---|
+| **integer-extension** | `i64.extend_i32_s`, `i64.extend_i32_u` |
+| **integer-truncation** | `i32.wrap_i64` |
+| **sign-extension** | `i32.extend8_s`, `i32.extend16_s`, `i64.extend8_s`, `i64.extend16_s`, `i64.extend32_s` |
+| **int-to-float** | `f32.convert_i32_s`, `f32.convert_i64_u`, `f64.convert_i32_s`, `f64.convert_i64_u`, … |
+| **float-to-int** | `i32.trunc_f32_s`, `i32.trunc_f64_u`, `i64.trunc_f32_s`, `i64.trunc_f64_u`, … |
+| **float-widening** | `f64.promote_f32` |
+| **float-narrowing** | `f32.demote_f64` |
+| **reinterpretation** | `i32.reinterpret_f32`, `i64.reinterpret_f64`, `f32.reinterpret_i32`, `f64.reinterpret_i64` |
+| **saturating-conversion** | `i32.trunc_sat_f32_s`, `i32.trunc_sat_f64_u`, `i64.trunc_sat_f32_s`, `i64.trunc_sat_f64_u`, … |
+
+Every record includes the function index, block index, instruction index, byte offset within the function body, opcode, source and destination numeric types, signedness on each side, and severity-neutral diagnostics (`lossy`, `representation-change`, `widening`, `reinterpretation`). Trapping float-to-integer instructions are distinguished from the non-trapping `trunc_sat` family. The analyzer reports narrowing, widening, high-order-bit-discard, precision-loss, signedness-sensitive, trapping, and saturating counts; flags conversion chains such as widen → narrow, narrow → widen, repeated signed/unsigned conversions, and integer → float → integer round trips; and lists the functions with the highest conversion density.
+
+Chains are reported only when the relationship is statically safe: consecutive conversion instructions in the same block whose destination type matches the next instruction's source type. The analyzer never claims a concrete runtime value will lose precision; diagnostics describe structural possibility only. Optional `--csv` output emits one row per conversion with columns `functionIndex,blockIndex,instructionIndex,instructionOffset,opcode,sourceType,destinationType,category,sourceSignedness,destinationSignedness,widening,narrowing,mayDiscardHighOrderBits,mayLosePrecision,trapping,saturating,diagnostics`. Supplying a second artifact enables comparison mode, reporting added and removed conversions, changed opcodes/source types/destination types/categories, newly introduced narrowing or precision-loss conversions, and newly introduced suspicious chains.
+
+#### Static-analysis limitations
+
+- The analyzer performs a linear scan of each function body. It does not reconstruct a full control-flow graph or a validated operand-stack type state, so a "conversion chain" is limited to directly adjacent, type-compatible conversion instructions.
+- Local, global, memory, parameter, and constant values are not evaluated. The analyzer cannot prove that a narrowing conversion actually receives an out-of-range value at runtime.
+- Saturating instructions are recognized from the `0xfc` prefix sub-opcodes. SIMD and atomic prefixes are not scanned; the function is reported with a warning instead of being misinterpreted.
+- Results are deterministic for a given artifact: records and aggregates are emitted in stable function/block/instruction order with sorted category and pattern lists.
 
 ### WASM function complexity scoring
 
