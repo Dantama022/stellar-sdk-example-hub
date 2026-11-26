@@ -4046,6 +4046,42 @@ Optional `--csv` output emits one row per floating-point instruction with column
 
 Unknown or unsupported opcodes are silently treated as non-float instructions and do not abort the analysis. No WASM instructions are ever executed.
 
+### WASM unreachable-path analysis
+
+`wasm-unreachable` reconstructs a structured control-flow graph for every WASM function, computes reachable blocks from the function entry, and reports unreachable blocks, instructions, and contiguous ranges. It parses the code section only; the module is never instantiated or executed.
+
+```bash
+wasm-unreachable src/contracts/sample/hello.wasm
+wasm-unreachable src/contracts/sample/hello.wasm --json
+wasm-unreachable src/contracts/sample/hello.wasm --csv
+wasm-unreachable src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+# The same analysis is available through the bundled inspector:
+stellar-api-inspector wasm-unreachable src/contracts/sample/hello.wasm --json
+```
+
+Structured `block`, `loop`, `if`/`else`, `try`/`catch`, `br`, `br_if`, `br_table`, `return`, `unreachable`, and function-level `end` constructs are translated into a block CFG. Branch depths are resolved against the structured label stack. When a block is proven unreachable, the analyzer records the most specific statically determinable reason:
+
+| Reason | Meaning |
+|---|---|
+| **unconditional-branch** | Code follows an unconditional `br` or `br_table`. |
+| **return** | Code follows a `return` or tail call. |
+| **unreachable-trap** | Code follows an `unreachable` instruction. |
+| **structured-termination** | A merge/continuation block is unreachable because every incoming structured path terminates. |
+| **other** | Unreachable, but the terminating source is not more precisely classified. |
+
+Each function summary reports total/reachable/unreachable blocks and instructions, unreachable-code density, the largest unreachable region, and whether the function is reachable from module entry points. Module entry points are exported functions (or the start function) when present; when a module has no exports, all defined functions are treated as roots. This conservative rule avoids claiming a function is entirely unreachable merely because export metadata is absent.
+
+Optional `--csv` output emits one row per unreachable range with columns `functionIndex,blockIndex,startInstructionIndex,endInstructionIndex,startOffset,endOffset,instructionCount,reason`. `--json` emits normalized unreachable block, instruction, and range records with aggregate statistics. Supplying a second artifact enables comparison mode, reporting newly unreachable regions, regions that became reachable, changed range boundaries, and functions with newly introduced unreachable code.
+
+#### Reachability model and limitations
+
+- The analyzer models only intraprocedural structured control flow. `call_indirect`, table dispatch, and dynamic exception dispatch are not followed.
+- `if` and `br_if` conditions are not evaluated. Both outcomes are considered possible, so a conditional branch never makes its fall-through statically unreachable.
+- `try`/`catch` uses conservative exception edges: a `throw` may reach enclosing catch blocks, but the precise thrown tag is not tracked.
+- Legacy exception opcodes are supported; newer `try_table` and exotic proposal instructions produce a warning and stop scanning that function rather than guessing their layout.
+- Malformed control-flow structures (for example, `else` without `if` or an out-of-range branch depth) produce diagnostics and never crash the analyzer.
+- Results are deterministic for a given artifact: blocks, ranges, and instructions are emitted in stable function/block/instruction order.
+- The analysis works completely offline and never executes contract code.
 ### WASM memory-alias analysis
 
 `wasm-memory-alias` reconstructs conservative effective-address expressions for supported WASM loads and stores and classifies pairs of accesses as `must-alias`, `may-alias`, `no-alias`, or `unknown`. It parses the code section only; the module is never instantiated, linked, or executed.
