@@ -40083,4 +40083,32 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
     ],
   },
+  '266-sep10-challenge-validator': {
+    name: '266-sep10-challenge-validator',
+    description:
+      'Validate SEP-10 challenge transaction XDR, time bounds, manageData operations, and server signatures',
+    run: loadExample('../examples/266-sep10-challenge-validator'),
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }],
+  },
+  '267-sep38-quote-auditor': {
+    name: '267-sep38-quote-auditor',
+    description:
+      'Audit SEP-38 exchange quotes for expiration, decimal-safe effective rates, fees, and multi-quote comparison',
+    run: loadExample('../examples/267-sep38-quote-auditor'),
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }],
+  },
+  '268-sep24-transaction-reconciliation': {
+    name: '268-sep24-transaction-reconciliation',
+    description:
+      'Reconcile SEP-24 interactive deposit and withdrawal records against on-chain Stellar transactions',
+    run: loadExample('../examples/268-sep24-transaction-reconciliation'),
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }],
+  },
+  '269-sep12-kyc-auditor': {
+    name: '269-sep12-kyc-auditor',
+    description:
+      'Audit SEP-12 customer KYC statuses, required/conditional fields, and inconsistencies with PII redaction',
+    run: loadExample('../examples/269-sep12-kyc-auditor'),
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }]
+  },
 };

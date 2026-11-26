@@ -4313,3 +4313,39 @@ Four standalone, read-only TypeScript examples (each with its own `package.json`
 - [Return value decoder and type validator](examples/soroban/return-value-decoding/README.md): decode `ScVal` return values with exact big integers and check them against the expected type.
 - [Invocation error classification](examples/soroban/invocation-error-analysis/README.md): identify the failing stage, classify the error and get safe recovery guidance (never auto-retries).
 - [WASM provenance verification](examples/soroban/wasm-provenance-verification/README.md): hash a built contract, compare with a trusted checksum and the deployed executable.
+
+## SEP-10 Challenge Transaction Security Validator (`266-sep10-challenge-validator`)
+
+Validates SEP-10 challenge transaction XDR structure, sequence number (`0`), time bounds, `manageData` operations, and server signature against an independently trusted server signing key without signing or submitting.
+
+```bash
+npm run run-example -- 266-sep10-challenge-validator
+npm test -- --runInBand tests/sep10-challenge-validator.test.ts
+```
+
+## SEP-38 Quote Expiration & Exchange Rate Auditor (`267-sep38-quote-auditor`)
+
+Audits SEP-38 anchor quotes for schema validity, expiration thresholds, decimal-safe effective exchange rates, fee breakdowns, and directional multi-quote comparisons.
+
+```bash
+npm run run-example -- 267-sep38-quote-auditor
+npm test -- --runInBand tests/sep38-quote-auditor.test.ts
+```
+
+## SEP-24 Deposit & Withdrawal Transaction Reconciliation (`268-sep24-transaction-reconciliation`)
+
+Reconciles SEP-24 interactive deposit and withdrawal records against on-chain Stellar payment records, tracking anchor completion separately from on-chain verification.
+
+```bash
+npm run run-example -- 268-sep24-transaction-reconciliation
+npm test -- --runInBand tests/sep24-transaction-reconciliation.test.ts
+```
+
+## SEP-12 KYC Status & Customer Verification Auditor (`269-sep12-kyc-auditor`)
+
+Audits SEP-12 customer-level and field-level verification statuses, required/conditional fields, and status inconsistencies while redacting sensitive customer identifiers.
+
+```bash
+npm run run-example -- 269-sep12-kyc-auditor
+npm test -- --runInBand tests/sep12-kyc-auditor.test.ts
+```
