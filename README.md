@@ -4188,3 +4188,55 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Asset Trustline Exposure & Issuer Risk Report (`262-asset-trustline-exposure`)
+
+Read-only audit of an account's issued-asset trustlines, authorization states, duplicate asset codes across distinct issuers, and public issuer flags.
+
+```bash
+npm run run-example -- 262-asset-trustline-exposure
+npm test -- --runInBand tests/asset-trustline-exposure.test.ts
+```
+
+> **Note:** This report is informational only and does not establish market value, liquidity, redemption rights, or issuer solvency.
+
+## Network Configuration & Endpoint Compatibility (`263-network-endpoint-compatibility`)
+
+Validates Stellar network configuration, checks Horizon and Soroban RPC reachability and passphrase consistency, and redacts embedded URL credentials/tokens.
+
+```bash
+npm run run-example -- 263-network-endpoint-compatibility
+npm test -- --runInBand tests/network-endpoint-compatibility.test.ts
+```
+
+> **Note:** Endpoint reachability alone does not prove network identity or compatibility with every SDK operation.
+
+## Transaction Operation Inspection & XDR Summaries (`264-transaction-operation-inspector`)
+
+Parses base64 Stellar transaction envelopes without mutating them, summarizes operations (explicitly flagging unsupported operation types), and evaluates rule-based review warnings using exact stroop precision.
+
+```bash
+npm run run-example -- 264-transaction-operation-inspector
+npm test -- --runInBand tests/transaction-operation-inspector.test.ts
+```
+
+> **Note:** Syntactic inspection and review warnings do not replace signature verification or application-specific authorization checks.
+
+## Account Sponsorship Reconciliation & Reserve Audit (`265-sponsorship-reserve-audit`)
+
+Read-only reconciliation of Stellar account sponsorship fields (`num_sponsoring`, `num_sponsored`, `sponsor`) and reserve estimation with explicit assumptions and unresolved-check reporting.
+
+```bash
+npm run run-example -- 265-sponsorship-reserve-audit
+npm test -- --runInBand tests/sponsorship-reserve-audit.test.ts
+```
+
+> **Note:** This audit does not modify sponsorship relationships or guarantee transaction affordability.
+## Soroban contract invocation toolkit
+
+Four standalone, read-only TypeScript examples (each with its own `package.json`, README and offline tests) cover preparing a Soroban call, understanding its result, diagnosing failures, and verifying the code that runs:
+
+- [Argument encoder and validator](examples/soroban/argument-encoding/README.md): validate inputs and encode them as `ScVal`/XDR, optionally guided by a contract specification.
+- [Return value decoder and type validator](examples/soroban/return-value-decoding/README.md): decode `ScVal` return values with exact big integers and check them against the expected type.
+- [Invocation error classification](examples/soroban/invocation-error-analysis/README.md): identify the failing stage, classify the error and get safe recovery guidance (never auto-retries).
+- [WASM provenance verification](examples/soroban/wasm-provenance-verification/README.md): hash a built contract, compare with a trusted checksum and the deployed executable.
