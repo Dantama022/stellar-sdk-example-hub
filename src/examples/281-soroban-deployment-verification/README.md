@@ -44,21 +44,21 @@ Run the bundled Testnet sample (the built-in Stellar Asset Contract, which
 demonstrates the non-Wasm executable path):
 
 ```bash
-npm run run-example 262-soroban-deployment-verification
+npm run run-example 281-soroban-deployment-verification
 ```
 
 Audit your own deployment with a manifest file:
 
 ```bash
 MANIFEST_FILE=./manifests/testnet.json \
-  npm run run-example 262-soroban-deployment-verification
+  npm run run-example 281-soroban-deployment-verification
 ```
 
 Emit machine-readable output:
 
 ```bash
 MANIFEST_FILE=./manifests/production.json JSON_OUTPUT=true \
-  npm run run-example 262-soroban-deployment-verification
+  npm run run-example 281-soroban-deployment-verification
 ```
 
 ### Environment variables

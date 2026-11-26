@@ -9,15 +9,15 @@ import {
   extractExecutableInfo,
   fetchContractCode,
   inspectContractInstance,
-} from '../src/examples/262-soroban-deployment-verification/contract-inspector';
-import type { SorobanRpcClient } from '../src/examples/262-soroban-deployment-verification/contract-inspector';
-import { DeploymentVerificationError } from '../src/examples/262-soroban-deployment-verification/errors';
-import { verifyExecutable } from '../src/examples/262-soroban-deployment-verification/executable-verifier';
+} from '../src/examples/281-soroban-deployment-verification/contract-inspector';
+import type { SorobanRpcClient } from '../src/examples/281-soroban-deployment-verification/contract-inspector';
+import { DeploymentVerificationError } from '../src/examples/281-soroban-deployment-verification/errors';
+import { verifyExecutable } from '../src/examples/281-soroban-deployment-verification/executable-verifier';
 import {
   readContractSpecFromWasm,
   verifyInterface,
   verifyInterfaceAgainstNetwork,
-} from '../src/examples/262-soroban-deployment-verification/interface-verifier';
+} from '../src/examples/281-soroban-deployment-verification/interface-verifier';
 import {
   SAMPLE_MANIFESTS,
   assertValidManifest,
@@ -25,18 +25,18 @@ import {
   loadManifestFile,
   selectManifest,
   validateManifest,
-} from '../src/examples/262-soroban-deployment-verification/manifest';
-import type { DeploymentManifest } from '../src/examples/262-soroban-deployment-verification/manifest';
+} from '../src/examples/281-soroban-deployment-verification/manifest';
+import type { DeploymentManifest } from '../src/examples/281-soroban-deployment-verification/manifest';
 import {
   checkNetwork,
   validateRpcEndpoint,
-} from '../src/examples/262-soroban-deployment-verification/network-check';
+} from '../src/examples/281-soroban-deployment-verification/network-check';
 import {
   buildDeploymentVerificationReport,
   determineOverallStatus,
   formatDeploymentVerificationReport,
-} from '../src/examples/262-soroban-deployment-verification/report';
-import { verifyDeployment } from '../src/examples/262-soroban-deployment-verification/index';
+} from '../src/examples/281-soroban-deployment-verification/report';
+import { verifyDeployment } from '../src/examples/281-soroban-deployment-verification/index';
 
 // ---------------------------------------------------------------------------
 // Deterministic fixtures
@@ -54,7 +54,7 @@ const EXAMPLE_DIR = path.join(
   '..',
   'src',
   'examples',
-  '262-soroban-deployment-verification',
+  '281-soroban-deployment-verification',
 );
 
 function testnetNetwork(): DeploymentManifest['network'] {
@@ -1025,21 +1025,21 @@ describe('read-only guarantee', () => {
 describe('repository integration', () => {
   it('registers the example in the runner catalog', () => {
     const catalog = readFileSync(path.join(__dirname, '..', 'src', 'runner', 'catalog.ts'), 'utf8');
-    expect(catalog).toContain("'262-soroban-deployment-verification'");
+    expect(catalog).toContain("'281-soroban-deployment-verification'");
     expect(catalog).toContain(
-      "loadExample('../examples/262-soroban-deployment-verification/index')",
+      "loadExample('../examples/281-soroban-deployment-verification/index')",
     );
   });
 
   it('documents the example in README.md', () => {
     const readme = readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
-    expect(readme).toContain('262-soroban-deployment-verification');
+    expect(readme).toContain('281-soroban-deployment-verification');
   });
 
   it('ships an example README with setup and usage instructions', () => {
     const readme = readFileSync(path.join(EXAMPLE_DIR, 'README.md'), 'utf8');
     expect(readme).toContain('MANIFEST_FILE');
-    expect(readme).toContain('npm run run-example 262-soroban-deployment-verification');
+    expect(readme).toContain('npm run run-example 281-soroban-deployment-verification');
     expect(readme).toMatch(/read-only/i);
   });
 });

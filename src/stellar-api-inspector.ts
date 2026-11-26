@@ -290,6 +290,7 @@ import { run as runWasmCustomSections } from './examples/245-wasm-custom-section
 import { run as runWasmGlobals } from './examples/246-wasm-globals';
 import { run as runWasmInstructions } from './examples/247-wasm-instructions';
 import { run as runWasmElements } from './examples/248-wasm-elements';
+import { run as runWasmSideEffects } from './examples/280-wasm-side-effects';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 
 dotenv.config();
@@ -327,6 +328,7 @@ function printUsage(): void {
   console.log('  wasm-globals <wasmFile> [compareFile] [--json]');
   console.log('  wasm-instructions <wasmFile> [compareFile] [--json]');
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-side-effects <wasmFile> [compareFile] [--json] [--csv] [--dot]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -340,6 +342,28 @@ function parseWasmArgs(args: string[]): { wasmFile?: string; compareFile?: strin
   const json = args.includes('--json') || args.includes('--json=true');
   const files = args.filter((arg) => arg !== '--json' && arg !== '--json=true');
   return { wasmFile: files[0], compareFile: files[1], json };
+}
+
+function parseWasmSideEffectsArgs(args: string[]): {
+  wasmFile?: string;
+  compareFile?: string;
+  json: boolean;
+  csv: boolean;
+  dot: boolean;
+} {
+  const json = args.includes('--json') || args.includes('--json=true');
+  const csv = args.includes('--csv') || args.includes('--csv=true');
+  const dot = args.includes('--dot') || args.includes('--dot=true');
+  const files = args.filter(
+    (arg) =>
+      arg !== '--json' &&
+      arg !== '--json=true' &&
+      arg !== '--csv' &&
+      arg !== '--csv=true' &&
+      arg !== '--dot' &&
+      arg !== '--dot=true',
+  );
+  return { wasmFile: files[0], compareFile: files[1], json, csv, dot };
 }
 
 export async function runInspectorCli(args: string[]): Promise<number> {
@@ -444,6 +468,9 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'wasm-instructions':
         await runWasmInstructions(parseWasmArgs(cmdArgs));
         return 0;
+      case 'wasm-side-effects':
+        await runWasmSideEffects(parseWasmSideEffectsArgs(cmdArgs));
+        return 0;
       default:
         printUsage();
         return 1;
@@ -517,6 +544,12 @@ import { run as runWasmComplexity } from './examples/249-wasm-complexity';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 import { ComplexityThresholds } from './utils/wasm-complexity';
 import { run as runWasmFloatOps } from './examples/248-wasm-float-ops';
+import { parseUnreachableArgs, run as runWasmUnreachable } from './examples/273-wasm-unreachable';
+import {
+  parseMemoryAliasArgs,
+  run as runWasmMemoryAlias,
+} from './examples/271-wasm-memory-alias';
+import { run as runWasmNumericConversions } from './examples/269-wasm-numeric-conversions';
 import { run as runWasmLocals } from './examples/249-wasm-locals';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 import { WasmProvenanceError } from './examples/249-wasm-return-provenance/provenance-engine';
@@ -558,6 +591,9 @@ function printUsage(): void {
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
   console.log('  wasm-complexity <wasmFile> [compareFile] [--json] [--threshold <score>]');
   console.log('  wasm-float-ops <wasmFile> [compareFile] [--json] [--csv]');
+  console.log('  wasm-unreachable <wasmFile> [compareFile] [--json] [--csv]');
+  console.log('  wasm-memory-alias <wasmFile> [compareFile] [filters] [--json] [--csv]');
+  console.log('  wasm-numeric-conversions <wasmFile> [compareFile] [--json] [--csv]');
   console.log('  wasm-locals <wasmFile> [compareFile] [--json]');
 }
 
@@ -749,6 +785,18 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'wasm-locals':
         await runWasmLocals(parseWasmArgs(cmdArgs));
         return 0;
+      case 'wasm-unreachable':
+        await runWasmUnreachable(parseUnreachableArgs(cmdArgs));
+        return 0;
+      case 'wasm-memory-alias':
+        await runWasmMemoryAlias(parseMemoryAliasArgs(cmdArgs));
+        return 0;
+      case 'wasm-numeric-conversions': {
+        const wasmNumericArgs = parseWasmArgs(cmdArgs);
+        const csv = cmdArgs.includes('--csv') || cmdArgs.includes('--csv=true');
+        await runWasmNumericConversions({ ...wasmNumericArgs, csv });
+        return 0;
+      }
       default:
         printUsage();
         return 1;

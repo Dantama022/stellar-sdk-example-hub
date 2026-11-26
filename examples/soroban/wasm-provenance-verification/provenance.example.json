@@ -1,0 +1,11 @@
+{
+  "sourceRepository": "https://github.com/example-org/example-contracts",
+  "commit": "0123456789abcdef0123456789abcdef01234567",
+  "contractPath": "contracts/token",
+  "rustc": "rustc 1.84.0 (9fc6b4312 2025-01-07)",
+  "buildTool": "stellar 22.1.0",
+  "target": "wasm32v1-none",
+  "buildCommand": "stellar contract build",
+  "artifactPath": "target/wasm32v1-none/release/token.wasm",
+  "expectedSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}

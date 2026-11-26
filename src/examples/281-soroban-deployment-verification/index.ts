@@ -10,10 +10,10 @@
  * submits a transaction.
  *
  * Usage (runner):
- *   npm run run-example 262-soroban-deployment-verification
- *   MANIFEST_ENV=testnet npm run run-example 262-soroban-deployment-verification
- *   MANIFEST_FILE=./manifests/testnet.json npm run run-example 262-soroban-deployment-verification
- *   CONTRACT_ID=C... JSON_OUTPUT=true npm run run-example 262-soroban-deployment-verification
+ *   npm run run-example 281-soroban-deployment-verification
+ *   MANIFEST_ENV=testnet npm run run-example 281-soroban-deployment-verification
+ *   MANIFEST_FILE=./manifests/testnet.json npm run run-example 281-soroban-deployment-verification
+ *   CONTRACT_ID=C... JSON_OUTPUT=true npm run run-example 281-soroban-deployment-verification
  */
 
 import chalk from 'chalk';
