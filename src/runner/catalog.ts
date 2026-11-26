@@ -40033,4 +40033,54 @@ export const examples: Record<string, Example> = {
       'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
     run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
   },
+  '262-asset-trustline-exposure': {
+    name: '262-asset-trustline-exposure',
+    description:
+      'Audit an account’s issued-asset trustlines, authorization states, duplicate asset codes, and public issuer flags',
+    run: loadExample('../examples/262-asset-trustline-exposure'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to audit:',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '263-network-endpoint-compatibility': {
+    name: '263-network-endpoint-compatibility',
+    description:
+      'Validate Stellar network configuration and check Horizon and Soroban RPC reachability and passphrase compatibility',
+    run: loadExample('../examples/263-network-endpoint-compatibility'),
+    params: [
+      { type: 'input', name: 'networkName', message: 'Network label:', default: 'testnet' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '264-transaction-operation-inspector': {
+    name: '264-transaction-operation-inspector',
+    description:
+      'Inspect a Stellar transaction envelope XDR and produce operation-level summaries and rule-based review warnings',
+    run: loadExample('../examples/264-transaction-operation-inspector'),
+    params: [
+      { type: 'input', name: 'xdr', message: 'Base64 transaction envelope XDR (leave blank for sample):' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '265-sponsorship-reserve-audit': {
+    name: '265-sponsorship-reserve-audit',
+    description:
+      'Reconcile Stellar account sponsorship relationships and estimate reserve obligations with explicit assumptions',
+    run: loadExample('../examples/265-sponsorship-reserve-audit'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to audit:',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
 };
