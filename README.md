@@ -4135,3 +4135,36 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Soroban Deployment Verification and Configuration Audit
+
+[`262-soroban-deployment-verification`](src/examples/262-soroban-deployment-verification/index.ts) audits an existing Soroban deployment against a local manifest and reports whether the on-chain configuration still matches it. The example is read-only: it calls only `getNetwork`, `getLatestLedger` and `getLedgerEntries`.
+
+It checks, independently:
+
+- contract availability on the expected network (instance ledger entry),
+- the network passphrase reported by the Soroban RPC endpoint,
+- the executable type (Wasm vs a protocol built-in such as the Stellar Asset Contract),
+- the Wasm hash where applicable, compared against the manifest expectation,
+- the exported contract interface read from the deployed `contractspecv0` specification.
+
+A matching contract address alone is never treated as proof of equivalence, and incomplete data (missing code entry, unpublished specification, unreachable RPC) is reported as **inconclusive** rather than as a pass.
+
+Audit the bundled Testnet sample (a built-in executable):
+
+```bash
+npm run run-example 262-soroban-deployment-verification
+```
+
+Audit your own deployment and emit JSON:
+
+```bash
+MANIFEST_FILE=./manifests/testnet.json JSON_OUTPUT=true \
+  npm run run-example 262-soroban-deployment-verification
+```
+
+`MANIFEST_ENV` selects a bundled sample manifest, while `CONTRACT_ID` and `SOROBAN_RPC_URL` override a loaded manifest before validation. Validate the manifest before trusting a verdict: an invalid manifest never reaches the network. See the [example README](src/examples/262-soroban-deployment-verification/README.md) for the manifest schema, output fields, failure classification and limitations.
+
+```bash
+npm test -- --runInBand tests/soroban-deployment-verification.test.ts
+```
