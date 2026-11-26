@@ -544,6 +544,10 @@ import { run as runWasmComplexity } from './examples/249-wasm-complexity';
 import { WasmValidationError } from './utils/wasm-static-analysis';
 import { ComplexityThresholds } from './utils/wasm-complexity';
 import { run as runWasmFloatOps } from './examples/248-wasm-float-ops';
+import {
+  parseMemoryAliasArgs,
+  run as runWasmMemoryAlias,
+} from './examples/271-wasm-memory-alias';
 import { run as runWasmNumericConversions } from './examples/269-wasm-numeric-conversions';
 import { run as runWasmLocals } from './examples/249-wasm-locals';
 import { WasmValidationError } from './utils/wasm-static-analysis';
@@ -586,6 +590,7 @@ function printUsage(): void {
   console.log('  wasm-elements <wasmFile> [compareFile] [--json]');
   console.log('  wasm-complexity <wasmFile> [compareFile] [--json] [--threshold <score>]');
   console.log('  wasm-float-ops <wasmFile> [compareFile] [--json] [--csv]');
+  console.log('  wasm-memory-alias <wasmFile> [compareFile] [filters] [--json] [--csv]');
   console.log('  wasm-numeric-conversions <wasmFile> [compareFile] [--json] [--csv]');
   console.log('  wasm-locals <wasmFile> [compareFile] [--json]');
 }
@@ -777,6 +782,9 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       }
       case 'wasm-locals':
         await runWasmLocals(parseWasmArgs(cmdArgs));
+        return 0;
+      case 'wasm-memory-alias':
+        await runWasmMemoryAlias(parseMemoryAliasArgs(cmdArgs));
         return 0;
       case 'wasm-numeric-conversions': {
         const wasmNumericArgs = parseWasmArgs(cmdArgs);
