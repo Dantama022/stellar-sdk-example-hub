@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Address, scValToNative, xdr } from '@stellar/stellar-sdk';
+import { Address, StrKey, scValToNative, xdr } from '@stellar/stellar-sdk';
 
 export type StateDurability = 'persistent' | 'temporary' | 'unknown';
 
@@ -79,7 +79,7 @@ export function jsonSafe(value: unknown): unknown {
   return value;
 }
 
-export function stableStringify(value: unknown): string {
+export function stableStringifyCompact(value: unknown): string {
   const normalize = (input: unknown): unknown => {
     if (typeof input === 'bigint') return input.toString();
     if (Buffer.isBuffer(input)) return `0x${input.toString('hex')}`;
@@ -109,7 +109,7 @@ export function renderValue(value: unknown): string {
   if (typeof value === 'string') return value;
   if (typeof value === 'bigint') return value.toString();
   try {
-    return stableStringify(value);
+    return stableStringifyCompact(value);
   } catch {
     return String(value);
   }
@@ -159,15 +159,6 @@ function decodeContractId(scAddress: any): string | undefined {
   } catch {
     return undefined;
   }
-}
-
-function normalizeDurability(value: unknown): StateDurability {
-  if (typeof value === 'string') {
-    const lowered = value.toLowerCase();
-    if (lowered.includes('persistent')) return 'persistent';
-    if (lowered.includes('temporary')) return 'temporary';
-  }
-  return 'unknown';
 }
 
 function decodeLedgerKey(ledgerKey: string): {
@@ -327,7 +318,7 @@ export function normalizeStateEntry(raw: unknown, index: number): NormalizedStat
   const keyXdr = ledgerDecoded.keyXdr ?? keyXdrFromJson;
   const keyDecoded = ledgerDecoded.keyDecoded ?? keyDecodedFromJson;
 
-  const syntheticKey = stableStringify({
+  const syntheticKey = stableStringifyCompact({
     contractId: contractId ?? null,
     durability,
     keyXdr: keyXdr ?? null,
@@ -652,10 +643,6 @@ export function tryCanonicalLedgerKey(input: string): string | undefined {
     return undefined;
   }
 }
-import * as fs from 'fs';
-import * as path from 'path';
-import { StrKey, scValToNative, xdr } from '@stellar/stellar-sdk';
-
 export type Durability = 'persistent' | 'temporary' | 'unknown';
 export type JsonObject = Record<string, unknown>;
 

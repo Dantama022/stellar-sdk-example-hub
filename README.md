@@ -4140,3 +4140,117 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Soroban Contract State Snapshots and Upgrade Regression Comparison
+
+[`262-contract-state-snapshot`](src/examples/262-contract-state-snapshot.ts) captures the ledger entries that make up a Soroban contract's observable state, normalizes them into a portable JSON snapshot, assigns deterministic SHA-256 fingerprints, and compares two snapshots for upgrade review.
+
+The example captures the contract instance entry (including its instance storage), the `contractCode` entry referenced by the instance WASM hash when available, and any storage keys you name. Soroban RPC cannot enumerate a contract's storage keys, so keys must be supplied explicitly.
+
+### Setup
+
+Use Node.js 18 or newer and the repository dependencies. The example makes read-only Soroban RPC calls; it never signs, simulates or submits a transaction.
+
+```bash
+npm ci
+```
+
+### Capture a baseline snapshot
+
+```bash
+CONTRACT_ID=C... \
+SOROBAN_RPC_URL=https://soroban-testnet.stellar.org \
+SNAPSHOT_KEYS=COUNTER,Admin,LOCK \
+SNAPSHOT_DURABILITY=persistent \
+SNAPSHOT_OUT=baseline.json \
+npm run run-example 262-contract-state-snapshot
+```
+
+`SNAPSHOT_KEYS` accepts plain symbol names (encoded with `SNAPSHOT_DURABILITY`), base64 `ScVal` XDR, or base64 `LedgerKey` XDR. A `LedgerKey` carries its own durability.
+
+### Compare after the change
+
+```bash
+CONTRACT_ID=C... \
+SNAPSHOT_KEYS=COUNTER,Admin,LOCK \
+SNAPSHOT_BASELINE=baseline.json \
+UPGRADE_REVIEW=true \
+EXPECTED_CHANGES_FILE=expected-changes.json \
+SNAPSHOT_OUT=after.json \
+npm run run-example 262-contract-state-snapshot
+```
+
+Set `JSON_OUTPUT=true` to print the snapshot or comparison report as JSON.
+
+### Expected-change allowlist
+
+```json
+{
+  "expectedChanges": [
+    { "change": "modified", "key": "COUNTER", "reason": "migration writes the new counter format" },
+    { "change": "created", "entryType": "persistent", "key": "Migrated" },
+    { "change": "removed", "key": "LegacyState" }
+  ]
+}
+```
+
+Rules may match `change` (`created`, `modified`, `removed` or `any`), `entryType`, `durability`, `keyId`, `key` or an entry `fingerprint`. Changes outside the allowlist are reported as unexpected. Without an allowlist, changes are reported as observations with the status `changed`.
+
+### Sample output
+
+Sample output from a state comparison:
+
+```text
+=== Soroban Contract State Comparison ===
+Contract ID            : C...
+Network                : testnet
+Network passphrase     : Test SDF Network ; September 2015
+Baseline ledger        : 123456
+Comparison ledger      : 123999
+Baseline fingerprint   : 4f0c...
+Comparison fingerprint : 9ab1...
+Overall status         : EXPECTED CHANGES ONLY
+
+Entries inspected      : 5 baseline / 5 comparison / 5 unique keys
+Created                : 1
+Modified               : 1
+Removed                : 0
+Unchanged              : 3
+Metadata-only changes  : 0
+Unverifiable           : 0
+Expected changes       : 2
+Unexpected changes     : 0
+
+Upgrade review
+  Enabled             : yes
+  Contract instance   : changed
+  WASM reference      : changed (aaaa... -> bbbb...)
+  Storage changes     : 2
+  Note: Observed state changes are facts about the two snapshots; they do not by themselves establish that a contract upgrade caused them.
+```
+
+### Snapshot format (version 1)
+
+Snapshots are JSON documents with `format: "stellar-sdk-example-hub/contract-state-snapshot"` and `version: 1`. A snapshot records:
+
+- `contractId`, `network.id`, `network.passphrase`, `ledger` and `capturedAt`
+- the instance WASM hash when available
+- `entries`: canonical ledger-key XDR, ledger entry type, storage category (`instance`, `persistent`, `temporary`, `contractCode`, `other`), durability, optional decoded key/value, encoded size, last-modified and live-until ledger, decode diagnostics, and a per-entry `fingerprint`
+- `unavailable`: requested keys that were not returned, with `not-found`, `archived` or `rpc-error` reasons
+- `snapshotFingerprint`: SHA-256 over the contract ID and sorted entry fingerprints
+
+Fingerprints hash canonical JSON (recursively sorted keys) of the ledger key, entry type, durability and encoded value. TTL and last-modified metadata are compared separately so rent changes do not look like value changes. Snapshots are validated on import: unknown formats or versions, invalid XDR, duplicate keys, and fingerprint mismatches are rejected. Comparisons reject mismatched contract IDs and networks.
+
+### Limitations
+
+- **Current state only.** `getLedgerEntries` and `getContractData` return current ledger state. A past ledger position is rejected with `UnsupportedHistoricalStateError`; historical state requires an archival or indexing provider.
+- **No storage enumeration.** There is no RPC method that lists every key of a contract. Supply the keys to inspect; the contract instance is always fetched because its key is derivable.
+- **Archived and expired entries.** A `not-found` response is treated as observed absence so new and removed keys can be reported. Archived entries and RPC failures are reported as unverifiable. A provider that reports archived entries as `not-found` makes that distinction ambiguous, so inspect the snapshot warnings.
+- **Schema agnostic.** Decoded values are shown for convenience, but comparison relies on canonical XDR, not on application-specific schemas.
+- **No causal claim.** A detected state change does not by itself establish that a contract upgrade caused it. The report distinguishes observations from the optional allowlist classification.
+
+Run the offline tests:
+
+```bash
+npm test -- --runInBand tests/contract-state-snapshot.test.ts
+```
