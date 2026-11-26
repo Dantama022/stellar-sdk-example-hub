@@ -7,6 +7,9 @@
     "wasm-fingerprint": "dist/src/wasm-fingerprint.js",
     "wasm-features": "dist/src/wasm-features.js",
     "wasm-names": "dist/src/wasm-names.js",
+    "wasm-unreachable": "dist/src/wasm-unreachable.js",
+    "wasm-memory-alias": "dist/src/wasm-memory-alias.js",
+    "wasm-numeric-conversions": "dist/src/wasm-numeric-conversions.js",
     "stellar-api-inspector": "dist/src/stellar-api-inspector.js"
   },
   "scripts": {
@@ -49,7 +52,7 @@
     "commander": "^11.1.0",
     "dotenv": "^16.4.5",
     "inquirer": "^8.2.7",
-    "wasm-parser": "^1.0.1"
+    "wasm-parser": "npm:@webassemblyjs/wasm-parser@^1.14.1"
   },
   "devDependencies": {
     "@types/inquirer": "^8.2.13",
@@ -72,7 +75,12 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "testMatch": [
-      "**/tests/**/*.test.ts"
+      "**/tests/**/*.test.ts",
+      "**/examples/soroban/event-schema-validation/**/*.test.ts"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/examples/"
     ],
     "transform": {
       "^.+\\.[tj]sx?$": [

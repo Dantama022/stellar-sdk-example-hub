@@ -71,6 +71,13 @@ import { ComplexityThresholds } from './utils/wasm-complexity';
 import { run as runWasmFloatOps } from './examples/248-wasm-float-ops';
 import { run as runWasmLocals } from './examples/249-wasm-locals';
 
+import { parseUnreachableArgs, run as runWasmUnreachable } from './examples/273-wasm-unreachable';
+import {
+  parseMemoryAliasArgs,
+  run as runWasmMemoryAlias,
+} from './examples/271-wasm-memory-alias';
+import { run as runWasmNumericConversions } from './examples/269-wasm-numeric-conversions';
+
 dotenv.config();
 
 function printUsage(): void {
@@ -129,6 +136,9 @@ function printUsage(): void {
   console.log('  wasm-complexity <wasmFile> [compareFile] [--json] [--threshold <score>]');
   console.log('  wasm-float-ops <wasmFile> [compareFile] [--json] [--csv]');
   console.log('  wasm-locals <wasmFile> [compareFile] [--json]');
+  console.log('  wasm-unreachable <wasmFile> [compareFile] [--json] [--csv]');
+  console.log('  wasm-memory-alias <wasmFile> [compareFile] [filters] [--json] [--csv]');
+  console.log('  wasm-numeric-conversions <wasmFile> [compareFile] [--json] [--csv]');
 }
 
 function resolveHorizonUrl(args: string[]): string {
@@ -404,6 +414,18 @@ export async function runInspectorCli(args: string[]): Promise<number> {
       case 'wasm-locals':
         await runWasmLocals(parseWasmArgs(cmdArgs));
         return 0;
+case 'wasm-unreachable':
+        await runWasmUnreachable(parseUnreachableArgs(cmdArgs));
+        return 0;
+case 'wasm-memory-alias':
+        await runWasmMemoryAlias(parseMemoryAliasArgs(cmdArgs));
+        return 0;
+case 'wasm-numeric-conversions': {
+        const wasmNumericArgs = parseWasmArgs(cmdArgs);
+        const csv = cmdArgs.includes('--csv') || cmdArgs.includes('--csv=true');
+        await runWasmNumericConversions({ ...wasmNumericArgs, csv });
+        return 0;
+      }
       default:
         printUsage();
         return 1;

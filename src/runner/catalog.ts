@@ -144,20 +144,6 @@ export const examples: Record<string, Example> = {
     description: 'Intentionally trigger and parse Soroban RPC and transaction errors',
     run: loadExample('../examples/18-soroban-errors'),
   },
-  '189-soroban-transaction-polling': {
-    name: '189-soroban-transaction-polling',
-    description: 'Poll a Soroban transaction with backoff, retries, timeout, and cancellation',
-    run: loadExample('../examples/189-soroban-transaction-polling'),
-    params: [
-      {
-        type: 'input',
-        name: 'rpcUrl',
-        message: 'Soroban RPC endpoint:',
-        default: 'https://soroban-testnet.stellar.org',
-      },
-      { type: 'input', name: 'transactionHash', message: 'Transaction hash:' },
-    ],
-  },
   '19-horizon-streaming': {
     name: '19-horizon-streaming',
     description: 'Subscribe to live Horizon payment events over Server-Sent Events',
@@ -185,15 +171,15 @@ export const examples: Record<string, Example> = {
     description: 'Create, modify, and delete buy offers on the Stellar SDEX',
     run: loadExample('../examples/22-manage-buy-offer'),
   },
-  '23-soroban-upgrade': {
-    name: '23-soroban-upgrade',
-    description: 'Deploy, upgrade, and verify a Soroban contract while preserving storage',
-    run: loadExample('../examples/23-soroban-upgrade'),
-  },
   '23-manage-data-entries': {
     name: '23-manage-data-entries',
     description: 'Create, update, query, and remove account data entries on-ledger',
     run: loadExample('../examples/23-manage-data-entries'),
+  },
+  '23-soroban-upgrade': {
+    name: '23-soroban-upgrade',
+    description: 'Deploy, upgrade, and verify a Soroban contract while preserving storage',
+    run: loadExample('../examples/23-soroban-upgrade'),
   },
   '24-create-passive-sell-offer': {
     name: '24-create-passive-sell-offer',
@@ -258,30 +244,11 @@ export const examples: Record<string, Example> = {
       'Wrap a signed inner transaction in a fee-bump envelope with a higher fee and a separate fee-source account',
     run: loadExample('../examples/33-fee-bump-replacement'),
   },
-  '96-fee-bump-recovery-workflow': {
-    name: '96-fee-bump-recovery-workflow',
+  '35-revoke-sponsorship': {
+    name: '35-revoke-sponsorship',
     description:
-      'Recover a low-fee transaction by wrapping it in a higher-fee fee-bump replacement',
-    run: loadExample('../examples/96-fee-bump-recovery-workflow'),
-    params: [
-      {
-        type: 'input',
-        name: 'innerBaseFee',
-        message: 'Enter the original transaction base fee in stroops:',
-        default: '10',
-      },
-      {
-        type: 'input',
-        name: 'bumpBaseFee',
-        message: 'Enter the fee-bump base fee in stroops:',
-        default: '500',
-      },
-    ],
-  },
-  '37-strict-send-path-payment': {
-    name: '37-strict-send-path-payment',
-    description: 'Execute a strict-send path payment and observe the received amount',
-    run: loadExample('../examples/37-strict-send-path-payment'),
+      'Revoke sponsorship from a sponsored ledger entry and inspect reserve responsibility',
+    run: loadExample('../examples/35-revoke-sponsorship'),
   },
   '36-strict-receive-path-payment': {
     name: '36-strict-receive-path-payment',
@@ -289,11 +256,10 @@ export const examples: Record<string, Example> = {
       'Execute a strict-receive path payment with a fixed destination amount and sendMax cap',
     run: loadExample('../examples/36-strict-receive-path-payment'),
   },
-  '35-revoke-sponsorship': {
-    name: '35-revoke-sponsorship',
-    description:
-      'Revoke sponsorship from a sponsored ledger entry and inspect reserve responsibility',
-    run: loadExample('../examples/35-revoke-sponsorship'),
+  '37-strict-send-path-payment': {
+    name: '37-strict-send-path-payment',
+    description: 'Execute a strict-send path payment and observe the received amount',
+    run: loadExample('../examples/37-strict-send-path-payment'),
   },
   '38-account-signer-management': {
     name: '38-account-signer-management',
@@ -338,6 +304,18 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '46-transaction-detail-inspection': {
+    name: '46-transaction-detail-inspection',
+    description: 'Retrieve a Horizon transaction by hash and inspect its metadata and XDR',
+    run: loadExample('../examples/46-transaction-detail-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Enter a transaction hash, or leave blank to inspect the latest transaction:',
+      },
+    ],
+  },
   '47-account-data-entries': {
     name: '47-account-data-entries',
     description: 'Create, verify, update, and remove account data entries with reserve context',
@@ -368,6 +346,19 @@ export const examples: Record<string, Example> = {
         type: 'input',
         name: 'assetIssuer',
         message: 'Asset issuer account ID (required when asset code is set):',
+      },
+    ],
+  },
+  '51-failed-transaction-analysis': {
+    name: '51-failed-transaction-analysis',
+    description:
+      'Inspect failed transactions and translate result codes into human-readable diagnostics',
+    run: loadExample('../examples/51-failed-transaction-analysis'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Optional transaction hash (blank searches recent failed transactions):',
       },
     ],
   },
@@ -402,67 +393,10 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
-  '59-account-offer-inspection': {
-    name: '59-account-offer-inspection',
-    description: "Inspect an account's active SDEX offers, assets, prices, and approximate volumes",
-    run: loadExample('../examples/59-account-offer-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'accountId',
-        message: 'Optional account ID (blank finds an account with offers when possible):',
-      },
-      {
-        type: 'input',
-        name: 'limit',
-        message: 'Number of offers to retrieve (1-200):',
-        default: '20',
-      },
-    ],
-  },
-  '46-transaction-detail-inspection': {
-    name: '46-transaction-detail-inspection',
-    description: 'Retrieve a Horizon transaction by hash and inspect its metadata and XDR',
-    run: loadExample('../examples/46-transaction-detail-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'transactionHash',
-        message: 'Enter a transaction hash, or leave blank to inspect the latest transaction:',
-      },
-    ],
-  },
-  '51-failed-transaction-analysis': {
-    name: '51-failed-transaction-analysis',
-    description:
-      'Inspect failed transactions and translate result codes into human-readable diagnostics',
-    run: loadExample('../examples/51-failed-transaction-analysis'),
-    params: [
-      {
-        type: 'input',
-        name: 'transactionHash',
-        message: 'Optional transaction hash (blank searches recent failed transactions):',
-      },
-    ],
-  },
-  '148-result-code-decoder': {
-    name: '148-result-code-decoder',
-    description:
-      'Retrieve a transaction from Horizon and decode transaction and operation result codes into diagnostics',
-    run: loadExample('../examples/148-result-code-decoder'),
-    params: [
-      {
-        type: 'input',
-        name: 'transactionHash',
-        message: 'Enter the 64-character transaction hash:',
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output JSON?',
-        default: false,
-      },
-    ],
+  '54-fee-stats': {
+    name: '54-fee-stats',
+    description: 'Query Horizon fee statistics, fee distributions, and recommended fee values',
+    run: loadExample('../examples/54-fee-stats'),
   },
   '55-trade-history': {
     name: '55-trade-history',
@@ -501,11 +435,6 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
-  '54-fee-stats': {
-    name: '54-fee-stats',
-    description: 'Query Horizon fee statistics, fee distributions, and recommended fee values',
-    run: loadExample('../examples/54-fee-stats'),
-  },
   '57-account-reserve-calculator': {
     name: '57-account-reserve-calculator',
     description: 'Calculate an account minimum reserve and available balance from ledger entries',
@@ -531,160 +460,21 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
-  '190-soroban-transaction-event-monitor': {
-    name: '190-soroban-transaction-event-monitor',
-    description:
-      'Monitor a submitted Soroban transaction, poll for its terminal state, and extract and decode emitted contract events',
-    run: loadExample('../examples/190-soroban-transaction-event-monitor'),
+  '59-account-offer-inspection': {
+    name: '59-account-offer-inspection',
+    description: "Inspect an account's active SDEX offers, assets, prices, and approximate volumes",
+    run: loadExample('../examples/59-account-offer-inspection'),
     params: [
       {
         type: 'input',
-        name: 'rpcUrl',
-        message: 'Soroban RPC URL (blank uses testnet):',
-        default: 'https://soroban-testnet.stellar.org',
-      },
-      {
-        type: 'input',
-        name: 'txHash',
-        message: 'Transaction hash to monitor (64 hex characters):',
-      },
-      {
-        type: 'input',
-        name: 'pollIntervalMs',
-        message: 'Poll interval in ms (blank uses 1500):',
-        default: '1500',
-      },
-      {
-        type: 'input',
-        name: 'timeoutMs',
-        message: 'Timeout in ms (blank uses 60000):',
-        default: '60000',
-      },
-    ],
-  },
-  '191-soroban-contract-deployment-inspection': {
-    name: '191-soroban-contract-deployment-inspection',
-    description:
-      'Inspect a deployed Soroban contract: verify existence, retrieve instance and code ledger entries, extract TTL and code hash, and produce a read-only deployment verification report',
-    run: loadExample('../examples/191-soroban-contract-deployment-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'rpcUrl',
-        message: 'Soroban RPC URL (blank uses testnet):',
-        default: 'https://soroban-testnet.stellar.org',
-      },
-      {
-        type: 'input',
-        name: 'contractId',
-        message: 'Contract ID (56-character C-address):',
-        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
-      },
-      {
-        type: 'list',
-        name: 'json',
-        message: 'Output format:',
-        default: 'false',
-        choices: [
-          { name: 'Human-readable', value: 'false' },
-          { name: 'JSON', value: 'true' },
-        ],
-      },
-    ],
-  },
-  '192-soroban-contract-code-inspection': {
-    name: '192-soroban-contract-code-inspection',
-    description:
-      'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
-    run: loadExample('../examples/192-soroban-contract-code-inspection'),
-  },
-  '66-ledger-effects': {
-    name: '66-ledger-effects',
-    description:
-      'Retrieve every effect produced by one closed ledger, grouped by effect type with summary statistics',
-    run: loadExample('../examples/66-ledger-effects'),
-    params: [
-      {
-        type: 'input',
-        name: 'ledgerSequence',
-        message: 'Ledger sequence (blank uses the latest closed ledger):',
+        name: 'accountId',
+        message: 'Optional account ID (blank finds an account with offers when possible):',
       },
       {
         type: 'input',
         name: 'limit',
-        message: 'Number of effects to retrieve (1-500):',
-        default: '25',
-      },
-    ],
-  },
-  '67-soroban-contract-events': {
-    name: '67-soroban-contract-events',
-    description:
-      'Query Soroban contract events over a ledger range and decode topics, payloads, and ledger references',
-    run: loadExample('../examples/67-soroban-contract-events'),
-    params: [
-      {
-        type: 'input',
-        name: 'contractId',
-        message: 'Contract ID to inspect (blank uses default testnet contract):',
-      },
-      {
-        type: 'input',
-        name: 'startLedger',
-        message: 'Start ledger (blank scans the last ~24h of ledgers):',
-      },
-      {
-        type: 'input',
-        name: 'endLedger',
-        message: 'End ledger (blank queries up to the latest ledger):',
-      },
-      {
-        type: 'input',
-        name: 'limit',
-        message: 'Number of events to retrieve (1-200):',
-        default: '10',
-      },
-    ],
-  },
-  '188-soroban-transaction-inspection': {
-    name: '188-soroban-transaction-inspection',
-    description:
-      'Retrieve, inspect, and decode a Soroban transaction by hash with status detection, XDR analysis, event decoding, and optional polling',
-    run: loadExample('../examples/188-soroban-transaction-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'transactionHash',
-        message: 'Soroban transaction hash to inspect:',
-      },
-      {
-        type: 'input',
-        name: 'rpcUrl',
-        message: 'Optional RPC URL (blank uses testnet default):',
-      },
-      {
-        type: 'input',
-        name: 'pollIntervalMs',
-        message: 'Polling interval in milliseconds:',
-        default: '2000',
-      },
-      {
-        type: 'input',
-        name: 'pollTimeoutMs',
-        message: 'Polling timeout in milliseconds:',
-        default: '30000',
-      },
-      {
-        type: 'confirm',
-        name: 'pollUntilFinal',
-        message: 'Poll until a final status is available?',
-        default: true,
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output JSON?',
-        default: false,
+        message: 'Number of offers to retrieve (1-200):',
+        default: '20',
       },
     ],
   },
@@ -719,12 +509,6 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
-  '140-account-reserve-analysis': {
-    name: '140-account-reserve-analysis',
-    description:
-      'Inspect account reserve requirements, subentries, liabilities, and estimated spendable XLM',
-    run: loadExample('../examples/140-account-reserve-analysis'),
-  },
   '62-payment-history': {
     name: '62-payment-history',
     description:
@@ -741,82 +525,6 @@ export const examples: Record<string, Example> = {
         name: 'limit',
         message: 'Number of payment records to retrieve (1-200):',
         default: '10',
-      },
-    ],
-  },
-  '141-sequence-number-management': {
-    name: '141-sequence-number-management',
-    description:
-      'Retrieve, allocate, detect stale, and manage Stellar account sequence numbers across transactions',
-    run: loadExample('../examples/141-sequence-number-management'),
-    params: [
-      {
-        type: 'input',
-        name: 'transactionCount',
-        message: 'Number of sequential transactions to build and submit (default 3):',
-        default: '3',
-      },
-      {
-        type: 'list',
-        name: 'json',
-        message: 'Output format:',
-        default: 'false',
-        choices: [
-          { name: 'Human-readable', value: 'false' },
-          { name: 'JSON', value: 'true' },
-        ],
-      },
-    ],
-  },
-  '142-batch-transaction-construction': {
-    name: '142-batch-transaction-construction',
-    description:
-      'Construct, inspect, and optionally submit a batch of independent transactions with sequential sequence numbers',
-    run: loadExample('../examples/142-batch-transaction-construction'),
-    params: [
-      {
-        type: 'input',
-        name: 'batchSize',
-        message: 'Number of transactions in the batch (default 3):',
-        default: '3',
-      },
-      {
-        type: 'list',
-        name: 'dryRun',
-        message: 'Run mode:',
-        default: 'false',
-        choices: [
-          { name: 'Submit transactions', value: 'false' },
-          { name: 'Dry-run (inspect only, no submission)', value: 'true' },
-        ],
-      },
-      {
-        type: 'list',
-        name: 'json',
-        message: 'Output format:',
-        default: 'false',
-        choices: [
-          { name: 'Human-readable', value: 'false' },
-          { name: 'JSON', value: 'true' },
-        ],
-      },
-    ],
-  },
-  '143-transaction-time-bounds': {
-    name: '143-transaction-time-bounds',
-    description:
-      'Construct, inspect, validate, and submit transactions with time bounds; observe txTOO_EARLY and txTOO_LATE',
-    run: loadExample('../examples/143-transaction-time-bounds'),
-    params: [
-      {
-        type: 'list',
-        name: 'json',
-        message: 'Output format:',
-        default: 'false',
-        choices: [
-          { name: 'Human-readable', value: 'false' },
-          { name: 'JSON', value: 'true' },
-        ],
       },
     ],
   },
@@ -882,97 +590,53 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
-  '84-muxed-account-handling': {
-    name: '84-muxed-account-handling',
-    description: 'Create, parse, and validate muxed (M...) accounts and their identifiers',
-    run: loadExample('../examples/84-muxed-account-handling'),
-  },
-  '85-transaction-fee-estimation': {
-    name: '85-transaction-fee-estimation',
-    description: 'Estimate transaction fees from network fee stats across priority levels',
-    run: loadExample('../examples/85-transaction-fee-estimation'),
-  },
-  '86-transaction-memo-handling': {
-    name: '86-transaction-memo-handling',
-    description: 'Build, encode, and decode every supported Stellar transaction memo type',
-    run: loadExample('../examples/86-transaction-memo-handling'),
-  },
-  '87-transaction-envelope-inspection': {
-    name: '87-transaction-envelope-inspection',
-    description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
-    run: loadExample('../examples/87-transaction-envelope-inspection'),
-  },
-  '150-mixed-operation-transaction': {
-    name: '150-mixed-operation-transaction',
+  '66-ledger-effects': {
+    name: '66-ledger-effects',
     description:
-      'Build and inspect an atomic transaction containing payment, manageData, and bumpSequence operations',
-    run: loadExample('../examples/150-mixed-operation-transaction'),
+      'Retrieve every effect produced by one closed ledger, grouped by effect type with summary statistics',
+    run: loadExample('../examples/66-ledger-effects'),
     params: [
       {
         type: 'input',
-        name: 'sourceAccount',
-        message: 'Existing Horizon source account ID:',
+        name: 'ledgerSequence',
+        message: 'Ledger sequence (blank uses the latest closed ledger):',
       },
       {
-        type: 'confirm',
-        name: 'dryRun',
-        message: 'Run as a dry run without submission?',
-        default: true,
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output JSON?',
-        default: false,
+        type: 'input',
+        name: 'limit',
+        message: 'Number of effects to retrieve (1-500):',
+        default: '25',
       },
     ],
   },
-  '151-fee-bump-wrapping': {
-    name: '151-fee-bump-wrapping',
+  '67-soroban-contract-events': {
+    name: '67-soroban-contract-events',
     description:
-      'Wrap and validate a base64 Stellar transaction envelope with a fee-bump transaction without submitting it',
-    run: loadExample('../examples/151-fee-bump-wrapping'),
+      'Query Soroban contract events over a ledger range and decode topics, payloads, and ledger references',
+    run: loadExample('../examples/67-soroban-contract-events'),
     params: [
       {
         type: 'input',
-        name: 'innerEnvelope',
-        message: 'Base64-encoded inner transaction envelope:',
+        name: 'contractId',
+        message: 'Contract ID to inspect (blank uses default testnet contract):',
       },
       {
         type: 'input',
-        name: 'feeSourceAccount',
-        message: 'Existing Horizon fee-source account ID:',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans the last ~24h of ledgers):',
       },
       {
         type: 'input',
-        name: 'bumpFee',
-        message: 'Fee-bump base fee in stroops:',
-        default: '500',
+        name: 'endLedger',
+        message: 'End ledger (blank queries up to the latest ledger):',
       },
       {
-        type: 'confirm',
-        name: 'dryRun',
-        message: 'Run as a dry run without submission?',
-        default: true,
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output JSON?',
-        default: false,
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to retrieve (1-200):',
+        default: '10',
       },
     ],
-  },
-  '88-claimable-balance-inspection': {
-    name: '88-claimable-balance-inspection',
-    description: 'Query and inspect claimable balances, assets, amounts, claimants, and predicates',
-    run: loadExample('../examples/88-claimable-balance-inspection'),
-  },
-  '89-account-data-inspection': {
-    name: '89-account-data-inspection',
-    description:
-      'Inspect account data entries, decode base64 values, and explain Manage Data state changes',
-    run: loadExample('../examples/89-account-data-inspection'),
   },
   '68-soroban-contract-simulation': {
     name: '68-soroban-contract-simulation',
@@ -998,12 +662,6 @@ export const examples: Record<string, Example> = {
       'Read initial contract storage, invoke a state-modifying method, confirm the transaction, and verify the updated storage value',
     run: loadExample('../examples/71-soroban-storage-update'),
   },
-  '82-transaction-time-bounds': {
-    name: '82-transaction-time-bounds',
-    description:
-      'Build, simulate, sign, and submit a Soroban contract invocation with custom time bounds, and demonstrate expired and invalid time-bounds handling',
-    run: loadExample('../examples/82-transaction-time-bounds'),
-  },
   '80-offline-transaction-workflow': {
     name: '80-offline-transaction-workflow',
     description:
@@ -1018,6 +676,113 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '81-transaction-preflight': {
+    name: '81-transaction-preflight',
+    description:
+      'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
+    run: loadExample('../examples/81-transaction-preflight'),
+  },
+  '82-transaction-time-bounds': {
+    name: '82-transaction-time-bounds',
+    description:
+      'Build, simulate, sign, and submit a Soroban contract invocation with custom time bounds, and demonstrate expired and invalid time-bounds handling',
+    run: loadExample('../examples/82-transaction-time-bounds'),
+  },
+  '83-multi-contract-transaction': {
+    name: '83-multi-contract-transaction',
+    description:
+      'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
+    run: loadExample('../examples/83-multi-contract-transaction'),
+  },
+  '84-muxed-account-handling': {
+    name: '84-muxed-account-handling',
+    description: 'Create, parse, and validate muxed (M...) accounts and their identifiers',
+    run: loadExample('../examples/84-muxed-account-handling'),
+  },
+  '85-transaction-fee-estimation': {
+    name: '85-transaction-fee-estimation',
+    description: 'Estimate transaction fees from network fee stats across priority levels',
+    run: loadExample('../examples/85-transaction-fee-estimation'),
+  },
+  '86-transaction-memo-handling': {
+    name: '86-transaction-memo-handling',
+    description: 'Build, encode, and decode every supported Stellar transaction memo type',
+    run: loadExample('../examples/86-transaction-memo-handling'),
+  },
+  '87-transaction-envelope-inspection': {
+    name: '87-transaction-envelope-inspection',
+    description: 'Inspect transaction envelopes, signatures, and XDR round-tripping',
+    run: loadExample('../examples/87-transaction-envelope-inspection'),
+  },
+  '88-claimable-balance-inspection': {
+    name: '88-claimable-balance-inspection',
+    description: 'Query and inspect claimable balances, assets, amounts, claimants, and predicates',
+    run: loadExample('../examples/88-claimable-balance-inspection'),
+  },
+  '89-account-data-inspection': {
+    name: '89-account-data-inspection',
+    description:
+      'Inspect account data entries, decode base64 values, and explain Manage Data state changes',
+    run: loadExample('../examples/89-account-data-inspection'),
+  },
+  '92-account-payment-stream': {
+    name: '92-account-payment-stream',
+    description:
+      'Subscribe to a Horizon account payment stream, display incoming and outgoing payments in real time, handle errors, and explain streaming versus polling',
+    run: loadExample('../examples/92-account-payment-stream'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to monitor (blank discovers a recently active account):',
+      },
+      {
+        type: 'list',
+        name: 'paymentFilter',
+        message: 'Payment direction filter:',
+        default: 'all',
+        choices: [
+          { name: 'All payments (incoming + outgoing)', value: 'all' },
+          { name: 'Incoming only', value: 'incoming' },
+          { name: 'Outgoing only', value: 'outgoing' },
+        ],
+      },
+    ],
+  },
+  '93-trustline-management': {
+    name: '93-trustline-management',
+    description:
+      'Create, inspect, update, and remove asset trustlines — demonstrating changeTrust, limit updates, authorization status, and the reserve cost of each subentry',
+    run: loadExample('../examples/93-trustline-management'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code for the trustline (blank uses DEMO):',
+        default: 'DEMO',
+      },
+    ],
+  },
+  '96-fee-bump-recovery-workflow': {
+    name: '96-fee-bump-recovery-workflow',
+    description:
+      'Recover a low-fee transaction by wrapping it in a higher-fee fee-bump replacement',
+    run: loadExample('../examples/96-fee-bump-recovery-workflow'),
+    params: [
+      {
+        type: 'input',
+        name: 'innerBaseFee',
+        message: 'Enter the original transaction base fee in stroops:',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'bumpBaseFee',
+        message: 'Enter the fee-bump base fee in stroops:',
+        default: '500',
+      },
+    ],
+  },
   '100-authorization-entry-inspection': {
     name: '100-authorization-entry-inspection',
     description:
@@ -1029,12 +794,6 @@ export const examples: Record<string, Example> = {
     description:
       'Interpret a simulateTransaction response: resource budget, ledger footprint, return value, diagnostic events, and restore preamble',
     run: loadExample('../examples/101-simulation-result-analysis'),
-  },
-  '181-soroban-footprint-comparison': {
-    name: '181-soroban-footprint-comparison',
-    description:
-      'Compare Soroban ledger footprints across multiple simulation results, detect shared entries, added/removed keys, access-mode changes, and identify the smaller footprint',
-    run: loadExample('../examples/181-soroban-footprint-comparison'),
   },
   '102-contract-storage-inspection': {
     name: '102-contract-storage-inspection',
@@ -1054,17 +813,17 @@ export const examples: Record<string, Example> = {
       'Detect archived Soroban contract state, simulate and submit RestoreFootprint, and verify accessibility',
     run: loadExample('../examples/104-contract-restoration'),
   },
-  '106-scval-serialization': {
-    name: '106-scval-serialization',
-    description:
-      'Convert JavaScript values to Soroban ScVal objects and back with reusable helpers',
-    run: loadExample('../examples/106-scval-serialization'),
-  },
   '105-contract-event-decoding': {
     name: '105-contract-event-decoding',
     description:
       'Retrieve Soroban contract events and decode topics and payloads with raw XDR side-by-side',
     run: loadExample('../examples/105-contract-event-decoding'),
+  },
+  '106-scval-serialization': {
+    name: '106-scval-serialization',
+    description:
+      'Convert JavaScript values to Soroban ScVal objects and back with reusable helpers',
+    run: loadExample('../examples/106-scval-serialization'),
   },
   '107-contract-spec-introspection': {
     name: '107-contract-spec-introspection',
@@ -1199,180 +958,26 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
-  '81-transaction-preflight': {
-    name: '81-transaction-preflight',
+  '116-soroban-token-contract': {
+    name: '116-soroban-token-contract',
     description:
-      'Run the full Soroban preflight workflow: simulate, extract footprint/auth/resource-fee data, assemble, sign, submit, and confirm',
-    run: loadExample('../examples/81-transaction-preflight'),
+      'Inspect Soroban token metadata, balances and allowances, construct a transfer, and simulate it before submission',
+    run: loadExample('../examples/116-soroban-token-contract'),
   },
-  '83-multi-contract-transaction': {
-    name: '83-multi-contract-transaction',
-    description:
-      'Compose a single orchestrator contract invocation touching multiple downstream contracts, simulate and submit it, and explain atomicity and execution order',
-    run: loadExample('../examples/83-multi-contract-transaction'),
+  '117-soroban-auth-tree': {
+    name: '117-soroban-auth-tree',
+    description: 'Simulate Soroban authorization and visualize root and nested invocation trees',
+    run: loadExample('../examples/117-soroban-auth-tree'),
   },
-  '93-trustline-management': {
-    name: '93-trustline-management',
-    description:
-      'Create, inspect, update, and remove asset trustlines — demonstrating changeTrust, limit updates, authorization status, and the reserve cost of each subentry',
-    run: loadExample('../examples/93-trustline-management'),
-    params: [
-      {
-        type: 'input',
-        name: 'assetCode',
-        message: 'Asset code for the trustline (blank uses DEMO):',
-        default: 'DEMO',
-      },
-    ],
+  '118-ledger-footprint-analysis': {
+    name: '118-ledger-footprint-analysis',
+    description: 'Simulate, decode, summarize, and compare Soroban ledger footprints',
+    run: loadExample('../examples/118-ledger-footprint-analysis'),
   },
-  '92-account-payment-stream': {
-    name: '92-account-payment-stream',
-    description:
-      'Subscribe to a Horizon account payment stream, display incoming and outgoing payments in real time, handle errors, and explain streaming versus polling',
-    run: loadExample('../examples/92-account-payment-stream'),
-    params: [
-      {
-        type: 'input',
-        name: 'accountId',
-        message: 'Account ID to monitor (blank discovers a recently active account):',
-      },
-      {
-        type: 'list',
-        name: 'paymentFilter',
-        message: 'Payment direction filter:',
-        default: 'all',
-        choices: [
-          { name: 'All payments (incoming + outgoing)', value: 'all' },
-          { name: 'Incoming only', value: 'incoming' },
-          { name: 'Outgoing only', value: 'outgoing' },
-        ],
-      },
-    ],
-  },
-  '126-claimable-balance-management': {
-    name: '126-claimable-balance-management',
-    description: 'Discover, inspect, filter, and claim eligible Stellar claimable balances',
-    run: loadExample('../examples/126-claimable-balance-management'),
-    params: [
-      {
-        type: 'input',
-        name: 'assetFilter',
-        message: 'Optional asset filter ("native" or CODE:ISSUER, blank shows all):',
-      },
-    ],
-  },
-  '128-account-authorization-flags': {
-    name: '128-account-authorization-flags',
-    description:
-      'Inspect and manage issuer account authorization flags and trustline authorization',
-    run: loadExample('../examples/128-account-authorization-flags'),
-    params: [
-      {
-        type: 'input',
-        name: 'assetCode',
-        message: 'Asset code to demonstrate authorization on (blank uses AUTHCOIN):',
-        default: 'AUTHCOIN',
-      },
-    ],
-  },
-  '130-sponsored-reserve-management': {
-    name: '130-sponsored-reserve-management',
-    description:
-      "Sponsor a trustline and a data entry, inspect reserve responsibility, then revoke one entry's sponsorship",
-    run: loadExample('../examples/130-sponsored-reserve-management'),
-  },
-  '131-path-payment-route-inspection': {
-    name: '131-path-payment-route-inspection',
-    description:
-      'Discover and rank strict-receive path payment routes without submitting a payment',
-    run: loadExample('../examples/131-path-payment-route-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'destAmount',
-        message: 'Fixed destination amount to price routes for (blank uses 25):',
-        default: '25',
-      },
-      {
-        type: 'input',
-        name: 'maxRoutes',
-        message: 'Maximum number of routes to display (blank uses 5):',
-        default: '5',
-      },
-    ],
-  },
-  '139-account-offer-inspection': {
-    name: '139-account-offer-inspection',
-    description:
-      "Inspect an account's open SDEX offers, grouped by trading pair with summary statistics",
-    run: loadExample('../examples/139-account-offer-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'accountId',
-        message: 'Enter Stellar account ID to inspect offers:',
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output results in JSON format?',
-        default: false,
-      },
-    ],
-  },
-  '138-account-merge-preflight': {
-    name: '138-account-merge-preflight',
-    description: 'Inspect a Stellar account and determine whether it is ready for an account merge',
-    run: loadExample('../examples/138-account-merge-preflight'),
-    params: [
-      {
-        type: 'input',
-        name: 'sourceAccountId',
-        message: 'Enter source account ID (to be merged/deleted):',
-      },
-      {
-        type: 'input',
-        name: 'destinationAccountId',
-        message: 'Enter destination account ID:',
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output results in JSON format?',
-        default: false,
-      },
-    ],
-  },
-  '132-fee-bump-inspection': {
-    name: '132-fee-bump-inspection',
-    description: 'Decode and inspect a fee-bump transaction envelope entirely offline',
-    run: loadExample('../examples/132-fee-bump-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'envelopeXdr',
-        message: 'Enter base64 transaction envelope XDR (leave blank to generate sample):',
-      },
-    ],
-  },
-  '136-transaction-fee-estimation': {
-    name: '136-transaction-fee-estimation',
-    description: 'Estimate transaction fees from network fee statistics across operation sizes',
-    run: loadExample('../examples/136-transaction-fee-estimation'),
-    params: [
-      {
-        type: 'input',
-        name: 'operationCount',
-        message: 'Enter number of operations for fee estimation:',
-        default: '1',
-      },
-      {
-        type: 'confirm',
-        name: 'json',
-        message: 'Output results in JSON format?',
-        default: false,
-      },
-    ],
+  '119-soroban-resource-fee-analysis': {
+    name: '119-soroban-resource-fee-analysis',
+    description: 'Compare Soroban CPU, memory, ledger I/O, resource limits, and estimated fees',
+    run: loadExample('../examples/119-soroban-resource-fee-analysis'),
   },
   '120-transaction-lifecycle-monitor': {
     name: '120-transaction-lifecycle-monitor',
@@ -1530,15 +1135,79 @@ export const examples: Record<string, Example> = {
     description: 'Simulate liquidity pool deposit and withdrawal operations',
     run: loadExample('../examples/125-liquidity-pool-simulation'),
   },
+  '126-claimable-balance-management': {
+    name: '126-claimable-balance-management',
+    description: 'Discover, inspect, filter, and claim eligible Stellar claimable balances',
+    run: loadExample('../examples/126-claimable-balance-management'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetFilter',
+        message: 'Optional asset filter ("native" or CODE:ISSUER, blank shows all):',
+      },
+    ],
+  },
   '127-trustline-management': {
     name: '127-trustline-management',
     description: 'Retrieve, inspect, create, modify, and remove Stellar trustlines',
     run: loadExample('../examples/127-trustline-management'),
   },
+  '128-account-authorization-flags': {
+    name: '128-account-authorization-flags',
+    description:
+      'Inspect and manage issuer account authorization flags and trustline authorization',
+    run: loadExample('../examples/128-account-authorization-flags'),
+    params: [
+      {
+        type: 'input',
+        name: 'assetCode',
+        message: 'Asset code to demonstrate authorization on (blank uses AUTHCOIN):',
+        default: 'AUTHCOIN',
+      },
+    ],
+  },
   '129-asset-clawback': {
     name: '129-asset-clawback',
     description: 'Inspect clawback configuration and construct a clawback transaction',
     run: loadExample('../examples/129-asset-clawback'),
+  },
+  '130-sponsored-reserve-management': {
+    name: '130-sponsored-reserve-management',
+    description:
+      "Sponsor a trustline and a data entry, inspect reserve responsibility, then revoke one entry's sponsorship",
+    run: loadExample('../examples/130-sponsored-reserve-management'),
+  },
+  '131-path-payment-route-inspection': {
+    name: '131-path-payment-route-inspection',
+    description:
+      'Discover and rank strict-receive path payment routes without submitting a payment',
+    run: loadExample('../examples/131-path-payment-route-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'destAmount',
+        message: 'Fixed destination amount to price routes for (blank uses 25):',
+        default: '25',
+      },
+      {
+        type: 'input',
+        name: 'maxRoutes',
+        message: 'Maximum number of routes to display (blank uses 5):',
+        default: '5',
+      },
+    ],
+  },
+  '132-fee-bump-inspection': {
+    name: '132-fee-bump-inspection',
+    description: 'Decode and inspect a fee-bump transaction envelope entirely offline',
+    run: loadExample('../examples/132-fee-bump-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'envelopeXdr',
+        message: 'Enter base64 transaction envelope XDR (leave blank to generate sample):',
+      },
+    ],
   },
   '133-transaction-signature-verification': {
     name: '133-transaction-signature-verification',
@@ -1563,10 +1232,233 @@ export const examples: Record<string, Example> = {
     description: 'Perform preflight validation checks on a transaction envelope before submission',
     run: loadExample('../examples/135-transaction-preflight-validation'),
   },
+  '136-transaction-fee-estimation': {
+    name: '136-transaction-fee-estimation',
+    description: 'Estimate transaction fees from network fee statistics across operation sizes',
+    run: loadExample('../examples/136-transaction-fee-estimation'),
+    params: [
+      {
+        type: 'input',
+        name: 'operationCount',
+        message: 'Enter number of operations for fee estimation:',
+        default: '1',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
   '137-dynamic-fee-selection': {
     name: '137-dynamic-fee-selection',
     description: 'Retrieve fee stats and calculate transaction fees using dynamic strategies',
     run: loadExample('../examples/137-dynamic-fee-selection'),
+  },
+  '138-account-merge-preflight': {
+    name: '138-account-merge-preflight',
+    description: 'Inspect a Stellar account and determine whether it is ready for an account merge',
+    run: loadExample('../examples/138-account-merge-preflight'),
+    params: [
+      {
+        type: 'input',
+        name: 'sourceAccountId',
+        message: 'Enter source account ID (to be merged/deleted):',
+      },
+      {
+        type: 'input',
+        name: 'destinationAccountId',
+        message: 'Enter destination account ID:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '139-account-offer-inspection': {
+    name: '139-account-offer-inspection',
+    description:
+      "Inspect an account's open SDEX offers, grouped by trading pair with summary statistics",
+    run: loadExample('../examples/139-account-offer-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Enter Stellar account ID to inspect offers:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output results in JSON format?',
+        default: false,
+      },
+    ],
+  },
+  '140-account-reserve-analysis': {
+    name: '140-account-reserve-analysis',
+    description:
+      'Inspect account reserve requirements, subentries, liabilities, and estimated spendable XLM',
+    run: loadExample('../examples/140-account-reserve-analysis'),
+  },
+  '141-sequence-number-management': {
+    name: '141-sequence-number-management',
+    description:
+      'Retrieve, allocate, detect stale, and manage Stellar account sequence numbers across transactions',
+    run: loadExample('../examples/141-sequence-number-management'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionCount',
+        message: 'Number of sequential transactions to build and submit (default 3):',
+        default: '3',
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '142-batch-transaction-construction': {
+    name: '142-batch-transaction-construction',
+    description:
+      'Construct, inspect, and optionally submit a batch of independent transactions with sequential sequence numbers',
+    run: loadExample('../examples/142-batch-transaction-construction'),
+    params: [
+      {
+        type: 'input',
+        name: 'batchSize',
+        message: 'Number of transactions in the batch (default 3):',
+        default: '3',
+      },
+      {
+        type: 'list',
+        name: 'dryRun',
+        message: 'Run mode:',
+        default: 'false',
+        choices: [
+          { name: 'Submit transactions', value: 'false' },
+          { name: 'Dry-run (inspect only, no submission)', value: 'true' },
+        ],
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '143-transaction-time-bounds': {
+    name: '143-transaction-time-bounds',
+    description:
+      'Construct, inspect, validate, and submit transactions with time bounds; observe txTOO_EARLY and txTOO_LATE',
+    run: loadExample('../examples/143-transaction-time-bounds'),
+    params: [
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '148-result-code-decoder': {
+    name: '148-result-code-decoder',
+    description:
+      'Retrieve a transaction from Horizon and decode transaction and operation result codes into diagnostics',
+    run: loadExample('../examples/148-result-code-decoder'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Enter the 64-character transaction hash:',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '150-mixed-operation-transaction': {
+    name: '150-mixed-operation-transaction',
+    description:
+      'Build and inspect an atomic transaction containing payment, manageData, and bumpSequence operations',
+    run: loadExample('../examples/150-mixed-operation-transaction'),
+    params: [
+      {
+        type: 'input',
+        name: 'sourceAccount',
+        message: 'Existing Horizon source account ID:',
+      },
+      {
+        type: 'confirm',
+        name: 'dryRun',
+        message: 'Run as a dry run without submission?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '151-fee-bump-wrapping': {
+    name: '151-fee-bump-wrapping',
+    description:
+      'Wrap and validate a base64 Stellar transaction envelope with a fee-bump transaction without submitting it',
+    run: loadExample('../examples/151-fee-bump-wrapping'),
+    params: [
+      {
+        type: 'input',
+        name: 'innerEnvelope',
+        message: 'Base64-encoded inner transaction envelope:',
+      },
+      {
+        type: 'input',
+        name: 'feeSourceAccount',
+        message: 'Existing Horizon fee-source account ID:',
+      },
+      {
+        type: 'input',
+        name: 'bumpFee',
+        message: 'Fee-bump base fee in stroops:',
+        default: '500',
+      },
+      {
+        type: 'confirm',
+        name: 'dryRun',
+        message: 'Run as a dry run without submission?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
   },
   '157-horizon-pagination': {
     name: '157-horizon-pagination',
@@ -1726,187 +1618,6 @@ export const examples: Record<string, Example> = {
     description: 'Inspect asset authorization flags and trustline authorization-related balances',
     run: loadExample('../examples/168-issuer-authorization-inspection'),
   },
-  '116-soroban-token-contract': {
-    name: '116-soroban-token-contract',
-    description:
-      'Inspect Soroban token metadata, balances and allowances, construct a transfer, and simulate it before submission',
-    run: loadExample('../examples/116-soroban-token-contract'),
-  },
-  '117-soroban-auth-tree': {
-    name: '117-soroban-auth-tree',
-    description: 'Simulate Soroban authorization and visualize root and nested invocation trees',
-    run: loadExample('../examples/117-soroban-auth-tree'),
-  },
-  '118-ledger-footprint-analysis': {
-    name: '118-ledger-footprint-analysis',
-    description: 'Simulate, decode, summarize, and compare Soroban ledger footprints',
-    run: loadExample('../examples/118-ledger-footprint-analysis'),
-  },
-  '119-soroban-resource-fee-analysis': {
-    name: '119-soroban-resource-fee-analysis',
-    description: 'Compare Soroban CPU, memory, ledger I/O, resource limits, and estimated fees',
-    run: loadExample('../examples/119-soroban-resource-fee-analysis'),
-  },
-  '177-soroban-event-decoding': {
-    name: '177-soroban-event-decoding',
-    description:
-      'Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding',
-    run: loadExample('../examples/177-soroban-event-decoding'),
-  },
-  '193-soroban-contract-interface': {
-    name: '193-soroban-contract-interface',
-    description:
-      'Inspect a deployed Soroban contract interface, exported functions, and user-defined types',
-    run: loadExample('../examples/193-soroban-contract-interface'),
-    params: [
-      {
-        type: 'input',
-        name: 'contractId',
-        message: 'Contract ID (blank discovers a recently active contract):',
-      },
-      {
-        type: 'input',
-        name: 'startLedger',
-        message: 'Start ledger (blank scans the last ~24h of ledgers):',
-      },
-      {
-        type: 'input',
-        name: 'endLedger',
-        message: 'End ledger (blank queries up to the latest ledger):',
-      },
-      {
-        type: 'input',
-        name: 'limit',
-        message: 'Number of events to retrieve (1-200):',
-        default: '10',
-      },
-      {
-        type: 'input',
-        name: 'eventType',
-        message: 'Event type filter (contract, system, or diagnostic):',
-        default: 'contract',
-      },
-      {
-        type: 'input',
-        name: 'topicFilter',
-        message: 'Optional topic filter (e.g. "transfer"):',
-      },
-    ],
-  },
-  '178-soroban-contract-storage': {
-    name: '178-soroban-contract-storage',
-    description:
-      'Inspect Soroban contract storage entries across instance, persistent, and temporary durability tiers',
-    run: loadExample('../examples/178-soroban-contract-storage'),
-    params: [
-      {
-        type: 'input',
-        name: 'contractId',
-        message: 'Contract ID:',
-        default: 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA',
-      },
-      {
-        type: 'input',
-        name: 'storageKey',
-        message: 'Optional storage key (e.g. "counter", "symbol:admin", "address:G..."):',
-      },
-    ],
-  },
-  '179-soroban-footprint-inspection': {
-    name: '179-soroban-footprint-inspection',
-    description:
-      'Extract and analyze the Soroban ledger footprint from a transaction simulation or envelope',
-    run: loadExample('../examples/179-soroban-footprint-inspection'),
-    params: [
-      {
-        type: 'input',
-        name: 'transactionXdr',
-        message: 'Optional base64 XDR (blank runs a demo simulation):',
-      },
-    ],
-  },
-  '180-soroban-resource-analysis': {
-    name: '180-soroban-resource-analysis',
-    description:
-      'Analyze Soroban resource usage from simulation results with utilization and near-limit detection',
-    run: loadExample('../examples/180-soroban-resource-analysis'),
-    params: [
-      {
-        type: 'input',
-        name: 'transactionXdr',
-        message: 'Optional base64 XDR (blank runs a demo simulation):',
-      },
-      {
-        type: 'confirm',
-        name: 'jsonOutput',
-        message: 'Output JSON?',
-        default: false,
-      },
-    ],
-  },
-  '194-soroban-contract-client-generator': {
-    name: '194-soroban-contract-client-generator',
-    description:
-      'Generate a strongly typed TypeScript contract-client wrapper from a Soroban contract specification',
-    run: loadExample('../examples/194-soroban-contract-client-generator'),
-    params: [
-      {
-        type: 'input',
-        name: 'contractId',
-        message: 'Contract ID for client:',
-      },
-      {
-        type: 'confirm',
-        name: 'jsonOutput',
-        message: 'Output JSON metadata?',
-        default: false,
-      },
-    ],
-  },
-  '195-soroban-interface-compatibility': {
-    name: '195-soroban-interface-compatibility',
-    description:
-      'Compare two Soroban contract specifications and report additions, removals, and breaking changes',
-    run: loadExample('../examples/195-soroban-interface-compatibility'),
-    params: [
-      {
-        type: 'confirm',
-        name: 'strictMode',
-        message: 'Enable strict compatibility mode?',
-        default: false,
-      },
-      {
-        type: 'confirm',
-        name: 'jsonOutput',
-        message: 'Output JSON?',
-        default: false,
-      },
-    ],
-  },
-  '196-soroban-authorization-preparation': {
-    name: '196-soroban-authorization-preparation',
-    description:
-      'Prepare, inspect, decode, and verify Soroban authorization entries and invocation trees without signing',
-    run: loadExample('../examples/196-soroban-authorization-preparation'),
-    params: [
-      {
-        type: 'input',
-        name: 'contractId',
-        message: 'Target Contract ID:',
-      },
-      {
-        type: 'input',
-        name: 'sourceAccount',
-        message: 'Authorizing public key:',
-      },
-      {
-        type: 'confirm',
-        name: 'jsonOutput',
-        message: 'Output JSON?',
-        default: false,
-      },
-    ],
-  },
   '169-asset-holder-distribution': {
     name: '169-asset-holder-distribution',
     description:
@@ -2042,425 +1753,68 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
     ],
   },
-  '197-soroban-authorization-signature-inspection': {
-    name: '197-soroban-authorization-signature-inspection',
+  '177-soroban-event-decoding': {
+    name: '177-soroban-event-decoding',
     description:
-      'Inspect Soroban authorization-entry signatures and invocation trees without signing',
-    run: loadExample('../examples/197-soroban-authorization-signature-inspection'),
+      'Retrieve, filter, decode, and display Soroban contract events with topic and payload decoding',
+    run: loadExample('../examples/177-soroban-event-decoding'),
+  },
+  '178-soroban-contract-storage': {
+    name: '178-soroban-contract-storage',
+    description:
+      'Inspect Soroban contract storage entries across instance, persistent, and temporary durability tiers',
+    run: loadExample('../examples/178-soroban-contract-storage'),
     params: [
       {
         type: 'input',
-        name: 'entries',
-        message: 'Space-separated authorization-entry XDR values:',
-      },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-    ],
-  },
-  '198-soroban-ttl': {
-    name: '198-soroban-ttl',
-    description: 'Read-only Soroban contract-state TTL and expiration analysis',
-    run: loadExample('../examples/198-soroban-ttl'),
-    params: [
-      { type: 'input', name: 'contractId', message: 'Contract ID:' },
-      { type: 'input', name: 'keys', message: 'Optional comma-separated storage keys:' },
-      { type: 'input', name: 'warningLedgers', message: 'Warning threshold:', default: 1000 },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-    ],
-  },
-  '199-soroban-state-report': {
-    name: '199-soroban-state-report',
-    description: 'Consolidated read-only Soroban state footprint and TTL-risk report',
-    run: loadExample('../examples/199-soroban-state-report'),
-    params: [
-      { type: 'input', name: 'contractId', message: 'Contract ID:' },
-      { type: 'input', name: 'keys', message: 'Optional comma-separated storage keys:' },
-      { type: 'input', name: 'warningLedgers', message: 'Warning threshold:', default: 1000 },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-    ],
-  },
-  '200-decode-ledger-key': {
-    name: '200-decode-ledger-key',
-    description:
-      'Decode base64 Soroban ledger-key XDR with contract, durability, and ScVal details',
-    run: loadExample('../examples/200-decode-ledger-key'),
-    params: [
-      { type: 'input', name: 'inputs', message: 'Space-separated ledger-key XDR values:' },
-      { type: 'confirm', name: 'compact', message: 'Compact output?', default: false },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-    ],
-  },
-  '197-state-lifecycle': {
-    name: '197-state-lifecycle',
-    description:
-      'Offline Soroban contract-data entry lifecycle analysis: compare ordered state snapshots, detect added/modified/removed/reappearing entries, track TTL and durability changes',
-    run: loadExample('../examples/197-state-lifecycle'),
-    params: [
-      {
-        type: 'input',
-        name: 'snapshotFiles',
-        message: 'Space-separated paths to two or more JSON snapshot files:',
+        name: 'contractId',
+        message: 'Contract ID:',
+        default: 'CDW6BR4A6MGGCW23SCAVBBBZ3HW4V5C3TJ35OC3D4RQ4A6MGGCW23SCA',
       },
       {
         type: 'input',
-        name: 'contractIdFilter',
-        message: 'Contract ID filter (blank = all contracts):',
+        name: 'storageKey',
+        message: 'Optional storage key (e.g. "counter", "symbol:admin", "address:G..."):',
       },
+    ],
+  },
+  '179-soroban-footprint-inspection': {
+    name: '179-soroban-footprint-inspection',
+    description:
+      'Extract and analyze the Soroban ledger footprint from a transaction simulation or envelope',
+    run: loadExample('../examples/179-soroban-footprint-inspection'),
+    params: [
       {
-        type: 'list',
-        name: 'durabilityFilter',
-        message: 'Durability filter:',
-        choices: [
-          { name: 'All', value: '' },
-          { name: 'Persistent only', value: 'persistent' },
-          { name: 'Temporary only', value: 'temporary' },
-        ],
-        default: '',
+        type: 'input',
+        name: 'transactionXdr',
+        message: 'Optional base64 XDR (blank runs a demo simulation):',
       },
+    ],
+  },
+  '180-soroban-resource-analysis': {
+    name: '180-soroban-resource-analysis',
+    description:
+      'Analyze Soroban resource usage from simulation results with utilization and near-limit detection',
+    run: loadExample('../examples/180-soroban-resource-analysis'),
+    params: [
       {
-        type: 'list',
-        name: 'transitionFilter',
-        message: 'Lifecycle transition filter:',
-        choices: [
-          { name: 'All', value: '' },
-          { name: 'First observed', value: 'first-observed' },
-          { name: 'Persisting', value: 'persisting' },
-          { name: 'Modified', value: 'modified' },
-          { name: 'Removed', value: 'removed' },
-          { name: 'Reappearing', value: 'reappearing' },
-        ],
-        default: '',
+        type: 'input',
+        name: 'transactionXdr',
+        message: 'Optional base64 XDR (blank runs a demo simulation):',
       },
       {
         type: 'confirm',
-        name: 'validateOrder',
-        message: 'Validate snapshot ledger ordering?',
-        default: true,
-      },
-      { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
-    ],
-  },
-  '201-scval': {
-    name: '201-scval',
-    description: 'Interactive ScVal encoding and decoding playground',
-    run: loadExample('../examples/201-scval'),
-    params: [
-      { type: 'list', name: 'action', message: 'Action:', choices: ['encode', 'decode'] },
-      { type: 'input', name: 'value', message: 'Value (JSON or base64 XDR):' },
-      { type: 'input', name: 'type', message: 'Type hint (optional):' },
-    ],
-  },
-  '202-scval-validate': {
-    name: '202-scval-validate',
-    description: 'Validate supplied JSON input against an expected Soroban ScVal type structure',
-    run: loadExample('../examples/202-scval-validate'),
-    params: [
-      { type: 'input', name: 'input', message: 'Input JSON value:' },
-      { type: 'input', name: 'expectedType', message: 'Expected type structure:' },
-    ],
-  },
-  '203-contract-args': {
-    name: '203-contract-args',
-    description:
-      'Inspect a Soroban contract specification and output a developer-friendly argument schema',
-    run: loadExample('../examples/203-contract-args'),
-    params: [{ type: 'input', name: 'contractId', message: 'Target contract ID:' }],
-  },
-  '209-watch-events': {
-    name: '209-watch-events',
-    description: 'Periodically monitor Soroban RPC for new contract events in real-time',
-    run: loadExample('../examples/209-watch-events'),
-    params: [{ type: 'input', name: 'contractId', message: 'Target contract ID:' }],
-  },
-  '210-replay-events': {
-    name: '210-replay-events',
-    description:
-      'Retrieve, decode, and export a deterministic stream of Soroban events over a ledger range',
-    run: loadExample('../examples/210-replay-events'),
-    params: [
-      { type: 'input', name: 'startLedger', message: 'Start ledger sequence:' },
-      { type: 'input', name: 'endLedger', message: 'End ledger sequence:' },
-      { type: 'input', name: 'contractId', message: 'Target contract ID (optional):' },
-    ],
-  },
-  '211-event-analytics': {
-    name: '211-event-analytics',
-    description:
-      'Analyze historical Soroban events to produce aggregate usage statistics and distributions',
-    run: loadExample('../examples/211-event-analytics'),
-    params: [
-      { type: 'input', name: 'startLedger', message: 'Start ledger sequence:' },
-      { type: 'input', name: 'endLedger', message: 'End ledger sequence:' },
-      { type: 'input', name: 'contractId', message: 'Target contract ID (optional):' },
-    ],
-  },
-  '212-event-validate': {
-    name: '212-event-validate',
-    description:
-      'Validate historical Soroban events and payload structures against an expected schema',
-    run: loadExample('../examples/212-event-validate'),
-    params: [
-      { type: 'input', name: 'eventFile', message: 'Path to target event JSON:' },
-      { type: 'input', name: 'schemaFile', message: 'Path to expected schema JSON:' },
-    ],
-  },
-  '213-event-schema-diff': {
-    name: '213-event-schema-diff',
-    description: 'Compare two Soroban event schema definitions and output structural differences',
-    run: loadExample('../examples/213-event-schema-diff'),
-    params: [
-      { type: 'input', name: 'oldSchema', message: 'Path to old schema JSON:' },
-      { type: 'input', name: 'newSchema', message: 'Path to new schema JSON:' },
-    ],
-  },
-  '214-event-types': {
-    name: '214-event-types',
-    description: 'Generate strongly-typed TypeScript interfaces from a Soroban event schema',
-    run: loadExample('../examples/214-event-types'),
-    params: [{ type: 'input', name: 'schemaFile', message: 'Path to schema JSON:' }],
-  },
-  '215-event-compat': {
-    name: '215-event-compat',
-    description: 'Verify if a collection of actual Soroban events can be decoded against a schema',
-    run: loadExample('../examples/215-event-compat'),
-    params: [
-      { type: 'input', name: 'schemaFile', message: 'Path to expected schema JSON:' },
-      { type: 'input', name: 'eventsFile', message: 'Path to events JSON:' },
-    ],
-  },
-  '218-wasm-dominators': {
-    name: '218-wasm-dominators',
-    description:
-      'Construct control-flow graphs and compute dominator trees for every function in a Soroban contract WASM artifact',
-    run: loadExample('../examples/218-wasm-dominators'),
-    params: [
-      { type: 'input', name: 'wasmFile', message: 'Path to WASM file (blank uses bundled sample):' },
-      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-      { type: 'confirm', name: 'dot', message: 'Output DOT graph?', default: false },
-      { type: 'input', name: 'dotOutput', message: 'Optional path to write DOT file (blank skips write):' },
-    ],
-  },
-  '252-wasm-features': {
-    name: '252-wasm-features',
-    description:
-      'Scan WASM sections, types, imports, and instructions for a normalized offline feature-usage profile and optional artifact comparison',
-    run: loadExample('../examples/252-wasm-features'),
-    params: [
-      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
-      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-    ],
-  },
-  '219-wasm-recursion': {
-    name: '219-wasm-recursion',
-    description:
-      'Analyse recursive call patterns in a Soroban contract WASM artifact — detecting self-recursion, mutual recursion, multi-function cycles, and indirect-call candidates offline without executing contract code',
-    run: loadExample('../examples/219-wasm-recursion'),
-    params: [
-      { type: 'input', name: 'wasmFile', message: 'Path to WASM file (blank uses bundled sample):' },
-      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-      { type: 'confirm', name: 'dot', message: 'Output DOT graph for recursive components?', default: false },
-      { type: 'input', name: 'maxCycles', message: 'Max cycles to enumerate (0 = skip enumeration):', default: 0 },
-    ],
-  },
-  '217-wasm-roundtrip': {
-    name: '217-wasm-roundtrip',
-    description:
-      'Parse a Soroban contract WASM artifact, re-encode it, and verify structural integrity across the round trip',
-    run: loadExample('../examples/217-wasm-roundtrip'),
-    params: [
-      {
-        type: 'input',
-        name: 'wasmFile',
-        message: 'Path to WASM file (blank uses bundled sample):',
-      },
-      {
-        type: 'input',
-        name: 'output',
-        message: 'Optional output path for the re-encoded artifact (blank skips write):',
-      },
-      {
-        type: 'confirm',
-        name: 'json',
+        name: 'jsonOutput',
         message: 'Output JSON?',
         default: false,
       },
-      {
-        type: 'confirm',
-        name: 'forceOverwrite',
-        message: 'Allow overwriting the source artifact if paths match?',
-        default: false,
-      },
     ],
   },
-  '216-state-diff': {
-    name: '216-state-diff',
+  '181-soroban-footprint-comparison': {
+    name: '181-soroban-footprint-comparison',
     description:
-      'Compare two Soroban contract state snapshots to find additions, modifications, and TTL changes',
-    run: loadExample('../examples/216-state-diff'),
-    params: [
-      { type: 'input', name: 'beforeFile', message: 'Path to initial state JSON:' },
-      { type: 'input', name: 'afterFile', message: 'Path to modified state JSON:' },
-    ],
-  },
-  '224-state-deps': {
-    name: '224-state-deps',
-    description:
-      'Scan a captured Soroban state snapshot to extract observable references and build a dependency graph',
-    run: loadExample('../examples/224-state-deps'),
-    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
-  },
-  '204-contract-template': {
-    name: '204-contract-template',
-    description:
-      'Generate a reusable TypeScript/JSON invocation template for a specific contract function',
-    run: loadExample('../examples/204-contract-template'),
-    params: [
-      { type: 'input', name: 'contractId', message: 'Target contract ID:' },
-      { type: 'input', name: 'functionName', message: 'Function name:' },
-    ],
-  },
-  '205-build-args': {
-    name: '205-build-args',
-    description:
-      'Convert developer-provided JSON input into ScVal[] arguments for Soroban invocation',
-    run: loadExample('../examples/205-build-args'),
-    params: [
-      { type: 'input', name: 'contractId', message: 'Target contract ID:' },
-      { type: 'input', name: 'functionName', message: 'Function name:' },
-      { type: 'input', name: 'args', message: 'Arguments JSON string:' },
-    ],
-  },
-  '206-decode-return': {
-    name: '206-decode-return',
-    description: 'Decode a base64 ScVal return value from a transaction or simulation result',
-    run: loadExample('../examples/206-decode-return'),
-    params: [{ type: 'input', name: 'input', message: 'Base64 ScVal XDR:' }],
-  },
-  '207-decode-event': {
-    name: '207-decode-event',
-    description: 'Decode the topics and data payload of a Soroban event JSON record',
-    run: loadExample('../examples/207-decode-event'),
-    params: [{ type: 'input', name: 'eventInput', message: 'Event JSON string:' }],
-  },
-  '249-wasm-return-provenance': {
-    name: '249-wasm-return-provenance',
-    description:
-      'Offline return-value provenance analysis for Soroban contract WASM artifacts — traces every return value backward through supported instructions and control-flow paths, classifying sources as parameters, constants, globals, memory, or call results',
-    run: loadExample('../examples/249-wasm-return-provenance/index'),
-    params: [
-      {
-        type: 'input',
-        name: 'wasmFile',
-        message: 'Path to WASM file (blank uses bundled sample):',
-      },
-      {
-        type: 'input',
-        name: 'compareFile',
-        message: 'Optional second WASM file for comparison mode:',
-      },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-      { type: 'confirm', name: 'dot', message: 'Output DOT provenance graph?', default: false },
-      {
-        type: 'input',
-        name: 'dotOutput',
-        message: 'Optional path to write DOT file (blank skips write):',
-      },
-    ],
-  },
-  '250-wasm-strings': {
-    name: '250-wasm-strings',
-    description:
-      'Offline WASM embedded-string analysis — extracts strings from data segments and custom sections, classifies them, groups repeated occurrences, and reports aggregate statistics',
-    run: loadExample('../examples/250-wasm-strings'),
-    params: [
-      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
-      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
-    ],
-  },
-  '251-wasm-stack-types': {
-    name: '251-wasm-stack-types',
-    description:
-      'Offline WASM operand-stack type analysis — reconstructs statically expected stack type states, identifies underflows, and reports type-flow statistics',
-    run: loadExample('../examples/251-wasm-stack-types'),
-    params: [
-      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
-      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
-    ],
-  },
-  '252-wasm-globals-usage': {
-    name: '252-wasm-globals-usage',
-    description:
-      'Offline WASM global mutation analysis — tracks global.get and global.set usage, classifies globals as read-only/write-only/read-write/unused, and reports per-function data-flow statistics',
-    run: loadExample('../examples/252-wasm-globals-usage'),
-    params: [
-      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
-      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
-    ],
-  },
-  '253-wasm-literals': {
-    name: '253-wasm-literals',
-    description:
-      'Offline WASM literal and magic-number analysis — extracts numeric constants, classifies structural patterns (zero, power-of-two, bit-mask, etc.), and reports occurrence statistics',
-    run: loadExample('../examples/253-wasm-literals'),
-    params: [
-      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
-      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
-    ],
-  },
-  '254-contract-event-checkpointing': { name: '254-contract-event-checkpointing', description: '254-contract-event-checkpointing (issues #405–#408)', run: loadExample('../examples/254-contract-event-checkpointing') },
-  '255-asset-trustline-lifecycle': { name: '255-asset-trustline-lifecycle', description: '255-asset-trustline-lifecycle (issues #405–#408)', run: loadExample('../examples/255-asset-trustline-lifecycle') },
-  '256-path-payment-preparation': { name: '256-path-payment-preparation', description: '256-path-payment-preparation (issues #405–#408)', run: loadExample('../examples/256-path-payment-preparation') },
-  '257-transaction-history-checkpointing': { name: '257-transaction-history-checkpointing', description: '257-transaction-history-checkpointing (issues #405–#408)', run: loadExample('../examples/257-transaction-history-checkpointing') },
-  '259-transaction-fee-bid-analysis': {
-    name: '259-transaction-fee-bid-analysis',
-    description:
-      'Analyze fresh Horizon fee statistics, enforce a congestion-aware fee policy, and prepare a payment transaction without submitting by default',
-    run: loadExample('../examples/259-transaction-fee-bid-analysis'),
-    params: [
-      { type: 'input', name: 'sourceAccountId', message: 'Source account ID:' },
-      { type: 'input', name: 'destinationAccountId', message: 'Destination account ID:' },
-      { type: 'input', name: 'operationCount', message: 'Number of payment operations:', default: '1' },
-      {
-        type: 'list',
-        name: 'strategy',
-        message: 'Fee strategy:',
-        choices: ['economy', 'standard', 'priority'],
-        default: 'standard',
-      },
-      { type: 'input', name: 'maxTotalFee', message: 'Maximum total fee in stroops:', default: '5000' },
-      { type: 'confirm', name: 'submit', message: 'Submit the signed transaction?', default: false },
-    ],
-  },
-  '260-signer-recovery-readiness-audit': {
-    name: '260-signer-recovery-readiness-audit',
-    description:
-      'Audit Horizon signer weights and threshold feasibility without claiming key availability or account recoverability',
-    run: loadExample('../examples/260-signer-recovery-readiness-audit'),
-    params: [
-      {
-        type: 'input',
-        name: 'accountId',
-        message: 'Account ID to audit:',
-        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
-      },
-      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
-    ],
-  },
-  '261-sep11-txrep-transaction-representation': {
-    name: '261-sep11-txrep-transaction-representation',
-    description:
-      'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
-    run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
+      'Compare Soroban ledger footprints across multiple simulation results, detect shared entries, added/removed keys, access-mode changes, and identify the smaller footprint',
+    run: loadExample('../examples/181-soroban-footprint-comparison'),
   },
   '185-soroban-ledger-entry-retrieval': {
     name: '185-soroban-ledger-entry-retrieval',
@@ -2543,6 +1897,460 @@ export const examples: Record<string, Example> = {
       },
     ],
   },
+  '188-soroban-transaction-inspection': {
+    name: '188-soroban-transaction-inspection',
+    description:
+      'Retrieve, inspect, and decode a Soroban transaction by hash with status detection, XDR analysis, event decoding, and optional polling',
+    run: loadExample('../examples/188-soroban-transaction-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'transactionHash',
+        message: 'Soroban transaction hash to inspect:',
+      },
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Optional RPC URL (blank uses testnet default):',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Polling interval in milliseconds:',
+        default: '2000',
+      },
+      {
+        type: 'input',
+        name: 'pollTimeoutMs',
+        message: 'Polling timeout in milliseconds:',
+        default: '30000',
+      },
+      {
+        type: 'confirm',
+        name: 'pollUntilFinal',
+        message: 'Poll until a final status is available?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '189-soroban-transaction-polling': {
+    name: '189-soroban-transaction-polling',
+    description: 'Poll a Soroban transaction with backoff, retries, timeout, and cancellation',
+    run: loadExample('../examples/189-soroban-transaction-polling'),
+    params: [
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC endpoint:',
+        default: 'https://soroban-testnet.stellar.org',
+      },
+      { type: 'input', name: 'transactionHash', message: 'Transaction hash:' },
+    ],
+  },
+  '190-soroban-transaction-event-monitor': {
+    name: '190-soroban-transaction-event-monitor',
+    description:
+      'Monitor a submitted Soroban transaction, poll for its terminal state, and extract and decode emitted contract events',
+    run: loadExample('../examples/190-soroban-transaction-event-monitor'),
+    params: [
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC URL (blank uses testnet):',
+        default: 'https://soroban-testnet.stellar.org',
+      },
+      {
+        type: 'input',
+        name: 'txHash',
+        message: 'Transaction hash to monitor (64 hex characters):',
+      },
+      {
+        type: 'input',
+        name: 'pollIntervalMs',
+        message: 'Poll interval in ms (blank uses 1500):',
+        default: '1500',
+      },
+      {
+        type: 'input',
+        name: 'timeoutMs',
+        message: 'Timeout in ms (blank uses 60000):',
+        default: '60000',
+      },
+    ],
+  },
+  '191-soroban-contract-deployment-inspection': {
+    name: '191-soroban-contract-deployment-inspection',
+    description:
+      'Inspect a deployed Soroban contract: verify existence, retrieve instance and code ledger entries, extract TTL and code hash, and produce a read-only deployment verification report',
+    run: loadExample('../examples/191-soroban-contract-deployment-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'rpcUrl',
+        message: 'Soroban RPC URL (blank uses testnet):',
+        default: 'https://soroban-testnet.stellar.org',
+      },
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (56-character C-address):',
+        default: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      },
+      {
+        type: 'list',
+        name: 'json',
+        message: 'Output format:',
+        default: 'false',
+        choices: [
+          { name: 'Human-readable', value: 'false' },
+          { name: 'JSON', value: 'true' },
+        ],
+      },
+    ],
+  },
+  '192-soroban-contract-code-inspection': {
+    name: '192-soroban-contract-code-inspection',
+    description:
+      'Inspect Soroban contract code metadata, extract the code identifier, and verify a supplied WASM hash',
+    run: loadExample('../examples/192-soroban-contract-code-inspection'),
+  },
+  '193-soroban-contract-interface': {
+    name: '193-soroban-contract-interface',
+    description:
+      'Inspect a deployed Soroban contract interface, exported functions, and user-defined types',
+    run: loadExample('../examples/193-soroban-contract-interface'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID (blank discovers a recently active contract):',
+      },
+      {
+        type: 'input',
+        name: 'startLedger',
+        message: 'Start ledger (blank scans the last ~24h of ledgers):',
+      },
+      {
+        type: 'input',
+        name: 'endLedger',
+        message: 'End ledger (blank queries up to the latest ledger):',
+      },
+      {
+        type: 'input',
+        name: 'limit',
+        message: 'Number of events to retrieve (1-200):',
+        default: '10',
+      },
+      {
+        type: 'input',
+        name: 'eventType',
+        message: 'Event type filter (contract, system, or diagnostic):',
+        default: 'contract',
+      },
+      {
+        type: 'input',
+        name: 'topicFilter',
+        message: 'Optional topic filter (e.g. "transfer"):',
+      },
+    ],
+  },
+  '194-soroban-contract-client-generator': {
+    name: '194-soroban-contract-client-generator',
+    description:
+      'Generate a strongly typed TypeScript contract-client wrapper from a Soroban contract specification',
+    run: loadExample('../examples/194-soroban-contract-client-generator'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Contract ID for client:',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON metadata?',
+        default: false,
+      },
+    ],
+  },
+  '195-soroban-interface-compatibility': {
+    name: '195-soroban-interface-compatibility',
+    description:
+      'Compare two Soroban contract specifications and report additions, removals, and breaking changes',
+    run: loadExample('../examples/195-soroban-interface-compatibility'),
+    params: [
+      {
+        type: 'confirm',
+        name: 'strictMode',
+        message: 'Enable strict compatibility mode?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '196-soroban-authorization-preparation': {
+    name: '196-soroban-authorization-preparation',
+    description:
+      'Prepare, inspect, decode, and verify Soroban authorization entries and invocation trees without signing',
+    run: loadExample('../examples/196-soroban-authorization-preparation'),
+    params: [
+      {
+        type: 'input',
+        name: 'contractId',
+        message: 'Target Contract ID:',
+      },
+      {
+        type: 'input',
+        name: 'sourceAccount',
+        message: 'Authorizing public key:',
+      },
+      {
+        type: 'confirm',
+        name: 'jsonOutput',
+        message: 'Output JSON?',
+        default: false,
+      },
+    ],
+  },
+  '197-soroban-authorization-signature-inspection': {
+    name: '197-soroban-authorization-signature-inspection',
+    description:
+      'Inspect Soroban authorization-entry signatures and invocation trees without signing',
+    run: loadExample('../examples/197-soroban-authorization-signature-inspection'),
+    params: [
+      {
+        type: 'input',
+        name: 'entries',
+        message: 'Space-separated authorization-entry XDR values:',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '197-state-lifecycle': {
+    name: '197-state-lifecycle',
+    description:
+      'Offline Soroban contract-data entry lifecycle analysis: compare ordered state snapshots, detect added/modified/removed/reappearing entries, track TTL and durability changes',
+    run: loadExample('../examples/197-state-lifecycle'),
+    params: [
+      {
+        type: 'input',
+        name: 'snapshotFiles',
+        message: 'Space-separated paths to two or more JSON snapshot files:',
+      },
+      {
+        type: 'input',
+        name: 'contractIdFilter',
+        message: 'Contract ID filter (blank = all contracts):',
+      },
+      {
+        type: 'list',
+        name: 'durabilityFilter',
+        message: 'Durability filter:',
+        choices: [
+          { name: 'All', value: '' },
+          { name: 'Persistent only', value: 'persistent' },
+          { name: 'Temporary only', value: 'temporary' },
+        ],
+        default: '',
+      },
+      {
+        type: 'list',
+        name: 'transitionFilter',
+        message: 'Lifecycle transition filter:',
+        choices: [
+          { name: 'All', value: '' },
+          { name: 'First observed', value: 'first-observed' },
+          { name: 'Persisting', value: 'persisting' },
+          { name: 'Modified', value: 'modified' },
+          { name: 'Removed', value: 'removed' },
+          { name: 'Reappearing', value: 'reappearing' },
+        ],
+        default: '',
+      },
+      {
+        type: 'confirm',
+        name: 'validateOrder',
+        message: 'Validate snapshot ledger ordering?',
+        default: true,
+      },
+      { type: 'confirm', name: 'jsonOutput', message: 'Output JSON?', default: false },
+    ],
+  },
+  '198-soroban-ttl': {
+    name: '198-soroban-ttl',
+    description: 'Read-only Soroban contract-state TTL and expiration analysis',
+    run: loadExample('../examples/198-soroban-ttl'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Contract ID:' },
+      { type: 'input', name: 'keys', message: 'Optional comma-separated storage keys:' },
+      { type: 'input', name: 'warningLedgers', message: 'Warning threshold:', default: 1000 },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '199-soroban-state-report': {
+    name: '199-soroban-state-report',
+    description: 'Consolidated read-only Soroban state footprint and TTL-risk report',
+    run: loadExample('../examples/199-soroban-state-report'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Contract ID:' },
+      { type: 'input', name: 'keys', message: 'Optional comma-separated storage keys:' },
+      { type: 'input', name: 'warningLedgers', message: 'Warning threshold:', default: 1000 },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '200-decode-ledger-key': {
+    name: '200-decode-ledger-key',
+    description:
+      'Decode base64 Soroban ledger-key XDR with contract, durability, and ScVal details',
+    run: loadExample('../examples/200-decode-ledger-key'),
+    params: [
+      { type: 'input', name: 'inputs', message: 'Space-separated ledger-key XDR values:' },
+      { type: 'confirm', name: 'compact', message: 'Compact output?', default: false },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '201-scval': {
+    name: '201-scval',
+    description: 'Interactive ScVal encoding and decoding playground',
+    run: loadExample('../examples/201-scval'),
+    params: [
+      { type: 'list', name: 'action', message: 'Action:', choices: ['encode', 'decode'] },
+      { type: 'input', name: 'value', message: 'Value (JSON or base64 XDR):' },
+      { type: 'input', name: 'type', message: 'Type hint (optional):' },
+    ],
+  },
+  '202-scval-validate': {
+    name: '202-scval-validate',
+    description: 'Validate supplied JSON input against an expected Soroban ScVal type structure',
+    run: loadExample('../examples/202-scval-validate'),
+    params: [
+      { type: 'input', name: 'input', message: 'Input JSON value:' },
+      { type: 'input', name: 'expectedType', message: 'Expected type structure:' },
+    ],
+  },
+  '203-contract-args': {
+    name: '203-contract-args',
+    description:
+      'Inspect a Soroban contract specification and output a developer-friendly argument schema',
+    run: loadExample('../examples/203-contract-args'),
+    params: [{ type: 'input', name: 'contractId', message: 'Target contract ID:' }],
+  },
+  '204-contract-template': {
+    name: '204-contract-template',
+    description:
+      'Generate a reusable TypeScript/JSON invocation template for a specific contract function',
+    run: loadExample('../examples/204-contract-template'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Target contract ID:' },
+      { type: 'input', name: 'functionName', message: 'Function name:' },
+    ],
+  },
+  '205-build-args': {
+    name: '205-build-args',
+    description:
+      'Convert developer-provided JSON input into ScVal[] arguments for Soroban invocation',
+    run: loadExample('../examples/205-build-args'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Target contract ID:' },
+      { type: 'input', name: 'functionName', message: 'Function name:' },
+      { type: 'input', name: 'args', message: 'Arguments JSON string:' },
+    ],
+  },
+  '206-decode-return': {
+    name: '206-decode-return',
+    description: 'Decode a base64 ScVal return value from a transaction or simulation result',
+    run: loadExample('../examples/206-decode-return'),
+    params: [{ type: 'input', name: 'input', message: 'Base64 ScVal XDR:' }],
+  },
+  '207-decode-event': {
+    name: '207-decode-event',
+    description: 'Decode the topics and data payload of a Soroban event JSON record',
+    run: loadExample('../examples/207-decode-event'),
+    params: [{ type: 'input', name: 'eventInput', message: 'Event JSON string:' }],
+  },
+  '209-watch-events': {
+    name: '209-watch-events',
+    description: 'Periodically monitor Soroban RPC for new contract events in real-time',
+    run: loadExample('../examples/209-watch-events'),
+    params: [{ type: 'input', name: 'contractId', message: 'Target contract ID:' }],
+  },
+  '210-replay-events': {
+    name: '210-replay-events',
+    description:
+      'Retrieve, decode, and export a deterministic stream of Soroban events over a ledger range',
+    run: loadExample('../examples/210-replay-events'),
+    params: [
+      { type: 'input', name: 'startLedger', message: 'Start ledger sequence:' },
+      { type: 'input', name: 'endLedger', message: 'End ledger sequence:' },
+      { type: 'input', name: 'contractId', message: 'Target contract ID (optional):' },
+    ],
+  },
+  '211-event-analytics': {
+    name: '211-event-analytics',
+    description:
+      'Analyze historical Soroban events to produce aggregate usage statistics and distributions',
+    run: loadExample('../examples/211-event-analytics'),
+    params: [
+      { type: 'input', name: 'startLedger', message: 'Start ledger sequence:' },
+      { type: 'input', name: 'endLedger', message: 'End ledger sequence:' },
+      { type: 'input', name: 'contractId', message: 'Target contract ID (optional):' },
+    ],
+  },
+  '212-event-validate': {
+    name: '212-event-validate',
+    description:
+      'Validate historical Soroban events and payload structures against an expected schema',
+    run: loadExample('../examples/212-event-validate'),
+    params: [
+      { type: 'input', name: 'eventFile', message: 'Path to target event JSON:' },
+      { type: 'input', name: 'schemaFile', message: 'Path to expected schema JSON:' },
+    ],
+  },
+  '213-event-schema-diff': {
+    name: '213-event-schema-diff',
+    description: 'Compare two Soroban event schema definitions and output structural differences',
+    run: loadExample('../examples/213-event-schema-diff'),
+    params: [
+      { type: 'input', name: 'oldSchema', message: 'Path to old schema JSON:' },
+      { type: 'input', name: 'newSchema', message: 'Path to new schema JSON:' },
+    ],
+  },
+  '214-event-types': {
+    name: '214-event-types',
+    description: 'Generate strongly-typed TypeScript interfaces from a Soroban event schema',
+    run: loadExample('../examples/214-event-types'),
+    params: [{ type: 'input', name: 'schemaFile', message: 'Path to schema JSON:' }],
+  },
+  '215-event-compat': {
+    name: '215-event-compat',
+    description: 'Verify if a collection of actual Soroban events can be decoded against a schema',
+    run: loadExample('../examples/215-event-compat'),
+    params: [
+      { type: 'input', name: 'schemaFile', message: 'Path to expected schema JSON:' },
+      { type: 'input', name: 'eventsFile', message: 'Path to events JSON:' },
+    ],
+  },
+  '216-state-diff': {
+    name: '216-state-diff',
+    description:
+      'Compare two Soroban contract state snapshots to find additions, modifications, and TTL changes',
+    run: loadExample('../examples/216-state-diff'),
+    params: [
+      { type: 'input', name: 'beforeFile', message: 'Path to initial state JSON:' },
+      { type: 'input', name: 'afterFile', message: 'Path to modified state JSON:' },
+    ],
+  },
   '217-state-summary': {
     name: '217-state-summary',
     description:
@@ -2570,6 +2378,36 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
     ],
   },
+  '217-wasm-roundtrip': {
+    name: '217-wasm-roundtrip',
+    description:
+      'Parse a Soroban contract WASM artifact, re-encode it, and verify structural integrity across the round trip',
+    run: loadExample('../examples/217-wasm-roundtrip'),
+    params: [
+      {
+        type: 'input',
+        name: 'wasmFile',
+        message: 'Path to WASM file (blank uses bundled sample):',
+      },
+      {
+        type: 'input',
+        name: 'output',
+        message: 'Optional output path for the re-encoded artifact (blank skips write):',
+      },
+      {
+        type: 'confirm',
+        name: 'json',
+        message: 'Output JSON?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'forceOverwrite',
+        message: 'Allow overwriting the source artifact if paths match?',
+        default: false,
+      },
+    ],
+  },
   '218-state-key': {
     name: '218-state-key',
     description:
@@ -2592,6 +2430,19 @@ export const examples: Record<string, Example> = {
       },
       { type: 'confirm', name: 'raw', message: 'Include raw encoded data?', default: false },
       { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '218-wasm-dominators': {
+    name: '218-wasm-dominators',
+    description:
+      'Construct control-flow graphs and compute dominator trees for every function in a Soroban contract WASM artifact',
+    run: loadExample('../examples/218-wasm-dominators'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file (blank uses bundled sample):' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'dot', message: 'Output DOT graph?', default: false },
+      { type: 'input', name: 'dotOutput', message: 'Optional path to write DOT file (blank skips write):' },
     ],
   },
   '219-state-search': {
@@ -2623,6 +2474,19 @@ export const examples: Record<string, Example> = {
       },
       { type: 'confirm', name: 'raw', message: 'Include raw encoded values?', default: false },
       { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '219-wasm-recursion': {
+    name: '219-wasm-recursion',
+    description:
+      'Analyse recursive call patterns in a Soroban contract WASM artifact — detecting self-recursion, mutual recursion, multi-function cycles, and indirect-call candidates offline without executing contract code',
+    run: loadExample('../examples/219-wasm-recursion'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file (blank uses bundled sample):' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'dot', message: 'Output DOT graph for recursive components?', default: false },
+      { type: 'input', name: 'maxCycles', message: 'Max cycles to enumerate (0 = skip enumeration):', default: 0 },
     ],
   },
   '220-state-types': {
@@ -2669,12 +2533,163 @@ export const examples: Record<string, Example> = {
     run: loadExample('../examples/223-state-check'),
     params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
   },
+  '224-state-deps': {
+    name: '224-state-deps',
+    description:
+      'Scan a captured Soroban state snapshot to extract observable references and build a dependency graph',
+    run: loadExample('../examples/224-state-deps'),
+    params: [{ type: 'input', name: 'snapshotFile', message: 'Path to snapshot JSON:' }],
+  },
   '226-state-merge': {
     name: '226-state-merge',
     description:
       'Merge Soroban state snapshots with deterministic deduplication and explicit conflict handling',
     run: loadExample('../examples/226-state-merge'),
     params: [{ type: 'input', name: 'snapshotFiles', message: 'Space-separated snapshot files:' }],
+  },
+  '249-wasm-return-provenance': {
+    name: '249-wasm-return-provenance',
+    description:
+      'Offline return-value provenance analysis for Soroban contract WASM artifacts — traces every return value backward through supported instructions and control-flow paths, classifying sources as parameters, constants, globals, memory, or call results',
+    run: loadExample('../examples/249-wasm-return-provenance/index'),
+    params: [
+      {
+        type: 'input',
+        name: 'wasmFile',
+        message: 'Path to WASM file (blank uses bundled sample):',
+      },
+      {
+        type: 'input',
+        name: 'compareFile',
+        message: 'Optional second WASM file for comparison mode:',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'dot', message: 'Output DOT provenance graph?', default: false },
+      {
+        type: 'input',
+        name: 'dotOutput',
+        message: 'Optional path to write DOT file (blank skips write):',
+      },
+    ],
+  },
+  '250-wasm-strings': {
+    name: '250-wasm-strings',
+    description:
+      'Offline WASM embedded-string analysis — extracts strings from data segments and custom sections, classifies them, groups repeated occurrences, and reports aggregate statistics',
+    run: loadExample('../examples/250-wasm-strings'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
+    ],
+  },
+  '251-wasm-stack-types': {
+    name: '251-wasm-stack-types',
+    description:
+      'Offline WASM operand-stack type analysis — reconstructs statically expected stack type states, identifies underflows, and reports type-flow statistics',
+    run: loadExample('../examples/251-wasm-stack-types'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
+    ],
+  },
+  '252-wasm-features': {
+    name: '252-wasm-features',
+    description:
+      'Scan WASM sections, types, imports, and instructions for a normalized offline feature-usage profile and optional artifact comparison',
+    run: loadExample('../examples/252-wasm-features'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison mode:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '252-wasm-globals-usage': {
+    name: '252-wasm-globals-usage',
+    description:
+      'Offline WASM global mutation analysis — tracks global.get and global.set usage, classifies globals as read-only/write-only/read-write/unused, and reports per-function data-flow statistics',
+    run: loadExample('../examples/252-wasm-globals-usage'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
+    ],
+  },
+  '253-wasm-literals': {
+    name: '253-wasm-literals',
+    description:
+      'Offline WASM literal and magic-number analysis — extracts numeric constants, classifies structural patterns (zero, power-of-two, bit-mask, etc.), and reports occurrence statistics',
+    run: loadExample('../examples/253-wasm-literals'),
+    params: [
+      { type: 'input', name: 'wasmFile', message: 'Path to WASM file:' },
+      { type: 'input', name: 'compareFile', message: 'Optional second WASM file for comparison:' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+      { type: 'confirm', name: 'csv', message: 'Output CSV?', default: false },
+    ],
+  },
+  '254-contract-event-checkpointing': { name: '254-contract-event-checkpointing', description: '254-contract-event-checkpointing (issues #405–#408)', run: loadExample('../examples/254-contract-event-checkpointing') },
+  '255-asset-trustline-lifecycle': { name: '255-asset-trustline-lifecycle', description: '255-asset-trustline-lifecycle (issues #405–#408)', run: loadExample('../examples/255-asset-trustline-lifecycle') },
+  '256-path-payment-preparation': { name: '256-path-payment-preparation', description: '256-path-payment-preparation (issues #405–#408)', run: loadExample('../examples/256-path-payment-preparation') },
+  '257-transaction-history-checkpointing': { name: '257-transaction-history-checkpointing', description: '257-transaction-history-checkpointing (issues #405–#408)', run: loadExample('../examples/257-transaction-history-checkpointing') },
+  '259-transaction-fee-bid-analysis': {
+    name: '259-transaction-fee-bid-analysis',
+    description:
+      'Analyze fresh Horizon fee statistics, enforce a congestion-aware fee policy, and prepare a payment transaction without submitting by default',
+    run: loadExample('../examples/259-transaction-fee-bid-analysis'),
+    params: [
+      { type: 'input', name: 'sourceAccountId', message: 'Source account ID:' },
+      { type: 'input', name: 'destinationAccountId', message: 'Destination account ID:' },
+      { type: 'input', name: 'operationCount', message: 'Number of payment operations:', default: '1' },
+      {
+        type: 'list',
+        name: 'strategy',
+        message: 'Fee strategy:',
+        choices: ['economy', 'standard', 'priority'],
+        default: 'standard',
+      },
+      { type: 'input', name: 'maxTotalFee', message: 'Maximum total fee in stroops:', default: '5000' },
+      { type: 'confirm', name: 'submit', message: 'Submit the signed transaction?', default: false },
+    ],
+  },
+  '260-signer-recovery-readiness-audit': {
+    name: '260-signer-recovery-readiness-audit',
+    description:
+      'Audit Horizon signer weights and threshold feasibility without claiming key availability or account recoverability',
+    run: loadExample('../examples/260-signer-recovery-readiness-audit'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to audit:',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '261-sep11-txrep-transaction-representation': {
+    name: '261-sep11-txrep-transaction-representation',
+    description:
+      'Encode and parse SEP-11 Txrep for a bounded unsigned Testnet payment profile without signing or submitting',
+    run: loadExample('../examples/261-sep11-txrep-transaction-representation'),
+  },
+  '262-asset-trustline-exposure': {
+    name: '262-asset-trustline-exposure',
+    description:
+      'Audit an account’s issued-asset trustlines, authorization states, duplicate asset codes, and public issuer flags',
+    run: loadExample('../examples/262-asset-trustline-exposure'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to audit:',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
   },
   '262-contract-state-snapshot': {
     name: '262-contract-state-snapshot',
@@ -2688,4 +2703,67 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'upgradeReview', message: 'Mark this comparison as an upgrade review?', default: false },
     ],
   },
+  '263-network-endpoint-compatibility': {
+    name: '263-network-endpoint-compatibility',
+    description:
+      'Validate Stellar network configuration and check Horizon and Soroban RPC reachability and passphrase compatibility',
+    run: loadExample('../examples/263-network-endpoint-compatibility'),
+    params: [
+      { type: 'input', name: 'networkName', message: 'Network label:', default: 'testnet' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '264-transaction-operation-inspector': {
+    name: '264-transaction-operation-inspector',
+    description:
+      'Inspect a Stellar transaction envelope XDR and produce operation-level summaries and rule-based review warnings',
+    run: loadExample('../examples/264-transaction-operation-inspector'),
+    params: [
+      { type: 'input', name: 'xdr', message: 'Base64 transaction envelope XDR (leave blank for sample):' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '265-sponsorship-reserve-audit': {
+    name: '265-sponsorship-reserve-audit',
+    description:
+      'Reconcile Stellar account sponsorship relationships and estimate reserve obligations with explicit assumptions',
+    run: loadExample('../examples/265-sponsorship-reserve-audit'),
+    params: [
+      {
+        type: 'input',
+        name: 'accountId',
+        message: 'Account ID to audit:',
+        default: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7',
+      },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
+  },
+  '266-sep10-challenge-validator': {
+    name: '266-sep10-challenge-validator',
+    description:
+      'Validate SEP-10 challenge transaction XDR, time bounds, manageData operations, and server signatures',
+    run: loadExample('../examples/266-sep10-challenge-validator'),
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }],
+  },
+  '267-sep38-quote-auditor': {
+    name: '267-sep38-quote-auditor',
+    description:
+      'Audit SEP-38 exchange quotes for expiration, decimal-safe effective rates, fees, and multi-quote comparison',
+    run: loadExample('../examples/267-sep38-quote-auditor'),
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }],
+  },
+  '268-sep24-transaction-reconciliation': {
+    name: '268-sep24-transaction-reconciliation',
+    description:
+      'Reconcile SEP-24 interactive deposit and withdrawal records against on-chain Stellar transactions',
+    run: loadExample('../examples/268-sep24-transaction-reconciliation'),
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }],
+  },
+  '269-sep12-kyc-auditor': {
+    name: '269-sep12-kyc-auditor',
+    description:
+      'Audit SEP-12 customer KYC statuses, required/conditional fields, and inconsistencies with PII redaction',
+    run: loadExample('../examples/269-sep12-kyc-auditor'),
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }]
+  }
 };
