@@ -4082,6 +4082,90 @@ Optional `--csv` output emits one row per unreachable range with columns `functi
 - Malformed control-flow structures (for example, `else` without `if` or an out-of-range branch depth) produce diagnostics and never crash the analyzer.
 - Results are deterministic for a given artifact: blocks, ranges, and instructions are emitted in stable function/block/instruction order.
 - The analysis works completely offline and never executes contract code.
+### WASM memory-alias analysis
+
+`wasm-memory-alias` reconstructs conservative effective-address expressions for supported WASM loads and stores and classifies pairs of accesses as `must-alias`, `may-alias`, `no-alias`, or `unknown`. It parses the code section only; the module is never instantiated, linked, or executed.
+
+```bash
+wasm-memory-alias src/contracts/sample/hello.wasm
+wasm-memory-alias src/contracts/sample/hello.wasm --json
+wasm-memory-alias src/contracts/sample/hello.wasm --csv
+wasm-memory-alias src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+# The same analysis is available through the bundled inspector:
+stellar-api-inspector wasm-memory-alias src/contracts/sample/hello.wasm --json
+```
+
+Each memory access records its function index, basic-block index, instruction index, byte offset, access type (`load`/`store`), access width, alignment, static memarg offset, memory index, loop context, and an address classification:
+
+| Address class | Meaning |
+|---|---|
+| **exact** | The dynamic address is a statically known `i32.const` value plus the static memarg offset. |
+| **range** | The dynamic address is bounded by a mask or remainder operation, giving a finite numeric range. |
+| **symbolic** | The address is a known base symbol (`local:N` or `global:N`) plus a known addend. |
+| **unknown** | The address cannot be reconstructed from the supported static patterns. |
+
+Pair classification uses access widths, so partially overlapping byte ranges are distinguished from identical ranges. The analyzer also reports read/read, read/write, and write/write relationships, potential read/write conflicts, per-function statistics, alias relationships grouped by function pair and by 512-byte memory region, and the functions with the largest aliasing access sets.
+
+Optional filters:
+
+```bash
+wasm-memory-alias contract.wasm --function 3
+wasm-memory-alias contract.wasm --type store
+wasm-memory-alias contract.wasm --min-address 0 --max-address 4096
+wasm-memory-alias contract.wasm --alias may-alias
+wasm-memory-alias contract.wasm --max-pairs 50000
+```
+
+`--json` emits normalized access and pair records plus aggregate statistics. `--csv` emits one row per analyzed pair with columns `functionA,blockA,instructionA,accessTypeA,functionB,blockB,instructionB,accessTypeB,memoryIndex,alias,relationship,sameBlock,sameFunction,overlappingBytes,potentialConflict,addressA,addressB,widthA,widthB`. Supplying a second artifact enables comparison mode, which reports added and removed alias relationships, changed classifications, and newly introduced potential read/write conflicts.
+
+#### Alias model and conservative assumptions
+
+- Address reconstruction is a small block-local abstract interpretation. A block starts with an empty abstract stack, so block parameters, values produced by calls, and values carried across block boundaries are not assumed.
+- Unknown instructions make the remainder of the current block unknown instead of guessing a stack shape. Values produced by calls are treated as unknown.
+- Pairs are compared within a function. Cross-function accesses are not related because each function has its own call context and no interprocedural value model is applied.
+- Symbolic addresses are compared only when they share the same base symbol. Different symbolic bases are reported as `unknown` because the runtime values may be equal.
+- Exact and range-bounded accesses are compared using their absolute byte intervals. Disjoint intervals are `no-alias`; identical ranges with the same width are `must-alias`; other overlaps are `may-alias`.
+- Accesses inside loops are flagged. Non-exact relationships inside loops are treated conservatively as `may-alias` or `unknown`; exact constants and disjoint bounded ranges remain safe to compare.
+- Read/write conflicts are reported whenever the analysis can establish a possible overlap, including `unknown` relationships where overlap cannot be excluded.
+- Pair comparison is limited by `--max-pairs` (default 200,000) to avoid uncontrolled quadratic growth on very large access sets. Truncation is deterministic and reported in `pairComparisonsTruncated`.
+- Results are deterministic for a given artifact and options. The analysis works completely offline and never executes contract code.
+### WASM numeric conversion analysis
+
+`wasm-numeric-conversions` inventories instructions that convert values between integer widths, floating-point precisions, signed and unsigned interpretations, and bit patterns. It parses the code section only; it never instantiates, links, or executes the module.
+
+```bash
+wasm-numeric-conversions src/contracts/sample/hello.wasm
+wasm-numeric-conversions src/contracts/sample/hello.wasm --json
+wasm-numeric-conversions src/contracts/sample/hello.wasm --csv
+wasm-numeric-conversions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+# The same analysis is available through the bundled inspector:
+stellar-api-inspector wasm-numeric-conversions src/contracts/sample/hello.wasm --json
+```
+
+Supported instructions are classified into these categories:
+
+| Category | Instructions |
+|---|---|
+| **integer-extension** | `i64.extend_i32_s`, `i64.extend_i32_u` |
+| **integer-truncation** | `i32.wrap_i64` |
+| **sign-extension** | `i32.extend8_s`, `i32.extend16_s`, `i64.extend8_s`, `i64.extend16_s`, `i64.extend32_s` |
+| **int-to-float** | `f32.convert_i32_s`, `f32.convert_i64_u`, `f64.convert_i32_s`, `f64.convert_i64_u`, … |
+| **float-to-int** | `i32.trunc_f32_s`, `i32.trunc_f64_u`, `i64.trunc_f32_s`, `i64.trunc_f64_u`, … |
+| **float-widening** | `f64.promote_f32` |
+| **float-narrowing** | `f32.demote_f64` |
+| **reinterpretation** | `i32.reinterpret_f32`, `i64.reinterpret_f64`, `f32.reinterpret_i32`, `f64.reinterpret_i64` |
+| **saturating-conversion** | `i32.trunc_sat_f32_s`, `i32.trunc_sat_f64_u`, `i64.trunc_sat_f32_s`, `i64.trunc_sat_f64_u`, … |
+
+Every record includes the function index, block index, instruction index, byte offset within the function body, opcode, source and destination numeric types, signedness on each side, and severity-neutral diagnostics (`lossy`, `representation-change`, `widening`, `reinterpretation`). Trapping float-to-integer instructions are distinguished from the non-trapping `trunc_sat` family. The analyzer reports narrowing, widening, high-order-bit-discard, precision-loss, signedness-sensitive, trapping, and saturating counts; flags conversion chains such as widen → narrow, narrow → widen, repeated signed/unsigned conversions, and integer → float → integer round trips; and lists the functions with the highest conversion density.
+
+Chains are reported only when the relationship is statically safe: consecutive conversion instructions in the same block whose destination type matches the next instruction's source type. The analyzer never claims a concrete runtime value will lose precision; diagnostics describe structural possibility only. Optional `--csv` output emits one row per conversion with columns `functionIndex,blockIndex,instructionIndex,instructionOffset,opcode,sourceType,destinationType,category,sourceSignedness,destinationSignedness,widening,narrowing,mayDiscardHighOrderBits,mayLosePrecision,trapping,saturating,diagnostics`. Supplying a second artifact enables comparison mode, reporting added and removed conversions, changed opcodes/source types/destination types/categories, newly introduced narrowing or precision-loss conversions, and newly introduced suspicious chains.
+
+#### Static-analysis limitations
+
+- The analyzer performs a linear scan of each function body. It does not reconstruct a full control-flow graph or a validated operand-stack type state, so a "conversion chain" is limited to directly adjacent, type-compatible conversion instructions.
+- Local, global, memory, parameter, and constant values are not evaluated. The analyzer cannot prove that a narrowing conversion actually receives an out-of-range value at runtime.
+- Saturating instructions are recognized from the `0xfc` prefix sub-opcodes. SIMD and atomic prefixes are not scanned; the function is reported with a warning instead of being misinterpreted.
+- Results are deterministic for a given artifact: records and aggregates are emitted in stable function/block/instruction order with sorted category and pattern lists.
 
 ### WASM function complexity scoring
 

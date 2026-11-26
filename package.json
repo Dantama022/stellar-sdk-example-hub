@@ -9,6 +9,9 @@
     "wasm-names": "dist/src/wasm-names.js",
     "wasm-unreachable": "dist/src/wasm-unreachable.js",
     "stellar-api-inspector": "dist/src/stellar-api-inspector.js"
+    "wasm-memory-alias": "dist/src/wasm-memory-alias.js",
+    "wasm-numeric-conversions": "dist/src/wasm-numeric-conversions.js",
+    "stellar-api-inspector": "dist/src/stellar-api-inspector.js"
   },
   "scripts": {
     "build": "tsc",
