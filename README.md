@@ -2698,6 +2698,25 @@ The repository currently includes the following runnable examples:
 185. **`185-soroban-ledger-entry-retrieval`**: Querying Soroban ledger entries via `getLedgerEntries`, validating and decoding raw `LedgerKey` XDR, supporting multiple common key types, and reporting entry metadata, TTL, missing/archived cases, and structured JSON output without mutating state.
 **`186-soroban-rpc-diagnostics`**: Checking a Soroban RPC endpoint for health, network metadata, protocol version, latest ledger state, and stale-ledger diagnostics with configurable timeouts and JSON output.
 **`187-soroban-rpc-pagination`**: Walking paginated Soroban RPC results with cursor propagation, page limits, empty-page handling, repeated-cursor detection, and resumable pagination metadata.
+
+### Network health monitoring and Horizon/RPC availability
+
+`319-network-health-monitoring` checks configured Horizon and Soroban RPC endpoints using read-only requests, measures response times, validates basic response shapes, and reports each endpoint as `healthy`, `degraded`, or `unhealthy`. It never constructs or submits a transaction.
+
+```bash
+npx ts-node src/examples/319-network-health-monitoring.ts --network testnet
+npx ts-node src/examples/319-network-health-monitoring.ts --network mainnet --json
+npx ts-node src/examples/319-network-health-monitoring.ts \
+  --horizon-url https://horizon-testnet.stellar.org \
+  --soroban-rpc-url https://soroban-testnet.stellar.org \
+  --timeout 5000 --degraded-threshold 2000
+```
+
+Horizon is checked with a `GET /` request and validated against the root metadata shape (`network_passphrase`, version fields). Soroban RPC is checked with the read-only JSON-RPC `getHealth` method. Timeouts, transport failures, HTTP errors, malformed responses, and RPC-level errors are reported separately. URL credentials and query parameters are stripped before display.
+
+Optional repeated checks are sequential (`--checks <n> --interval <ms>`), so a later request never overlaps an unfinished one. The process handles `SIGINT` by aborting before the next round. The default is a single finite check.
+
+See [examples/network-health/README.md](./examples/network-health/README.md) for endpoint configuration, sample output, and limitations.
 102. **`102-contract-storage-inspection`**: Probing contract storage keys across persistent and temporary durability, displaying raw `ScVal` XDR alongside decoded values, and handling missing keys and decoding failures without aborting the sweep.
 103. **`103-storage-ttl-management`**: Reading a storage entry's `liveUntilLedgerSeq`, classifying how much life it has left, and building, simulating and submitting an `ExtendFootprintTTL` transaction — plus when to restore an archived entry instead.
 23. **`23-manage-data-entries`**: Creating, updating, querying, and removing account data entries with `manageData`.
