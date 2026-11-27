@@ -1,7 +1,4 @@
-import { createRequire } from 'module';
-import { contract, xdr } from '@stellar/stellar-sdk';
-
-const requireSdkUtils = createRequire(__filename);
+import { cereal, contract, xdr } from '@stellar/stellar-sdk';
 
 export interface ParsedArgument {
   name: string;
@@ -326,12 +323,12 @@ export function specFromWasm(wasm: Buffer): contract.Spec | null {
       return null;
     }
 
-    const { processSpecEntryStream } = requireSdkUtils(
-      '@stellar/stellar-sdk/lib/contract/utils',
-    ) as {
-      processSpecEntryStream: (buffer: Buffer) => xdr.ScSpecEntry[];
-    };
-    const entries = processSpecEntryStream(Buffer.from(sections[0]));
+    // Read the XDR ScSpecEntry stream with the public reader. (The SDK's
+    // lib/contract/utils subpath is not in its package exports map.)
+    const reader = new cereal.XdrReader(Buffer.from(sections[0]));
+    const entries: xdr.ScSpecEntry[] = [];
+    // `read` takes an XdrReader at runtime (as the SDK does); the typings say Buffer.
+    while (!reader.eof) entries.push(xdr.ScSpecEntry.read(reader as unknown as Buffer));
     return new contract.Spec(entries);
   } catch {
     return null;

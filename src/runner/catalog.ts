@@ -40048,6 +40048,18 @@ export const examples: Record<string, Example> = {
       { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
     ],
   },
+  '264-contract-upgrade-preflight': {
+    name: '264-contract-upgrade-preflight',
+    description:
+      'Preflight a Soroban contract upgrade: inspect the deployed WASM, validate the replacement, find the contract-specific entry point and authorizer, and simulate without submitting',
+    run: loadExample('../examples/264-contract-upgrade-preflight'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Contract ID (C...):' },
+      { type: 'input', name: 'wasmPath', message: 'Replacement WASM path:' },
+      { type: 'input', name: 'sourceAccount', message: 'Account that would submit the upgrade (G...):' },
+      { type: 'input', name: 'upgradeFunction', message: 'Upgrade function name (blank to infer from the spec):', default: '' },
+    ],
+  },
   '261-sep11-txrep-transaction-representation': {
     name: '261-sep11-txrep-transaction-representation',
     description:

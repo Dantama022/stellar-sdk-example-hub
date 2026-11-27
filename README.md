@@ -493,6 +493,14 @@ The report checks configured signer-weight totals against low, medium, and high 
 cannot verify that signing keys are available or controlled, so threshold feasibility is not a
 guarantee that the account can be recovered.
 
+Preflight a Soroban contract upgrade (WASM validation, contract-specific entry point and authorizer, simulation; never submitted):
+
+```bash
+CONTRACT_ID=C... REPLACEMENT_WASM=./target/new.wasm SOURCE_ACCOUNT=G... npm run run-example -- 264-contract-upgrade-preflight
+```
+
+See [examples/soroban/contract-upgrade-preflight.md](examples/soroban/contract-upgrade-preflight.md).
+
 Analyze current fee conditions and prepare an unsigned payment transaction without submitting it:
 
 ```bash
