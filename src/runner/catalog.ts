@@ -39989,6 +39989,17 @@ export const examples: Record<string, Example> = {
     ],
   },
   '254-contract-event-checkpointing': { name: '254-contract-event-checkpointing', description: '254-contract-event-checkpointing (issues #405–#408)', run: loadExample('../examples/254-contract-event-checkpointing') },
+  '263-soroban-event-replay-checkpoint': {
+    name: '263-soroban-event-replay-checkpoint',
+    description:
+      'Replay Soroban contract events from a ledger checkpoint with deduplication, bounded retries and RPC retention reporting (at-least-once, idempotent handler)',
+    run: loadExample('../examples/263-soroban-event-replay-checkpoint'),
+    params: [
+      { type: 'input', name: 'contractId', message: 'Contract ID (C...):' },
+      { type: 'input', name: 'startLedger', message: 'Start ledger:' },
+      { type: 'input', name: 'topics', message: "Topic filter, comma-separated symbols or '*' (blank for all):", default: '' },
+    ],
+  },
   '255-asset-trustline-lifecycle': { name: '255-asset-trustline-lifecycle', description: '255-asset-trustline-lifecycle (issues #405–#408)', run: loadExample('../examples/255-asset-trustline-lifecycle') },
   '256-path-payment-preparation': { name: '256-path-payment-preparation', description: '256-path-payment-preparation (issues #405–#408)', run: loadExample('../examples/256-path-payment-preparation') },
   '257-transaction-history-checkpointing': { name: '257-transaction-history-checkpointing', description: '257-transaction-history-checkpointing (issues #405–#408)', run: loadExample('../examples/257-transaction-history-checkpointing') },
