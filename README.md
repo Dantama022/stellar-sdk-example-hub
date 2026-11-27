@@ -4046,6 +4046,127 @@ Optional `--csv` output emits one row per floating-point instruction with column
 
 Unknown or unsupported opcodes are silently treated as non-float instructions and do not abort the analysis. No WASM instructions are ever executed.
 
+### WASM unreachable-path analysis
+
+`wasm-unreachable` reconstructs a structured control-flow graph for every WASM function, computes reachable blocks from the function entry, and reports unreachable blocks, instructions, and contiguous ranges. It parses the code section only; the module is never instantiated or executed.
+
+```bash
+wasm-unreachable src/contracts/sample/hello.wasm
+wasm-unreachable src/contracts/sample/hello.wasm --json
+wasm-unreachable src/contracts/sample/hello.wasm --csv
+wasm-unreachable src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+# The same analysis is available through the bundled inspector:
+stellar-api-inspector wasm-unreachable src/contracts/sample/hello.wasm --json
+```
+
+Structured `block`, `loop`, `if`/`else`, `try`/`catch`, `br`, `br_if`, `br_table`, `return`, `unreachable`, and function-level `end` constructs are translated into a block CFG. Branch depths are resolved against the structured label stack. When a block is proven unreachable, the analyzer records the most specific statically determinable reason:
+
+| Reason | Meaning |
+|---|---|
+| **unconditional-branch** | Code follows an unconditional `br` or `br_table`. |
+| **return** | Code follows a `return` or tail call. |
+| **unreachable-trap** | Code follows an `unreachable` instruction. |
+| **structured-termination** | A merge/continuation block is unreachable because every incoming structured path terminates. |
+| **other** | Unreachable, but the terminating source is not more precisely classified. |
+
+Each function summary reports total/reachable/unreachable blocks and instructions, unreachable-code density, the largest unreachable region, and whether the function is reachable from module entry points. Module entry points are exported functions (or the start function) when present; when a module has no exports, all defined functions are treated as roots. This conservative rule avoids claiming a function is entirely unreachable merely because export metadata is absent.
+
+Optional `--csv` output emits one row per unreachable range with columns `functionIndex,blockIndex,startInstructionIndex,endInstructionIndex,startOffset,endOffset,instructionCount,reason`. `--json` emits normalized unreachable block, instruction, and range records with aggregate statistics. Supplying a second artifact enables comparison mode, reporting newly unreachable regions, regions that became reachable, changed range boundaries, and functions with newly introduced unreachable code.
+
+#### Reachability model and limitations
+
+- The analyzer models only intraprocedural structured control flow. `call_indirect`, table dispatch, and dynamic exception dispatch are not followed.
+- `if` and `br_if` conditions are not evaluated. Both outcomes are considered possible, so a conditional branch never makes its fall-through statically unreachable.
+- `try`/`catch` uses conservative exception edges: a `throw` may reach enclosing catch blocks, but the precise thrown tag is not tracked.
+- Legacy exception opcodes are supported; newer `try_table` and exotic proposal instructions produce a warning and stop scanning that function rather than guessing their layout.
+- Malformed control-flow structures (for example, `else` without `if` or an out-of-range branch depth) produce diagnostics and never crash the analyzer.
+- Results are deterministic for a given artifact: blocks, ranges, and instructions are emitted in stable function/block/instruction order.
+- The analysis works completely offline and never executes contract code.
+### WASM memory-alias analysis
+
+`wasm-memory-alias` reconstructs conservative effective-address expressions for supported WASM loads and stores and classifies pairs of accesses as `must-alias`, `may-alias`, `no-alias`, or `unknown`. It parses the code section only; the module is never instantiated, linked, or executed.
+
+```bash
+wasm-memory-alias src/contracts/sample/hello.wasm
+wasm-memory-alias src/contracts/sample/hello.wasm --json
+wasm-memory-alias src/contracts/sample/hello.wasm --csv
+wasm-memory-alias src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+# The same analysis is available through the bundled inspector:
+stellar-api-inspector wasm-memory-alias src/contracts/sample/hello.wasm --json
+```
+
+Each memory access records its function index, basic-block index, instruction index, byte offset, access type (`load`/`store`), access width, alignment, static memarg offset, memory index, loop context, and an address classification:
+
+| Address class | Meaning |
+|---|---|
+| **exact** | The dynamic address is a statically known `i32.const` value plus the static memarg offset. |
+| **range** | The dynamic address is bounded by a mask or remainder operation, giving a finite numeric range. |
+| **symbolic** | The address is a known base symbol (`local:N` or `global:N`) plus a known addend. |
+| **unknown** | The address cannot be reconstructed from the supported static patterns. |
+
+Pair classification uses access widths, so partially overlapping byte ranges are distinguished from identical ranges. The analyzer also reports read/read, read/write, and write/write relationships, potential read/write conflicts, per-function statistics, alias relationships grouped by function pair and by 512-byte memory region, and the functions with the largest aliasing access sets.
+
+Optional filters:
+
+```bash
+wasm-memory-alias contract.wasm --function 3
+wasm-memory-alias contract.wasm --type store
+wasm-memory-alias contract.wasm --min-address 0 --max-address 4096
+wasm-memory-alias contract.wasm --alias may-alias
+wasm-memory-alias contract.wasm --max-pairs 50000
+```
+
+`--json` emits normalized access and pair records plus aggregate statistics. `--csv` emits one row per analyzed pair with columns `functionA,blockA,instructionA,accessTypeA,functionB,blockB,instructionB,accessTypeB,memoryIndex,alias,relationship,sameBlock,sameFunction,overlappingBytes,potentialConflict,addressA,addressB,widthA,widthB`. Supplying a second artifact enables comparison mode, which reports added and removed alias relationships, changed classifications, and newly introduced potential read/write conflicts.
+
+#### Alias model and conservative assumptions
+
+- Address reconstruction is a small block-local abstract interpretation. A block starts with an empty abstract stack, so block parameters, values produced by calls, and values carried across block boundaries are not assumed.
+- Unknown instructions make the remainder of the current block unknown instead of guessing a stack shape. Values produced by calls are treated as unknown.
+- Pairs are compared within a function. Cross-function accesses are not related because each function has its own call context and no interprocedural value model is applied.
+- Symbolic addresses are compared only when they share the same base symbol. Different symbolic bases are reported as `unknown` because the runtime values may be equal.
+- Exact and range-bounded accesses are compared using their absolute byte intervals. Disjoint intervals are `no-alias`; identical ranges with the same width are `must-alias`; other overlaps are `may-alias`.
+- Accesses inside loops are flagged. Non-exact relationships inside loops are treated conservatively as `may-alias` or `unknown`; exact constants and disjoint bounded ranges remain safe to compare.
+- Read/write conflicts are reported whenever the analysis can establish a possible overlap, including `unknown` relationships where overlap cannot be excluded.
+- Pair comparison is limited by `--max-pairs` (default 200,000) to avoid uncontrolled quadratic growth on very large access sets. Truncation is deterministic and reported in `pairComparisonsTruncated`.
+- Results are deterministic for a given artifact and options. The analysis works completely offline and never executes contract code.
+### WASM numeric conversion analysis
+
+`wasm-numeric-conversions` inventories instructions that convert values between integer widths, floating-point precisions, signed and unsigned interpretations, and bit patterns. It parses the code section only; it never instantiates, links, or executes the module.
+
+```bash
+wasm-numeric-conversions src/contracts/sample/hello.wasm
+wasm-numeric-conversions src/contracts/sample/hello.wasm --json
+wasm-numeric-conversions src/contracts/sample/hello.wasm --csv
+wasm-numeric-conversions src/contracts/sample-v1/upgradeable_v1.wasm src/contracts/sample-v2/upgradeable_v2.wasm --json
+# The same analysis is available through the bundled inspector:
+stellar-api-inspector wasm-numeric-conversions src/contracts/sample/hello.wasm --json
+```
+
+Supported instructions are classified into these categories:
+
+| Category | Instructions |
+|---|---|
+| **integer-extension** | `i64.extend_i32_s`, `i64.extend_i32_u` |
+| **integer-truncation** | `i32.wrap_i64` |
+| **sign-extension** | `i32.extend8_s`, `i32.extend16_s`, `i64.extend8_s`, `i64.extend16_s`, `i64.extend32_s` |
+| **int-to-float** | `f32.convert_i32_s`, `f32.convert_i64_u`, `f64.convert_i32_s`, `f64.convert_i64_u`, … |
+| **float-to-int** | `i32.trunc_f32_s`, `i32.trunc_f64_u`, `i64.trunc_f32_s`, `i64.trunc_f64_u`, … |
+| **float-widening** | `f64.promote_f32` |
+| **float-narrowing** | `f32.demote_f64` |
+| **reinterpretation** | `i32.reinterpret_f32`, `i64.reinterpret_f64`, `f32.reinterpret_i32`, `f64.reinterpret_i64` |
+| **saturating-conversion** | `i32.trunc_sat_f32_s`, `i32.trunc_sat_f64_u`, `i64.trunc_sat_f32_s`, `i64.trunc_sat_f64_u`, … |
+
+Every record includes the function index, block index, instruction index, byte offset within the function body, opcode, source and destination numeric types, signedness on each side, and severity-neutral diagnostics (`lossy`, `representation-change`, `widening`, `reinterpretation`). Trapping float-to-integer instructions are distinguished from the non-trapping `trunc_sat` family. The analyzer reports narrowing, widening, high-order-bit-discard, precision-loss, signedness-sensitive, trapping, and saturating counts; flags conversion chains such as widen → narrow, narrow → widen, repeated signed/unsigned conversions, and integer → float → integer round trips; and lists the functions with the highest conversion density.
+
+Chains are reported only when the relationship is statically safe: consecutive conversion instructions in the same block whose destination type matches the next instruction's source type. The analyzer never claims a concrete runtime value will lose precision; diagnostics describe structural possibility only. Optional `--csv` output emits one row per conversion with columns `functionIndex,blockIndex,instructionIndex,instructionOffset,opcode,sourceType,destinationType,category,sourceSignedness,destinationSignedness,widening,narrowing,mayDiscardHighOrderBits,mayLosePrecision,trapping,saturating,diagnostics`. Supplying a second artifact enables comparison mode, reporting added and removed conversions, changed opcodes/source types/destination types/categories, newly introduced narrowing or precision-loss conversions, and newly introduced suspicious chains.
+
+#### Static-analysis limitations
+
+- The analyzer performs a linear scan of each function body. It does not reconstruct a full control-flow graph or a validated operand-stack type state, so a "conversion chain" is limited to directly adjacent, type-compatible conversion instructions.
+- Local, global, memory, parameter, and constant values are not evaluated. The analyzer cannot prove that a narrowing conversion actually receives an out-of-range value at runtime.
+- Saturating instructions are recognized from the `0xfc` prefix sub-opcodes. SIMD and atomic prefixes are not scanned; the function is reported with a warning instead of being misinterpreted.
+- Results are deterministic for a given artifact: records and aggregates are emitted in stable function/block/instruction order with sorted category and pattern lists.
+
 ### WASM function complexity scoring
 
 `wasm-complexity` reads and validates the binary structure and code section; it never
@@ -4140,3 +4261,124 @@ npm test -- --runInBand tests/sep11-txrep-transaction-representation.test.ts
 The example uses deterministic local test keys to build one unsigned Testnet native-XLM payment, encodes and parses a documented Txrep subset, and checks that reconstruction produces the same envelope XDR. Expected output includes `Original and reconstructed envelope match: true`, one `1.2500000 XLM` payment, and no signatures. It performs no HTTP requests, signing, credential use, or network submission.
 
 The parser intentionally supports only classic V1 envelopes containing exactly one native payment, no memo, no operation-specific source, zero time bounds, extension version 0, and no signatures. It is not a general Txrep implementation; unsupported fields and transaction shapes are rejected. The serialized asset uses the specification's normalized Testnet name, `TestXLM`. Inspect all transaction fields before any separate signing step, and do not treat valid Txrep or XDR as proof that signatures are authorized or the transaction is safe.
+
+## Asset Trustline Exposure & Issuer Risk Report (`262-asset-trustline-exposure`)
+
+Read-only audit of an account's issued-asset trustlines, authorization states, duplicate asset codes across distinct issuers, and public issuer flags.
+
+```bash
+npm run run-example -- 262-asset-trustline-exposure
+npm test -- --runInBand tests/asset-trustline-exposure.test.ts
+```
+
+> **Note:** This report is informational only and does not establish market value, liquidity, redemption rights, or issuer solvency.
+
+## Network Configuration & Endpoint Compatibility (`263-network-endpoint-compatibility`)
+
+Validates Stellar network configuration, checks Horizon and Soroban RPC reachability and passphrase consistency, and redacts embedded URL credentials/tokens.
+
+```bash
+npm run run-example -- 263-network-endpoint-compatibility
+npm test -- --runInBand tests/network-endpoint-compatibility.test.ts
+```
+
+> **Note:** Endpoint reachability alone does not prove network identity or compatibility with every SDK operation.
+
+## Transaction Operation Inspection & XDR Summaries (`264-transaction-operation-inspector`)
+
+Parses base64 Stellar transaction envelopes without mutating them, summarizes operations (explicitly flagging unsupported operation types), and evaluates rule-based review warnings using exact stroop precision.
+
+```bash
+npm run run-example -- 264-transaction-operation-inspector
+npm test -- --runInBand tests/transaction-operation-inspector.test.ts
+```
+
+> **Note:** Syntactic inspection and review warnings do not replace signature verification or application-specific authorization checks.
+
+## Account Sponsorship Reconciliation & Reserve Audit (`265-sponsorship-reserve-audit`)
+
+Read-only reconciliation of Stellar account sponsorship fields (`num_sponsoring`, `num_sponsored`, `sponsor`) and reserve estimation with explicit assumptions and unresolved-check reporting.
+
+```bash
+npm run run-example -- 265-sponsorship-reserve-audit
+npm test -- --runInBand tests/sponsorship-reserve-audit.test.ts
+```
+
+> **Note:** This audit does not modify sponsorship relationships or guarantee transaction affordability.
+## Soroban contract invocation toolkit
+
+Four standalone, read-only TypeScript examples (each with its own `package.json`, README and offline tests) cover preparing a Soroban call, understanding its result, diagnosing failures, and verifying the code that runs:
+
+- [Argument encoder and validator](examples/soroban/argument-encoding/README.md): validate inputs and encode them as `ScVal`/XDR, optionally guided by a contract specification.
+- [Return value decoder and type validator](examples/soroban/return-value-decoding/README.md): decode `ScVal` return values with exact big integers and check them against the expected type.
+- [Invocation error classification](examples/soroban/invocation-error-analysis/README.md): identify the failing stage, classify the error and get safe recovery guidance (never auto-retries).
+- [WASM provenance verification](examples/soroban/wasm-provenance-verification/README.md): hash a built contract, compare with a trusted checksum and the deployed executable.
+
+## SEP-10 Challenge Transaction Security Validator (`266-sep10-challenge-validator`)
+
+Validates SEP-10 challenge transaction XDR structure, sequence number (`0`), time bounds, `manageData` operations, and server signature against an independently trusted server signing key without signing or submitting.
+
+```bash
+npm run run-example -- 266-sep10-challenge-validator
+npm test -- --runInBand tests/sep10-challenge-validator.test.ts
+```
+
+## SEP-38 Quote Expiration & Exchange Rate Auditor (`267-sep38-quote-auditor`)
+
+Audits SEP-38 anchor quotes for schema validity, expiration thresholds, decimal-safe effective exchange rates, fee breakdowns, and directional multi-quote comparisons.
+
+```bash
+npm run run-example -- 267-sep38-quote-auditor
+npm test -- --runInBand tests/sep38-quote-auditor.test.ts
+```
+
+## SEP-24 Deposit & Withdrawal Transaction Reconciliation (`268-sep24-transaction-reconciliation`)
+
+Reconciles SEP-24 interactive deposit and withdrawal records against on-chain Stellar payment records, tracking anchor completion separately from on-chain verification.
+
+```bash
+npm run run-example -- 268-sep24-transaction-reconciliation
+npm test -- --runInBand tests/sep24-transaction-reconciliation.test.ts
+```
+
+## SEP-12 KYC Status & Customer Verification Auditor (`269-sep12-kyc-auditor`)
+
+Audits SEP-12 customer-level and field-level verification statuses, required/conditional fields, and status inconsistencies while redacting sensitive customer identifiers.
+
+```bash
+npm run run-example -- 269-sep12-kyc-auditor
+npm test -- --runInBand tests/sep12-kyc-auditor.test.ts
+```
+
+## Soroban Deployment Verification & Configuration Audit (`281-soroban-deployment-verification`)
+
+Audits an existing Soroban deployment against a local manifest and reports whether the on-chain configuration still matches it. The example is read-only: it calls only `getNetwork`, `getLatestLedger` and `getLedgerEntries`.
+
+It checks, independently:
+
+- contract availability on the expected network (instance ledger entry),
+- the network passphrase reported by the Soroban RPC endpoint,
+- the executable type (Wasm vs a protocol built-in such as the Stellar Asset Contract),
+- the Wasm hash where applicable, compared against the manifest expectation,
+- the exported contract interface read from the deployed `contractspecv0` specification.
+
+A matching contract address alone is never treated as proof of equivalence, and incomplete data (missing code entry, unpublished specification, unreachable RPC) is reported as **inconclusive** rather than as a pass.
+
+Audit the bundled Testnet sample (a built-in executable):
+
+```bash
+npm run run-example 281-soroban-deployment-verification
+```
+
+Audit your own deployment and emit JSON:
+
+```bash
+MANIFEST_FILE=./manifests/testnet.json JSON_OUTPUT=true \
+  npm run run-example 281-soroban-deployment-verification
+```
+
+`MANIFEST_ENV` selects a bundled sample manifest, while `CONTRACT_ID` and `SOROBAN_RPC_URL` override a loaded manifest before validation. See the [example README](src/examples/281-soroban-deployment-verification/README.md) for the manifest schema, output fields, failure classification and limitations.
+
+```bash
+npm test -- --runInBand tests/soroban-deployment-verification.test.ts
+```
