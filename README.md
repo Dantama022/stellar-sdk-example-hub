@@ -4349,3 +4349,36 @@ Audits SEP-12 customer-level and field-level verification statuses, required/con
 npm run run-example -- 269-sep12-kyc-auditor
 npm test -- --runInBand tests/sep12-kyc-auditor.test.ts
 ```
+
+## Soroban Deployment Verification & Configuration Audit (`281-soroban-deployment-verification`)
+
+Audits an existing Soroban deployment against a local manifest and reports whether the on-chain configuration still matches it. The example is read-only: it calls only `getNetwork`, `getLatestLedger` and `getLedgerEntries`.
+
+It checks, independently:
+
+- contract availability on the expected network (instance ledger entry),
+- the network passphrase reported by the Soroban RPC endpoint,
+- the executable type (Wasm vs a protocol built-in such as the Stellar Asset Contract),
+- the Wasm hash where applicable, compared against the manifest expectation,
+- the exported contract interface read from the deployed `contractspecv0` specification.
+
+A matching contract address alone is never treated as proof of equivalence, and incomplete data (missing code entry, unpublished specification, unreachable RPC) is reported as **inconclusive** rather than as a pass.
+
+Audit the bundled Testnet sample (a built-in executable):
+
+```bash
+npm run run-example 281-soroban-deployment-verification
+```
+
+Audit your own deployment and emit JSON:
+
+```bash
+MANIFEST_FILE=./manifests/testnet.json JSON_OUTPUT=true \
+  npm run run-example 281-soroban-deployment-verification
+```
+
+`MANIFEST_ENV` selects a bundled sample manifest, while `CONTRACT_ID` and `SOROBAN_RPC_URL` override a loaded manifest before validation. See the [example README](src/examples/281-soroban-deployment-verification/README.md) for the manifest schema, output fields, failure classification and limitations.
+
+```bash
+npm test -- --runInBand tests/soroban-deployment-verification.test.ts
+```

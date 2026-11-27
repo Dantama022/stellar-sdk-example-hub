@@ -40109,6 +40109,28 @@ export const examples: Record<string, Example> = {
     description:
       'Audit SEP-12 customer KYC statuses, required/conditional fields, and inconsistencies with PII redaction',
     run: loadExample('../examples/269-sep12-kyc-auditor'),
-    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }]
+    params: [{ type: 'confirm', name: 'json', message: 'Output JSON?', default: false }],
+  },
+  '281-soroban-deployment-verification': {
+    name: '281-soroban-deployment-verification',
+    description:
+      'Audit an existing Soroban deployment against a manifest: verify availability, network passphrase, executable type, Wasm hash and contract interface, then report mismatches and inconclusive checks without modifying on-chain state',
+    run: loadExample('../examples/281-soroban-deployment-verification/index'),
+    params: [
+      {
+        type: 'input',
+        name: 'environment',
+        message: 'Manifest environment (blank uses testnet):',
+        default: 'testnet',
+      },
+      {
+        type: 'input',
+        name: 'manifestFile',
+        message: 'Path to a deployment manifest JSON file (blank uses the bundled sample):',
+      },
+      { type: 'input', name: 'rpcUrl', message: 'Override Soroban RPC URL (optional):' },
+      { type: 'input', name: 'contractId', message: 'Override contract ID (optional):' },
+      { type: 'confirm', name: 'json', message: 'Output JSON?', default: false },
+    ],
   },
 };
